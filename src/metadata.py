@@ -180,6 +180,7 @@ def automated_demo():
     print(search.get_previous_options())
     print(search.choose(6))
 
+
 def interactive_demo():
     search = Search(query=input("initial query: "))
     print(search.options)
