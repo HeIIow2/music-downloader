@@ -21,6 +21,99 @@ class Search:
         elif artist is not None:
             self.set_options(self.Options([musicbrainzngs.search_artists(artist=artist)]))
 
+    def download(self):
+        print("DOWNLOADING")
+        print(self.current_chosen_option)
+
+        kind = self.current_chosen_option['kind']
+        mb_id = self.current_chosen_option['id']
+
+        if kind == "artist":
+            return self.download_artist(mb_id)
+        if kind == "release":
+            return self.download_release(mb_id)
+        if kind == "track":
+            return self.download_track(mb_id)
+
+    def download_artist(self, mb_id):
+        """
+        Available includes: recordings, releases, release-groups, works, various-artists, discids, media, isrcs,
+        aliases, annotation, area-rels, artist-rels, label-rels, place-rels, event-rels, recording-rels,
+        release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels, tags, user-tags,
+        ratings, user-ratings
+        """
+        print(mb_id)
+        result = musicbrainzngs.get_artist_by_id(mb_id, includes=[])
+        print(result)
+
+    def download_release(self, mb_id):
+        """
+        Available includes: artists, labels, recordings, release-groups, media, artist-credits, discids, isrcs,
+        recording-level-rels, work-level-rels, annotation, aliases, tags, user-tags, area-rels, artist-rels,
+        label-rels, place-rels, event-rels, recording-rels, release-rels, release-group-rels, series-rels, url-rels,
+        work-rels, instrument-rels
+        """
+        print(mb_id)
+        result = musicbrainzngs.get_release_by_id(mb_id, includes=[])
+        print(result)
+
+    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None):
+        """
+        Title
+        Artist
+        Album:
+        Album artist
+        Composer
+        Genre
+        Track number <> of <>
+        Disc number <> of <>
+        Year
+        BPM
+        Comment
+
+        Album Art
+        """
+        """Available includes: artists, releases, discids, media, artist-credits, isrcs, work-level-rels, annotation, 
+        aliases, tags, user-tags, ratings, user-ratings, area-rels, artist-rels, label-rels, place-rels, event-rels, 
+        recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels """
+
+        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases"])
+        recording_data = result['recording']
+        release_data = recording_data['release-list'][0]
+
+        title = recording_data['title']
+        artist = [artist_['artist']['name'] for artist_ in recording_data['artist-credit']]
+        artist_ids = [artist_['artist']['id'] for artist_ in recording_data['artist-credit']]
+
+        def get_additional_release_info(mb_id_):
+            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings"])
+            is_various_artist_ = len(r['release']['artist-credit']) > 1
+            tracklist = r['release']['medium-list'][0]['track-list']
+            track_count_ = len(tracklist)
+            this_track_ = 0
+            for track in tracklist:
+                if track["recording"]["id"] == mb_id:
+                    this_track_ = track["position"]
+
+            return is_various_artist_, this_track_, track_count_
+
+        album_id = release_data['id']
+        album = release_data['title']
+        year = release_data['date'].split("-")[0]
+        if is_various_artist is None or track is None or total_tracks is None:
+            is_various_artist, track, total_tracks = get_additional_release_info(album_id)
+        album_artist = "Various Artists" if is_various_artist else artist[0]
+
+        return {
+            'title': title,
+            'artist': artist,
+            'album_artist': album_artist,
+            'album': album,
+            'year': year,
+            'track': track,
+            'total_tracks': total_tracks
+        }
+
     def browse_artist(self, artist: dict, limit: int = 25):
         options_sets = [
             {"artist-list": [artist, ], "artist-count": 1},
@@ -175,10 +268,11 @@ def automated_demo():
     search = Search(query="psychonaut 4")
     print(search.options)
     print(search.choose(0))
+    search.download()
     print(search.choose(2))
+    search.download()
     print(search.choose(4))
-    print(search.get_previous_options())
-    print(search.choose(6))
+    print(search.download())
 
 
 def interactive_demo():
@@ -201,4 +295,8 @@ def interactive_demo():
 
 
 if __name__ == "__main__":
-    interactive_demo()
+    # automated_demo()
+    search = Search(query="psychonaut 4")
+    # search.download_artist("c0c720b5-012f-4204-a472-981403f37b12")
+    # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
+    search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
