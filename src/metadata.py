@@ -180,6 +180,24 @@ def automated_demo():
     print(search.get_previous_options())
     print(search.choose(6))
 
+def interactive_demo():
+    search = Search(query=input("initial query: "))
+    print(search.options)
+    while True:
+        input_ = input("q to quit, .. for previous options, . for current options, int for this element: ").lower()
+        input_.strip()
+        if input_ == "q":
+            break
+        if input_ == ".":
+            print(search.options)
+            continue
+        if input_ == "..":
+            print(search.get_previous_options())
+            continue
+        if input_.isdigit():
+            print(search.choose(int(input_)))
+            continue
+
 
 if __name__ == "__main__":
-    automated_demo()
+    interactive_demo()
