@@ -1,10 +1,10 @@
+import json
 import os.path
 
 import pandas as pd
 import requests
+import logging
 
-
-# https://musify.club/search/suggestions?term=happy days
 
 class Download:
     def __init__(self, metadata_csv: str = ".cache1.csv", session: requests.Session = requests.Session(),
@@ -25,7 +25,7 @@ class Download:
         self.dump_urls(file)
 
     def check_musify_track(self, row):
-        artist = row['artist']
+        artist = json.loads(row['artist'].replace("'", '"'))
         track = row['title']
 
         url = f"https://musify.club/search/suggestions?term={track}"
@@ -34,7 +34,7 @@ class Download:
         if r.status_code == 200:
             autocomplete = r.json()
             for row in autocomplete:
-                if any(a in row['label'] for a in artist):
+                if any(a in row['label'] for a in artist) and "/track" in row['url']:
                     return row
 
         return None
@@ -49,6 +49,8 @@ class Download:
             file_ = default_url.split("/")[-1]
             musify_id = file_.split("-")[-1]
             musify_name = "-".join(file_.split("-")[:-1])
+
+            logging.info(f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3")
 
             return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
 
@@ -69,4 +71,11 @@ class Download:
 
 
 if __name__ == "__main__":
-    download = Download()
+    proxies = {
+        'http': 'socks5h://127.0.0.1:9150',
+        'https': 'socks5h://127.0.0.1:9150'
+    }
+
+    s = requests.Session()
+    s.proxies = proxies
+    download = Download(session=s)

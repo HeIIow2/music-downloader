@@ -1,5 +1,6 @@
 import metadata
 import download_links
+import url_to_path
 import logging
 
 TEMP = "temp"
@@ -38,7 +39,10 @@ def cli():
     search.download(file=STEP_ONE_CACHE)
 
     logging.info("Fetching Download Links")
-    download = download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP)
+    download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP)
+
+    logging.info("creating Paths")
+    url_to_path.UrlPath("dsbm")
 
 
 if __name__ == "__main__":

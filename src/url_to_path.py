@@ -15,9 +15,11 @@ class UrlPath:
         new_metadata = []
 
         for idx, row in self.metadata.iterrows():
-            path = self.get_path_from_row(row)
+            file, path = self.get_path_from_row(row)
             new_row = dict(row)
             new_row['path'] = path
+            new_row['file'] = file
+            new_row['genre'] = self.genre
             new_metadata.append(new_row)
 
         new_df = pd.DataFrame(new_metadata)
@@ -31,13 +33,16 @@ class UrlPath:
         :param row:
         :return: path:
         """
-        return shlex.quote(os.path.join(self.get_genre(), self.get_artist(row), f"{self.get_song(row)}.mp3"))
+        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row), f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row))
 
     def escape_part(self, part: str):
         return part.replace("/", " ")
 
     def get_genre(self):
         return self.escape_part(self.genre)
+
+    def get_album(self, row):
+        return self.escape_part(row['album'])
 
     def get_artist(self, row):
         artists = json.loads(row['artist'].replace("'", '"'))
