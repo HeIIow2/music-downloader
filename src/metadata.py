@@ -1,4 +1,5 @@
-import imp
+import os.path
+
 import musicbrainzngs
 import pandas as pd
 
@@ -8,13 +9,15 @@ KNOWN_KIND_OF_OPTIONS = ["artist", "release", "track"]
 
 
 class Search:
-    def __init__(self, query: str = None, artist: str = None):
+    def __init__(self, query: str = None, artist: str = None, temp: str = "temp"):
         if query is None and artist is None:
             raise ValueError("no query provided")
 
         self.options_history = []
         self.current_options = None
         self.current_chosen_option = None
+
+        self.temp = temp
 
         # initial search
         if query is not None:
@@ -23,7 +26,7 @@ class Search:
         elif artist is not None:
             self.set_options(self.Options([musicbrainzngs.search_artists(artist=artist)]))
 
-    def download(self):
+    def download(self, file: str = ".cache1.csv"):
         kind = self.current_chosen_option['kind']
         mb_id = self.current_chosen_option['id']
 
@@ -36,7 +39,7 @@ class Search:
             metadata_list = self.download_track(mb_id)
 
         metadata_df = pd.DataFrame(metadata_list)
-        metadata_df.to_csv(".cache.csv")
+        metadata_df.to_csv(os.path.join(self.temp, file))
 
         return metadata_df
 

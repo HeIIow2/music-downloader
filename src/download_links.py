@@ -1,23 +1,28 @@
-from turtle import down
+import os.path
+
 import pandas as pd
 import requests
+
 
 # https://musify.club/search/suggestions?term=happy days
 
 class Download:
-    def __init__(self, metadata_csv: str = ".cache.csv", session: requests.Session = requests.Session()) -> None:
+    def __init__(self, metadata_csv: str = ".cache1.csv", session: requests.Session = requests.Session(),
+                 file: str = ".cache2.csv", temp: str = "temp") -> None:
+        self.temp = temp
+
         self.session = session
         self.session.headers = {
             "Connection": "keep-alive",
             "Referer": "https://musify.club/"
         }
 
-        self.metadata = pd.read_csv(metadata_csv, index_col=0)
-    
+        self.metadata = pd.read_csv(os.path.join(self.temp, metadata_csv), index_col=0)
+
         self.urls = []
         missing_urls, self.urls = self.check_musify()
 
-        self.dump_urls()
+        self.dump_urls(file)
 
     def check_musify_track(self, row):
         artist = row['artist']
@@ -47,19 +52,21 @@ class Download:
 
             return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
 
-
         for idx, row in self.metadata.iterrows():
             url = self.check_musify_track(row)
             if url is None:
                 missing_urls.append(row['id'])
                 continue
-            urls.append({'id':row['id'], 'url': get_download_link(url['url'])})
-        
+            data = dict(row)
+            data['url'] = get_download_link(url['url'])
+            urls.append(data)
+
         return missing_urls, urls
 
-    def dump_urls(self):
+    def dump_urls(self, file: str = ".cache2.csv"):
         df = pd.DataFrame(self.urls)
-        df.to_csv(".download_links.csv")
+        df.to_csv(os.path.join(self.temp, file))
+
 
 if __name__ == "__main__":
     download = Download()

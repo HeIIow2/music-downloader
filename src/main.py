@@ -1,13 +1,21 @@
 import metadata
 import download_links
+import logging
+
+TEMP = "temp"
+STEP_ONE_CACHE = ".cache1.csv"
+STEP_TWO_CACHE = ".cache2.csv"
+
+logging.basicConfig(level=logging.INFO)
 
 
 def search_for_metadata(query: str):
-    search = metadata.Search(query=query)
+    search = metadata.Search(query=query, temp=TEMP)
 
     print(search.options)
     while True:
-        input_ = input("q to quit, ok to download, .. for previous options, . for current options, int for this element: ").lower()
+        input_ = input(
+            "q to quit, ok to download, .. for previous options, . for current options, int for this element: ").lower()
         input_.strip()
         if input_ == "q":
             exit(0)
@@ -26,9 +34,11 @@ def search_for_metadata(query: str):
 
 def cli():
     search = search_for_metadata(query=input("initial query: "))
-    search.download()
+    logging.info("Starting Downloading of metadata")
+    search.download(file=STEP_ONE_CACHE)
 
-    download = download_links.Download()
+    logging.info("Fetching Download Links")
+    download = download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP)
 
 
 if __name__ == "__main__":
