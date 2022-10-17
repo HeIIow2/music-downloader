@@ -1,4 +1,5 @@
 import metadata
+import download_links
 
 
 def search_for_metadata(query: str):
@@ -26,6 +27,8 @@ def search_for_metadata(query: str):
 def cli():
     search = search_for_metadata(query=input("initial query: "))
     search.download()
+
+    download = download_links.Download()
 
 
 if __name__ == "__main__":
