@@ -1,4 +1,6 @@
+import imp
 import musicbrainzngs
+import pandas as pd
 
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
@@ -22,18 +24,21 @@ class Search:
             self.set_options(self.Options([musicbrainzngs.search_artists(artist=artist)]))
 
     def download(self):
-        print("DOWNLOADING")
-        print(self.current_chosen_option)
-
         kind = self.current_chosen_option['kind']
         mb_id = self.current_chosen_option['id']
 
+        metadata_list = []
         if kind == "artist":
-            return self.download_artist(mb_id)
-        if kind == "release":
-            return self.download_release(mb_id)
-        if kind == "track":
-            return self.download_track(mb_id)
+            metadata_list = self.download_artist(mb_id)
+        elif kind == "release":
+            metadata_list = self.download_release(mb_id)
+        elif kind == "track":
+            metadata_list = self.download_track(mb_id)
+
+        metadata_df = pd.DataFrame(metadata_list)
+        metadata_df.to_csv(".cache.csv")
+
+        return metadata_df
 
     def download_artist(self, mb_id):
         """
@@ -42,9 +47,12 @@ class Search:
         release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels, tags, user-tags,
         ratings, user-ratings
         """
-        print(mb_id)
-        result = musicbrainzngs.get_artist_by_id(mb_id, includes=[])
-        print(result)
+        metadata_list = []
+        result = musicbrainzngs.get_artist_by_id(mb_id, includes=["releases"])
+        for release in result["artist"]["release-list"]:
+            metadata_list.extend(self.download_release(release["id"]))
+
+        return metadata_list
 
     def download_release(self, mb_id):
         """
@@ -53,9 +61,21 @@ class Search:
         label-rels, place-rels, event-rels, recording-rels, release-rels, release-group-rels, series-rels, url-rels,
         work-rels, instrument-rels
         """
-        print(mb_id)
-        result = musicbrainzngs.get_release_by_id(mb_id, includes=[])
-        print(result)
+        result = musicbrainzngs.get_release_by_id(mb_id, includes=["artists", "recordings"])
+
+        tracklist_metadata = []
+
+        is_various_artist = len(result['release']['artist-credit']) > 1
+        tracklist = result['release']['medium-list'][0]['track-list']
+        track_count = len(tracklist)
+        this_track = 0
+        for track in tracklist:
+            track_id = track["recording"]["id"]
+            this_track = track["position"]
+
+            tracklist_metadata.extend(self.download_track(track_id, is_various_artist=is_various_artist, track=this_track, total_tracks=track_count))
+        
+        return tracklist_metadata
 
     def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None):
         """
@@ -104,7 +124,8 @@ class Search:
             is_various_artist, track, total_tracks = get_additional_release_info(album_id)
         album_artist = "Various Artists" if is_various_artist else artist[0]
 
-        return {
+        return [{
+            'id': mb_id,
             'title': title,
             'artist': artist,
             'album_artist': album_artist,
@@ -112,7 +133,7 @@ class Search:
             'year': year,
             'track': track,
             'total_tracks': total_tracks
-        }
+        }]
 
     def browse_artist(self, artist: dict, limit: int = 25):
         options_sets = [
@@ -279,7 +300,7 @@ def interactive_demo():
     search = Search(query=input("initial query: "))
     print(search.options)
     while True:
-        input_ = input("q to quit, .. for previous options, . for current options, int for this element: ").lower()
+        input_ = input("d to download, q to quit, .. for previous options, . for current options, int for this element: ").lower()
         input_.strip()
         if input_ == "q":
             break
@@ -292,11 +313,16 @@ def interactive_demo():
         if input_.isdigit():
             print(search.choose(int(input_)))
             continue
+        if input_ == "d":
+            search.download()
+            break
 
 
 if __name__ == "__main__":
+    interactive_demo()
     # automated_demo()
-    search = Search(query="psychonaut 4")
-    # search.download_artist("c0c720b5-012f-4204-a472-981403f37b12")
+    # search = Search(query="psychonaut 4")
     # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
-    search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    # for track_ in search.download_artist("c0c720b5-012f-4204-a472-981403f37b12"):
+    #     print(track_)
+    # search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")

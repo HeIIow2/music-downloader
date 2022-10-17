@@ -25,6 +25,7 @@ def search_for_metadata(query: str):
 
 def cli():
     search = search_for_metadata(query=input("initial query: "))
+    search.download()
 
 
 if __name__ == "__main__":
