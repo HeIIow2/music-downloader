@@ -1,4 +1,5 @@
 import os.path
+from select import select
 
 import musicbrainzngs
 import pandas as pd
@@ -82,17 +83,8 @@ class Search:
 
     def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None):
         """
-        Title
-        Artist
-        Album:
-        Album artist
-        Composer
-        Genre
-        Track number <> of <>
-        Disc number <> of <>
-        Year
-        BPM
-        Comment
+        album
+        bpm
 
         Album Art
         """
@@ -100,7 +92,8 @@ class Search:
         aliases, tags, user-tags, ratings, user-ratings, area-rels, artist-rels, label-rels, place-rels, event-rels, 
         recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels """
 
-        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases"])
+        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels"])
+        print(result)
         recording_data = result['recording']
         release_data = recording_data['release-list'][0]
 
@@ -109,7 +102,7 @@ class Search:
         artist_ids = [artist_['artist']['id'] for artist_ in recording_data['artist-credit']]
 
         def get_additional_release_info(mb_id_):
-            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings"])
+            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings", "recording-rels"])
             is_various_artist_ = len(r['release']['artist-credit']) > 1
             tracklist = r['release']['medium-list'][0]['track-list']
             track_count_ = len(tracklist)
@@ -322,10 +315,10 @@ def interactive_demo():
 
 
 if __name__ == "__main__":
-    interactive_demo()
+    # interactive_demo()
     # automated_demo()
-    # search = Search(query="psychonaut 4")
+    search = Search(query="psychonaut 4")
     # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
     # for track_ in search.download_artist("c0c720b5-012f-4204-a472-981403f37b12"):
     #     print(track_)
-    # search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
