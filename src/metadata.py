@@ -83,8 +83,18 @@ class Search:
 
     def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None):
         """
+        TODO
+        bpm     its kind of possible via the AcousticBrainz API. however, the data may not be of very good
+                quality and AB is scheduled to go away in some time.
+
+        compilation     Field that is used by iTunes to mark albums as compilation.
+                        Either enter the value 1 or delete the field. https://en.wikipedia.org/wiki/Compilation_album
+                        How should I get it? I don't fucking know
+
+        composer
+
+        DONE
         album
-        bpm
 
         Album Art
         """
