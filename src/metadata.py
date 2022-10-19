@@ -61,19 +61,34 @@ class Search:
         """
         metadata_list = []
         result = musicbrainzngs.get_artist_by_id(mb_id, includes=["releases"])
-        for release in result["artist"]["release-list"]:
-            metadata_list.extend(self.download_release(release["id"]))
+        for i, release in enumerate(result["artist"]["release-list"]):
+            metadata_list.extend(self.download_release(release["id"], i))
 
         return metadata_list
 
-    def download_release(self, mb_id):
+    def download_release(self, mb_id, album_sort: int = None):
         """
         Available includes: artists, labels, recordings, release-groups, media, artist-credits, discids, isrcs,
         recording-level-rels, work-level-rels, annotation, aliases, tags, user-tags, area-rels, artist-rels,
         label-rels, place-rels, event-rels, recording-rels, release-rels, release-group-rels, series-rels, url-rels,
         work-rels, instrument-rels
         """
-        result = musicbrainzngs.get_release_by_id(mb_id, includes=["artists", "recordings"])
+        def get_additional_artist_info(mb_id_):
+            r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
+
+            album_sort = 0
+            for i, release in enumerate(r["artist"]["release-list"]):
+                id_ = release["id"]
+                if id_ == mb_id:
+                    album_sort = i
+                    break
+
+            return album_sort
+        result = musicbrainzngs.get_release_by_id(mb_id, includes=["artists", "recordings", 'release-groups'])
+
+        if album_sort is None:
+            album_sort = get_additional_artist_info(get_elem_from_obj(result, ['release', 'artist-credit', 0, 'artist', 'id']))
+        release_type = get_elem_from_obj(result, ['release', 'release-group', 'type'])
 
         tracklist_metadata = []
 
@@ -85,11 +100,11 @@ class Search:
             track_id = track["recording"]["id"]
             this_track = track["position"]
 
-            tracklist_metadata.extend(self.download_track(track_id, is_various_artist=is_various_artist, track=this_track, total_tracks=track_count))
+            tracklist_metadata.extend(self.download_track(track_id, is_various_artist=is_various_artist, track=this_track, total_tracks=track_count, album_sort=album_sort, album_type=release_type))
         
         return tracklist_metadata
 
-    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None, album_sort: int = None):
+    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None, album_sort: int = None, album_type: str = None):
         """
         TODO
         bpm     its kind of possible via the AcousticBrainz API. however, the data may not be of very good
@@ -97,13 +112,18 @@ class Search:
 
         compilation     Field that is used by iTunes to mark albums as compilation.
                         Either enter the value 1 or delete the field. https://en.wikipedia.org/wiki/Compilation_album
-                        How should I get it? I don't fucking know
+                        How should I get it? I don't fucking know. Now I do. Release Group Type is Compilation
 
         composer, copyright, discsubtitle
-
-        language
-        musicbrainz_albumtype
-        
+        'musicbrainz_discid',
+        'asin',
+        'performer',
+        'catalognumber',
+        'musicbrainz_releasetrackid',
+        'musicbrainz_releasegroupid',
+        'musicbrainz_workid',
+        'acoustid_fingerprint',
+        'acoustid_id'
 
         DONE
 
@@ -119,22 +139,25 @@ class Search:
         musicbrainz_albumid
         musicbrainz_albumartistid
         musicbrainz_albumstatus
+        language
+        musicbrainz_albumtype
+        'releasecountry'
+        'barcode'
 
         Album Art
         """
-        """Available includes: artists, releases, discids, media, artist-credits, isrcs, work-level-rels, annotation, 
+        """
+        Available includes: artists, releases, discids, media, artist-credits, isrcs, work-level-rels, annotation, 
         aliases, tags, user-tags, ratings, user-ratings, area-rels, artist-rels, label-rels, place-rels, event-rels, 
-        recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels """
+        recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels 
+        """
 
         result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs", "work-level-rels"])
         recording_data = result['recording']
-        print(result)
-
         isrc = get_elem_from_obj(recording_data, ['isrc-list', 0])
 
         release_data = recording_data['release-list'][0]
         mb_release_id = release_data['id']
-        print(release_data)
 
         title = recording_data['title']
         
@@ -154,7 +177,7 @@ class Search:
             return album_sort
 
         def get_additional_release_info(mb_id_):
-            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings", "recording-rels"])
+            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings", "recording-rels", 'release-groups'])
             is_various_artist_ = len(r['release']['artist-credit']) > 1
             tracklist = r['release']['medium-list'][0]['track-list']
             track_count_ = len(tracklist)
@@ -163,28 +186,34 @@ class Search:
                 if track["recording"]["id"] == mb_id:
                     this_track_ = track["position"]
 
-            return is_various_artist_, this_track_, track_count_
+            release_type = get_elem_from_obj(r, ['release', 'release-group', 'type'])
+
+            return is_various_artist_, this_track_, track_count_, release_type
 
         album_id = get_elem_from_obj(release_data, ['id'])
         album = get_elem_from_obj(release_data, ['title'])
         album_status = get_elem_from_obj(release_data, ['status'])
-
+        language = get_elem_from_obj(release_data, ['text-representation', 'language'])
 
         year = get_elem_from_obj(release_data, ['date'], lambda x: x.split("-")[0])
         date = get_elem_from_obj(release_data, ['date'])
-        if is_various_artist is None or track is None or total_tracks is None:
-            is_various_artist, track, total_tracks = get_additional_release_info(album_id)
+        if is_various_artist is None or track is None or total_tracks is None or album_type is None:
+            is_various_artist, track, total_tracks, album_type = get_additional_release_info(album_id)
         if album_sort is None:
             album_sort = get_additional_artist_info(mb_artist_ids[0])
         album_artist = "Various Artists" if is_various_artist else artist[0]
         album_artist_id = None if album_artist == "Various Artists" else mb_artist_ids[0]
+        compilation = "1" if album_type == "Compilation" else None
+        country = get_elem_from_obj(release_data, ['country'])
+        barcode = get_elem_from_obj(release_data, ['barcode'])
 
         return [{
+            'id': mb_id,
             'album': album,
             'title': title,
             'artist': artist,
             'album_artist': album_artist,
-            'tracknumber': track,
+            'tracknumber': str(track),
             'albumsort': album_sort,
             'titlesort': track,
             'isrc': isrc,
@@ -192,9 +221,14 @@ class Search:
             'year': year,
             'musicbrainz_artistid': mb_artist_ids[0],
             'musicbrainz_albumid': mb_release_id,
-            'musicbrainz_artistid': album_artist_id,
+            'musicbrainz_albumartistid': album_artist_id,
             'musicbrainz_albumstatus': album_status,
-            'total_tracks': total_tracks
+            'total_tracks': total_tracks,
+            'language': language,
+            'musicbrainz_albumtype': album_type,
+            'compilation': compilation,
+            'releasecountry': country,
+            'barcode': barcode
         }]
 
     def browse_artist(self, artist: dict, limit: int = 25):
@@ -387,5 +421,11 @@ if __name__ == "__main__":
     # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
     # for track_ in search.download_artist("c0c720b5-012f-4204-a472-981403f37b12"):
     #     print(track_)
-    #search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
-    search.download_track("5cc28584-10c6-40e2-b6d4-6891e7e7c575")
+    res = search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    # res = search.download_track("5cc28584-10c6-40e2-b6d4-6891e7e7c575")
+
+    for key in res[0]:
+        if res[0][key] is None:
+            continue
+
+        print(key, res[0][key])

@@ -112,8 +112,10 @@ class Download:
         
         valid_keys = list(EasyID3.valid_keys.keys())
 
-        for key in list(row):
-            if key in valid_keys and row[key] is not None:
+        for key in list(row.keys()):
+            if key in valid_keys and row[key] is not None and not pd.isna(row[key]):
+                if type(row[key]) == int or type(row[key]) == float:
+                    row[key] = str(row[key])
                 audiofile[key] = row[key]
 
         """
@@ -131,11 +133,11 @@ class Download:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    proxies = {
-        'http': 'socks5h://127.0.0.1:9150',
-        'https': 'socks5h://127.0.0.1:9150'
-    }
-
     s = requests.Session()
-    s.proxies = proxies
+    if False:
+        proxies = {
+            'http': 'socks5h://127.0.0.1:9150',
+            'https': 'socks5h://127.0.0.1:9150'
+        }
+        s.proxies = proxies
     Download(session=s)

@@ -10,6 +10,8 @@ STEP_ONE_CACHE = ".cache1.csv"
 STEP_TWO_CACHE = ".cache2.csv"
 STEP_THREE_CACHE = ".cache3.csv"
 
+TOR = False
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -38,10 +40,13 @@ def search_for_metadata(query: str):
 
 def cli():
     session = requests.Session()
-    session.proxies = {
-        'http': 'socks5h://127.0.0.1:9150',
-        'https': 'socks5h://127.0.0.1:9150'
-    }
+    if TOR:
+        session.proxies = {
+            'http': 'socks5h://127.0.0.1:9150',
+            'https': 'socks5h://127.0.0.1:9150'
+        }
+
+    genre = input("genre to download to: ")
 
     search = search_for_metadata(query=input("initial query: "))
     logging.info("Starting Downloading of metadata")
@@ -51,7 +56,7 @@ def cli():
     download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
 
     logging.info("creating Paths")
-    url_to_path.UrlPath("dsbm")
+    url_to_path.UrlPath(genre=genre)
 
     logging.info("starting to download the mp3's")
     download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP)
