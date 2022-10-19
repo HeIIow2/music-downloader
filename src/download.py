@@ -58,7 +58,7 @@ dict_keys(
         'musicip_puid',
         'musicip_fingerprint',
         'musicbrainz_albumstatus',
-        'musicbrainz_albumtype',
+        'musicbrainz_albumtype', <----------
         'releasecountry',
         'musicbrainz_discid',
         'asin',
@@ -110,6 +110,13 @@ class Download:
     def write_metadata(self, row, file):
         audiofile = EasyID3(file)
         
+        valid_keys = list(EasyID3.valid_keys.keys())
+
+        for key in list(row):
+            if key in valid_keys and row[key] is not None:
+                audiofile[key] = row[key]
+
+        """
         audiofile["artist"] = row['artist']
         audiofile["albumartist"] = row['album_artist']
         audiofile["date"] = str(row['year'])
@@ -117,6 +124,7 @@ class Download:
         audiofile["title"] = row['title']
         audiofile["album"] = row['album']
         audiofile["tracknumber"] = str(row['track'])
+        """
 
         audiofile.save()
 
