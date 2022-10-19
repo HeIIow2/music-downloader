@@ -1,6 +1,4 @@
 import os.path
-from tkinter.messagebox import NO
-
 
 import musicbrainzngs
 import pandas as pd
@@ -8,6 +6,15 @@ import pandas as pd
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 KNOWN_KIND_OF_OPTIONS = ["artist", "release", "track"]
+
+def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x):
+    current_object = current_object
+    for key in keys:
+        if key in current_object or (type(key) == int and key < len(current_object)):
+            current_object = current_object[key]
+        else:
+            return None
+    return after_process(current_object)
 
 
 class Search:
@@ -117,15 +124,15 @@ class Search:
         recording_data = result['recording']
         print(result)
 
-        isrc = None if 'isrc-list' not in recording_data else recording_data['isrc-list'][0]
-        print(isrc)
+        isrc = get_elem_from_obj(recording_data, ['isrc-list', 0])
 
         release_data = recording_data['release-list'][0]
         mb_release_id = release_data['id']
 
         title = recording_data['title']
-        artist = [artist_['artist']['name'] for artist_ in recording_data['artist-credit']]
-        mb_artist_ids = [artist_['artist']['id'] for artist_ in recording_data['artist-credit']]
+        
+        artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
+        mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
         
         def get_additional_artist_info(mb_id_):
             r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
@@ -153,8 +160,8 @@ class Search:
 
         album_id = release_data['id']
         album = release_data['title']
-        year = release_data['date'].split("-")[0]
-        date = release_data['date']
+        year = get_elem_from_obj(release_data, ['date'], lambda x: x.split("-")[0])
+        date = get_elem_from_obj(release_data, ['date'])
         if is_various_artist is None or track is None or total_tracks is None:
             is_various_artist, track, total_tracks = get_additional_release_info(album_id)
         if album_sort is None:
