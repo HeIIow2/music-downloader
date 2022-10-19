@@ -102,6 +102,8 @@ class Search:
         composer, copyright, discsubtitle
 
         language
+        musicbrainz_albumtype
+        
 
         DONE
 
@@ -113,6 +115,10 @@ class Search:
         !!!albumsort can sort albums cronological
         titlesort is just set to the tracknumber to sort by track order to sort correctly
         isrc
+        musicbrainz_artistid
+        musicbrainz_albumid
+        musicbrainz_albumartistid
+        musicbrainz_albumstatus
 
         Album Art
         """
@@ -128,6 +134,7 @@ class Search:
 
         release_data = recording_data['release-list'][0]
         mb_release_id = release_data['id']
+        print(release_data)
 
         title = recording_data['title']
         
@@ -158,8 +165,11 @@ class Search:
 
             return is_various_artist_, this_track_, track_count_
 
-        album_id = release_data['id']
-        album = release_data['title']
+        album_id = get_elem_from_obj(release_data, ['id'])
+        album = get_elem_from_obj(release_data, ['title'])
+        album_status = get_elem_from_obj(release_data, ['status'])
+
+
         year = get_elem_from_obj(release_data, ['date'], lambda x: x.split("-")[0])
         date = get_elem_from_obj(release_data, ['date'])
         if is_various_artist is None or track is None or total_tracks is None:
@@ -167,6 +177,7 @@ class Search:
         if album_sort is None:
             album_sort = get_additional_artist_info(mb_artist_ids[0])
         album_artist = "Various Artists" if is_various_artist else artist[0]
+        album_artist_id = None if album_artist == "Various Artists" else mb_artist_ids[0]
 
         return [{
             'album': album,
@@ -179,6 +190,10 @@ class Search:
             'isrc': isrc,
             'date': date,
             'year': year,
+            'musicbrainz_artistid': mb_artist_ids[0],
+            'musicbrainz_albumid': mb_release_id,
+            'musicbrainz_artistid': album_artist_id,
+            'musicbrainz_albumstatus': album_status,
             'total_tracks': total_tracks
         }]
 
