@@ -1,5 +1,5 @@
 import os.path
-from select import select
+
 
 import musicbrainzngs
 import pandas as pd
@@ -81,7 +81,7 @@ class Search:
         
         return tracklist_metadata
 
-    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None):
+    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None, album_sort: int = None):
         """
         TODO
         bpm     its kind of possible via the AcousticBrainz API. however, the data may not be of very good
@@ -91,10 +91,19 @@ class Search:
                         Either enter the value 1 or delete the field. https://en.wikipedia.org/wiki/Compilation_album
                         How should I get it? I don't fucking know
 
-        composer
+        composer, copyright
+
+        isrc
 
         DONE
+
         album
+        title
+        artist
+        albumartist
+        tracknumber
+        !!!albumsort can sort albums cronological
+        titlesort is just set to the tracknumber to sort by track order to sort correctly
 
         Album Art
         """
@@ -102,14 +111,27 @@ class Search:
         aliases, tags, user-tags, ratings, user-ratings, area-rels, artist-rels, label-rels, place-rels, event-rels, 
         recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels """
 
-        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels"])
+        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs"])
         print(result)
         recording_data = result['recording']
         release_data = recording_data['release-list'][0]
+        mb_release_id = release_data['id']
 
         title = recording_data['title']
         artist = [artist_['artist']['name'] for artist_ in recording_data['artist-credit']]
-        artist_ids = [artist_['artist']['id'] for artist_ in recording_data['artist-credit']]
+        mb_artist_ids = [artist_['artist']['id'] for artist_ in recording_data['artist-credit']]
+        
+        def get_additional_artist_info(mb_id_):
+            r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
+
+            album_sort = 0
+            for i, release in enumerate(r["artist"]["release-list"]):
+                id_ = release["id"]
+                if id_ == mb_release_id:
+                    album_sort = i
+                    break
+
+            return album_sort
 
         def get_additional_release_info(mb_id_):
             r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings", "recording-rels"])
@@ -128,16 +150,19 @@ class Search:
         year = release_data['date'].split("-")[0]
         if is_various_artist is None or track is None or total_tracks is None:
             is_various_artist, track, total_tracks = get_additional_release_info(album_id)
+        if album_sort is None:
+            album_sort = get_additional_artist_info(mb_artist_ids[0])
         album_artist = "Various Artists" if is_various_artist else artist[0]
 
         return [{
-            'id': mb_id,
+            'album': album,
             'title': title,
             'artist': artist,
             'album_artist': album_artist,
-            'album': album,
+            'tracknumber': track,
+            'albumsort': album_sort,
+            'titlesort': track,
             'year': year,
-            'track': track,
             'total_tracks': total_tracks
         }]
 
