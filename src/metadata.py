@@ -1,4 +1,5 @@
 import os.path
+from tkinter.messagebox import NO
 
 
 import musicbrainzngs
@@ -91,9 +92,9 @@ class Search:
                         Either enter the value 1 or delete the field. https://en.wikipedia.org/wiki/Compilation_album
                         How should I get it? I don't fucking know
 
-        composer, copyright
+        composer, copyright, discsubtitle
 
-        isrc
+        language
 
         DONE
 
@@ -104,6 +105,7 @@ class Search:
         tracknumber
         !!!albumsort can sort albums cronological
         titlesort is just set to the tracknumber to sort by track order to sort correctly
+        isrc
 
         Album Art
         """
@@ -111,9 +113,13 @@ class Search:
         aliases, tags, user-tags, ratings, user-ratings, area-rels, artist-rels, label-rels, place-rels, event-rels, 
         recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels """
 
-        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs"])
-        print(result)
+        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs", "work-level-rels"])
         recording_data = result['recording']
+        print(result)
+
+        isrc = None if 'isrc-list' not in recording_data else recording_data['isrc-list'][0]
+        print(isrc)
+
         release_data = recording_data['release-list'][0]
         mb_release_id = release_data['id']
 
@@ -148,6 +154,7 @@ class Search:
         album_id = release_data['id']
         album = release_data['title']
         year = release_data['date'].split("-")[0]
+        date = release_data['date']
         if is_various_artist is None or track is None or total_tracks is None:
             is_various_artist, track, total_tracks = get_additional_release_info(album_id)
         if album_sort is None:
@@ -162,6 +169,8 @@ class Search:
             'tracknumber': track,
             'albumsort': album_sort,
             'titlesort': track,
+            'isrc': isrc,
+            'date': date,
             'year': year,
             'total_tracks': total_tracks
         }]
@@ -356,4 +365,5 @@ if __name__ == "__main__":
     # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
     # for track_ in search.download_artist("c0c720b5-012f-4204-a472-981403f37b12"):
     #     print(track_)
-    search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    #search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    search.download_track("5cc28584-10c6-40e2-b6d4-6891e7e7c575")
