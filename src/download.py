@@ -3,8 +3,10 @@ import os.path
 import pandas as pd
 from mutagen.easyid3 import EasyID3
 import json
-
 import logging
+
+import musify
+import youtube_music
 
 """
 https://en.wikipedia.org/wiki/ID3
@@ -87,15 +89,25 @@ class Download:
 
         for idx, row in self.dataframe.iterrows():
             row['artist'] = json.loads(row['artist'].replace("'", '"'))
-            self.download(row['path'], row['file'], row['url'])
+            if self.path_stuff(row['path'], row['file']):
+                continue
+
+            src = row['src']
+            if src == 'musify':
+                self.download_from_musify(row['path'], row['file'], row['url'])
+            elif src == 'youtube':
+                youtube_music.download(row)
             self.write_metadata(row, row['file'])
 
-    def download(self, path, file, url):
-        if os.path.exists(file):
-            logging.info(f"'{file}' does already exist, thus not downloading.")
-            return
+    def path_stuff(self, path: str, file_: str):
+        # returns true if it shouldn't be downloaded
+        if os.path.exists(file_):
+            logging.info(f"'{file_}' does already exist, thus not downloading.")
+            return True
         os.makedirs(path, exist_ok=True)
+        return False
 
+    def download_from_musify(self, path, file, url):
         logging.info(f"downloading: '{url}'")
         r = self.session.get(url)
         if r.status_code != 200:
@@ -117,16 +129,6 @@ class Download:
                 if type(row[key]) == int or type(row[key]) == float:
                     row[key] = str(row[key])
                 audiofile[key] = row[key]
-
-        """
-        audiofile["artist"] = row['artist']
-        audiofile["albumartist"] = row['album_artist']
-        audiofile["date"] = str(row['year'])
-        audiofile["genre"] = row['genre']
-        audiofile["title"] = row['title']
-        audiofile["album"] = row['album']
-        audiofile["tracknumber"] = str(row['track'])
-        """
 
         audiofile.save()
 
