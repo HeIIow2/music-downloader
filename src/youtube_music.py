@@ -40,6 +40,11 @@ def download(row):
     file_ = row['file']
     options = {
         'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
         'keepvideo': False,
         'outtmpl': file_
     }

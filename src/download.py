@@ -1,7 +1,9 @@
 import requests
 import os.path
 import pandas as pd
+import mutagen
 from mutagen.easyid3 import EasyID3
+import mutagen.mp3
 import json
 import logging
 
@@ -90,6 +92,7 @@ class Download:
         for idx, row in self.dataframe.iterrows():
             row['artist'] = json.loads(row['artist'].replace("'", '"'))
             if self.path_stuff(row['path'], row['file']):
+                self.write_metadata(row, row['file'])
                 continue
 
             src = row['src']
@@ -119,18 +122,24 @@ class Download:
             mp3_file.write(r.content)
         logging.info("finished")
 
-    def write_metadata(self, row, file):
-        audiofile = EasyID3(file)
+    def write_metadata(self, row, filePath):
+        try:
+            audiofile = EasyID3(filePath)
+        except mutagen.id3.ID3NoHeaderError:
+            audiofile = mutagen.mp3.EasyMP3(filePath)
+            audiofile.add_tags()
         
         valid_keys = list(EasyID3.valid_keys.keys())
 
         for key in list(row.keys()):
             if key in valid_keys and row[key] is not None and not pd.isna(row[key]):
+                # print(key)
                 if type(row[key]) == int or type(row[key]) == float:
                     row[key] = str(row[key])
                 audiofile[key] = row[key]
 
-        audiofile.save()
+        print("saving")
+        audiofile.save(filePath, v1=2)
 
 
 if __name__ == "__main__":
