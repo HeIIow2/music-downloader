@@ -161,8 +161,17 @@ class Search:
 
         title = recording_data['title']
         
-        artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
-        mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
+	
+        artist = []
+        mb_artist_ids = []
+        for artist_ in recording_data['artist-credit']:
+                name_ = get_elem_from_obj(artist_, ['artist', 'name'])
+                if name_ is None:
+                        continue
+                artist.append(name_)
+                mb_artist_ids.append(get_elem_from_obj(artist_, ['artist', 'id']))
+	        # artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
+	        # mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
         
         def get_additional_artist_info(mb_id_):
             r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
