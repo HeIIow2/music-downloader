@@ -3,7 +3,7 @@ import os.path
 import pandas as pd
 import mutagen
 from mutagen.easyid3 import EasyID3
-import mutagen.mp3
+from pydub import AudioSegment
 import json
 import logging
 
@@ -77,6 +77,38 @@ dict_keys(
         ])
 """
 
+ID3_TAGS = {
+    "TALB": "album",
+    "TBPM": "bpm",
+    "TCMP": "compilation",  # iTunes extension
+    "TCOM": "composer",
+    "TCOP": "copyright",
+    "TENC": "encodedby",
+    "TEXT": "lyricist",
+    "TLEN": "length",
+    "TMED": "media",
+    "TMOO": "mood",
+    "TIT1": "grouping",
+    "TIT2": "title",
+    "TIT3": "version",
+    "TPE1": "artist",
+    "TPE2": "albumartist",
+    "TPE3": "conductor",
+    "TPE4": "arranger",
+    "TPOS": "discnumber",
+    "TPUB": "organization",
+    "TRCK": "tracknumber",
+    "TOLY": "author",
+    "TSO2": "albumartistsort",  # iTunes extension
+    "TSOA": "albumsort",
+    "TSOC": "composersort",  # iTunes extension
+    "TSOP": "artistsort",
+    "TSOT": "titlesort",
+    "TSRC": "isrc",
+    "TSST": "discsubtitle",
+    "TLAN": "language",
+}
+
 class Download:
     def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp"):
         self.session = session
@@ -123,11 +155,9 @@ class Download:
         logging.info("finished")
 
     def write_metadata(self, row, filePath):
-        try:
-            audiofile = EasyID3(filePath)
-        except mutagen.id3.ID3NoHeaderError:
-            audiofile = mutagen.mp3.EasyMP3(filePath)
-            audiofile.add_tags()
+        AudioSegment.from_file(filePath).export(filePath, format="mp3")
+        
+        audiofile = EasyID3(filePath)
         
         valid_keys = list(EasyID3.valid_keys.keys())
 
@@ -140,6 +170,7 @@ class Download:
 
         print("saving")
         audiofile.save(filePath, v1=2)
+
 
 
 if __name__ == "__main__":
