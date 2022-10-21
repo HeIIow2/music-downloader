@@ -33,3 +33,20 @@ def get_download_link(default_url):
     logging.info(f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3")
 
     return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
+
+def download_from_musify(path, file, url):
+    logging.info(f"downloading: '{url}'")
+    r = session.get(url)
+    if r.status_code != 200:
+        if r.status_code == 404:
+            logging.warning(f"{url} was not found")
+            return -1
+        raise ConnectionError(f"\"{url}\" returned {r.status_code}: {r.text}")
+    with open(file, "wb") as mp3_file:
+        mp3_file.write(r.content)
+    logging.info("finished")
+
+def download(row):
+    url = row['url']
+    file_ = row['file']
+    return download_from_musify(file_, url)

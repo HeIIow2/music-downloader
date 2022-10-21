@@ -129,7 +129,7 @@ class Download:
 
             src = row['src']
             if src == 'musify':
-                self.download_from_musify(row['path'], row['file'], row['url'])
+                musify.download(row)
             elif src == 'youtube':
                 youtube_music.download(row)
             self.write_metadata(row, row['file'])
@@ -141,18 +141,6 @@ class Download:
             return True
         os.makedirs(path, exist_ok=True)
         return False
-
-    def download_from_musify(self, path, file, url):
-        logging.info(f"downloading: '{url}'")
-        r = self.session.get(url)
-        if r.status_code != 200:
-            if r.status_code == 404:
-                logging.warning(f"{url} was not found")
-                return -1
-            raise ConnectionError(f"\"{url}\" returned {r.status_code}: {r.text}")
-        with open(file, "wb") as mp3_file:
-            mp3_file.write(r.content)
-        logging.info("finished")
 
     def write_metadata(self, row, filePath):
         AudioSegment.from_file(filePath).export(filePath, format="mp3")
