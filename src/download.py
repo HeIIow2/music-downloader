@@ -90,7 +90,8 @@ class Download:
         self.dataframe = pd.read_csv(os.path.join(self.temp, self.file), index_col=0)
 
         for idx, row in self.dataframe.iterrows():
-            row['artist'] = json.loads(row['artist'].replace("'", '"'))
+            row['artist'] = tuple(json.loads(row['artist'].replace("'", '"')))
+        
             if self.path_stuff(row['path'], row['file']):
                 self.write_metadata(row, row['file'])
                 continue
@@ -118,7 +119,7 @@ class Download:
         valid_keys = list(EasyID3.valid_keys.keys())
 
         for key in list(row.keys()):
-            if key in valid_keys and row[key] is not None and not pd.isna(row[key]):
+            if key in valid_keys and type(row[key]) == list and not pd.isna(row[key]):
                 # print(key)
                 if type(row[key]) == int or type(row[key]) == float:
                     row[key] = str(row[key])
