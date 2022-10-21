@@ -41,7 +41,7 @@ def search_for_metadata(query: str):
             continue
 
 
-def cli():
+def cli(start_at: int = 0):
     session = requests.Session()
     if TOR:
         session.proxies = {
@@ -49,21 +49,26 @@ def cli():
             'https': 'socks5h://127.0.0.1:9150'
         }
 
-    genre = input("genre to download to: ")
+    if start_at <= 2:
+        genre = input("genre to download to: ")
 
-    search = search_for_metadata(query=input("initial query: "))
-    logging.info("Starting Downloading of metadata")
-    search.download(file=STEP_ONE_CACHE)
+    if start_at <= 0:
+        search = search_for_metadata(query=input("initial query: "))
+        logging.info("Starting Downloading of metadata")
+        search.download(file=STEP_ONE_CACHE)
 
-    logging.info("Fetching Download Links")
-    download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
+    if start_at <= 1:
+        logging.info("Fetching Download Links")
+        download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
 
-    logging.info("creating Paths")
-    url_to_path.UrlPath(genre=genre)
+    if start_at <= 2:
+        logging.info("creating Paths")
+        url_to_path.UrlPath(genre=genre)
 
-    logging.info("starting to download the mp3's")
-    download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
+    if start_at <= 3:
+        logging.info("starting to download the mp3's")
+        download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
 
 
 if __name__ == "__main__":
-    cli()
+    cli(start_at=3)

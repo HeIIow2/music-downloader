@@ -76,9 +76,9 @@ dict_keys(
         ])
 """
 
-
 class Download:
-    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp"):
+    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp",
+                 base_path: str = ""):
         self.session = session
         self.session.headers = {
             "Connection": "keep-alive",
@@ -90,8 +90,10 @@ class Download:
         self.dataframe = pd.read_csv(os.path.join(self.temp, self.file), index_col=0)
 
         for idx, row in self.dataframe.iterrows():
-            row['artist'] = tuple(json.loads(row['artist'].replace("'", '"')))
-        
+            row['artist'] = json.loads(row['artist'].replace("'", '"'))
+            row['file'] = os.path.join(base_path, row['file'])
+            row['path'] = os.path.join(base_path, row['path'])
+
             if self.path_stuff(row['path'], row['file']):
                 self.write_metadata(row, row['file'])
                 continue
@@ -113,13 +115,13 @@ class Download:
 
     def write_metadata(self, row, filePath):
         AudioSegment.from_file(filePath).export(filePath, format="mp3")
-        
+
         audiofile = EasyID3(filePath)
-        
+
         valid_keys = list(EasyID3.valid_keys.keys())
 
         for key in list(row.keys()):
-            if key in valid_keys and type(row[key]) == list and not pd.isna(row[key]):
+            if type(row[key]) == list or key in valid_keys and not pd.isna(row[key]):
                 # print(key)
                 if type(row[key]) == int or type(row[key]) == float:
                     row[key] = str(row[key])
@@ -129,8 +131,7 @@ class Download:
         audiofile.save(filePath, v1=2)
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     s = requests.Session()
-    Download(session=s)
+    Download(session=s, base_path=os.path.expanduser('~/Music'))
