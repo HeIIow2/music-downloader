@@ -2,14 +2,17 @@ import metadata
 import download_links
 import url_to_path
 import download
+
 import logging
 import requests
+import os
 
 TEMP = "temp"
 STEP_ONE_CACHE = ".cache1.csv"
 STEP_TWO_CACHE = ".cache2.csv"
 STEP_THREE_CACHE = ".cache3.csv"
 
+MUSIC_DIR = os.path.expanduser('~/Music')
 TOR = False
 
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +62,7 @@ def cli():
     url_to_path.UrlPath(genre=genre)
 
     logging.info("starting to download the mp3's")
-    download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP)
+    download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
 
 
 if __name__ == "__main__":
