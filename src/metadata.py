@@ -1,11 +1,17 @@
 import os.path
+import logging
 
 import musicbrainzngs
 import pandas as pd
 
+mb_log = logging.getLogger("musicbrainzngs")
+mb_log.setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 KNOWN_KIND_OF_OPTIONS = ["artist", "release", "track"]
+
+def output(msg: str):
+    print(msg)
 
 def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x):
     current_object = current_object
@@ -61,6 +67,7 @@ class Search:
         """
         metadata_list = []
         result = musicbrainzngs.get_artist_by_id(mb_id, includes=["releases"])
+
         for i, release in enumerate(result["artist"]["release-list"]):
             metadata_list.extend(self.download_release(release["id"], i))
 
