@@ -3,7 +3,7 @@ import os.path
 import pandas as pd
 from mutagen.easyid3 import EasyID3
 import json
-
+import os
 import logging
 
 """
@@ -73,13 +73,15 @@ dict_keys(
         ])
 """
 
+
 class Download:
-    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp"):
+    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp", base_path: str = os.path.expanduser('~/Music')):
         self.session = session
         self.session.headers = {
             "Connection": "keep-alive",
             "Referer": "https://musify.club/"
         }
+        self.base_path = base_path
         self.temp = temp
         self.file = file
 
@@ -87,6 +89,8 @@ class Download:
 
         for idx, row in self.dataframe.iterrows():
             row['artist'] = json.loads(row['artist'].replace("'", '"'))
+            row['path'] = os.path.join(self.base_path, row['path'])
+            row['file'] = os.path.join(self.base_path, row['file'])
             self.download(row['path'], row['file'], row['url'])
             self.write_metadata(row, row['file'])
 
@@ -109,7 +113,7 @@ class Download:
 
     def write_metadata(self, row, file):
         audiofile = EasyID3(file)
-        
+
         valid_keys = list(EasyID3.valid_keys.keys())
 
         for key in list(row.keys()):
