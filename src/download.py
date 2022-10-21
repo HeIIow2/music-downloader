@@ -1,7 +1,6 @@
 import requests
 import os.path
 import pandas as pd
-import mutagen
 from mutagen.easyid3 import EasyID3
 from pydub import AudioSegment
 import json
@@ -77,37 +76,6 @@ dict_keys(
         ])
 """
 
-ID3_TAGS = {
-    "TALB": "album",
-    "TBPM": "bpm",
-    "TCMP": "compilation",  # iTunes extension
-    "TCOM": "composer",
-    "TCOP": "copyright",
-    "TENC": "encodedby",
-    "TEXT": "lyricist",
-    "TLEN": "length",
-    "TMED": "media",
-    "TMOO": "mood",
-    "TIT1": "grouping",
-    "TIT2": "title",
-    "TIT3": "version",
-    "TPE1": "artist",
-    "TPE2": "albumartist",
-    "TPE3": "conductor",
-    "TPE4": "arranger",
-    "TPOS": "discnumber",
-    "TPUB": "organization",
-    "TRCK": "tracknumber",
-    "TOLY": "author",
-    "TSO2": "albumartistsort",  # iTunes extension
-    "TSOA": "albumsort",
-    "TSOC": "composersort",  # iTunes extension
-    "TSOP": "artistsort",
-    "TSOT": "titlesort",
-    "TSRC": "isrc",
-    "TSST": "discsubtitle",
-    "TLAN": "language",
-}
 
 class Download:
     def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp"):
@@ -164,10 +132,4 @@ class Download:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     s = requests.Session()
-    if False:
-        proxies = {
-            'http': 'socks5h://127.0.0.1:9150',
-            'https': 'socks5h://127.0.0.1:9150'
-        }
-        s.proxies = proxies
     Download(session=s)
