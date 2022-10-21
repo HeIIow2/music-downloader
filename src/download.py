@@ -2,9 +2,12 @@ import requests
 import os.path
 import pandas as pd
 from mutagen.easyid3 import EasyID3
+from pydub import AudioSegment
 import json
-import os
 import logging
+
+import musify
+import youtube_music
 
 """
 https://en.wikipedia.org/wiki/ID3
@@ -75,13 +78,12 @@ dict_keys(
 
 
 class Download:
-    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp", base_path: str = os.path.expanduser('~/Music')):
+    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp"):
         self.session = session
         self.session.headers = {
             "Connection": "keep-alive",
             "Referer": "https://musify.club/"
         }
-        self.base_path = base_path
         self.temp = temp
         self.file = file
 
@@ -89,59 +91,45 @@ class Download:
 
         for idx, row in self.dataframe.iterrows():
             row['artist'] = json.loads(row['artist'].replace("'", '"'))
-            row['path'] = os.path.join(self.base_path, row['path'])
-            row['file'] = os.path.join(self.base_path, row['file'])
-            self.download(row['path'], row['file'], row['url'])
+            if self.path_stuff(row['path'], row['file']):
+                self.write_metadata(row, row['file'])
+                continue
+
+            src = row['src']
+            if src == 'musify':
+                musify.download(row)
+            elif src == 'youtube':
+                youtube_music.download(row)
             self.write_metadata(row, row['file'])
 
-    def download(self, path, file, url):
-        if os.path.exists(file):
-            logging.info(f"'{file}' does already exist, thus not downloading.")
-            return
+    def path_stuff(self, path: str, file_: str):
+        # returns true if it shouldn't be downloaded
+        if os.path.exists(file_):
+            logging.info(f"'{file_}' does already exist, thus not downloading.")
+            return True
         os.makedirs(path, exist_ok=True)
+        return False
 
-        logging.info(f"downloading: '{url}'")
-        r = self.session.get(url)
-        if r.status_code != 200:
-            if r.status_code == 404:
-                logging.warning(f"{url} was not found")
-                return -1
-            raise ConnectionError(f"\"{url}\" returned {r.status_code}: {r.text}")
-        with open(file, "wb") as mp3_file:
-            mp3_file.write(r.content)
-        logging.info("finished")
-
-    def write_metadata(self, row, file):
-        audiofile = EasyID3(file)
-
+    def write_metadata(self, row, filePath):
+        AudioSegment.from_file(filePath).export(filePath, format="mp3")
+        
+        audiofile = EasyID3(filePath)
+        
         valid_keys = list(EasyID3.valid_keys.keys())
 
         for key in list(row.keys()):
             if key in valid_keys and row[key] is not None and not pd.isna(row[key]):
+                # print(key)
                 if type(row[key]) == int or type(row[key]) == float:
                     row[key] = str(row[key])
                 audiofile[key] = row[key]
 
-        """
-        audiofile["artist"] = row['artist']
-        audiofile["albumartist"] = row['album_artist']
-        audiofile["date"] = str(row['year'])
-        audiofile["genre"] = row['genre']
-        audiofile["title"] = row['title']
-        audiofile["album"] = row['album']
-        audiofile["tracknumber"] = str(row['track'])
-        """
+        print("saving")
+        audiofile.save(filePath, v1=2)
 
-        audiofile.save()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     s = requests.Session()
-    if False:
-        proxies = {
-            'http': 'socks5h://127.0.0.1:9150',
-            'https': 'socks5h://127.0.0.1:9150'
-        }
-        s.proxies = proxies
     Download(session=s)
