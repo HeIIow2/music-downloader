@@ -7,6 +7,7 @@ session.headers = {
     "Referer": "https://musify.club/"
 }
 
+
 def get_musify_url(row):
     title = row['title']
     artists = row['artist']
@@ -22,6 +23,7 @@ def get_musify_url(row):
 
     return None
 
+
 def get_download_link(default_url):
     # https://musify.club/track/dl/18567672/rauw-alejandro-te-felicito-feat-shakira.mp3
     # /track/sundenklang-wenn-mein-herz-schreit-3883217'
@@ -34,7 +36,8 @@ def get_download_link(default_url):
 
     return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
 
-def download_from_musify(path, file, url):
+
+def download_from_musify(file, url):
     logging.info(f"downloading: '{url}'")
     r = session.get(url)
     if r.status_code != 200:
@@ -45,6 +48,7 @@ def download_from_musify(path, file, url):
     with open(file, "wb") as mp3_file:
         mp3_file.write(r.content)
     logging.info("finished")
+
 
 def download(row):
     url = row['url']
