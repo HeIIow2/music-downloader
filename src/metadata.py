@@ -96,7 +96,6 @@ class Search:
             return album_sort
 
         result = musicbrainzngs.get_release_by_id(mb_id, includes=["artists", "recordings", 'release-groups'])
-        print(result['release'])
 
         if album_sort is None:
             album_sort = get_additional_artist_info(
@@ -189,8 +188,6 @@ class Search:
                 continue
             artist.append(name_)
             mb_artist_ids.append(get_elem_from_obj(artist_, ['artist', 'id']))
-            # artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
-            # mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
 
         def get_additional_artist_info(mb_id_):
             r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])

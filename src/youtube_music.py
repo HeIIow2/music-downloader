@@ -15,7 +15,6 @@ def get_youtube_from_isrc(isrc: str):
     # https://stackoverflow.com/questions/63388364/searching-youtube-videos-using-youtube-dl
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
         video = ydl.extract_info(f"ytsearch:{isrc}", download=False)['entries'][0]
-    print(type(video))
     if YOUTUBE_URL_KEY not in video:
         return None
     return {
