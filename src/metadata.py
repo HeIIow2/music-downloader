@@ -10,16 +10,18 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 KNOWN_KIND_OF_OPTIONS = ["artist", "release", "track"]
 
+
 def output(msg: str):
     print(msg)
 
-def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x):
+
+def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x, return_if_none=None):
     current_object = current_object
     for key in keys:
         if key in current_object or (type(key) == int and key < len(current_object)):
             current_object = current_object[key]
         else:
-            return None
+            return return_if_none
     return after_process(current_object)
 
 
@@ -80,6 +82,7 @@ class Search:
         label-rels, place-rels, event-rels, recording-rels, release-rels, release-group-rels, series-rels, url-rels,
         work-rels, instrument-rels
         """
+
         def get_additional_artist_info(mb_id_):
             r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
 
@@ -91,10 +94,13 @@ class Search:
                     break
 
             return album_sort
+
         result = musicbrainzngs.get_release_by_id(mb_id, includes=["artists", "recordings", 'release-groups'])
+        print(result['release'])
 
         if album_sort is None:
-            album_sort = get_additional_artist_info(get_elem_from_obj(result, ['release', 'artist-credit', 0, 'artist', 'id']))
+            album_sort = get_additional_artist_info(
+                get_elem_from_obj(result, ['release', 'artist-credit', 0, 'artist', 'id']))
         release_type = get_elem_from_obj(result, ['release', 'release-group', 'type'])
 
         tracklist_metadata = []
@@ -107,11 +113,15 @@ class Search:
             track_id = track["recording"]["id"]
             this_track = track["position"]
 
-            tracklist_metadata.extend(self.download_track(track_id, is_various_artist=is_various_artist, track=this_track, total_tracks=track_count, album_sort=album_sort, album_type=release_type))
-        
+            tracklist_metadata.extend(
+                self.download_track(track_id, is_various_artist=is_various_artist, track=this_track,
+                                    total_tracks=track_count, album_sort=album_sort, album_type=release_type,
+                                    release_data=result['release']))
+
         return tracklist_metadata
 
-    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None, album_sort: int = None, album_type: str = None):
+    def download_track(self, mb_id, is_various_artist: bool = None, track: int = None, total_tracks: int = None,
+                       album_sort: int = None, album_type: str = None, release_data: dict = None):
         """
         TODO
         bpm     its kind of possible via the AcousticBrainz API. however, the data may not be of very good
@@ -159,27 +169,29 @@ class Search:
         recording-rels, release-rels, release-group-rels, series-rels, url-rels, work-rels, instrument-rels 
         """
 
-        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs", "work-level-rels"])
+        result = musicbrainzngs.get_recording_by_id(mb_id, includes=["artists", "releases", "recording-rels", "isrcs",
+                                                                     "work-level-rels"])
         recording_data = result['recording']
         isrc = get_elem_from_obj(recording_data, ['isrc-list', 0])
 
-        release_data = recording_data['release-list'][0]
+        if release_data is None:
+            # choosing the last release, because it is the least likely one to be a single
+            release_data = recording_data['release-list'][-1]
         mb_release_id = release_data['id']
 
         title = recording_data['title']
-        
-	
+
         artist = []
         mb_artist_ids = []
         for artist_ in recording_data['artist-credit']:
-                name_ = get_elem_from_obj(artist_, ['artist', 'name'])
-                if name_ is None:
-                        continue
-                artist.append(name_)
-                mb_artist_ids.append(get_elem_from_obj(artist_, ['artist', 'id']))
-	        # artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
-	        # mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
-        
+            name_ = get_elem_from_obj(artist_, ['artist', 'name'])
+            if name_ is None:
+                continue
+            artist.append(name_)
+            mb_artist_ids.append(get_elem_from_obj(artist_, ['artist', 'id']))
+            # artist = [get_elem_from_obj(artist_, ['artist', 'name']) for artist_ in recording_data['artist-credit']]
+            # mb_artist_ids = [get_elem_from_obj(artist_, ['artist', 'id']) for artist_ in recording_data['artist-credit']]
+
         def get_additional_artist_info(mb_id_):
             r = musicbrainzngs.get_artist_by_id(mb_id_, includes=["releases"])
 
@@ -193,7 +205,8 @@ class Search:
             return album_sort
 
         def get_additional_release_info(mb_id_):
-            r = musicbrainzngs.get_release_by_id(mb_id_, includes=["artists", "recordings", "recording-rels", 'release-groups'])
+            r = musicbrainzngs.get_release_by_id(mb_id_,
+                                                 includes=["artists", "recordings", "recording-rels", 'release-groups'])
             is_various_artist_ = len(r['release']['artist-credit']) > 1
             tracklist = r['release']['medium-list'][0]['track-list']
             track_count_ = len(tracklist)
@@ -412,7 +425,8 @@ def interactive_demo():
     search = Search(query=input("initial query: "))
     print(search.options)
     while True:
-        input_ = input("d to download, q to quit, .. for previous options, . for current options, int for this element: ").lower()
+        input_ = input(
+            "d to download, q to quit, .. for previous options, . for current options, int for this element: ").lower()
         input_.strip()
         if input_ == "q":
             break
@@ -435,9 +449,12 @@ if __name__ == "__main__":
     # automated_demo()
     search = Search(query="psychonaut 4")
     # search.download_release("27f00fb8-983c-4d5c-950f-51418aac55dc")
+    search.download_release("1aeb676f-e556-4b17-b45e-64ab69ef0375")
     # for track_ in search.download_artist("c0c720b5-012f-4204-a472-981403f37b12"):
     #     print(track_)
-    res = search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    # res = search.download_track("83a30323-aee1-401a-b767-b3c1bdd026c0")
+    # res = search.download_track("5e1ee2c5-502c-44d3-b1bc-22803441d8c6")
+    res = search.download_track("86b43bec-eea6-40ae-8624-c1e404204ba1")
     # res = search.download_track("5cc28584-10c6-40e2-b6d4-6891e7e7c575")
 
     for key in res[0]:

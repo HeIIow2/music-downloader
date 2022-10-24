@@ -1,3 +1,4 @@
+import mutagen.id3
 import requests
 import os.path
 import pandas as pd
@@ -76,6 +77,7 @@ dict_keys(
         ])
 """
 
+
 class Download:
     def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp",
                  base_path: str = ""):
@@ -113,10 +115,13 @@ class Download:
         os.makedirs(path, exist_ok=True)
         return False
 
-    def write_metadata(self, row, filePath):
-        AudioSegment.from_file(filePath).export(filePath, format="mp3")
-
-        audiofile = EasyID3(filePath)
+    def write_metadata(self, row, file_path):
+        # only convert the file to the proper format if mutagen doesn't work with it due to time
+        try:
+            audiofile = EasyID3(file_path)
+        except mutagen.id3.ID3NoHeaderError:
+            AudioSegment.from_file(file_path).export(file_path, format="mp3")
+            audiofile = EasyID3(file_path)
 
         valid_keys = list(EasyID3.valid_keys.keys())
 
@@ -128,7 +133,7 @@ class Download:
                 audiofile[key] = row[key]
 
         print("saving")
-        audiofile.save(filePath, v1=2)
+        audiofile.save(file_path, v1=2)
 
 
 if __name__ == "__main__":
