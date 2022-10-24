@@ -2,10 +2,13 @@ import youtube_dl
 import pandas as pd
 import jellyfish
 import logging
+import time
 
-
-YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
+YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 YOUTUBE_URL_KEY = 'webpage_url'
+WAIT_BETWEEN_BLOCK = 10
+MAX_TRIES = 3
+
 
 def get_youtube_from_isrc(isrc: str):
     # https://stackoverflow.com/questions/63388364/searching-youtube-videos-using-youtube-dl
@@ -19,6 +22,7 @@ def get_youtube_from_isrc(isrc: str):
         'title': video['title']
     }
 
+
 def get_youtube_url(row):
     if pd.isna(row['isrc']):
         return None
@@ -31,11 +35,13 @@ def get_youtube_url(row):
 
     print(real_title, video_title, phonetic_distance)
     if phonetic_distance > 1:
-        logging.warning(f"dont downloading {result['url']} cuz the phonetic distance ({phonetic_distance}) between {real_title} and {video_title} is to high.")
+        logging.warning(
+            f"dont downloading {result['url']} cuz the phonetic distance ({phonetic_distance}) between {real_title} and {video_title} is to high.")
         return None
     return result['url']
 
-def download(row):
+
+def download(row, trie: int = 0):
     url = row['url']
     file_ = row['file']
     options = {
@@ -49,11 +55,20 @@ def download(row):
         'outtmpl': file_
     }
 
-    with youtube_dl.YoutubeDL(options) as ydl:
-        ydl.download([url])
+    try:
+        with youtube_dl.YoutubeDL(options) as ydl:
+            ydl.download([url])
+    except youtube_dl.utils.DownloadError:
+        logging.warning(f"youtube blocked downloading. ({trie}-{MAX_TRIES})")
+        if trie >= MAX_TRIES:
+            logging.warning("too many tries, returning")
+        logging.warning(f"retrying in {WAIT_BETWEEN_BLOCK} seconds again")
+        time.sleep(WAIT_BETWEEN_BLOCK)
+        return download(row, trie=trie+1)
+
 
 if __name__ == "__main__":
-    # example isrc that exists on youtube music
+    # example isrc that exists on YouTube music
     ISRC = "DEUM71500715"
     result = get_youtube_from_isrc(ISRC)
     print(result)

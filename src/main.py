@@ -71,4 +71,4 @@ def cli(start_at: int = 0):
 
 
 if __name__ == "__main__":
-    cli(start_at=0)
+    cli(start_at=3)
