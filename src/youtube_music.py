@@ -1,8 +1,9 @@
 import youtube_dl
 import pandas as pd
-import jellyfish
 import logging
 import time
+
+import phonetic_compares
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 YOUTUBE_URL_KEY = 'webpage_url'
@@ -31,12 +32,11 @@ def get_youtube_url(row):
     result = get_youtube_from_isrc(row['isrc'])
     video_title = result['title'].lower()
 
-    phonetic_distance = jellyfish.levenshtein_distance(real_title, video_title)
+    match, distance = phonetic_compares.match_titles(video_title, real_title)
 
-    print(real_title, video_title, phonetic_distance)
-    if phonetic_distance > 1:
+    if match:
         logging.warning(
-            f"dont downloading {result['url']} cuz the phonetic distance ({phonetic_distance}) between {real_title} and {video_title} is to high.")
+            f"dont downloading {result['url']} cuz the phonetic distance ({distance}) between {real_title} and {video_title} is to high.")
         return None
     return result['url']
 
