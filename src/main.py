@@ -7,7 +7,6 @@ import logging
 import requests
 import os
 
-# "/home/lars/Projekts/big projects/music-downloader/venv/bin/python3.10" "/home/lars/Projekts/big projects/music-downloader/src/main.py"
 
 TEMP = "temp"
 STEP_ONE_CACHE = ".cache1.csv"

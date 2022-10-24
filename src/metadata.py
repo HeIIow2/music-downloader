@@ -49,6 +49,7 @@ class Search:
 
         metadata_list = []
         if kind == "artist":
+
             metadata_list = self.download_artist(mb_id)
         elif kind == "release":
             metadata_list = self.download_release(mb_id)
@@ -72,7 +73,6 @@ class Search:
 
         for i, release in enumerate(result["artist"]["release-list"]):
             metadata_list.extend(self.download_release(release["id"], i))
-
         return metadata_list
 
     def download_release(self, mb_id, album_sort: int = None):
