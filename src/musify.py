@@ -1,5 +1,8 @@
 import logging
 import requests
+import bs4
+
+import phonetic_compares
 
 session = requests.Session()
 session.headers = {
@@ -54,3 +57,61 @@ def download(row):
     url = row['url']
     file_ = row['file']
     return download_from_musify(file_, url)
+
+
+def search_for_track(row):
+    track = row.title
+    artist = row.artist
+
+    url = f"https://musify.club/search?searchText={track}"
+    r = session.get(url)
+    if r.status_code != 200:
+        raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
+    soup = bs4.BeautifulSoup(r.content, features="html.parser")
+    tracklist_container_soup = soup.find_all("div", {"class": "playlist"})
+    if len(tracklist_container_soup) != 1:
+        raise Exception("Connfusion Error. HTML Layout of https://musify.club changed.")
+    tracklist_container_soup = tracklist_container_soup[0]
+
+    tracklist_soup = tracklist_container_soup.find_all("div", {"class": "playlist__details"})
+
+    def parse_track_soup(_track_soup):
+        anchor_soups = _track_soup.find_all("a")
+        band_name = anchor_soups[0].text.strip()
+        title = anchor_soups[1].text.strip()
+        url_ = anchor_soups[1]['href']
+        return band_name, title, url_
+
+    for track_soup in tracklist_soup:
+        band_option, title_option, track_url = parse_track_soup(track_soup)
+
+        title_match, title_distance = phonetic_compares.match_titles(track, title_option)
+        band_match, band_distance = phonetic_compares.match_artists(artist, band_option)
+
+        print(track, title_option, title_match, title_distance)
+        print(artist, band_option, band_match, band_distance)
+
+        if not title_match and not band_match:
+            return get_download_link(track_url)
+
+    return None
+
+
+def get_musify_url_slow(row):
+    print(row)
+    result = search_for_track(row)
+    if result is not None:
+        return result
+
+
+if __name__ == "__main__":
+    import pandas as pd
+    import json
+
+    df = pd.read_csv("../temp/.cache1.csv")
+    print(df)
+
+    for idx, row in df.iterrows():
+        row['artist'] = json.loads(row['artist'].replace("'", '"'))
+        print("-" * 200)
+        print(get_musify_url_slow(row))
