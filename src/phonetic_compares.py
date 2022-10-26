@@ -5,7 +5,7 @@ TITLE_THRESHOLD_LEVENSHTEIN = 2
 
 def match_titles(title_1: str, title_2: str) -> (bool, int):
     distance = jellyfish.levenshtein_distance(title_1, title_2)
-    return distance > 1, distance
+    return distance > TITLE_THRESHOLD_LEVENSHTEIN, distance
 
 
 def match_artists(artist_1, artist_2: str) -> (bool, int):

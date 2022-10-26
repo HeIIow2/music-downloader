@@ -12,10 +12,10 @@ session.headers = {
 
 
 def get_musify_url(row):
-    title = row['title']
-    artists = row['artist']
+    title = row.title
+    artists = row.artist
 
-    url = f"https://musify.club/search/suggestions?term={title}"
+    url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
 
     r = session.get(url=url)
     if r.status_code == 200:
@@ -59,15 +59,19 @@ def download(row):
     return download_from_musify(file_, url)
 
 
+def get_soup_of_search(query: str):
+    url = f"https://musify.club/search?searchText={query}"
+    print(url)
+    r = session.get(url)
+    if r.status_code != 200:
+        raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
+    return bs4.BeautifulSoup(r.content, features="html.parser")
+
 def search_for_track(row):
     track = row.title
     artist = row.artist
 
-    url = f"https://musify.club/search?searchText={track}"
-    r = session.get(url)
-    if r.status_code != 200:
-        raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
-    soup = bs4.BeautifulSoup(r.content, features="html.parser")
+    soup = get_soup_of_search(f"{artist[0]} - {track}")
     tracklist_container_soup = soup.find_all("div", {"class": "playlist"})
     if len(tracklist_container_soup) != 1:
         raise Exception("Connfusion Error. HTML Layout of https://musify.club changed.")
@@ -98,7 +102,6 @@ def search_for_track(row):
 
 
 def get_musify_url_slow(row):
-    print(row)
     result = search_for_track(row)
     if result is not None:
         return result
@@ -109,9 +112,11 @@ if __name__ == "__main__":
     import json
 
     df = pd.read_csv("../temp/.cache1.csv")
-    print(df)
 
     for idx, row in df.iterrows():
         row['artist'] = json.loads(row['artist'].replace("'", '"'))
         print("-" * 200)
+        print("fast")
+        print(get_musify_url(row))
+        print("slow")
         print(get_musify_url_slow(row))
