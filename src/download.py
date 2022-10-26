@@ -50,11 +50,13 @@ def path_stuff(path: str, file_: str):
 
 
 class Download:
-    def __init__(self, proxies: dict = None, file: str = ".cache3.csv", temp: str = "temp",
+    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp",
                  base_path: str = ""):
-        if proxies is not None:
-            musify.set_proxy(proxies)
-
+        self.session = session
+        self.session.headers = {
+            "Connection": "keep-alive",
+            "Referer": "https://musify.club/"
+        }
         self.temp = temp
         self.file = file
 
