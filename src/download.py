@@ -32,7 +32,6 @@ def write_metadata(row, file_path):
 
     for key in list(row.keys()):
         if type(row[key]) == list or key in valid_keys and not pd.isna(row[key]):
-            # print(key)
             if type(row[key]) == int or type(row[key]) == float:
                 row[key] = str(row[key])
             audiofile[key] = row[key]
@@ -72,11 +71,17 @@ class Download:
                 write_metadata(row, row['file'])
                 continue
 
+            download_success = None
             src = row['src']
             if src == 'musify':
-                musify.download(row)
+                download_success = musify.download(row)
             elif src == 'youtube':
-                youtube_music.download(row)
+                download_success = youtube_music.download(row)
+
+            if download_success == -1:
+                logging.warning(f"couldn't download {row.url} from {row.src}")
+                continue
+
             write_metadata(row, row['file'])
 
 

@@ -35,8 +35,6 @@ def get_download_link(default_url):
     musify_id = file_.split("-")[-1]
     musify_name = "-".join(file_.split("-")[:-1])
 
-    logging.info(f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3")
-
     return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
 
 
@@ -45,7 +43,10 @@ def download_from_musify(file, url):
     r = session.get(url)
     if r.status_code != 200:
         if r.status_code == 404:
-            logging.warning(f"{url} was not found")
+            logging.warning(f"{r.url} was not found")
+            return -1
+        if r.status_code == 503:
+            logging.warning(f"{r.url} raised an internal server error")
             return -1
         raise ConnectionError(f"\"{url}\" returned {r.status_code}: {r.text}")
     with open(file, "wb") as mp3_file:
@@ -61,11 +62,12 @@ def download(row):
 
 def get_soup_of_search(query: str):
     url = f"https://musify.club/search?searchText={query}"
-    print(url)
+    logging.debug(f"Trying to get soup from {url}")
     r = session.get(url)
     if r.status_code != 200:
         raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
     return bs4.BeautifulSoup(r.content, features="html.parser")
+
 
 def search_for_track(row):
     track = row.title

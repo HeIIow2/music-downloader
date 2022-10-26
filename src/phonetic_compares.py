@@ -13,7 +13,6 @@ def match_artists(artist_1, artist_2: str) -> (bool, int):
         distances = []
 
         for artist_1_ in artist_1:
-            print(artist_1_)
             match, distance = match_titles(artist_1_, artist_2)
             if not match:
                 return match, distance
