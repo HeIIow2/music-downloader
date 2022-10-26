@@ -39,7 +39,10 @@ def get_download_link(default_url):
 
     return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> e923dcdaf208a95492af3afaa9e49fbbcfb9520c
 def download_from_musify(file, url):
     logging.info(f"downloading: '{url}'")
     r = session.get(url)
