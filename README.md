@@ -56,9 +56,36 @@ Those Tags are for the musicplayer to not sort for Example the albums of a band 
 This is the **international standart release code**. With this a track can be identified 100% percicely all of the time, if it is known and the website has a search api for that. Obviously this will get important later.
 
 
-
 ## Download
 
+Now that the metadata is downloaded and cached, download sources need to be sound, because one can't listen to metadata. Granted it would be amazing if that would be possible. 
+
 ### Musify
+
+The quickest source to get download links from is to my knowledge [musify](https://musify.club/). Its a russian music downloading page, where many many songs are available to stream and to download. Due to me not wanting to stress the server to much, I abuse a handy feature nearly every page where you can search suff has. The autocomplete api for the search input. Those always are quite limited in the number of results it returns, but it is optimized to be quick. Thus with the http header `Connection` set to `keep-alive` the bottelneck defently is not at the speed of those requests.
+
+For musify the endpoint is following: [https://musify.club/search/suggestions?term={title}](https://musify.club/search/suggestions?term=LornaShore) If the http headers are set correctly, then searching for example for "Lorna Shore" yields following result:
+
+```json
+[
+    {
+        "id":"Lorna Shore",
+        "label":"Lorna Shore",
+        "value":"Lorna Shore",
+        "category":"Исполнители",
+        "image":"https://39s.musify.club/img/68/9561484/25159224.jpg",
+        "url":"/artist/lorna-shore-59611"       
+    },
+    {"id":"Immortal","label":"Lorna Shore - Immortal (2020)","value":"Immortal","category":"Релизы","image":"https://39s-a.musify.club/img/70/20335517/52174338.jpg","url":"/release/lorna-shore-immortal-2020-1241300"},
+    {"id":"Immortal","label":"Lorna Shore - Immortal","value":"Immortal","category":"Треки","image":"","url":"/track/lorna-shore-immortal-12475071"}
+]
+```
+
+This is a shortened example for the response the api gives. The results are very Limited, but it is also very efficient to parse. The steps I take are:
+
+- call the api with the querry being the track name
+- parse the json response to an object
+- look at how different the title and artist are on every element from the category `Треки`, translated roughly to track or release.
+- If they match get the download links and cache them.
 
 ### Youtube
