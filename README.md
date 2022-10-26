@@ -1,4 +1,4 @@
-# music-downloader
+# A Music-Downloader with CLI
 This programm will first get the metadata of various songs from metadata provider like musicbrainz, and then search for download links on pages like bandcamp. Then it will download the song and edit the metadata according.
 
 ## Metadata
@@ -55,6 +55,7 @@ Those Tags are for the musicplayer to not sort for Example the albums of a band 
 
 This is the **international standart release code**. With this a track can be identified 100% percicely all of the time, if it is known and the website has a search api for that. Obviously this will get important later.
 
+---
 
 ## Download
 
@@ -89,3 +90,16 @@ This is a shortened example for the response the api gives. The results are very
 - If they match get the download links and cache them.
 
 ### Youtube
+
+Herte the **isrc** plays a huge role. You probaply know it, when you search on youtube for a song, and the music videos has a long intro or the first result is a live version. I don't want those in my music collection, only if the tracks are like this in the official release. Well how can you get around that?
+
+Turns out if you search for the **isrc** on youtube the results contain the music, like it is on the official release and some japanese meme videos. The tracks I wan't just have the title of the released track, so one can just compare those two.
+
+For searching, as well as for downloading I use the programm `youtube-dl`, which also has a programming interface for python.
+
+There are two bottlenecks with this approach though:
+1. `youtube-dl` is just slow. Actually it has to be, to not get blocked by youtube.
+2. Ofthen musicbrainz just doesn't give the isrc for some songs.
+
+**TODO**
+- look at how the isrc id derived an try to generate it for the tracks without directly getting it from mb.

@@ -31,6 +31,12 @@ class Download:
                 self.add_url(youtube_url, 'youtube', dict(row))
                 continue
 
+            # check musify again, but with a diffrent methode that takes longer
+            musify_url = musify.get_musify_url_slow(row)
+            if musify_url is not None:
+                self.add_url(musify_url, 'musify', dict(row))
+                continue
+
             logging.warning(f"Didn't find any sources for {row['title']}")
 
         self.dump_urls(file)

@@ -4,3 +4,5 @@ mutagen~=1.46.0
 musicbrainzngs~=0.7.1
 jellyfish~=0.9.0
 pydub~=0.25.1
+youtube_dl
+beautifulsoup4~=4.11.1
