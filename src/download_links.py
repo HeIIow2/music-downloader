@@ -9,8 +9,11 @@ import youtube_music
 
 
 class Download:
-    def __init__(self, metadata_csv: str = ".cache1.csv", session: requests.Session = requests.Session(),
+    def __init__(self, metadata_csv: str = ".cache1.csv", proxies: dict = None,
                  file: str = ".cache2.csv", temp: str = "temp") -> None:
+        if proxies is not None:
+            musify.set_proxy(proxies)
+
         self.temp = temp
         self.metadata = pd.read_csv(os.path.join(self.temp, metadata_csv), index_col=0)
 
