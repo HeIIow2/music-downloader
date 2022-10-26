@@ -99,7 +99,10 @@ For searching, as well as for downloading I use the programm `youtube-dl`, which
 
 There are two bottlenecks with this approach though:
 1. `youtube-dl` is just slow. Actually it has to be, to not get blocked by youtube.
-2. Ofthen musicbrainz just doesn't give the isrc for some songs.
+2. Often musicbrainz just doesn't give the isrc for some songs.
 
 **TODO**
 - look at how the isrc id derived an try to generate it for the tracks without directly getting it from mb.
+
+**Progress**
+- There is a great site whith a huge isrc database [https://isrc.soundexchange.com/](https://isrc.soundexchange.com/).

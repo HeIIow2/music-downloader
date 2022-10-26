@@ -11,6 +11,10 @@ session.headers = {
 }
 
 
+def set_proxy(proxies):
+    session.proxies = proxies
+
+
 def get_musify_url(row):
     title = row.title
     artists = row.artist
@@ -75,6 +79,8 @@ def search_for_track(row):
 
     soup = get_soup_of_search(f"{artist[0]} - {track}")
     tracklist_container_soup = soup.find_all("div", {"class": "playlist"})
+    if len(tracklist_container_soup) == 0:
+        return None
     if len(tracklist_container_soup) != 1:
         raise Exception("Connfusion Error. HTML Layout of https://musify.club changed.")
     tracklist_container_soup = tracklist_container_soup[0]
@@ -113,12 +119,17 @@ if __name__ == "__main__":
     import pandas as pd
     import json
 
+    TOR = True
+    if TOR:
+        set_proxy({
+            'http': 'socks5h://127.0.0.1:9150',
+            'https': 'socks5h://127.0.0.1:9150'
+        })
+
     df = pd.read_csv("../temp/.cache1.csv")
 
     for idx, row in df.iterrows():
         row['artist'] = json.loads(row['artist'].replace("'", '"'))
         print("-" * 200)
-        print("fast")
-        print(get_musify_url(row))
         print("slow")
         print(get_musify_url_slow(row))

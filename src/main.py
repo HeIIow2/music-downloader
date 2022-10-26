@@ -1,10 +1,9 @@
-import metadata
+import metadata.metadata
 import download_links
 import url_to_path
 import download
 
 import logging
-import requests
 import os
 
 
@@ -15,7 +14,7 @@ STEP_THREE_CACHE = ".cache3.csv"
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
-TOR = False
+TOR = True
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,7 +29,7 @@ def get_existing_genre():
 
 
 def search_for_metadata(query: str):
-    search = metadata.Search(query=query, temp=TEMP)
+    search = metadata.metadata.Search(query=query, temp=TEMP)
 
     print(search.options)
     while True:
@@ -71,9 +70,9 @@ def get_genre():
 
 
 def cli(start_at: int = 0):
-    session = requests.Session()
+    proxies = None
     if TOR:
-        session.proxies = {
+        proxies = {
             'http': 'socks5h://127.0.0.1:9150',
             'https': 'socks5h://127.0.0.1:9150'
         }
@@ -89,7 +88,7 @@ def cli(start_at: int = 0):
 
     if start_at <= 1:
         logging.info("Fetching Download Links")
-        download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
+        download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, proxies=proxies)
 
     if start_at <= 2:
         logging.info("creating Paths")
@@ -97,7 +96,7 @@ def cli(start_at: int = 0):
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
-        download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
+        download.Download(proxies=proxies, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
 
 
 if __name__ == "__main__":
