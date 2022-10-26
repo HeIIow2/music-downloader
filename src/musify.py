@@ -92,8 +92,8 @@ def search_for_track(row):
         title_match, title_distance = phonetic_compares.match_titles(track, title_option)
         band_match, band_distance = phonetic_compares.match_artists(artist, band_option)
 
-        print(track, title_option, title_match, title_distance)
-        print(artist, band_option, band_match, band_distance)
+        logging.debug(f"{(track, title_option, title_match, title_distance)}")
+        logging.debug(f"{(artist, band_option, band_match, band_distance)}")
 
         if not title_match and not band_match:
             return get_download_link(track_url)
