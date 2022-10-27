@@ -2,8 +2,6 @@ import sqlite3
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 def get_temp_dir():
     import tempfile
 
@@ -90,5 +88,10 @@ def add_release(
     cursor.execute(query, values)
     connection.commit()
 
-if __name__ == "__main__":
+def add_track(
+    
+):
     pass
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)

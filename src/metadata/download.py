@@ -15,7 +15,7 @@ mb_log.setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 
-# IMPORTANT
+# IMPORTANT DOCUMENTATION WHICH CONTAINS FOR EXAMPLE THE INCLUDES
 # https://python-musicbrainzngs.readthedocs.io/en/v0.7.1/api/#getting-data
 
 class Artist:
@@ -54,6 +54,10 @@ class Artist:
                 artists=[self],
                 albumsort=i + 1
             ))
+    
+    def __str__(self):
+        newline = "\n"
+        return f"id: {self.musicbrainz_artistid}\nname: {self.artist}\n{newline.join([str(release_group) for release_group in self.release_groups])}"
 
     def save(self):
         logging.info(f"artist: {self}")
@@ -61,10 +65,6 @@ class Artist:
             musicbrainz_artistid=self.musicbrainz_artistid,
             artist=self.artist
         )
-
-    def __str__(self):
-        newline = "\n"
-        return f"id: {self.musicbrainz_artistid}\nname: {self.artist}\n{newline.join([str(release_group) for release_group in self.release_groups])}"
 
 
 class ReleaseGroup:
@@ -112,15 +112,8 @@ class ReleaseGroup:
         newline = "\n"
         return f"{newline.join([str(release_group) for release_group in self.releases])}"
 
-    def append_artist(self, artist_id: str) -> Artist:
-        for existing_artist in self.artists:
-            if artist_id == existing_artist.musicbrainz_artistid:
-                return existing_artist
-        new_artist = Artist(artist_id, release_groups=[self], new_release_groups=False)
-        self.artists.append(new_artist)
-        return new_artist
-
     def save(self):
+        logging.info(f"caching release_group {self}")
         database.add_release_group(
             musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
             artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
@@ -129,6 +122,14 @@ class ReleaseGroup:
             musicbrainz_albumtype = self.musicbrainz_albumtype,
             compilation=self.compilation
         )
+
+    def append_artist(self, artist_id: str) -> Artist:
+        for existing_artist in self.artists:
+            if artist_id == existing_artist.musicbrainz_artistid:
+                return existing_artist
+        new_artist = Artist(artist_id, release_groups=[self], new_release_groups=False)
+        self.artists.append(new_artist)
+        return new_artist
 
     def append_release(self, release_data: dict):
         musicbrainz_albumid = get_elem_from_obj(release_data, ['id'])
@@ -178,6 +179,18 @@ class Release:
         self.save()
         self.append_recordings(recording_datas)
 
+    def __str__(self):
+        return f"{self.title} ©{self.copyright}"
+    
+    def save(self):
+        logging.info(f"caching release {self}")
+        database.add_release(
+            musicbrainz_albumid=self.musicbrainz_albumid,
+            release_group_id=self.release_group.musicbrainz_releasegroupid,
+            title=self.title,
+            copyright_=self.copyright
+        )
+
     def append_recordings(self, recording_datas: dict):
         for recording_data in recording_datas:
             musicbrainz_releasetrackid = get_elem_from_obj(recording_data, ['id'])
@@ -186,17 +199,6 @@ class Release:
 
             self.tracklist.append(musicbrainz_releasetrackid)
 
-    def save(self):
-        logging.info(f"release {self}")
-        database.add_release(
-            musicbrainz_albumid=self.musicbrainz_albumid,
-            release_group_id=self.release_group.musicbrainz_releasegroupid,
-            title=self.title,
-            copyright_=self.copyright
-        )
-
-    def __str__(self):
-        return f"{self.title} ©{self.copyright}"
 
 
 class Track:
@@ -212,6 +214,12 @@ class Track:
 
         self.musicbrainz_releasetrackid = musicbrainz_releasetrackid
         self.release = release
+
+    def __str__(self):
+        return "this is a track"
+    
+    def save(self):
+        logging.info("caching track {self}")
 
 
 def download(option: dict):
