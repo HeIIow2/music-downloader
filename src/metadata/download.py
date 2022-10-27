@@ -1,18 +1,21 @@
 from typing import List
-
 import musicbrainzngs
 import pandas as pd
 import logging
 from datetime import date
 
 from object_handeling import get_elem_from_obj, parse_music_brainz_date
+import database
+
+# I don't know if it would be feesable to set up my own mb instance
+# https://github.com/metabrainz/musicbrainz-docker
 
 mb_log = logging.getLogger("musicbrainzngs")
 mb_log.setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 
-# IMPORTANT
+# IMPORTANT DOCUMENTATION WHICH CONTAINS FOR EXAMPLE THE INCLUDES
 # https://python-musicbrainzngs.readthedocs.io/en/v0.7.1/api/#getting-data
 
 class Artist:
@@ -34,6 +37,9 @@ class Artist:
 
         self.artist = get_elem_from_obj(artist_data, ['name'])
 
+        self.save()
+
+        # STARTING TO FETCH' RELEASE GROUPS. IMPORTANT: DON'T WRITE ANYTHING BESIDES THAT HERE
         if not new_release_groups:
             return
         # sort all release groups by date and add album sort to have them in chronological order.
@@ -48,10 +54,17 @@ class Artist:
                 artists=[self],
                 albumsort=i + 1
             ))
-
+    
     def __str__(self):
         newline = "\n"
         return f"id: {self.musicbrainz_artistid}\nname: {self.artist}\n{newline.join([str(release_group) for release_group in self.release_groups])}"
+
+    def save(self):
+        logging.info(f"artist: {self}")
+        database.add_artist(
+            musicbrainz_artistid=self.musicbrainz_artistid,
+            artist=self.artist
+        )
 
 
 class ReleaseGroup:
@@ -88,6 +101,8 @@ class ReleaseGroup:
         self.musicbrainz_albumtype = get_elem_from_obj(release_group_data, ['primary-type'])
         self.compilation = "1" if self.musicbrainz_albumtype == "Compilation" else None
 
+        self.save()
+
         if only_download_distinct_releases:
             self.append_distinct_releases(release_datas)
         else:
@@ -96,6 +111,17 @@ class ReleaseGroup:
     def __str__(self):
         newline = "\n"
         return f"{newline.join([str(release_group) for release_group in self.releases])}"
+
+    def save(self):
+        logging.info(f"caching release_group {self}")
+        database.add_release_group(
+            musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
+            artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
+            albumartist = self.albumartist,
+            albumsort = self.albumsort,
+            musicbrainz_albumtype = self.musicbrainz_albumtype,
+            compilation=self.compilation
+        )
 
     def append_artist(self, artist_id: str) -> Artist:
         for existing_artist in self.artists:
@@ -150,7 +176,20 @@ class Release:
         self.title = get_elem_from_obj(release_data, ['title'])
         self.copyright = get_elem_from_obj(label_data, [0, 'label', 'name'])
 
+        self.save()
         self.append_recordings(recording_datas)
+
+    def __str__(self):
+        return f"{self.title} ©{self.copyright}"
+    
+    def save(self):
+        logging.info(f"caching release {self}")
+        database.add_release(
+            musicbrainz_albumid=self.musicbrainz_albumid,
+            release_group_id=self.release_group.musicbrainz_releasegroupid,
+            title=self.title,
+            copyright_=self.copyright
+        )
 
     def append_recordings(self, recording_datas: dict):
         for recording_data in recording_datas:
@@ -160,8 +199,6 @@ class Release:
 
             self.tracklist.append(musicbrainz_releasetrackid)
 
-    def __str__(self):
-        return f"{self.title} ©{self.copyright}"
 
 
 class Track:
@@ -177,6 +214,12 @@ class Track:
 
         self.musicbrainz_releasetrackid = musicbrainz_releasetrackid
         self.release = release
+
+    def __str__(self):
+        return "this is a track"
+    
+    def save(self):
+        logging.info("caching track {self}")
 
 
 def download(option: dict):
@@ -417,6 +460,15 @@ def download_track(mb_id, is_various_artist: bool = None, track: int = None, tot
 
 
 if __name__ == "__main__":
+    """
+    import tempfile
+    import os
+
+    TEMP_FOLDER = "music-downloader"
+    TEMP_DIR = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
+    if not os.path.exists(TEMP_DIR):
+        os.mkdir(TEMP_DIR)
+    """
     logging.basicConfig(level=logging.DEBUG)
 
     download({'id': '5cfecbe4-f600-45e5-9038-ce820eedf3d1', 'type': 'artist'})
