@@ -18,10 +18,10 @@ TEMP_DIR = get_temp_dir()
 DATABASE_FILE = "metadata.db"
 db_path = os.path.join(TEMP_DIR, DATABASE_FILE)
 
-sqliteConnection = sqlite3.connect(db_path)
-cursor = sqliteConnection.cursor()
+connection = sqlite3.connect(db_path)
+cursor = connection.cursor()
 
-def init_db(cursor, reset_anyways: bool = False):
+def init_db(cursor, connection, reset_anyways: bool = False):
     # check if db exists
     exists = True
     try:
@@ -43,7 +43,37 @@ def init_db(cursor, reset_anyways: bool = False):
             query = database_structure_file.read()
             cursor.executescript(query)
 
-init_db(cursor=cursor)
+init_db(cursor=cursor, connection=connection, reset_anyways=True)
+
+def add_artist(
+    musicbrainz_artistid: str,
+    artist: str = None
+):
+    query = "INSERT INTO artist (id, name) VALUES (?, ?);"
+    values = musicbrainz_artistid, artist
+
+    cursor.execute(query, values)
+    connection.commit()
+
+def add_release_group(
+    musicbrainz_releasegroupid: str,
+    artist_ids: list,
+    albumartist: str = None,
+    albumsort: int = None,
+    musicbrainz_albumtype: str = None,
+    compilation: str = None
+):
+    # add adjacency
+    adjacency_list = []
+    for artist_id in artist_ids:
+        adjacency_list.append((musicbrainz_releasegroupid, artist_id))
+    adjacency_values = tuple(adjacency_list)
+    adjacency_query = "INSERT INTO artist_release_group (artist_id, release_group_id) VALUES (?, ?);"
+    cursor.executemany(adjacency_query, adjacency_values)
+    connection.commit()
+
+    # add release group
+    query = "INSERT INTO release_group (id, albumartist, albumsort, musicbrainz_albumtype, compilation) VALUES (?, ?);"
 
 if __name__ == "__main__":
     pass

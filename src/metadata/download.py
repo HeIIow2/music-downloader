@@ -1,3 +1,4 @@
+import imp
 from typing import List
 
 import musicbrainzngs
@@ -8,6 +9,7 @@ from datetime import date
 import sqlite3
 
 from object_handeling import get_elem_from_obj, parse_music_brainz_date
+import database
 
 # I don't know if it would be feesable to set up my own mb instance
 # https://github.com/metabrainz/musicbrainz-docker
@@ -39,7 +41,9 @@ class Artist:
 
         self.artist = get_elem_from_obj(artist_data, ['name'])
 
-        logging.info(f"artist: {self}")
+        self.save()
+
+        # STARTING TO FETCH' RELEASE GROUPS. IMPORTANT: DON'T WRITE ANYTHING BESIDES THAT HERE
         if not new_release_groups:
             return
         # sort all release groups by date and add album sort to have them in chronological order.
@@ -54,6 +58,13 @@ class Artist:
                 artists=[self],
                 albumsort=i + 1
             ))
+
+    def save(self):
+        logging.info(f"artist: {self}")
+        database.add_artist(
+            musicbrainz_artistid=self.musicbrainz_artistid,
+            artist=self.artist
+        )
 
     def __str__(self):
         newline = "\n"
@@ -94,6 +105,8 @@ class ReleaseGroup:
         self.musicbrainz_albumtype = get_elem_from_obj(release_group_data, ['primary-type'])
         self.compilation = "1" if self.musicbrainz_albumtype == "Compilation" else None
 
+        self.save()
+
         if only_download_distinct_releases:
             self.append_distinct_releases(release_datas)
         else:
@@ -110,6 +123,16 @@ class ReleaseGroup:
         new_artist = Artist(artist_id, release_groups=[self], new_release_groups=False)
         self.artists.append(new_artist)
         return new_artist
+
+    def save(self):
+        database.add_release_group(
+            musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
+            artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
+            albumartist = self.albumartist,
+            albumsort = self.albumsort,
+            musicbrainz_albumtype = self.musicbrainz_albumtype,
+            compilation=self.compilation
+        )
 
     def append_release(self, release_data: dict):
         musicbrainz_albumid = get_elem_from_obj(release_data, ['id'])
