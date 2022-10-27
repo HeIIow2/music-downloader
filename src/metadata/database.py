@@ -73,7 +73,22 @@ def add_release_group(
     connection.commit()
 
     # add release group
-    query = "INSERT INTO release_group (id, albumartist, albumsort, musicbrainz_albumtype, compilation) VALUES (?, ?);"
+    query = "INSERT INTO release_group (id, albumartist, albumsort, musicbrainz_albumtype, compilation) VALUES (?, ?, ?, ?, ?);"
+    values = musicbrainz_releasegroupid, albumartist, albumsort, musicbrainz_albumtype, compilation
+    cursor.execute(query, values)
+    connection.commit()
+
+def add_release(
+    musicbrainz_albumid: str,
+    release_group_id: str,
+    title: str = None,
+    copyright_: str = None
+):
+    query = "INSERT INTO release_ (id, release_group_id, title, copyright) VALUES (?, ?, ?, ?);"
+    values = musicbrainz_albumid, release_group_id, title, copyright_
+
+    cursor.execute(query, values)
+    connection.commit()
 
 if __name__ == "__main__":
     pass

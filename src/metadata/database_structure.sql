@@ -28,8 +28,9 @@ CREATE TABLE release_group (
 DROP TABLE IF EXISTS release_;
 CREATE TABLE release_ (
     id TEXT PRIMARY KEY NOT NULL,
-    release_group TEXT NOT NULL,
-    name TEXT
+    release_group_id TEXT NOT NULL,
+    title TEXT, 
+    copyright TEXT
 );
 
 DROP TABLE IF EXISTS track;
