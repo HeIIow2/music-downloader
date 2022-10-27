@@ -22,7 +22,8 @@ CREATE TABLE release_group (
     albumartist TEXT,
     albumsort INT,
     musicbrainz_albumtype TEXT,
-    compilation TEXT
+    compilation TEXT,
+    album_artist_id TEXT
 );
 
 DROP TABLE IF EXISTS release_;
@@ -30,13 +31,20 @@ CREATE TABLE release_ (
     id TEXT PRIMARY KEY NOT NULL,
     release_group_id TEXT NOT NULL,
     title TEXT, 
-    copyright TEXT
+    copyright TEXT,
+    album_status TEXT,
+    language TEXT,
+    year TEXT,
+    date TEXT,
+    country TEXT,
+    barcode TEXT
 );
 
 DROP TABLE IF EXISTS track;
 CREATE TABLE track (
     id TEXT PRIMARY KEY NOT NULL,
     release_id TEXT NOT NULL,
-    name TEXT
+    track TEXT,
+    isrc TEXT
 );
 

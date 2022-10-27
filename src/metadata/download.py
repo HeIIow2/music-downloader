@@ -2,7 +2,6 @@ from typing import List
 import musicbrainzngs
 import pandas as pd
 import logging
-from datetime import date
 
 from object_handeling import get_elem_from_obj, parse_music_brainz_date
 import database
@@ -54,7 +53,7 @@ class Artist:
                 artists=[self],
                 albumsort=i + 1
             ))
-    
+
     def __str__(self):
         newline = "\n"
         return f"id: {self.musicbrainz_artistid}\nname: {self.artist}\n{newline.join([str(release_group) for release_group in self.release_groups])}"
@@ -95,7 +94,8 @@ class ReleaseGroup:
             if artist_id is None:
                 continue
             self.append_artist(artist_id)
-        self.albumartist = "Various Artists" if len(self.artists) >= 1 else self.artists[0].artist
+        self.albumartist = "Various Artists" if len(self.artists) > 1 else self.artists[0].artist
+        self.album_artist_id = None if self.albumartist == "Various Artists" else self.artists[0].musicbrainz_artistid
 
         self.albumsort = albumsort
         self.musicbrainz_albumtype = get_elem_from_obj(release_group_data, ['primary-type'])
@@ -117,10 +117,11 @@ class ReleaseGroup:
         database.add_release_group(
             musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
             artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
-            albumartist = self.albumartist,
-            albumsort = self.albumsort,
-            musicbrainz_albumtype = self.musicbrainz_albumtype,
-            compilation=self.compilation
+            albumartist=self.albumartist,
+            albumsort=self.albumsort,
+            musicbrainz_albumtype=self.musicbrainz_albumtype,
+            compilation=self.compilation,
+            album_artist_id=self.album_artist_id
         )
 
     def append_artist(self, artist_id: str) -> Artist:
@@ -176,29 +177,41 @@ class Release:
         self.title = get_elem_from_obj(release_data, ['title'])
         self.copyright = get_elem_from_obj(label_data, [0, 'label', 'name'])
 
+        self.album_status = get_elem_from_obj(release_data, ['status'])
+        self.language = get_elem_from_obj(release_data, ['text-representation', 'language'])
+        self.year = get_elem_from_obj(release_data, ['date'], lambda x: x.split("-")[0])
+        self.date = get_elem_from_obj(release_data, ['date'])
+        self.country = get_elem_from_obj(release_data, ['country'])
+        self.barcode = get_elem_from_obj(release_data, ['barcode'])
+
         self.save()
         self.append_recordings(recording_datas)
 
     def __str__(self):
-        return f"{self.title} ©{self.copyright}"
-    
+        return f"{self.title} ©{self.copyright} {self.album_status}"
+
     def save(self):
         logging.info(f"caching release {self}")
         database.add_release(
             musicbrainz_albumid=self.musicbrainz_albumid,
             release_group_id=self.release_group.musicbrainz_releasegroupid,
             title=self.title,
-            copyright_=self.copyright
+            copyright_=self.copyright,
+            album_status=self.album_status,
+            language=self.language,
+            year=self.year,
+            date=self.date,
+            country=self.country,
+            barcode=self.barcode
         )
 
     def append_recordings(self, recording_datas: dict):
         for recording_data in recording_datas:
-            musicbrainz_releasetrackid = get_elem_from_obj(recording_data, ['id'])
+            musicbrainz_releasetrackid = get_elem_from_obj(recording_data, ['recording', 'id'])
             if musicbrainz_releasetrackid is None:
                 continue
 
-            self.tracklist.append(musicbrainz_releasetrackid)
-
+            self.tracklist.append(Track(musicbrainz_releasetrackid, self))
 
 
 class Track:
@@ -214,12 +227,42 @@ class Track:
 
         self.musicbrainz_releasetrackid = musicbrainz_releasetrackid
         self.release = release
+        self.artists = []
+
+        result = musicbrainzngs.get_recording_by_id(self.musicbrainz_releasetrackid, includes=["artists", "releases", "recording-rels", "isrcs", "work-level-rels"])
+        recording_data = result['recording']
+        for artist_data in get_elem_from_obj(recording_data, ['artist-credit'], return_if_none=[]):
+            self.append_artist(get_elem_from_obj(artist_data, ['artist', 'id']))
+
+        self.isrc = get_elem_from_obj(recording_data, ['isrc-list', 0])
+        self.title = recording_data['title']
+
+        self.save()
 
     def __str__(self):
-        return "this is a track"
-    
+        return f"{self.title}: {self.isrc}"
+
     def save(self):
-        logging.info("caching track {self}")
+        logging.info(f"caching track {self}")
+
+        database.add_track(
+            musicbrainz_releasetrackid=self.musicbrainz_releasetrackid,
+            musicbrainz_albumid=self.release.musicbrainz_albumid,
+            feature_aritsts=[artist.musicbrainz_artistid for artist in self.artists],
+            track=self.title,
+            isrc=self.isrc
+        )
+
+    def append_artist(self, artist_id: str) -> Artist:
+        if artist_id is None:
+            return
+
+        for existing_artist in self.artists:
+            if artist_id == existing_artist.musicbrainz_artistid:
+                return existing_artist
+        new_artist = Artist(artist_id, new_release_groups=False)
+        self.artists.append(new_artist)
+        return new_artist
 
 
 def download(option: dict):
@@ -469,7 +512,9 @@ if __name__ == "__main__":
     if not os.path.exists(TEMP_DIR):
         os.mkdir(TEMP_DIR)
     """
-    logging.basicConfig(level=logging.DEBUG)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
     download({'id': '5cfecbe4-f600-45e5-9038-ce820eedf3d1', 'type': 'artist'})
     # download({'id': '4b9af532-ef7e-42ab-8b26-c466327cb5e0', 'type': 'release'})
