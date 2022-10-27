@@ -5,7 +5,12 @@ import pandas as pd
 import logging
 from datetime import date
 
+import sqlite3
+
 from object_handeling import get_elem_from_obj, parse_music_brainz_date
+
+# I don't know if it would be feesable to set up my own mb instance
+# https://github.com/metabrainz/musicbrainz-docker
 
 mb_log = logging.getLogger("musicbrainzngs")
 mb_log.setLevel(logging.WARNING)
@@ -34,6 +39,7 @@ class Artist:
 
         self.artist = get_elem_from_obj(artist_data, ['name'])
 
+        logging.info(f"artist: {self}")
         if not new_release_groups:
             return
         # sort all release groups by date and add album sort to have them in chronological order.
@@ -150,6 +156,7 @@ class Release:
         self.title = get_elem_from_obj(release_data, ['title'])
         self.copyright = get_elem_from_obj(label_data, [0, 'label', 'name'])
 
+        logging.info(f"release {self}")
         self.append_recordings(recording_datas)
 
     def append_recordings(self, recording_datas: dict):
@@ -417,7 +424,17 @@ def download_track(mb_id, is_various_artist: bool = None, track: int = None, tot
 
 
 if __name__ == "__main__":
+    """
+    import tempfile
+    import os
+
+    TEMP_FOLDER = "music-downloader"
+    TEMP_DIR = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
+    if not os.path.exists(TEMP_DIR):
+        os.mkdir(TEMP_DIR)
+    """
     logging.basicConfig(level=logging.DEBUG)
+    sqliteConnection = sqlite3.connect('sql.db')
 
     download({'id': '5cfecbe4-f600-45e5-9038-ce820eedf3d1', 'type': 'artist'})
     # download({'id': '4b9af532-ef7e-42ab-8b26-c466327cb5e0', 'type': 'release'})
