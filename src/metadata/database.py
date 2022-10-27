@@ -19,6 +19,7 @@ DATABASE_FILE = "metadata.db"
 db_path = os.path.join(TEMP_DIR, DATABASE_FILE)
 
 connection = sqlite3.connect(db_path)
+connection.row_factory = sqlite3.Row
 cursor = connection.cursor()
 
 
@@ -124,7 +125,45 @@ def add_track(
     connection.commit()
 
 
+def get_track_metadata(musicbrainz_releasetrackid: str):
+    # this would be vulnerable if musicbrainz_releasetrackid would be user input
+    query = f"""
+SELECT DISTINCT 
+    track.id as musicbrainz_releasetrackid,
+    release_.id as musicbrainz_albumid,
+    release_group.id as musicbrainz_releasegroupid,
+    track.track as track,
+    track.isrc as isrc,
+    release_.title as title,
+    release_.copyright as copyright,
+    release_.album_status as album_status,
+    release_.language as language,
+    release_.year as year,
+    release_.date as date,
+    release_.country as country,
+    release_.barcode as barcode,
+    release_group.albumartist as albumartist,
+    release_group.albumsort as albumsort,
+    release_group.musicbrainz_albumtype as musicbrainz_albumtype,
+    release_group.compilation as compilation,
+    release_group.album_artist_id as album_artist_id
+FROM track, release_, release_group, artist
+WHERE
+    track.id == "{musicbrainz_releasetrackid}" AND
+    track.release_id == release_.id AND
+    release_group.id == release_.release_group_id;
+    """
+
+    resulting_tracks = list(cursor.execute(query))
+    if len(resulting_tracks) != 1:
+        return -1
+
+    return dict(resulting_tracks[0])
+
+
 init_db(cursor=cursor, connection=connection, reset_anyways=False)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
+
+    print(get_track_metadata("a85d5ed5-20e5-4f95-8034-d204d81a36dd"))
