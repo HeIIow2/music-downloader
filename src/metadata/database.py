@@ -13,7 +13,8 @@ def get_temp_dir():
     return temp_dir
 
 
-DATABASE_STRUCTURE_FILE = "database_structure.sql"
+# DATABASE_STRUCTURE_FILE = "database_structure.sql"
+DATABASE_STRUCTURE_FILE = "src/metadata/database_structure.sql"
 TEMP_DIR = get_temp_dir()
 DATABASE_FILE = "metadata.db"
 db_path = os.path.join(TEMP_DIR, DATABASE_FILE)
@@ -124,9 +125,14 @@ def add_track(
     cursor.execute(query, values)
     connection.commit()
 
+def get_custom_track_querry(custom_where: list) -> str:
+    where_args = [
+        "track.release_id == release_.id",
+        "release_group.id == release_.release_group_id"
+    ]
+    where_args.extend(custom_where)
 
-def get_track_metadata(musicbrainz_releasetrackid: str):
-    # this would be vulnerable if musicbrainz_releasetrackid would be user input
+    where_arg = " AND ".join(where_args)
     query = f"""
 SELECT DISTINCT 
     track.id as musicbrainz_releasetrackid,
@@ -149,21 +155,36 @@ SELECT DISTINCT
     release_group.album_artist_id as album_artist_id
 FROM track, release_, release_group, artist
 WHERE
-    track.id == "{musicbrainz_releasetrackid}" AND
-    track.release_id == release_.id AND
-    release_group.id == release_.release_group_id;
+    {where_arg};
     """
+    return query
 
-    resulting_tracks = list(cursor.execute(query))
+def get_custom_track(custom_where: list):
+    query = get_custom_track_querry(custom_where=custom_where)
+    return [dict(i) for i in cursor.execute(query)]
+
+def get_track_metadata(musicbrainz_releasetrackid: str):
+    # this would be vulnerable if musicbrainz_releasetrackid would be user input
+    resulting_tracks = get_custom_track([f'track.id == "{musicbrainz_releasetrackid}"'])
     if len(resulting_tracks) != 1:
         return -1
 
     return dict(resulting_tracks[0])
 
+def get_tracks_to_download():
+    return get_custom_track(["track.downloaded == 0"])
+
+def get_tracks_without_isrc():
+    return get_custom_track(["track.isrc IS NULL"])
 
 init_db(cursor=cursor, connection=connection, reset_anyways=False)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
-    print(get_track_metadata("a85d5ed5-20e5-4f95-8034-d204d81a36dd"))
+    # get_track(["track.downloaded == 0", "track.isrc IS NOT NULL"])
+    #
+    for track in get_tracks_without_isrc():
+        print(track['track'])
+
+    #print(get_track_metadata("a85d5ed5-20e5-4f95-8034-d204d81a36dd"))

@@ -43,8 +43,11 @@ CREATE TABLE release_ (
 DROP TABLE IF EXISTS track;
 CREATE TABLE track (
     id TEXT PRIMARY KEY NOT NULL,
+    downloaded BOOLEAN NOT NULL DEFAULT 0,
     release_id TEXT NOT NULL,
     track TEXT,
-    isrc TEXT
+    isrc TEXT,
+    filepath TEXT,
+    url TEXT,
+    src TEXT
 );
-
