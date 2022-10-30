@@ -198,6 +198,9 @@ def get_tracks_to_download():
     return get_custom_track(["track.downloaded == 0"])
 
 
+def get_tracks_without_src():
+    return get_custom_track(["(track.url IS NULL OR track.src IS NULL)"])
+
 def get_tracks_without_isrc():
     return get_custom_track(["track.isrc IS NULL"])
 

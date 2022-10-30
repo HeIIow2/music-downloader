@@ -16,8 +16,8 @@ def set_proxy(proxies):
 
 
 def get_musify_url(row):
-    title = row.title
-    artists = row.artist
+    title = row['title']
+    artists = row['artists']
 
     url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
 
@@ -74,8 +74,8 @@ def get_soup_of_search(query: str):
 
 
 def search_for_track(row):
-    track = row.title
-    artist = row.artist
+    track = row['title']
+    artist = row['artists']
 
     soup = get_soup_of_search(f"{artist[0]} - {track}")
     tracklist_container_soup = soup.find_all("div", {"class": "playlist"})
