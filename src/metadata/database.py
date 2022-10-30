@@ -130,7 +130,9 @@ def add_track(
 def get_custom_track_querry(custom_where: list) -> str:
     where_args = [
         "track.release_id == release_.id",
-        "release_group.id == release_.release_group_id"
+        "release_group.id == release_.release_group_id",
+        "artist_track.artist_id == artist.id",
+        "artist_track.track_id == track.id"
     ]
     where_args.extend(custom_where)
 
@@ -138,6 +140,14 @@ def get_custom_track_querry(custom_where: list) -> str:
     query = f"""
 SELECT DISTINCT
     json_object(
+        'artists', json_group_array(
+            (
+            SELECT DISTINCT json_object(
+                'id', artist.id,
+                'name', artist.name
+                )
+            )
+        ),
         'musicbrainz_releasetrackid', track.id,
         'musicbrainz_albumid', release_.id,
         'track', track.track,
@@ -156,9 +166,10 @@ SELECT DISTINCT
         'compilation', release_group.compilation,
         'album_artist_id', release_group.album_artist_id
         )
-FROM track, release_, release_group, artist
+FROM track, release_, release_group,artist, artist_track
 WHERE
-    {where_arg};
+    {where_arg}
+GROUP BY track.id;
     """
     return query
 
@@ -193,6 +204,6 @@ if __name__ == "__main__":
     # get_track(["track.downloaded == 0", "track.isrc IS NOT NULL"])
     #
     for track in get_tracks_without_isrc():
-        print(track['track'])
+        print(track['track'], [artist['name'] for artist in track['artists']])
 
     # print(get_track_metadata("a85d5ed5-20e5-4f95-8034-d204d81a36dd"))
