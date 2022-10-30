@@ -148,11 +148,12 @@ SELECT DISTINCT
                 )
             )
         ),
+        'id', track.id,
         'musicbrainz_releasetrackid', track.id,
         'musicbrainz_albumid', release_.id,
-        'track', track.track,
+        'title', track.track,
         'isrc', track.isrc,
-        'title', release_.title,
+        'album', release_.title,
         'copyright', release_.copyright,
         'album_status', release_.album_status,
         'language', release_.language,
@@ -164,7 +165,12 @@ SELECT DISTINCT
         'albumsort', release_group.albumsort,
         'musicbrainz_albumtype', release_group.musicbrainz_albumtype,
         'compilation', release_group.compilation,
-        'album_artist_id', release_group.album_artist_id
+        'album_artist_id', release_group.album_artist_id,
+        'path', track.path,
+        'file', track.file,
+        'genre', track.genre,
+        'url', track.url,
+        'src', track.src
         )
 FROM track, release_, release_group,artist, artist_track
 WHERE
@@ -196,14 +202,41 @@ def get_tracks_without_isrc():
     return get_custom_track(["track.isrc IS NULL"])
 
 
+def get_tracks_without_filepath():
+    return get_custom_track(["(track.file IS NULL OR track.path IS NULL OR track.genre IS NULL)"])
+
+
+def update_download_status(track_id: str):
+    pass
+
+
+def set_download_data(track_id: str, url: str, src: str):
+    query = f"""
+UPDATE track
+SET url = ?,
+    src = ?
+WHERE '{track_id}' == id;
+        """
+    cursor.execute(query, (url, src))
+    connection.commit()
+
+
+def set_filepath(track_id: str, file: str, path: str, genre: str):
+    query = f"""
+UPDATE track
+SET file = ?,
+    path = ?,
+    genre = ?
+WHERE '{track_id}' == id;
+    """
+    cursor.execute(query, (file, path, genre))
+    connection.commit()
+
+
 init_db(cursor=cursor, connection=connection, reset_anyways=False)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
-    # get_track(["track.downloaded == 0", "track.isrc IS NOT NULL"])
-    #
     for track in get_tracks_without_isrc():
         print(track['track'], [artist['name'] for artist in track['artists']])
-
-    # print(get_track_metadata("a85d5ed5-20e5-4f95-8034-d204d81a36dd"))

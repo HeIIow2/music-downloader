@@ -1,6 +1,5 @@
 import json
 import os.path
-import pandas as pd
 import requests
 import logging
 

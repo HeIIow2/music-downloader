@@ -47,7 +47,9 @@ CREATE TABLE track (
     release_id TEXT NOT NULL,
     track TEXT,
     isrc TEXT,
-    filepath TEXT,
+    genre TEXT,
+    path TEXT,
+    file TEXT,
     url TEXT,
     src TEXT
 );
