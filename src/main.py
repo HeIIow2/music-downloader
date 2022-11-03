@@ -1,3 +1,4 @@
+import metadata.download
 import metadata.metadata
 import download_links
 import url_to_path
@@ -14,7 +15,7 @@ STEP_THREE_CACHE = ".cache3.csv"
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
-TOR = True
+TOR = False
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,7 +40,7 @@ def search_for_metadata(query: str):
         if input_ == "q":
             exit(0)
         if input_ == "ok":
-            return search
+            return search.current_chosen_option
         if input_ == ".":
             print(search.options)
             continue
@@ -84,20 +85,21 @@ def cli(start_at: int = 0):
     if start_at <= 0:
         search = search_for_metadata(query=input("initial query: "))
         logging.info("Starting Downloading of metadata")
-        search.download(file=STEP_ONE_CACHE)
+        metadata.download.download(search)
 
     if start_at <= 1:
         logging.info("Fetching Download Links")
-        download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, proxies=proxies)
+        download_links.Download(proxies=proxies)
 
     if start_at <= 2:
         logging.info("creating Paths")
+        print(genre)
         url_to_path.UrlPath(genre=genre)
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
-        download.Download(proxies=proxies, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
+        download.Download(proxies=proxies, base_path=MUSIC_DIR)
 
 
 if __name__ == "__main__":
-    cli(start_at=0)
+    cli(start_at=2)

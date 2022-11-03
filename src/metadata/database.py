@@ -14,8 +14,8 @@ def get_temp_dir():
     return temp_dir
 
 
-DATABASE_STRUCTURE_FILE = "database_structure.sql"
-# DATABASE_STRUCTURE_FILE = "src/metadata/database_structure.sql"
+# DATABASE_STRUCTURE_FILE = "database_structure.sql"
+DATABASE_STRUCTURE_FILE = "src/metadata/database_structure.sql"
 TEMP_DIR = get_temp_dir()
 DATABASE_FILE = "metadata.db"
 db_path = os.path.join(TEMP_DIR, DATABASE_FILE)
@@ -195,11 +195,12 @@ def get_track_metadata(musicbrainz_releasetrackid: str):
 
 
 def get_tracks_to_download():
-    return get_custom_track(["track.downloaded == 0"])
+    return get_custom_track(['track.downloaded == 0'])
 
 
 def get_tracks_without_src():
     return get_custom_track(["(track.url IS NULL OR track.src IS NULL)"])
+
 
 def get_tracks_without_isrc():
     return get_custom_track(["track.isrc IS NULL"])

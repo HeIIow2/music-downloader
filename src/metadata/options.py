@@ -24,7 +24,7 @@ def get_string_for_tracks(tracks: dict) -> str:
 
 
 def get_string_for_option(option: dict) -> str:
-    kind = option['kind']
+    kind = option['type']
     if kind == "artist":
         return get_string_for_artist(option)
     if kind == "release":
@@ -37,6 +37,7 @@ def get_string_for_option(option: dict) -> str:
 class Options:
     def __init__(self, results: list):
         self.results = results
+        print(results)
 
         self.artist_count = 0
         self.release_count = 0
@@ -56,7 +57,7 @@ class Options:
         komplex_information = self.result_list[self.current_option_ind]
         return {
             'id': komplex_information['id'],
-            'type': komplex_information['kind']
+            'type': komplex_information['type']
         }
 
     def choose(self, index: int) -> bool:
@@ -68,7 +69,8 @@ class Options:
     def __str__(self) -> str:
         string = f"artists: {self.artist_count}; releases {self.release_count}; tracks {self.track_count}\n"
         for i, option in enumerate(self.result_list):
-            string += f"{i})\t{option['kind']}:\t" + get_string_for_option(option)
+            print(option)
+            string += f"{i})\t{option['type']}:\t" + get_string_for_option(option)
         return string
 
     def set_options_values(self):
@@ -86,19 +88,19 @@ class Options:
     def set_artist_values(self, option_set: dict):
         self.artist_count += option_set['artist-count']
         for artist in option_set['artist-list']:
-            artist['kind'] = "artist"
+            artist['type'] = "artist"
             self.result_list.append(artist)
 
     def set_release_values(self, option_set: dict):
         self.release_count += option_set['release-count']
         for release in option_set['release-list']:
-            release['kind'] = "release"
+            release['type'] = "release"
             self.result_list.append(release)
 
     def set_track_values(self, option_set: dict):
         self.track_count += option_set['recording-count']
         for track in option_set['recording-list']:
-            track['kind'] = "track"
+            track['type'] = "track"
             self.result_list.append(track)
 
 """

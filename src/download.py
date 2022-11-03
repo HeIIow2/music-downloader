@@ -1,12 +1,11 @@
 import mutagen.id3
 import requests
 import os.path
-import pandas as pd
 from mutagen.easyid3 import EasyID3
 from pydub import AudioSegment
-import json
 import logging
 
+from metadata import database
 import musify
 import youtube_music
 
@@ -21,6 +20,10 @@ print(EasyID3.valid_keys.keys())
 
 
 def write_metadata(row, file_path):
+    if not os.path.exists(file_path):
+        logging.warning("something went really wrong")
+        return False
+
     # only convert the file to the proper format if mutagen doesn't work with it due to time
     try:
         audiofile = EasyID3(file_path)
@@ -31,10 +34,12 @@ def write_metadata(row, file_path):
     valid_keys = list(EasyID3.valid_keys.keys())
 
     for key in list(row.keys()):
-        if type(row[key]) == list or key in valid_keys and not pd.isna(row[key]):
-            if type(row[key]) == int or type(row[key]) == float:
+        if key in valid_keys and row[key] is not None:
+            if type(row[key]) != list:
                 row[key] = str(row[key])
             audiofile[key] = row[key]
+        else:
+            logging.warning(key)
 
     logging.info("saving")
     audiofile.save(file_path, v1=2)
@@ -50,18 +55,12 @@ def path_stuff(path: str, file_: str):
 
 
 class Download:
-    def __init__(self, proxies: dict = None, file: str = ".cache3.csv", temp: str = "temp",
-                 base_path: str = ""):
+    def __init__(self, proxies: dict = None, base_path: str = ""):
         if proxies is not None:
             musify.set_proxy(proxies)
 
-        self.temp = temp
-        self.file = file
-
-        self.dataframe = pd.read_csv(os.path.join(self.temp, self.file), index_col=0)
-
-        for idx, row in self.dataframe.iterrows():
-            row['artist'] = json.loads(row['artist'].replace("'", '"'))
+        for row in database.get_tracks_to_download():
+            row['artist'] = [i['name'] for i in row['artists']]
             row['file'] = os.path.join(base_path, row['file'])
             row['path'] = os.path.join(base_path, row['path'])
 

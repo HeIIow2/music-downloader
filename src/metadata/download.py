@@ -3,8 +3,8 @@ import musicbrainzngs
 import pandas as pd
 import logging
 
-from object_handeling import get_elem_from_obj, parse_music_brainz_date
-import database
+from metadata.object_handeling import get_elem_from_obj, parse_music_brainz_date
+from metadata import database
 
 # I don't know if it would be feesable to set up my own mb instance
 # https://github.com/metabrainz/musicbrainz-docker

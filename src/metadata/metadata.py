@@ -1,8 +1,7 @@
 import logging
 import musicbrainzngs
 
-import options
-from object_handeling import get_elem_from_obj
+from metadata import options
 
 mb_log = logging.getLogger("musicbrainzngs")
 mb_log.setLevel(logging.WARNING)
@@ -58,12 +57,13 @@ class Search:
         if not self.current_options.choose(index):
             return self.current_options
 
-        self.current_chosen_option = self.current_options.get_current_option()
-        kind = self.current_chosen_option['kind']
+        self.current_chosen_option = self.current_options.get_current_option(komplex=True)
+        kind = self.current_chosen_option['type']
         if kind == 'artist':
             return self.browse_artist(self.current_chosen_option, limit=limit)
         if kind == 'release':
             release_limit = limit if not ignore_limit_for_tracklist else 100
+            release_limit = 100
             return self.browse_release(self.current_chosen_option, limit=release_limit)
         if kind == 'track':
             track_limit = limit if not ignore_limit_for_tracklist else 100
