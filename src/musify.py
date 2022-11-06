@@ -1,8 +1,13 @@
 import logging
+import time
+
 import requests
 import bs4
 
 import phonetic_compares
+
+TRIES = 5
+TIMEOUT = 10
 
 session = requests.Session()
 session.headers = {
@@ -64,11 +69,18 @@ def download(row):
     return download_from_musify(file_, url)
 
 
-def get_soup_of_search(query: str):
+def get_soup_of_search(query: str, trie=0):
     url = f"https://musify.club/search?searchText={query}"
     logging.debug(f"Trying to get soup from {url}")
     r = session.get(url)
     if r.status_code != 200:
+        if r.status_code in [503] and trie < TRIES:
+            logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
+            logging.warning(f"retrying in {TIMEOUT} seconds again")
+            time.sleep(TIMEOUT)
+            return get_soup_of_search(query, trie=trie+1)
+
+        logging.warning("too many tries, returning")
         raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
     return bs4.BeautifulSoup(r.content, features="html.parser")
 

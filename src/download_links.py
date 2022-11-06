@@ -3,17 +3,18 @@ import logging
 
 import musify
 import youtube_music
-from metadata import database
 
 
 class Download:
-    def __init__(self, metadata_csv: str = ".cache1.csv", proxies: dict = None) -> None:
+    def __init__(self, database, logger: logging.Logger, proxies: dict = None) -> None:
+        self.database = database
+        self.logger = logger
         if proxies is not None:
             musify.set_proxy(proxies)
 
         self.urls = []
 
-        for row in database.get_tracks_to_download():
+        for row in self.database.get_tracks_to_download():
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']
@@ -36,10 +37,10 @@ class Download:
                 self.add_url(musify_url, 'musify', id_)
                 continue
 
-            logging.warning(f"Didn't find any sources for {row['title']}")
+            self.logger.warning(f"Didn't find any sources for {row['title']}")
 
     def add_url(self, url: str, src: str, id_: str):
-        database.set_download_data(id_, url, src)
+        self.database.set_download_data(id_, url, src)
 
 
 if __name__ == "__main__":

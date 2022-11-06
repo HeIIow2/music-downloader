@@ -1,3 +1,5 @@
+from metadata.database import Database
+from metadata.download import MetadataDownloader
 import metadata.download
 import metadata.metadata
 import download_links
@@ -6,12 +8,19 @@ import download
 
 import logging
 import os
+import tempfile
 
+logging.basicConfig(level=logging.INFO)
 
-TEMP = "temp"
-STEP_ONE_CACHE = ".cache1.csv"
-STEP_TWO_CACHE = ".cache2.csv"
-STEP_THREE_CACHE = ".cache3.csv"
+TEMP_FOLDER = "music-downloader"
+DATABASE_FILE = "metadata.db"
+DATABASE_STRUCTURE_FILE = "database_structure.sql"
+
+DATABASE_LOGGER = logging.getLogger("database")
+METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
+URL_DOWNLOAD_LOGGER = logging.getLogger("ling-download")
+PATH_LOGGER = logging.getLogger("create-paths")
+DOWNLOAD_LOGGER = logging.getLogger("download")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
@@ -19,6 +28,16 @@ TOR = False
 
 logger = logging.getLogger()
 logger.level = logging.DEBUG
+
+temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
+if not os.path.exists(temp_dir):
+    os.mkdir(temp_dir)
+
+database = Database(os.path.join(temp_dir, DATABASE_FILE),
+                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE), DATABASE_LOGGER,
+                    reset_anyways=False)
+
+
 
 
 def get_existing_genre():
@@ -31,7 +50,7 @@ def get_existing_genre():
 
 
 def search_for_metadata(query: str):
-    search = metadata.metadata.Search(query=query, temp=TEMP)
+    search = metadata.metadata.Search(query=query)
 
     print(search.options)
     while True:
@@ -86,20 +105,20 @@ def cli(start_at: int = 0):
     if start_at <= 0:
         search = search_for_metadata(query=input("initial query: "))
         logging.info("Starting Downloading of metadata")
-        metadata.download.download(search)
+        metadata_downloader = MetadataDownloader(database, METADATA_DOWNLOAD_LOGGER)
+        metadata_downloader.download(search)
 
     if start_at <= 1:
         logging.info("Fetching Download Links")
-        download_links.Download(proxies=proxies)
+        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, proxies=proxies)
 
     if start_at <= 2:
         logging.info("creating Paths")
-        print(genre)
-        url_to_path.UrlPath(genre=genre)
+        url_to_path.UrlPath(database, PATH_LOGGER, genre=genre)
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
-        download.Download(proxies=proxies, base_path=MUSIC_DIR)
+        download.Download(database, DOWNLOAD_LOGGER, proxies=proxies, base_path=MUSIC_DIR)
 
 
 if __name__ == "__main__":

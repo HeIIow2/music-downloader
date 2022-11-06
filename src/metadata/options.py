@@ -37,7 +37,6 @@ def get_string_for_option(option: dict) -> str:
 class Options:
     def __init__(self, results: list):
         self.results = results
-        print(results)
 
         self.artist_count = 0
         self.release_count = 0
@@ -69,7 +68,6 @@ class Options:
     def __str__(self) -> str:
         string = f"artists: {self.artist_count}; releases {self.release_count}; tracks {self.track_count}\n"
         for i, option in enumerate(self.result_list):
-            print(option)
             string += f"{i})\t{option['type']}:\t" + get_string_for_option(option)
         return string
 

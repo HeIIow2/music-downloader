@@ -1,5 +1,6 @@
 from datetime import date
 
+
 def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x, return_if_none=None):
     current_object = current_object
     for key in keys:
@@ -8,6 +9,7 @@ def get_elem_from_obj(current_object, keys: list, after_process=lambda x: x, ret
         else:
             return return_if_none
     return after_process(current_object)
+
 
 def parse_music_brainz_date(mb_date: str) -> date:
     year = 1

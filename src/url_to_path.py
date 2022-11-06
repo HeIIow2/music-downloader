@@ -1,20 +1,17 @@
 import os.path
-import json
-
-from metadata import database
+import logging
 
 
 class UrlPath:
-    def __init__(self, genre: str, temp: str = "temp", file: str = ".cache3.csv", step_two_file: str = ".cache2.csv"):
-        self.temp = temp
-        self.file = file
+    def __init__(self, database, logger: logging.Logger, genre: str):
+        self.database = database
+        self.logger = logger
 
         self.genre = genre
 
-        for row in database.get_tracks_without_filepath():
+        for row in self.database.get_tracks_without_filepath():
             file, path = self.get_path_from_row(row)
-            database.set_filepath(row['id'], file, path, genre)
-
+            self.database.set_filepath(row['id'], file, path, genre)
 
     def get_path_from_row(self, row):
         """
@@ -23,7 +20,9 @@ class UrlPath:
         :param row:
         :return: path:
         """
-        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row), f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row))
+        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row),
+                            f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row),
+                                                                       self.get_album(row))
 
     def escape_part(self, part: str):
         return part.replace("/", " ")

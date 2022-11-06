@@ -98,6 +98,7 @@ class Database:
             musicbrainz_releasetrackid: str,
             musicbrainz_albumid: str,
             feature_aritsts: list,
+            tracknumber: str = None,
             track: str = None,
             isrc: str = None
     ):
@@ -111,8 +112,8 @@ class Database:
         self.connection.commit()
 
         # add track
-        query = "INSERT OR REPLACE INTO track (id, release_id, track, isrc) VALUES (?, ?, ?, ?);"
-        values = musicbrainz_releasetrackid, musicbrainz_albumid, track, isrc
+        query = "INSERT OR REPLACE INTO track (id, release_id, track, isrc, tracknumber) VALUES (?, ?, ?, ?, ?);"
+        values = musicbrainz_releasetrackid, musicbrainz_albumid, track, isrc, tracknumber
         self.cursor.execute(query, values)
         self.connection.commit()
 
@@ -139,6 +140,8 @@ SELECT DISTINCT
             )
         ),
         'id', track.id,
+        'tracknumber', track.tracknumber,
+        'titlesort  ', track.tracknumber,
         'musicbrainz_releasetrackid', track.id,
         'musicbrainz_albumid', release_.id,
         'title', track.track,

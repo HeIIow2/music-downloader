@@ -2,7 +2,11 @@ from typing import List
 import musicbrainzngs
 import logging
 
-from object_handeling import get_elem_from_obj, parse_music_brainz_date
+try:
+    from object_handeling import get_elem_from_obj, parse_music_brainz_date
+
+except ModuleNotFoundError:
+    from metadata.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
 # I don't know if it would be feesable to set up my own mb instance
 # https://github.com/metabrainz/musicbrainz-docker
@@ -81,9 +85,10 @@ class MetadataDownloader:
                 database,
                 logger,
                 musicbrainz_releasegroupid: str,
-                artists = [],
+                artists=[],
                 albumsort: int = None,
-                only_download_distinct_releases: bool = True
+                only_download_distinct_releases: bool = True,
+                fetch_further: bool = True
         ):
             self.database = database
             self.logger = logger
@@ -117,6 +122,9 @@ class MetadataDownloader:
 
             self.save()
 
+            if not fetch_further:
+                return
+
             if only_download_distinct_releases:
                 self.append_distinct_releases(release_datas)
             else:
@@ -142,7 +150,8 @@ class MetadataDownloader:
             for existing_artist in self.artists:
                 if artist_id == existing_artist.musicbrainz_artistid:
                     return existing_artist
-            new_artist = Artist(artist_id, release_groups=[self], new_release_groups=False)
+            new_artist = MetadataDownloader.Artist(self.database, self.logger, artist_id, release_groups=[self],
+                                                   new_release_groups=False)
             self.artists.append(new_artist)
             return new_artist
 
@@ -150,7 +159,8 @@ class MetadataDownloader:
             musicbrainz_albumid = get_elem_from_obj(release_data, ['id'])
             if musicbrainz_albumid is None:
                 return
-            self.releases.append(MetadataDownloader.Release(self.database, self.logger, musicbrainz_albumid, release_group=self))
+            self.releases.append(
+                MetadataDownloader.Release(self.database, self.logger, musicbrainz_albumid, release_group=self))
 
         def append_distinct_releases(self, release_datas: List[dict]):
             titles = {}
@@ -174,7 +184,8 @@ class MetadataDownloader:
                 database,
                 logger,
                 musicbrainz_albumid: str,
-                release_group = None
+                release_group=None,
+                fetch_furter: bool = True
         ):
             self.database = database
             self.logger = logger
@@ -186,10 +197,16 @@ class MetadataDownloader:
             self.release_group = release_group
             self.tracklist = []
 
-            result = musicbrainzngs.get_release_by_id(self.musicbrainz_albumid, includes=["recordings", "labels"])
+            result = musicbrainzngs.get_release_by_id(self.musicbrainz_albumid,
+                                                      includes=["recordings", "labels", "release-groups"])
             release_data = get_elem_from_obj(result, ['release'], return_if_none={})
             label_data = get_elem_from_obj(release_data, ['label-info-list'], return_if_none={})
             recording_datas = get_elem_from_obj(release_data, ['medium-list', 0, 'track-list'], return_if_none=[])
+            release_group_data = get_elem_from_obj(release_data, ['release-group'], return_if_none={})
+            if self.release_group is None:
+                self.release_group = MetadataDownloader.ReleaseGroup(self.database, self.logger,
+                                                                     musicbrainz_releasegroupid=get_elem_from_obj(
+                                                                         release_group_data, ['id']), fetch_further=False)
 
             self.title = get_elem_from_obj(release_data, ['title'])
             self.copyright = get_elem_from_obj(label_data, [0, 'label', 'name'])
@@ -202,7 +219,8 @@ class MetadataDownloader:
             self.barcode = get_elem_from_obj(release_data, ['barcode'])
 
             self.save()
-            self.append_recordings(recording_datas)
+            if fetch_furter:
+                self.append_recordings(recording_datas)
 
         def __str__(self):
             return f"{self.title} ©{self.copyright} {self.album_status}"
@@ -223,12 +241,14 @@ class MetadataDownloader:
             )
 
         def append_recordings(self, recording_datas: dict):
-            for recording_data in recording_datas:
+            for i, recording_data in enumerate(recording_datas):
                 musicbrainz_releasetrackid = get_elem_from_obj(recording_data, ['recording', 'id'])
                 if musicbrainz_releasetrackid is None:
                     continue
 
-                self.tracklist.append(MetadataDownloader.Track(self.database, self.logger, musicbrainz_releasetrackid, self))
+                self.tracklist.append(
+                    MetadataDownloader.Track(self.database, self.logger, musicbrainz_releasetrackid, self,
+                                             track_number=str(i + 1)))
 
     class Track:
         def __init__(
@@ -236,7 +256,8 @@ class MetadataDownloader:
                 database,
                 logger,
                 musicbrainz_releasetrackid: str,
-                release = None
+                release=None,
+                track_number: str = None
         ):
             self.database = database
             self.logger = logger
@@ -249,10 +270,18 @@ class MetadataDownloader:
             self.release = release
             self.artists = []
 
+            self.track_number = track_number
+
             result = musicbrainzngs.get_recording_by_id(self.musicbrainz_releasetrackid,
                                                         includes=["artists", "releases", "recording-rels", "isrcs",
                                                                   "work-level-rels"])
             recording_data = result['recording']
+            release_data = get_elem_from_obj(recording_data, ['release-list', -1])
+            if self.release is None:
+                self.release = MetadataDownloader.Release(self.database, self.logger,
+                                                          get_elem_from_obj(release_data, ['id']), fetch_furter=False)
+
+
             for artist_data in get_elem_from_obj(recording_data, ['artist-credit'], return_if_none=[]):
                 self.append_artist(get_elem_from_obj(artist_data, ['artist', 'id']))
 
@@ -271,6 +300,7 @@ class MetadataDownloader:
                 musicbrainz_releasetrackid=self.musicbrainz_releasetrackid,
                 musicbrainz_albumid=self.release.musicbrainz_albumid,
                 feature_aritsts=[artist.musicbrainz_artistid for artist in self.artists],
+                tracknumber=self.track_number,
                 track=self.title,
                 isrc=self.isrc
             )
@@ -316,14 +346,15 @@ if __name__ == "__main__":
     import database
 
     database_ = database.Database(os.path.join(temp_dir, "metadata.db"),
-                                 os.path.join(temp_dir, "database_structure.sql"), db_logger,
-                                 reset_anyways=True)
+                                  os.path.join(temp_dir, "database_structure.sql"), db_logger,
+                                  reset_anyways=True)
 
     download_logger = logging.getLogger("metadata downloader")
     download_logger.setLevel(logging.INFO)
 
     downloader = MetadataDownloader(database_, download_logger)
 
-    downloader.download({'id': '5cfecbe4-f600-45e5-9038-ce820eedf3d1', 'type': 'artist'})
+    downloader.download({'id': 'd2006339-9e98-4624-a386-d503328eb854', 'type': 'track'})
+    # downloader.download({'id': 'cdd16860-35fd-46af-bd8c-5de7b15ebc31', 'type': 'release'})
     # download({'id': '4b9af532-ef7e-42ab-8b26-c466327cb5e0', 'type': 'release'})
     # download({'id': 'c24ed9e7-6df9-44de-8570-975f1a5a75d1', 'type': 'track'})
