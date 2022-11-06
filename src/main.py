@@ -17,7 +17,8 @@ NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
 TOR = False
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+logger.level = logging.DEBUG
 
 
 def get_existing_genre():
@@ -102,4 +103,4 @@ def cli(start_at: int = 0):
 
 
 if __name__ == "__main__":
-    cli(start_at=2)
+    cli(start_at=0)
