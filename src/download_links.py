@@ -19,16 +19,16 @@ class Download:
 
             id_ = row['id']
 
-            # check musify
-            musify_url = musify.get_musify_url(row)
-            if musify_url is not None:
-                self.add_url(musify_url, 'musify', id_)
-                continue
-
             # check YouTube
             youtube_url = youtube_music.get_youtube_url(row)
             if youtube_url is not None:
                 self.add_url(youtube_url, 'youtube', id_)
+                continue
+
+            # check musify
+            musify_url = musify.get_musify_url(row)
+            if musify_url is not None:
+                self.add_url(musify_url, 'musify', id_)
                 continue
 
             # check musify again, but with a different methode that takes longer
