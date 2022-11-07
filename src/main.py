@@ -35,7 +35,7 @@ if not os.path.exists(temp_dir):
 
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE), DATABASE_LOGGER,
-                    reset_anyways=False)
+                    reset_anyways=True)
 
 
 
