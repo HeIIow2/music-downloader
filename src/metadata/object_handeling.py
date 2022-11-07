@@ -19,6 +19,6 @@ def parse_music_brainz_date(mb_date: str) -> date:
     first_release_date = mb_date
     if first_release_date.count("-") == 2:
         year, month, day = [int(i) for i in first_release_date.split("-")]
-    elif first_release_date.count("-") == 0:
+    elif first_release_date.count("-") == 0 and first_release_date.isdigit():
         year = int(first_release_date)
     return date(year, month, day)

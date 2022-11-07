@@ -26,6 +26,15 @@ class Option:
 
         self.additional_info = additional_info
 
+    def __getitem__(self, item):
+        map_ = {
+            "id": self.id,
+            "type": self.type,
+            "kind": self.type,
+            "name": self.name
+        }
+        return map_[item]
+
     def __repr__(self) -> str:
         type_repr = {
             'artist': 'artist\t\t',
