@@ -1,7 +1,6 @@
 from typing import List
 import logging
 import musicbrainzngs
-import optional
 
 try:
     from object_handeling import get_elem_from_obj, parse_music_brainz_date
@@ -13,6 +12,7 @@ mb_log = logging.getLogger("musicbrainzngs")
 mb_log.setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
+MAX_PARAMATERS = 3
 OPTION_TYPES = ['artist', 'release_group', 'release', 'recording']
 
 
@@ -258,15 +258,46 @@ class Search:
         self.append_new_choices(results)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger_ = logging.getLogger("test")
+    def search_from_query(self, query: str):
+        """
+        mit # wird ein neuer Parameter gestartet
+        der Buchstabe dahinter legt die Art des Parameters fest
+        "#a Psychonaut 4 #r Tired, Numb and #t Drop by Drop"
+        :param query:
+        :return:
+        """
 
+        artist = None
+        release_group = None
+        recording = None
+
+        query = query.strip()
+        parameters = query.split('#')
+        parameters.remove('')
+
+        if len(parameters) > MAX_PARAMATERS:
+            raise ValueError(f"too many parameters. Only {MAX_PARAMATERS} are allowed")
+
+        for parameter in parameters:
+            splitted = parameter.split(" ")
+            type_ = splitted[0]
+            input_ = " ".join(splitted[:1]).strip()
+
+            if type_ == "a":
+                artist = input_
+                continue
+            if type_ == "r":
+                release_group = input_
+                continue
+            if type_ == "t":
+                release_group = input_
+                continue
+
+        self.search_recording_from_text(artist=artist, release_group=release_group, recording=recording)
+
+def automated_demo():
     search = Search(logger=logger_)
     search.search_from_text(artist="I Prevail")
-    # search.search_from_text(artist="K.I.Z")
-    # search.search_from_text(artist="I Prevail", release_group="TRAUMA")
-    # search.search_from_text(artist="I Prevail", release_group="TRAUMA", recording="breaking down")
 
     # choose an artist
     search.choose(0)
@@ -276,3 +307,10 @@ if __name__ == "__main__":
     search.choose(2)
     # choose a recording
     search.choose(4)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    logger_ = logging.getLogger("test")
+
+    search = Search(logger=logger_)
+    search.search_from_query("#a Psychonaut 4 #r Tired, Numb and #t Drop by Drop")
