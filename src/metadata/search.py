@@ -50,6 +50,12 @@ class Search:
 
         self.options_history.append(new_choices)
 
+    def get_previous_options(self):
+        self.options_history.pop(-1)
+        print()
+        for i, choice in enumerate(self.options_history[-1]):
+            print(f"{str(i).zfill(2)}) {choice}")
+
     @staticmethod
     def fetch_new_options_from_artist(artist: Option):
         """
@@ -160,7 +166,7 @@ class Search:
         """
         results = []
 
-        result = musicbrainzngs.get_recording_by_id(recording.id,includes=["artists", "releases"])
+        result = musicbrainzngs.get_recording_by_id(recording.id, includes=["artists", "releases"])
         recording_data = result['recording']
         release_datas = get_elem_from_obj(recording_data, ['release-list'])
         artist_datas = get_elem_from_obj(recording_data, ['artist-credit'], return_if_none={})
@@ -233,6 +239,7 @@ class Search:
 
     @staticmethod
     def search_artist_from_text(artist: str = None):
+        print(artist)
         result = musicbrainzngs.search_artists(artist=artist)
         artist_list = get_elem_from_obj(result, ['artist-list'], return_if_none=[])
 
@@ -248,6 +255,8 @@ class Search:
             self.logger.error("either artist, release group or recording has to be set")
             return -1
 
+        print()
+
         if recording is not None:
             results = self.search_recording_from_text(artist=artist, release_group=release_group, recording=recording)
         elif release_group is not None:
@@ -256,7 +265,6 @@ class Search:
             results = self.search_artist_from_text(artist=artist)
 
         self.append_new_choices(results)
-
 
     def search_from_query(self, query: str):
         """
@@ -281,7 +289,7 @@ class Search:
         for parameter in parameters:
             splitted = parameter.split(" ")
             type_ = splitted[0]
-            input_ = " ".join(splitted[:1]).strip()
+            input_ = " ".join(splitted[1:]).strip()
 
             if type_ == "a":
                 artist = input_
@@ -290,10 +298,11 @@ class Search:
                 release_group = input_
                 continue
             if type_ == "t":
-                release_group = input_
+                recording = input_
                 continue
 
-        self.search_recording_from_text(artist=artist, release_group=release_group, recording=recording)
+        self.search_from_text(artist=artist, release_group=release_group, recording=recording)
+
 
 def automated_demo():
     search = Search(logger=logger_)
@@ -308,9 +317,28 @@ def automated_demo():
     # choose a recording
     search.choose(4)
 
+
+def interactive_demo():
+    search = Search(logger=logger_)
+    while True:
+        input_ = input("q to quit, .. for previous options, int for this element, str to search for query, ok to download: ")
+        input_.strip()
+        if input_.lower() == "ok":
+            break
+        if input_.lower() == "q":
+            break
+        if input_.lower() == "..":
+            search.get_previous_options()
+            continue
+        if input_.isdigit():
+            search.choose(int(input_))
+            continue
+        search.search_from_query(input_)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger_ = logging.getLogger("test")
 
-    search = Search(logger=logger_)
-    search.search_from_query("#a Psychonaut 4 #r Tired, Numb and #t Drop by Drop")
+    interactive_demo()
+
