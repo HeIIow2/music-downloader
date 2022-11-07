@@ -2,10 +2,11 @@ import sqlite3
 import os
 import logging
 import json
+import requests
 
 
 class Database:
-    def __init__(self, path_to_db: str, db_structure: str, logger: logging.Logger, reset_anyways: bool = False):
+    def __init__(self, path_to_db: str, db_structure: str, db_structure_fallback: str, logger: logging.Logger, reset_anyways: bool = False):
         self.logger = logger
         self.path_to_db = path_to_db
 
@@ -13,9 +14,9 @@ class Database:
         self.cursor = self.connection.cursor()
 
         # init database
-        self.init_db(database_structure=db_structure, reset_anyways=reset_anyways)
+        self.init_db(database_structure=db_structure, database_structure_fallback=db_structure_fallback, reset_anyways=reset_anyways)
 
-    def init_db(self, database_structure: str, reset_anyways: bool = False):
+    def init_db(self, database_structure: str, database_structure_fallback: str, reset_anyways: bool = False):
         # check if db exists
         exists = True
         try:
@@ -31,6 +32,13 @@ class Database:
         if reset_anyways or not exists:
             # reset the database if reset_anyways is true or if an error has been thrown previously.
             self.logger.info("Creating/Reseting Database.")
+
+            if not os.path.exists(database_structure):
+                self.logger.info("database structure file doesn't exist yet, fetching from github")
+                r = requests.get(database_structure_fallback)
+                
+                with open(database_structure, "w") as f:
+                    f.write(r.text)
 
             # read the file
             with open(database_structure, "r") as database_structure_file:

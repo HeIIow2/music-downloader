@@ -109,3 +109,26 @@ There are two bottlenecks with this approach though:
 
 
 https://slavart.gamesdrive.net/
+https://getmetal.club/
+https://newalbumreleases.net/
+http://download-soundtracks.com/
+https://scnlog.me/
+https://intmusic.net/
+https://www.pluspremieres.ws/
+https://music4newgen.org/
+https://takemetal.org/
+https://coreradio.ru/
+https://alterportal.net/
+https://vk.com/mdcore
+https://vk.com/mdrock
+https://sophiesfloorboard.blogspot.com/
+https://funkysouls.org/
+https://www.deadpulpit.com/
+https://vk.com/filter_rock
+https://en.metal-tracker.com/
+https://thelastdisaster.org/
+https://vk.com/phc
+https://free-mp3-download.net/ requires recaptcha  
+https://vk.com/filter_rock
+https://t.me/ffilternews telegram?
+https://justanothermusic.site/index.php requires login

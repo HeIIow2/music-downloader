@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 TEMP_FOLDER = "music-downloader"
 DATABASE_FILE = "metadata.db"
 DATABASE_STRUCTURE_FILE = "database_structure.sql"
+DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql"
 
 DATABASE_LOGGER = logging.getLogger("database")
 METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
@@ -34,7 +35,9 @@ if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
-                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE), DATABASE_LOGGER,
+                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
+                    DATABASE_STRUCTURE_FALLBACK, 
+                    DATABASE_LOGGER,
                     reset_anyways=True)
 
 
