@@ -153,6 +153,33 @@ class Search:
         results.extend(tracklist)
         return results
 
+    @staticmethod
+    def fetch_new_options_from_record(recording: Option):
+        """
+        artists, release, record
+        """
+        results = []
+
+        result = musicbrainzngs.get_recording_by_id(recording.id,includes=["artists", "releases"])
+        recording_data = result['recording']
+        release_datas = get_elem_from_obj(recording_data, ['release-list'])
+        artist_datas = get_elem_from_obj(recording_data, ['artist-credit'], return_if_none={})
+
+        # appending all the artists to results
+        for artist_data in artist_datas:
+            results.append(Option('artist', get_elem_from_obj(artist_data, ['artist', 'id']),
+                                  get_elem_from_obj(artist_data, ['artist', 'name'])))
+
+        # appending all releases
+        for i, release_data in enumerate(release_datas):
+            results.append(
+                Option('release', get_elem_from_obj(release_data, ['id']), get_elem_from_obj(release_data, ['title']),
+                       additional_info=f" ({get_elem_from_obj(release_data, ['status'])})"))
+
+        results.append(recording)
+
+        return results
+
     def fetch_new_options(self):
         if self.current_option is None:
             return -1
@@ -164,6 +191,8 @@ class Search:
             result = self.fetch_new_options_from_release_group(self.current_option)
         elif self.current_option.type == 'release':
             result = self.fetch_new_options_from_release(self.current_option)
+        elif self.current_option.type == 'recording':
+            result = self.fetch_new_options_from_record(self.current_option)
 
         self.append_new_choices(result)
 
