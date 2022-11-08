@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-import metadata
-=======
 from metadata.database import Database
 from metadata.download import MetadataDownloader
 import metadata.download
 import metadata.search
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 import download_links
 import url_to_path
 import download
