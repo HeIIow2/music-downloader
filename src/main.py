@@ -32,8 +32,6 @@ DOWNLOAD_LOGGER = logging.getLogger("download")
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
 TOR = False
-<<<<<<< HEAD
-=======
 
 temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
 if not os.path.exists(temp_dir):
@@ -45,9 +43,6 @@ database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     DATABASE_LOGGER,
                     reset_anyways=True)
 
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
-
-
 
 def get_existing_genre():
     valid_directories = []
@@ -58,13 +53,9 @@ def get_existing_genre():
     return valid_directories
 
 
-<<<<<<< HEAD
-def search_for_metadata(query: str):
-    search = metadata.Search(query=query, temp=TEMP)
-=======
+
 def search_for_metadata():
     search = metadata.search.Search(logger=SEARCH_LOGGER)
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
     while True:
         input_ = input(
@@ -124,13 +115,8 @@ def cli(start_at: int = 0):
         metadata_downloader.download(search)
 
     if start_at <= 1:
-<<<<<<< HEAD
-        logging.info("Fetching Download Links")
-        download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
-=======
         logging.info("creating Paths")
         url_to_path.UrlPath(database, PATH_LOGGER, genre=genre)
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
     if start_at <= 2:
         logging.info("Fetching Download Links")
@@ -138,11 +124,7 @@ def cli(start_at: int = 0):
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
-<<<<<<< HEAD
-        download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
-=======
         download.Download(database, DOWNLOAD_LOGGER, proxies=proxies, base_path=MUSIC_DIR)
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
 
 if __name__ == "__main__":
