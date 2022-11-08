@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 import metadata
+=======
+from metadata.database import Database
+from metadata.download import MetadataDownloader
+import metadata.download
+import metadata.search
+>>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 import download_links
 import url_to_path
 import download
@@ -6,18 +13,40 @@ import download
 import logging
 import requests
 import os
+import tempfile
 
+logging.basicConfig(level=logging.INFO)
 
-TEMP = "temp"
-STEP_ONE_CACHE = ".cache1.csv"
-STEP_TWO_CACHE = ".cache2.csv"
-STEP_THREE_CACHE = ".cache3.csv"
+TEMP_FOLDER = "music-downloader"
+DATABASE_FILE = "metadata.db"
+DATABASE_STRUCTURE_FILE = "database_structure.sql"
+DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql"
+
+SEARCH_LOGGER = logging.getLogger("mb-cli")
+DATABASE_LOGGER = logging.getLogger("database")
+METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
+URL_DOWNLOAD_LOGGER = logging.getLogger("ling-download")
+PATH_LOGGER = logging.getLogger("create-paths")
+DOWNLOAD_LOGGER = logging.getLogger("download")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
 TOR = False
+<<<<<<< HEAD
+=======
 
-logging.basicConfig(level=logging.INFO)
+temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
+if not os.path.exists(temp_dir):
+    os.mkdir(temp_dir)
+
+database = Database(os.path.join(temp_dir, DATABASE_FILE),
+                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
+                    DATABASE_STRUCTURE_FALLBACK, 
+                    DATABASE_LOGGER,
+                    reset_anyways=True)
+
+>>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
+
 
 
 def get_existing_genre():
@@ -29,28 +58,34 @@ def get_existing_genre():
     return valid_directories
 
 
+<<<<<<< HEAD
 def search_for_metadata(query: str):
     search = metadata.Search(query=query, temp=TEMP)
+=======
+def search_for_metadata():
+    search = metadata.search.Search(logger=SEARCH_LOGGER)
+>>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
-    print(search.options)
     while True:
         input_ = input(
-            "q to quit, ok to download, .. for previous options, . for current options, int for this element: ").lower()
+            "q to quit, .. for previous options, int for this element, str to search for query, ok to download\n")
         input_.strip()
-        if input_ == "q":
-            exit(0)
-        if input_ == "ok":
-            return search
-        if input_ == ".":
-            print(search.options)
-            continue
-        if input_ == "..":
+        if input_.lower() == "ok":
+            break
+        if input_.lower() == "q":
+            break
+        if input_.lower() == "..":
+            print()
             print(search.get_previous_options())
             continue
         if input_.isdigit():
+            print()
             print(search.choose(int(input_)))
             continue
+        print()
+        print(search.search_from_query(input_))
 
+    return search.current_option
 
 def get_genre():
     existing_genres = get_existing_genre()
@@ -83,21 +118,31 @@ def cli(start_at: int = 0):
         logging.info(f"{genre} has been set as genre.")
 
     if start_at <= 0:
-        search = search_for_metadata(query=input("initial query: "))
+        search = search_for_metadata()
         logging.info("Starting Downloading of metadata")
-        search.download(file=STEP_ONE_CACHE)
+        metadata_downloader = MetadataDownloader(database, METADATA_DOWNLOAD_LOGGER)
+        metadata_downloader.download(search)
 
     if start_at <= 1:
+<<<<<<< HEAD
         logging.info("Fetching Download Links")
         download_links.Download(file=STEP_TWO_CACHE, metadata_csv=STEP_ONE_CACHE, temp=TEMP, session=session)
+=======
+        logging.info("creating Paths")
+        url_to_path.UrlPath(database, PATH_LOGGER, genre=genre)
+>>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
     if start_at <= 2:
-        logging.info("creating Paths")
-        url_to_path.UrlPath(genre=genre)
+        logging.info("Fetching Download Links")
+        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, MUSIC_DIR, proxies=proxies)
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
+<<<<<<< HEAD
         download.Download(session=session, file=STEP_THREE_CACHE, temp=TEMP, base_path=MUSIC_DIR)
+=======
+        download.Download(database, DOWNLOAD_LOGGER, proxies=proxies, base_path=MUSIC_DIR)
+>>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
 
 if __name__ == "__main__":

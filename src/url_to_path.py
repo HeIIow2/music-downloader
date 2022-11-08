@@ -1,30 +1,17 @@
 import os.path
-import shlex
-import pandas as pd
-import json
+import logging
 
 
 class UrlPath:
-    def __init__(self, genre: str, temp: str = "temp", file: str = ".cache3.csv", step_two_file: str = ".cache2.csv"):
-        self.temp = temp
-        self.file = file
-        self.metadata = pd.read_csv(os.path.join(self.temp, step_two_file), index_col=0)
+    def __init__(self, database, logger: logging.Logger, genre: str):
+        self.database = database
+        self.logger = logger
 
         self.genre = genre
 
-        new_metadata = []
-
-        for idx, row in self.metadata.iterrows():
+        for row in self.database.get_tracks_without_filepath():
             file, path = self.get_path_from_row(row)
-            new_row = dict(row)
-            new_row['path'] = path
-            new_row['file'] = file
-            new_row['genre'] = self.genre
-            new_metadata.append(new_row)
-
-        new_df = pd.DataFrame(new_metadata)
-        new_df.to_csv(os.path.join(self.temp, self.file))
-
+            self.database.set_filepath(row['id'], file, path, genre)
 
     def get_path_from_row(self, row):
         """
@@ -33,7 +20,9 @@ class UrlPath:
         :param row:
         :return: path:
         """
-        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row), f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row))
+        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row),
+                            f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row),
+                                                                       self.get_album(row))
 
     def escape_part(self, part: str):
         return part.replace("/", " ")
@@ -45,7 +34,7 @@ class UrlPath:
         return self.escape_part(row['album'])
 
     def get_artist(self, row):
-        artists = json.loads(row['artist'].replace("'", '"'))
+        artists = [artist['name'] for artist in row['artists']]
         return self.escape_part(artists[0])
 
     def get_song(self, row):

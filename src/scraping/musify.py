@@ -1,8 +1,16 @@
 import logging
+import time
+
 import requests
 import bs4
 
-import phonetic_compares
+try:
+    import phonetic_compares
+except ModuleNotFoundError:
+    from scraping import phonetic_compares
+
+TRIES = 5
+TIMEOUT = 10
 
 session = requests.Session()
 session.headers = {
@@ -12,8 +20,8 @@ session.headers = {
 
 
 def get_musify_url(row):
-    title = row.title
-    artists = row.artist
+    title = row['title']
+    artists = row['artists']
 
     url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
 
@@ -40,7 +48,10 @@ def get_download_link(default_url):
 
 def download_from_musify(file, url):
     logging.info(f"downloading: '{url}'")
-    r = session.get(url)
+    try:
+        r = session.get(url, timeout=15)
+    except requests.exceptions.ConnectionError:
+        return -1
     if r.status_code != 200:
         if r.status_code == 404:
             logging.warning(f"{r.url} was not found")
@@ -60,18 +71,25 @@ def download(row):
     return download_from_musify(file_, url)
 
 
-def get_soup_of_search(query: str):
+def get_soup_of_search(query: str, trie=0):
     url = f"https://musify.club/search?searchText={query}"
     logging.debug(f"Trying to get soup from {url}")
     r = session.get(url)
     if r.status_code != 200:
+        if r.status_code in [503] and trie < TRIES:
+            logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
+            logging.warning(f"retrying in {TIMEOUT} seconds again")
+            time.sleep(TIMEOUT)
+            return get_soup_of_search(query, trie=trie+1)
+
+        logging.warning("too many tries, returning")
         raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")
     return bs4.BeautifulSoup(r.content, features="html.parser")
 
 
 def search_for_track(row):
-    track = row.title
-    artist = row.artist
+    track = row['title']
+    artist = row['artists']
 
     soup = get_soup_of_search(f"{artist[0]} - {track}")
     tracklist_container_soup = soup.find_all("div", {"class": "playlist"})
