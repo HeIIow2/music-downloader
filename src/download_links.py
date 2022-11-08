@@ -15,7 +15,7 @@ class Download:
 
         self.urls = []
 
-        for row in self.database.get_tracks_to_download():
+        for row in self.database.get_tracks_without_src():
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']
