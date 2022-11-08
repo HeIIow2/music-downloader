@@ -71,8 +71,6 @@ class Download:
                 if type(row[key]) != list:
                     row[key] = str(row[key])
                 audiofile[key] = row[key]
-            else:
-                self.logger.warning(key)
 
         self.logger.info("saving")
         audiofile.save(file_path, v1=2)
