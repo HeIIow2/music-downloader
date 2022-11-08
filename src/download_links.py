@@ -6,19 +6,12 @@ from scraping import musify, youtube_music
 
 
 class Download:
-<<<<<<< HEAD
-    def __init__(self, metadata_csv: str = ".cache1.csv", session: requests.Session = requests.Session(),
-                 file: str = ".cache2.csv", temp: str = "temp") -> None:
-        self.temp = temp
-        self.metadata = pd.read_csv(os.path.join(self.temp, metadata_csv), index_col=0)
-=======
     def __init__(self, database, logger: logging.Logger, music_dir: str, proxies: dict = None) -> None:
         self.music_dir = music_dir
         self.database = database
         self.logger = logger
         if proxies is not None:
             musify.set_proxy(proxies)
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
         self.urls = []
 

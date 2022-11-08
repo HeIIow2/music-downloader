@@ -7,7 +7,6 @@ import url_to_path
 import download
 
 import logging
-import requests
 import os
 import tempfile
 
@@ -40,6 +39,8 @@ database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     reset_anyways=True)
 
 
+
+
 def get_existing_genre():
     valid_directories = []
     for elem in os.listdir(MUSIC_DIR):
@@ -47,7 +48,6 @@ def get_existing_genre():
             valid_directories.append(elem)
 
     return valid_directories
-
 
 
 def search_for_metadata():
@@ -93,9 +93,9 @@ def get_genre():
 
 
 def cli(start_at: int = 0):
-    session = requests.Session()
+    proxies = None
     if TOR:
-        session.proxies = {
+        proxies = {
             'http': 'socks5h://127.0.0.1:9150',
             'https': 'socks5h://127.0.0.1:9150'
         }

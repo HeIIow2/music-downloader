@@ -19,24 +19,12 @@ print(EasyID3.valid_keys.keys())
 
 
 class Download:
-<<<<<<< HEAD
-    def __init__(self, session: requests.Session = requests.Session(), file: str = ".cache3.csv", temp: str = "temp",
-                 base_path: str = ""):
-        self.session = session
-        self.session.headers = {
-            "Connection": "keep-alive",
-            "Referer": "https://musify.club/"
-        }
-        self.temp = temp
-        self.file = file
-=======
     def __init__(self, database, logger: logging.Logger, proxies: dict = None, base_path: str = ""):
         if proxies is not None:
             musify.set_proxy(proxies)
 
         self.database = database
         self.logger = logger
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
 
         for row in database.get_tracks_to_download():
             row['artist'] = [i['name'] for i in row['artists']]
