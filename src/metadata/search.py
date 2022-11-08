@@ -225,8 +225,8 @@ class Search:
         return self.fetch_new_options()
 
     @staticmethod
-    def search_recording_from_text(artist: str = None, release_group: str = None, recording: str = None):
-        result = musicbrainzngs.search_recordings(artist=artist, release=release_group, recording=recording)
+    def search_recording_from_text(artist: str = None, release_group: str = None, recording: str = None, query: str = None):
+        result = musicbrainzngs.search_recordings(artist=artist, release=release_group, recording=recording, query=query)
         recording_list = get_elem_from_obj(result, ['recording-list'], return_if_none=[])
 
         resulting_options = [
@@ -236,8 +236,8 @@ class Search:
         return resulting_options
 
     @staticmethod
-    def search_release_group_from_text(artist: str = None, release_group: str = None):
-        result = musicbrainzngs.search_release_groups(artist=artist, releasegroup=release_group)
+    def search_release_group_from_text(artist: str = None, release_group: str = None, query: str = None):
+        result = musicbrainzngs.search_release_groups(artist=artist, releasegroup=release_group, query=query)
         release_group_list = get_elem_from_obj(result, ['release-group-list'], return_if_none=[])
 
         resulting_options = [Option("release_group", get_elem_from_obj(release_group_, ['id']),
@@ -247,12 +247,9 @@ class Search:
         return resulting_options
 
     @staticmethod
-    def search_artist_from_text(artist: str = None):
-        print(artist)
-        result = musicbrainzngs.search_artists(artist=artist)
+    def search_artist_from_text(artist: str = None, query: str = None):
+        result = musicbrainzngs.search_artists(artist=artist, query=query)
         artist_list = get_elem_from_obj(result, ['artist-list'], return_if_none=[])
-
-        print(artist_list[0])
 
         resulting_options = [Option("artist", get_elem_from_obj(artist_, ['id']), get_elem_from_obj(artist_, ['name']),
                                     additional_info=f": {', '.join([i['name'] for i in get_elem_from_obj(artist_, ['tag-list'], return_if_none=[])])}")
@@ -275,14 +272,29 @@ class Search:
 
         self.append_new_choices(results)
 
+    def search_from_text_unspecified(self, query: str):
+        results = []
+        results.extend(self.search_artist_from_text(query=query))
+        results.extend(self.search_release_group_from_text(query=query))
+        results.extend(self.search_recording_from_text(query=query))
+
+        self.append_new_choices(results)
+
     def search_from_query(self, query: str):
+        if query is None:
+            return
         """
         mit # wird ein neuer Parameter gestartet
         der Buchstabe dahinter legt die Art des Parameters fest
         "#a Psychonaut 4 #r Tired, Numb and #t Drop by Drop"
+        if no # is in the query it gets treated as "unspecified query"
         :param query:
         :return:
         """
+
+        if not '#' in query:
+            self.search_from_text_unspecified(query)
+            return
 
         artist = None
         release_group = None
