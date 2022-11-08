@@ -62,12 +62,15 @@ def search_for_metadata():
         if input_.lower() == "q":
             break
         if input_.lower() == "..":
-            search.get_previous_options()
+            print()
+            print(search.get_previous_options())
             continue
         if input_.isdigit():
-            search.choose(int(input_))
+            print()
+            print(search.choose(int(input_)))
             continue
-        search.search_from_query(input_)
+        print()
+        print(search.search_from_query(input_))
 
     return search.current_option
 

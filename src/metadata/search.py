@@ -44,6 +44,13 @@ class Option:
         }
         return f"{type_repr[self.type]}: \"{self.name}\"{self.additional_info}"
 
+class MultipleOptions:
+    def __init__(self, option_list: List[Option]) -> None:
+        self.option_list = option_list
+
+    def __repr__(self) -> str:
+        return "\n".join([f"{str(i).zfill(2)}) {choice.__repr__()}" for i, choice in enumerate(self.option_list)])
+
 
 class Search:
     def __init__(self, logger: logging.Logger) -> None:
@@ -52,18 +59,13 @@ class Search:
         self.options_history = []
         self.current_option: Option
 
-    def append_new_choices(self, new_choices: List[Option]):
-        print()
-        for i, choice in enumerate(new_choices):
-            print(f"{str(i).zfill(2)}) {choice}")
-
+    def append_new_choices(self, new_choices: List[Option]) -> MultipleOptions:
         self.options_history.append(new_choices)
+        return MultipleOptions(new_choices)
 
     def get_previous_options(self):
         self.options_history.pop(-1)
-        print()
-        for i, choice in enumerate(self.options_history[-1]):
-            print(f"{str(i).zfill(2)}) {choice}")
+        return MultipleOptions(self.options_history[-1])
 
     @staticmethod
     def fetch_new_options_from_artist(artist: Option):
@@ -195,7 +197,7 @@ class Search:
 
         return results
 
-    def fetch_new_options(self):
+    def fetch_new_options(self) -> MultipleOptions:
         if self.current_option is None:
             return -1
 
@@ -209,17 +211,17 @@ class Search:
         elif self.current_option.type == 'recording':
             result = self.fetch_new_options_from_record(self.current_option)
 
-        self.append_new_choices(result)
+        return self.append_new_choices(result)
 
-    def choose(self, index: int):
+    def choose(self, index: int) -> MultipleOptions:
         if len(self.options_history) == 0:
             logging.error("initial query neaded before choosing")
-            return -1
+            return MultipleOptions([])
 
         latest_options = self.options_history[-1]
         if index >= len(latest_options):
             logging.error("index outside of options")
-            return -1
+            return MultipleOptions([])
 
         self.current_option = latest_options[index]
         return self.fetch_new_options()
@@ -256,13 +258,11 @@ class Search:
                              for artist_ in artist_list]
         return resulting_options
 
-    def search_from_text(self, artist: str = None, release_group: str = None, recording: str = None):
+    def search_from_text(self, artist: str = None, release_group: str = None, recording: str = None) -> MultipleOptions:
         self.logger.info(f"searching specified artist: \"{artist}\", release group: \"{release_group}\", recording: \"{recording}\"")
         if artist is None and release_group is None and recording is None:
             self.logger.error("either artist, release group or recording has to be set")
             return -1
-
-        print()
 
         if recording is not None:
             self.logger.info("search for recording")
@@ -274,9 +274,9 @@ class Search:
             self.logger.info("search for artist")
             results = self.search_artist_from_text(artist=artist)
 
-        self.append_new_choices(results)
+        return self.append_new_choices(results)
 
-    def search_from_text_unspecified(self, query: str):
+    def search_from_text_unspecified(self, query: str) -> MultipleOptions:
         self.logger.info(f"searching unspecified: \"{query}\"")
 
         results = []
@@ -284,11 +284,11 @@ class Search:
         results.extend(self.search_release_group_from_text(query=query))
         results.extend(self.search_recording_from_text(query=query))
 
-        self.append_new_choices(results)
+        return self.append_new_choices(results)
 
-    def search_from_query(self, query: str):
+    def search_from_query(self, query: str) -> MultipleOptions:
         if query is None:
-            return
+            return MultipleOptions([])
         """
         mit # wird ein neuer Parameter gestartet
         der Buchstabe dahinter legt die Art des Parameters fest
@@ -299,8 +299,7 @@ class Search:
         """
 
         if not '#' in query:
-            self.search_from_text_unspecified(query)
-            return
+            return self.search_from_text_unspecified(query)
 
         artist = None
         release_group = None
@@ -328,7 +327,7 @@ class Search:
                 recording = input_
                 continue
 
-        self.search_from_text(artist=artist, release_group=release_group, recording=recording)
+        return self.search_from_text(artist=artist, release_group=release_group, recording=recording)
 
 
 def automated_demo():
