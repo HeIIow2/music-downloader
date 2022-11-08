@@ -29,7 +29,10 @@ def get_musify_url(row):
 
     url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
 
-    r = session.get(url=url)
+    try:
+        r = session.get(url=url)
+    except requests.exceptions.ConnectionError:
+        return None
     if r.status_code == 200:
         autocomplete = r.json()
         for row in autocomplete:
