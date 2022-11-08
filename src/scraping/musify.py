@@ -52,7 +52,10 @@ def get_download_link(default_url):
 
 def download_from_musify(file, url):
     logging.info(f"downloading: '{url}'")
-    r = session.get(url)
+    try:
+        r = session.get(url, timeout=15)
+    except requests.exceptions.ConnectionError:
+        return -1
     if r.status_code != 200:
         if r.status_code == 404:
             logging.warning(f"{r.url} was not found")
