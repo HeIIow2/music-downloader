@@ -1,5 +1,6 @@
+from typing import List
+
 import youtube_dl
-import pandas as pd
 import logging
 import time
 
@@ -15,10 +16,13 @@ WAIT_BETWEEN_BLOCK = 10
 MAX_TRIES = 3
 
 
-def get_youtube_from_isrc(isrc: str):
+def get_youtube_from_isrc(isrc: str) -> List[dict]:
     # https://stackoverflow.com/questions/63388364/searching-youtube-videos-using-youtube-dl
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-        videos = ydl.extract_info(f"ytsearch:{isrc}", download=False)['entries']
+        try:
+            videos = ydl.extract_info(f"ytsearch:{isrc}", download=False)['entries']
+        except youtube_dl.utils.DownloadError:
+            return []
 
     return [{
         'url': video[YOUTUBE_URL_KEY],
@@ -27,8 +31,6 @@ def get_youtube_from_isrc(isrc: str):
 
 
 def get_youtube_url(row):
-    if pd.isna(row['isrc']):
-        return None
     real_title = row['title'].lower()
 
     final_result = None
