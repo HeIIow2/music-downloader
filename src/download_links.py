@@ -6,7 +6,8 @@ from scraping import musify, youtube_music
 
 
 class Download:
-    def __init__(self, database, logger: logging.Logger, proxies: dict = None) -> None:
+    def __init__(self, database, logger: logging.Logger, music_dir: str, proxies: dict = None) -> None:
+        self.music_dir = music_dir
         self.database = database
         self.logger = logger
         if proxies is not None:
@@ -18,7 +19,7 @@ class Download:
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']
-            if os.path.exists(os.path.join(os.path.expanduser('~/Music'), row['file'])):
+            if os.path.exists(os.path.join(self.music_dir, row['file'])):
                 self.logger.info(f"skipping the fetching of the download links, cuz {row['file']} already exists.")
                 continue
 

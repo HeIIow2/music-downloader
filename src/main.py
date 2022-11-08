@@ -116,7 +116,7 @@ def cli(start_at: int = 0):
 
     if start_at <= 2:
         logging.info("Fetching Download Links")
-        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, proxies=proxies)
+        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, MUSIC_DIR, proxies=proxies)
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")

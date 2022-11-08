@@ -18,9 +18,6 @@ print(EasyID3.valid_keys.keys())
 """
 
 
-
-
-
 class Download:
     def __init__(self, database, logger: logging.Logger, proxies: dict = None, base_path: str = ""):
         if proxies is not None:
