@@ -3,7 +3,10 @@ import pandas as pd
 import logging
 import time
 
-import phonetic_compares
+try:
+    import phonetic_compares
+except ModuleNotFoundError:
+    from scraping import phonetic_compares
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 YOUTUBE_URL_KEY = 'webpage_url'

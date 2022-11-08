@@ -1,8 +1,8 @@
 import requests
+import os
 import logging
 
-import musify
-import youtube_music
+from scraping import musify, youtube_music
 
 
 class Download:
@@ -18,6 +18,9 @@ class Download:
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']
+            if os.path.exists(os.path.join(os.path.expanduser('~/Music'), row['file'])):
+                self.logger.info(f"skipping the fetching of the download links, cuz {row['file']} already exists.")
+                continue
 
             # check YouTube
             youtube_url = youtube_music.get_youtube_url(row)

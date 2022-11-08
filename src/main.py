@@ -111,12 +111,12 @@ def cli(start_at: int = 0):
         metadata_downloader.download(search)
 
     if start_at <= 1:
-        logging.info("Fetching Download Links")
-        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, proxies=proxies)
-
-    if start_at <= 2:
         logging.info("creating Paths")
         url_to_path.UrlPath(database, PATH_LOGGER, genre=genre)
+
+    if start_at <= 2:
+        logging.info("Fetching Download Links")
+        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, proxies=proxies)
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")

@@ -4,7 +4,10 @@ import time
 import requests
 import bs4
 
-import phonetic_compares
+try:
+    import phonetic_compares
+except ModuleNotFoundError:
+    from scraping import phonetic_compares
 
 TRIES = 5
 TIMEOUT = 10

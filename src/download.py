@@ -5,8 +5,7 @@ from mutagen.easyid3 import EasyID3
 from pydub import AudioSegment
 import logging
 
-import musify
-import youtube_music
+from scraping import musify, youtube_music
 
 """
 https://en.wikipedia.org/wiki/ID3
