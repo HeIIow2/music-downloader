@@ -257,6 +257,7 @@ class Search:
         return resulting_options
 
     def search_from_text(self, artist: str = None, release_group: str = None, recording: str = None):
+        self.logger.info(f"searching specified artist: \"{artist}\", release group: \"{release_group}\", recording: \"{recording}\"")
         if artist is None and release_group is None and recording is None:
             self.logger.error("either artist, release group or recording has to be set")
             return -1
@@ -264,15 +265,20 @@ class Search:
         print()
 
         if recording is not None:
+            self.logger.info("search for recording")
             results = self.search_recording_from_text(artist=artist, release_group=release_group, recording=recording)
         elif release_group is not None:
+            self.logger.info("search for release group")
             results = self.search_release_group_from_text(artist=artist, release_group=release_group)
         else:
+            self.logger.info("search for artist")
             results = self.search_artist_from_text(artist=artist)
 
         self.append_new_choices(results)
 
     def search_from_text_unspecified(self, query: str):
+        self.logger.info(f"searching unspecified: \"{query}\"")
+
         results = []
         results.extend(self.search_artist_from_text(query=query))
         results.extend(self.search_release_group_from_text(query=query))
