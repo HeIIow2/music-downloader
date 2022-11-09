@@ -14,8 +14,8 @@ would be to write a Rhythmbox plugin that fetches lyrics from ID3 USLT
 # https://www.programcreek.com/python/example/63462/mutagen.mp3.EasyMP3
 # https://code.activestate.com/recipes/577138-embed-lyrics-into-mp3-files-using-mutagen-uslt-tag/
 
-MP3_PATH = "/home/lars/Music/metalcore/I Prevail/TRAUMA/Breaking Down.mp3"
-LYRICS = """
+MP3_PATH = "/home/lars/Music/deathcore/Brand of Sacrifice/The Interstice/Eclipse.mp3"
+LYRICS_BREAKING_DOWN = """
 [Chorus: Brian Burkheiser]
 I think, I think too much
 I'm a little bit paranoid, I think I’m breaking
@@ -78,6 +78,32 @@ I don't really like myself
 I don't really like myself
 I think I'm breaking down
 """
+LYRICS_ECLIPSE = """
+Your offerings have consecrated
+They are marked by the brand
+The sun has seen it's fifth death
+For the red lake to flow again
+
+He will
+Feel their pain in order to
+Complete the final transformation
+A name new and old
+
+Your offerings have been consecrated by the laws of Causality
+Falcon of Darkness
+Send us into an age of abyss
+Blinded by beauty
+With stacks of bodies as high as the eye can see
+Feast, apostles, feast
+
+The one chosen by the hand of God
+The master of the sinful black sheep
+And the king of the faithful blind
+
+Welcome to the new age
+Welcome to the new age
+We are the branded ones"""
+
 
 def add_lyrics(file_name, lyrics=""):
     tags = ID3(file_name)
@@ -91,5 +117,5 @@ def get_lyrics(file_name):
     return tags.getall("USLT")
 
 if __name__ == "__main__":
-    add_lyrics(MP3_PATH, lyrics=LYRICS)
+    add_lyrics(MP3_PATH, lyrics=LYRICS_ECLIPSE)
     print(get_lyrics(MP3_PATH))

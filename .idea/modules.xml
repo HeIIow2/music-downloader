@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/music-downloader.iml" filepath="$PROJECT_DIR$/.idea/music-downloader.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../rythmbox-id3-lyrics-support/.idea/rythmbox-id3-lyrics-support.iml" filepath="$PROJECT_DIR$/../rythmbox-id3-lyrics-support/.idea/rythmbox-id3-lyrics-support.iml" />
     </modules>
   </component>
 </project>
