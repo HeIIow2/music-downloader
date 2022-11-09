@@ -10,9 +10,9 @@ import logging
 import os
 import tempfile
 
-logging.basicConfig(level=logging.INFO)
 
 TEMP_FOLDER = "music-downloader"
+LOG_FILE = "download_logs.log"
 DATABASE_FILE = "metadata.db"
 DATABASE_STRUCTURE_FILE = "database_structure.sql"
 DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql"
@@ -31,6 +31,9 @@ TOR = False
 temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
+
+# configure logger basics
+logging.basicConfig(level=logging.INFO, filename=os.path.join(temp_dir, LOG_FILE))
 
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
