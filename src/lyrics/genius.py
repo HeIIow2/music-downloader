@@ -3,10 +3,12 @@ import sys
 import os
 import logging
 from typing import List
+from bs4 import BeautifulSoup
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+# utils >:3
 from tools import phonetic_compares
 from tools.object_handeling import get_elem_from_obj
 
@@ -49,7 +51,8 @@ class Song:
         self.lyricist: str
 
         if get_elem_from_obj(song_data, ['lyrics_state']) != "complete":
-            logger.warning(f"lyrics state of {self.title} by {self.artist} is not complete but {get_elem_from_obj(song_data, ['lyrics_state'])}")
+            logger.warning(
+                f"lyrics state of {self.title} by {self.artist} is not complete but {get_elem_from_obj(song_data, ['lyrics_state'])}")
 
         self.valid = self.is_valid()
         if self.valid:
@@ -61,33 +64,44 @@ class Song:
         title_match, title_distance = phonetic_compares.match_titles(self.title, self.desired_data['track'])
         artist_match, artist_distance = phonetic_compares.match_artists(self.artist, self.desired_data['artist'])
 
-        return title_match and artist_match
+        return not title_match and not artist_match
 
     def __repr__(self) -> str:
-        return f"{self.title} by {self.artist}"
+        return f"{self.title} by {self.artist} ({self.url})"
 
-    def fetch_lyrics(self) -> str:
+    def fetch_lyrics(self) -> str | None:
         if not self.valid:
             logger.warning(f"{self.__repr__()} is invalid but the lyrics still get fetched. Something could be wrong.")
-        lyrics = ""
 
+        r = session.get(self.url)
+        if r.status_code != 200:
+            logging.warning(f"{r.url} returned {r.status_code}:\n{r.content}")
+            return None
 
+        soup = BeautifulSoup(r.content, "html.parser")
+        lyrics_soups = soup.find_all('div', {'data-lyrics-container': "true"})
+        if len(lyrics_soups) == 0:
+            logger.warning(f"didn't found lyrics on {self.url}")
+            return None
+        if len(lyrics_soups) != 1:
+            logger.warning(f"number of lyrics_soups doesn't equals 1, but {len(lyrics_soups)} on {self.url}")
+
+        lyrics_soup = lyrics_soups[0]
+        lyrics = lyrics_soup.getText(separator="\n", strip=True)
+
+        # <div data-lyrics-container="true" class="Lyrics__Container-sc-1ynbvzw-6 YYrds">With the soundle
         self.lyrics = lyrics
         return lyrics
 
 
-def build_search_query(artist: str, track: str) -> str:
-    return f"{artist} - {track}"
-
-
 def process_multiple_songs(song_datas: list, desired_data: dict) -> List[Song]:
     all_songs = [Song(song_data, desired_data) for song_data in song_datas]
-    return [song for song in all_songs if not song.valid]
+    return [song_ for song_ in all_songs if not song_.valid]
 
 
 def search_song_list(artist: str, track: str) -> List[Song]:
     endpoint = "https://genius.com/api/search/multi?q="
-    url = endpoint + build_search_query(artist, track)
+    url = f"{endpoint}{artist} - {track}"
     logging.info(f"requesting {url}")
 
     desired_data = {
@@ -104,24 +118,56 @@ def search_song_list(artist: str, track: str) -> List[Song]:
         logging.warning(f"{r.url} returned {get_elem_from_obj(content, ['meta', 'status'])}:\n{content}")
         return []
 
-    # print(r.status_code)
-    # print(r.json())
-
     sections = get_elem_from_obj(content, ['response', 'sections'])
     for section in sections:
         section_type = get_elem_from_obj(section, ['type'])
-        print(section_type)
         if section_type == "song":
             return process_multiple_songs(get_elem_from_obj(section, ['hits'], return_if_none=[]), desired_data)
 
     return []
 
+
 def search(artist: str, track: str):
-    return search_song_list(artist, track)
+    raw_songs = search_song_list(artist, track)
+    all_lyrics = [raw_song.fetch_lyrics() for raw_song in raw_songs]
+    return [i for i in all_lyrics if i is not None]
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
-    songs = search_song_list("Psychonaut 4", "Sana Sana Sana, Cura Cura Cura")
-    print(songs)
+    song = Song(
+        {'highlights': [], 'index': 'song', 'type': 'song',
+         'result': {'_type': 'song', 'annotation_count': 0, 'api_path': '/songs/6142483',
+                    'artist_names': 'Psychonaut 4',
+                    'full_title': 'Sana Sana Sana, Cura Cura Cura by\xa0Psychonaut\xa04',
+                    'header_image_thumbnail_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.300x300x1.jpg',
+                    'header_image_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.651x651x1.jpg',
+                    'id': 6142483, 'instrumental': False, 'language': 'en', 'lyrics_owner_id': 4443216,
+                    'lyrics_state': 'complete', 'lyrics_updated_at': 1604698709,
+                    'path': '/Psychonaut-4-sana-sana-sana-cura-cura-cura-lyrics', 'pyongs_count': None,
+                    'relationships_index_url': 'https://genius.com/Psychonaut-4-sana-sana-sana-cura-cura-cura-sample',
+                    'release_date_components': {'year': 2020, 'month': 7, 'day': 1},
+                    'release_date_for_display': 'July 1, 2020',
+                    'release_date_with_abbreviated_month_for_display': 'Jul. 1, 2020',
+                    'song_art_image_thumbnail_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.300x300x1.jpg',
+                    'song_art_image_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.651x651x1.jpg',
+                    'stats': {'unreviewed_annotations': 0, 'hot': False}, 'title': 'Sana Sana Sana, Cura Cura Cura',
+                    'title_with_featured': 'Sana Sana Sana, Cura Cura Cura', 'updated_by_human_at': 1647353214,
+                    'url': 'https://genius.com/Psychonaut-4-sana-sana-sana-cura-cura-cura-lyrics',
+                    'featured_artists': [], 'primary_artist': {'_type': 'artist', 'api_path': '/artists/1108956',
+                                                               'header_image_url': 'https://images.genius.com/ff13efc74a043237cfca3fc0a6cb12dd.1000x563x1.jpg',
+                                                               'id': 1108956,
+                                                               'image_url': 'https://images.genius.com/25ff7cfdcb6d92a9f19ebe394a895736.640x640x1.jpg',
+                                                               'index_character': 'p', 'is_meme_verified': False,
+                                                               'is_verified': False, 'name': 'Psychonaut 4',
+                                                               'slug': 'Psychonaut-4',
+                                                               'url': 'https://genius.com/artists/Psychonaut-4'}}},
+        {'artist': 'Psychonaut 4', 'track': 'Sana Sana Sana, Cura Cura Cura'}
+    )
+    print(song.fetch_lyrics())
+
+    exit()
+    songs = search("Psychonaut 4", "Sana Sana Sana, Cura Cura Cura")
+    for song in songs:
+        print(song)

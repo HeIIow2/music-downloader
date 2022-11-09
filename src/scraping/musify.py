@@ -14,6 +14,7 @@ TIMEOUT = 10
 
 session = requests.Session()
 session.headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
     "Connection": "keep-alive",
     "Referer": "https://musify.club/"
 }
@@ -137,20 +138,4 @@ def get_musify_url_slow(row):
 
 
 if __name__ == "__main__":
-    import pandas as pd
-    import json
-
-    TOR = True
-    if TOR:
-        set_proxy({
-            'http': 'socks5h://127.0.0.1:9150',
-            'https': 'socks5h://127.0.0.1:9150'
-        })
-
-    df = pd.read_csv("../temp/.cache1.csv")
-
-    for idx, row in df.iterrows():
-        row['artist'] = json.loads(row['artist'].replace("'", '"'))
-        print("-" * 200)
-        print("slow")
-        print(get_musify_url_slow(row))
+    pass

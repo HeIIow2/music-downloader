@@ -205,7 +205,9 @@ GROUP BY track.id;
         return self.get_custom_track(["(track.file IS NULL OR track.path IS NULL OR track.genre IS NULL)"])
 
     def update_download_status(self, track_id: str):
-        pass
+        query = f"UPDATE track SET downloaded = 1, WHERE '{track_id}' == id;"
+        self.cursor.execute(query)
+        self.connection.commit()
 
     def set_download_data(self, track_id: str, url: str, src: str):
         query = f"""

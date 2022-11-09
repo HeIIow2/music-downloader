@@ -6,10 +6,12 @@ import download_links
 import url_to_path
 import download
 
+# NEEDS REFACTORING
+from lyrics_ import fetch_lyrics
+
 import logging
 import os
 import tempfile
-
 
 TEMP_FOLDER = "music-downloader"
 LOG_FILE = "download_logs.log"
@@ -37,11 +39,9 @@ logging.basicConfig(level=logging.INFO, filename=os.path.join(temp_dir, LOG_FILE
 
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
-                    DATABASE_STRUCTURE_FALLBACK, 
+                    DATABASE_STRUCTURE_FALLBACK,
                     DATABASE_LOGGER,
                     reset_anyways=True)
-
-
 
 
 def get_existing_genre():
@@ -76,6 +76,7 @@ def search_for_metadata():
         print(search.search_from_query(input_))
 
     return search.current_option
+
 
 def get_genre():
     existing_genres = get_existing_genre()
@@ -124,6 +125,10 @@ def cli(start_at: int = 0):
     if start_at <= 3:
         logging.info("starting to download the mp3's")
         download.Download(database, DOWNLOAD_LOGGER, proxies=proxies, base_path=MUSIC_DIR)
+
+    if start_at <= 4:
+        logging.info("starting to fetch the lyrics")
+        fetch_lyrics(database)
 
 
 if __name__ == "__main__":
