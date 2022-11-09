@@ -70,10 +70,10 @@ class MetadataDownloader:
 
         def __str__(self):
             newline = "\n"
-            return f"id: {self.musicbrainz_artistid}\nname: {self.artist}\n{newline.join([str(release_group) for release_group in self.release_groups])}"
+            return f"artist: \"{self.artist}\""
 
         def save(self):
-            self.logger.info(f"artist: {self}")
+            self.logger.info(f"caching {self}")
             self.database.add_artist(
                 musicbrainz_artistid=self.musicbrainz_artistid,
                 artist=self.artist
@@ -107,6 +107,9 @@ class MetadataDownloader:
             artist_datas = get_elem_from_obj(release_group_data, ['artist-credit'], return_if_none={})
             release_datas = get_elem_from_obj(release_group_data, ['release-list'], return_if_none={})
 
+            # only for printing the release
+            self.name = get_elem_from_obj(release_group_data, ['title'])
+
             for artist_data in artist_datas:
                 artist_id = get_elem_from_obj(artist_data, ['artist', 'id'])
                 if artist_id is None:
@@ -131,11 +134,10 @@ class MetadataDownloader:
                 self.append_all_releases(release_datas)
 
         def __str__(self):
-            newline = "\n"
-            return f"{newline.join([str(release_group) for release_group in self.releases])}"
+            return f"release group: \"{self.name}\""
 
         def save(self):
-            self.logger.info(f"caching release_group {self}")
+            self.logger.info(f"caching {self}")
             self.database.add_release_group(
                 musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
                 artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
@@ -223,10 +225,10 @@ class MetadataDownloader:
                 self.append_recordings(recording_datas)
 
         def __str__(self):
-            return f"{self.title} ©{self.copyright} {self.album_status}"
+            return f"release: {self.title} ©{self.copyright} {self.album_status}"
 
         def save(self):
-            self.logger.info(f"caching release {self}")
+            self.logger.info(f"caching {self}")
             self.database.add_release(
                 musicbrainz_albumid=self.musicbrainz_albumid,
                 release_group_id=self.release_group.musicbrainz_releasegroupid,
@@ -291,10 +293,10 @@ class MetadataDownloader:
             self.save()
 
         def __str__(self):
-            return f"{self.title}: {self.isrc}"
+            return f"track: \"{self.title}\" {self.isrc or ''}"
 
         def save(self):
-            self.logger.info(f"caching track {self}")
+            self.logger.info(f"caching {self}")
 
             self.database.add_track(
                 musicbrainz_releasetrackid=self.musicbrainz_releasetrackid,
@@ -346,8 +348,10 @@ if __name__ == "__main__":
     import database
 
     database_ = database.Database(os.path.join(temp_dir, "metadata.db"),
-                                  os.path.join(temp_dir, "database_structure.sql"), db_logger,
-                                  reset_anyways=True)
+                                  os.path.join(temp_dir, "database_structure.sql"),
+                                  "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql", 
+                                  db_logger,
+                                  reset_anyways=False)
 
     download_logger = logging.getLogger("metadata downloader")
     download_logger.setLevel(logging.INFO)
