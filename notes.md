@@ -1,4 +1,5 @@
 # TO DO
+- genuis scraper only downloades partially lyrics: reproducable example https://genius.com/Zombiez-blut-lyrics
 - LYRICS
 - add complete search of musify (scraping of artist page etc.) as last resort
 - add a check if the songs truly are the same with non changebal attributes (length etc.)
