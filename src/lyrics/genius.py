@@ -4,6 +4,7 @@ import os
 import logging
 from typing import List
 from bs4 import BeautifulSoup
+import pycountry
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -44,7 +45,9 @@ class Song:
         self.artist = get_elem_from_obj(song_data, ['primary_artist', 'name'])
         self.title = get_elem_from_obj(song_data, ['title'])
 
-        self.language = get_elem_from_obj(song_data, ['language'])
+        lang_code = get_elem_from_obj(song_data, ['language']) or "en"
+        self.language = pycountry.languages.get(alpha_2=lang_code)
+        self.lang = self.language.alpha_3
         self.url = get_elem_from_obj(song_data, ['url'])
 
         # maybe could be implemented
@@ -57,8 +60,12 @@ class Song:
         self.valid = self.is_valid()
         if self.valid:
             logger.info(f"found lyrics for \"{self.__repr__()}\"")
+        else:
+            return
 
-        self.lyrics: str
+        self.lyrics = self.fetch_lyrics()
+        if self.lyrics is None:
+            self.valid = False
 
     def is_valid(self) -> bool:
         title_match, title_distance = phonetic_compares.match_titles(self.title, self.desired_data['track'])
@@ -96,7 +103,7 @@ class Song:
 
 def process_multiple_songs(song_datas: list, desired_data: dict) -> List[Song]:
     all_songs = [Song(song_data, desired_data) for song_data in song_datas]
-    return [song_ for song_ in all_songs if not song_.valid]
+    return all_songs
 
 
 def search_song_list(artist: str, track: str) -> List[Song]:
@@ -128,14 +135,18 @@ def search_song_list(artist: str, track: str) -> List[Song]:
 
 
 def search(artist: str, track: str):
-    raw_songs = search_song_list(artist, track)
-    all_lyrics = [raw_song.fetch_lyrics() for raw_song in raw_songs]
-    return [i for i in all_lyrics if i is not None]
+    results = []
+    r = search_song_list(artist, track)
+    for r_ in r:
+        if r_.valid:
+            results.append(r_)
+    return results
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
+    """
     song = Song(
         {'highlights': [], 'index': 'song', 'type': 'song',
          'result': {'_type': 'song', 'annotation_count': 0, 'api_path': '/songs/6142483',
@@ -166,8 +177,8 @@ if __name__ == "__main__":
         {'artist': 'Psychonaut 4', 'track': 'Sana Sana Sana, Cura Cura Cura'}
     )
     print(song.fetch_lyrics())
+    """
 
-    exit()
-    songs = search("Psychonaut 4", "Sana Sana Sana, Cura Cura Cura")
+    songs = search("Psychonaut 4", "Sana-sana-sana - Cura-cura-cura")
     for song in songs:
         print(song)

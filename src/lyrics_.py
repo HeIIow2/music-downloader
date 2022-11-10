@@ -29,10 +29,9 @@ I have written that Rhythmbox plugin: https://github.com/HeIIow2/rythmbox-id3-ly
 # https://code.activestate.com/recipes/577138-embed-lyrics-into-mp3-files-using-mutagen-uslt-tag/
 
 
-def add_lyrics(file_name, lyrics=""):
-    print(lyrics)
+def add_lyrics(file_name, lyrics):
     tags = ID3(file_name)
-    uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=lyrics)
+    uslt_output = USLT(encoding=3, lang=lyrics.lang, desc=u'desc', text=lyrics.lyrics)
     tags["USLT::'eng'"] = uslt_output
 
     tags.save(file_name)
@@ -50,16 +49,16 @@ def fetch_single_lyrics(row: dict):
 
     if not os.path.exists(file_):
         return
-    print(file_, artist, track)
     lyrics = genius.search(artist, track)
     if len(lyrics) == 0:
         return
+    print("found something")
     add_lyrics(file_, lyrics[0])
 
 
 def fetch_lyrics(database: db.Database):
     for row in database.get_custom_track([]):
-        print(row)
+        print(row['title'])
         fetch_single_lyrics(row)
 
 
