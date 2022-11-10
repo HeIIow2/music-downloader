@@ -110,8 +110,8 @@ def cli(start_at: int = 0):
         logging.info(f"{genre} has been set as genre.")
 
     if start_at <= 0:
-        # search = search_for_metadata()
-        search = metadata.search.Option("release", "f8d4b24d-2c46-4e9c-8078-0c0f337c84dd", "Beautyfall")
+        search = search_for_metadata()
+        # search = metadata.search.Option("release", "f8d4b24d-2c46-4e9c-8078-0c0f337c84dd", "Beautyfall")
         logging.info("Starting Downloading of metadata")
         metadata_downloader = MetadataDownloader(database, METADATA_DOWNLOAD_LOGGER)
         metadata_downloader.download(search)
