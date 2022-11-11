@@ -7,7 +7,7 @@ def unhide(part: str):
     if len(part) == 0:
         return ""
     if part[0] == ".":
-        return part.replace(".", UNHIDE_CHAR)
+        return part.replace(".", UNHIDE_CHAR, 1)
     
     return part
 
