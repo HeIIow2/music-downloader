@@ -1,6 +1,16 @@
 import os.path
 import logging
 
+UNHIDE_CHAR = ','
+
+def unhide(part: str):
+    if len(part) == 0:
+        return ""
+    if part[0] == ".":
+        part[0] = UNHIDE_CHAR
+    
+    return part
+
 
 class UrlPath:
     def __init__(self, database, logger: logging.Logger, genre: str):
@@ -25,7 +35,7 @@ class UrlPath:
                                                                        self.get_album(row))
 
     def escape_part(self, part: str):
-        return part.replace("/", " ")
+        return unhide(part.replace("/", " "))
 
     def get_genre(self):
         return self.escape_part(self.genre)
