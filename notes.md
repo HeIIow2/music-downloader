@@ -1,4 +1,5 @@
 # TO DO
+- refactor file system
 - genuis scraper only downloades partially lyrics: reproducable example https://genius.com/Zombiez-blut-lyrics
 - LYRICS
 - add complete search of musify (scraping of artist page etc.) as last resort

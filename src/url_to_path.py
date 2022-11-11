@@ -1,6 +1,10 @@
 import os.path
 import logging
 
+from src.utils.shared import *
+
+logger = PATH_LOGGER
+
 UNHIDE_CHAR = '_'
 
 def unhide(part: str):
@@ -13,15 +17,13 @@ def unhide(part: str):
 
 
 class UrlPath:
-    def __init__(self, database, logger: logging.Logger, genre: str):
-        self.database = database
-        self.logger = logger
+    def __init__(self, genre: str):
 
         self.genre = genre
 
-        for row in self.database.get_tracks_without_filepath():
+        for row in database.get_tracks_without_filepath():
             file, path = self.get_path_from_row(row)
-            self.database.set_filepath(row['id'], file, path, genre)
+            database.set_filepath(row['id'], file, path, genre)
 
     def get_path_from_row(self, row):
         """
@@ -34,7 +36,8 @@ class UrlPath:
                             f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row),
                                                                        self.get_album(row))
 
-    def escape_part(self, part: str):
+    @staticmethod
+    def escape_part(part: str):
         return unhide(part.replace("/", " "))
 
     def get_genre(self):

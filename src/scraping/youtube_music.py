@@ -4,10 +4,7 @@ import youtube_dl
 import logging
 import time
 
-try:
-    import phonetic_compares
-except ModuleNotFoundError:
-    from scraping import phonetic_compares
+from src.utils import phonetic_compares
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 YOUTUBE_URL_KEY = 'webpage_url'

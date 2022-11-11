@@ -1,26 +1,27 @@
 import requests
-import os
-import logging
 
-from scraping import musify, youtube_music
+from src.utils.shared import *
+from src.scraping import musify, youtube_music, file_system
+
+logger = URL_DOWNLOAD_LOGGER
 
 
 class Download:
-    def __init__(self, database, logger: logging.Logger, music_dir: str, proxies: dict = None) -> None:
-        self.music_dir = music_dir
-        self.database = database
-        self.logger = logger
-        if proxies is not None:
-            musify.set_proxy(proxies)
-
+    def __init__(self) -> None:
         self.urls = []
 
-        for row in self.database.get_tracks_without_src():
+        for row in database.get_tracks_without_src():
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']
-            if os.path.exists(os.path.join(self.music_dir, row['file'])):
-                self.logger.info(f"skipping the fetching of the download links, cuz {row['file']} already exists.")
+            if os.path.exists(os.path.join(MUSIC_DIR, row['file'])):
+                logger.info(f"skipping the fetching of the download links, cuz {row['file']} already exists.")
+                continue
+
+            # check File System
+            file_path = file_system.get_path(row)
+            if file_path is not None:
+                self.add_url(file_path, 'file', id_)
                 continue
 
             # check YouTube
@@ -41,18 +42,11 @@ class Download:
                 self.add_url(musify_url, 'musify', id_)
                 continue
 
-            self.logger.warning(f"Didn't find any sources for {row['title']}")
+            logger.warning(f"Didn't find any sources for {row['title']}")
 
     def add_url(self, url: str, src: str, id_: str):
-        self.database.set_download_data(id_, url, src)
+        database.set_download_data(id_, url, src)
 
 
 if __name__ == "__main__":
-    proxies = {
-        'http': 'socks5h://127.0.0.1:9150',
-        'https': 'socks5h://127.0.0.1:9150'
-    }
-
-    s = requests.Session()
-    s.proxies = proxies
     download = Download()

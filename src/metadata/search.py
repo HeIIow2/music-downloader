@@ -1,18 +1,12 @@
 from typing import List
-import logging
 import musicbrainzngs
 
-try:
-    from object_handeling import get_elem_from_obj, parse_music_brainz_date
+from src.utils.shared import *
+from src.utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
-except ModuleNotFoundError:
-    from metadata.object_handeling import get_elem_from_obj, parse_music_brainz_date
+logger = SEARCH_LOGGER
 
-mb_log = logging.getLogger("musicbrainzngs")
-mb_log.setLevel(logging.WARNING)
-musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
-
-MAX_PARAMATERS = 3
+MAX_PARAMETERS = 3
 OPTION_TYPES = ['artist', 'release_group', 'release', 'recording']
 
 
@@ -45,6 +39,7 @@ class Option:
         }
         return f"{type_repr[self.type]}: \"{self.name}\"{self.additional_info}"
 
+
 class MultipleOptions:
     def __init__(self, option_list: List[Option]) -> None:
         self.option_list = option_list
@@ -54,9 +49,7 @@ class MultipleOptions:
 
 
 class Search:
-    def __init__(self, logger: logging.Logger) -> None:
-        self.logger = logger
-
+    def __init__(self) -> None:
         self.options_history = []
         self.current_option: Option
 
@@ -228,8 +221,10 @@ class Search:
         return self.fetch_new_options()
 
     @staticmethod
-    def search_recording_from_text(artist: str = None, release_group: str = None, recording: str = None, query: str = None):
-        result = musicbrainzngs.search_recordings(artist=artist, release=release_group, recording=recording, query=query)
+    def search_recording_from_text(artist: str = None, release_group: str = None, recording: str = None,
+                                   query: str = None):
+        result = musicbrainzngs.search_recordings(artist=artist, release=release_group, recording=recording,
+                                                  query=query)
         recording_list = get_elem_from_obj(result, ['recording-list'], return_if_none=[])
 
         resulting_options = [
@@ -260,25 +255,26 @@ class Search:
         return resulting_options
 
     def search_from_text(self, artist: str = None, release_group: str = None, recording: str = None) -> MultipleOptions:
-        self.logger.info(f"searching specified artist: \"{artist}\", release group: \"{release_group}\", recording: \"{recording}\"")
+        logger.info(
+            f"searching specified artist: \"{artist}\", release group: \"{release_group}\", recording: \"{recording}\"")
         if artist is None and release_group is None and recording is None:
-            self.logger.error("either artist, release group or recording has to be set")
-            return -1
+            logger.error("either artist, release group or recording has to be set")
+            return MultipleOptions([])
 
         if recording is not None:
-            self.logger.info("search for recording")
+            logger.info("search for recording")
             results = self.search_recording_from_text(artist=artist, release_group=release_group, recording=recording)
         elif release_group is not None:
-            self.logger.info("search for release group")
+            logger.info("search for release group")
             results = self.search_release_group_from_text(artist=artist, release_group=release_group)
         else:
-            self.logger.info("search for artist")
+            logger.info("search for artist")
             results = self.search_artist_from_text(artist=artist)
 
         return self.append_new_choices(results)
 
     def search_from_text_unspecified(self, query: str) -> MultipleOptions:
-        self.logger.info(f"searching unspecified: \"{query}\"")
+        logger.info(f"searching unspecified: \"{query}\"")
 
         results = []
         results.extend(self.search_artist_from_text(query=query))
@@ -310,8 +306,8 @@ class Search:
         parameters = query.split('#')
         parameters.remove('')
 
-        if len(parameters) > MAX_PARAMATERS:
-            raise ValueError(f"too many parameters. Only {MAX_PARAMATERS} are allowed")
+        if len(parameters) > MAX_PARAMETERS:
+            raise ValueError(f"too many parameters. Only {MAX_PARAMETERS} are allowed")
 
         for parameter in parameters:
             splitted = parameter.split(" ")
@@ -332,7 +328,7 @@ class Search:
 
 
 def automated_demo():
-    search = Search(logger=logger_)
+    search = Search()
     search.search_from_text(artist="I Prevail")
 
     # choose an artist
@@ -346,9 +342,10 @@ def automated_demo():
 
 
 def interactive_demo():
-    search = Search(logger=logger_)
+    search = Search()
     while True:
-        input_ = input("q to quit, .. for previous options, int for this element, str to search for query, ok to download: ")
+        input_ = input(
+            "q to quit, .. for previous options, int for this element, str to search for query, ok to download: ")
         input_.strip()
         if input_.lower() == "ok":
             break
@@ -364,8 +361,4 @@ def interactive_demo():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger_ = logging.getLogger("test")
-
     interactive_demo()
-

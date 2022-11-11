@@ -1,4 +1,5 @@
-from metadata.database import Database
+from utils.shared import *
+
 from metadata.download import MetadataDownloader
 import metadata.download
 import metadata.search
@@ -11,28 +12,6 @@ from lyrics_ import fetch_lyrics
 
 import logging
 import os
-import tempfile
-
-TEMP_FOLDER = "music-downloader"
-LOG_FILE = "download_logs.log"
-DATABASE_FILE = "metadata.db"
-DATABASE_STRUCTURE_FILE = "database_structure.sql"
-DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql"
-
-SEARCH_LOGGER = logging.getLogger("mb-cli")
-DATABASE_LOGGER = logging.getLogger("database")
-METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
-URL_DOWNLOAD_LOGGER = logging.getLogger("ling-download")
-PATH_LOGGER = logging.getLogger("create-paths")
-DOWNLOAD_LOGGER = logging.getLogger("download")
-
-NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
-MUSIC_DIR = os.path.expanduser('~/Music')
-TOR = False
-
-temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
-if not os.path.exists(temp_dir):
-    os.mkdir(temp_dir)
 
 # configure logger default
 logging.basicConfig(
@@ -43,12 +22,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-database = Database(os.path.join(temp_dir, DATABASE_FILE),
-                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
-                    DATABASE_STRUCTURE_FALLBACK,
-                    DATABASE_LOGGER,
-                    reset_anyways=True)
 
 
 def get_existing_genre():
@@ -61,7 +34,7 @@ def get_existing_genre():
 
 
 def search_for_metadata():
-    search = metadata.search.Search(logger=SEARCH_LOGGER)
+    search = metadata.search.Search()
 
     while True:
         input_ = input(
@@ -105,13 +78,6 @@ def get_genre():
 
 
 def cli(start_at: int = 0):
-    proxies = None
-    if TOR:
-        proxies = {
-            'http': 'socks5h://127.0.0.1:9150',
-            'https': 'socks5h://127.0.0.1:9150'
-        }
-
     if start_at <= 2:
         genre = get_genre()
         logging.info(f"{genre} has been set as genre.")
@@ -120,24 +86,24 @@ def cli(start_at: int = 0):
         search = search_for_metadata()
         # search = metadata.search.Option("release", "f8d4b24d-2c46-4e9c-8078-0c0f337c84dd", "Beautyfall")
         logging.info("Starting Downloading of metadata")
-        metadata_downloader = MetadataDownloader(database, METADATA_DOWNLOAD_LOGGER)
-        metadata_downloader.download(search)
+        metadata_downloader = MetadataDownloader()
+        metadata_downloader.download({'type': search.type, 'id': search.id})
 
     if start_at <= 1:
         logging.info("creating Paths")
-        url_to_path.UrlPath(database, PATH_LOGGER, genre=genre)
+        url_to_path.UrlPath(genre=genre)
 
     if start_at <= 2:
         logging.info("Fetching Download Links")
-        download_links.Download(database, METADATA_DOWNLOAD_LOGGER, MUSIC_DIR, proxies=proxies)
+        download_links.Download()
 
     if start_at <= 3:
         logging.info("starting to download the mp3's")
-        download.Download(database, DOWNLOAD_LOGGER, proxies=proxies, base_path=MUSIC_DIR)
+        download.Download()
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
-        fetch_lyrics(database)
+        fetch_lyrics()
 
 
 if __name__ == "__main__":

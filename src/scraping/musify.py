@@ -4,10 +4,8 @@ import time
 import requests
 import bs4
 
-try:
-    import phonetic_compares
-except ModuleNotFoundError:
-    from scraping import phonetic_compares
+from src.utils.shared import *
+from src.utils import phonetic_compares
 
 TRIES = 5
 TIMEOUT = 10
@@ -18,10 +16,7 @@ session.headers = {
     "Connection": "keep-alive",
     "Referer": "https://musify.club/"
 }
-
-
-def set_proxy(proxies):
-    session.proxies = proxies
+session.proxies = proxies
 
 
 def get_musify_url(row):
@@ -88,7 +83,7 @@ def get_soup_of_search(query: str, trie=0):
             logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
             logging.warning(f"retrying in {TIMEOUT} seconds again")
             time.sleep(TIMEOUT)
-            return get_soup_of_search(query, trie=trie+1)
+            return get_soup_of_search(query, trie=trie + 1)
 
         logging.warning("too many tries, returning")
         raise ConnectionError(f"{r.url} returned {r.status_code}:\n{r.content}")

@@ -1,17 +1,11 @@
 import requests
-import sys
-import os
-import logging
 from typing import List
 from bs4 import BeautifulSoup
 import pycountry
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-# utils >:3
-from tools import phonetic_compares
-from tools.object_handeling import get_elem_from_obj
+from src.utils.shared import *
+from src.utils import phonetic_compares
+from src.utils.object_handeling import get_elem_from_obj
 
 # search doesn't support isrc
 # https://genius.com/api/search/multi?q=I Prevail - Breaking Down
@@ -23,16 +17,9 @@ session.headers = {
     "Connection": "keep-alive",
     "Referer": "https://genius.com/search/embed"
 }
+session.proxies = proxies
+
 logger = logging.getLogger("genius")
-
-
-def set_proxy(proxies: dict):
-    session.proxies = proxies
-
-
-def set_logger(logger_: logging.Logger):
-    global logger
-    logger = logger_
 
 
 class Song:
