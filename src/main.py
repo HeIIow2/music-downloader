@@ -34,8 +34,15 @@ temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-# configure logger basics
-logging.basicConfig(level=logging.INFO, filename=os.path.join(temp_dir, LOG_FILE))
+# configure logger default
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(temp_dir, LOG_FILE)),
+        logging.StreamHandler()
+    ]
+)
 
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
