@@ -1,13 +1,13 @@
 import os.path
 import logging
 
-UNHIDE_CHAR = ','
+UNHIDE_CHAR = '_'
 
 def unhide(part: str):
     if len(part) == 0:
         return ""
     if part[0] == ".":
-        part[0] = UNHIDE_CHAR
+        return part.replace(".", UNHIDE_CHAR)
     
     return part
 
