@@ -19,7 +19,7 @@ session.headers = {
 }
 session.proxies = proxies
 
-logger = logging.getLogger("genius")
+logger = GENIUS_LOGGER
 
 
 class Song:
@@ -80,8 +80,8 @@ class Song:
         if len(lyrics_soups) != 1:
             logger.warning(f"number of lyrics_soups doesn't equals 1, but {len(lyrics_soups)} on {self.url}")
 
-        lyrics_soup = lyrics_soups[0]
-        lyrics = lyrics_soup.getText(separator="\n", strip=True)
+        lyrics = "\n".join([lyrics_soup.getText(separator="\n", strip=True) for lyrics_soup in lyrics_soups])
+        print(lyrics)
 
         # <div data-lyrics-container="true" class="Lyrics__Container-sc-1ynbvzw-6 YYrds">With the soundle
         self.lyrics = lyrics
@@ -166,6 +166,6 @@ if __name__ == "__main__":
     print(song.fetch_lyrics())
     """
 
-    songs = search("Psychonaut 4", "Sana-sana-sana - Cura-cura-cura")
+    songs = search("Zombiez", "WALL OF Z")
     for song in songs:
         print(song)

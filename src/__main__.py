@@ -77,8 +77,8 @@ def get_genre():
     return genre
 
 
-def cli(start_at: int = 0):
-    if start_at <= 2:
+def cli(start_at: int = 0, only_lyrics: bool = False):
+    if start_at <= 2 and not only_lyrics:
         genre = get_genre()
         logging.info(f"{genre} has been set as genre.")
 
@@ -89,15 +89,15 @@ def cli(start_at: int = 0):
         metadata_downloader = MetadataDownloader()
         metadata_downloader.download({'type': search.type, 'id': search.id})
 
-    if start_at <= 1:
+    if start_at <= 1 and not only_lyrics:
         logging.info("creating Paths")
         url_to_path.UrlPath(genre=genre)
 
-    if start_at <= 2:
+    if start_at <= 2 and not only_lyrics:
         logging.info("Fetching Download Links")
         download_links.Download()
 
-    if start_at <= 3:
+    if start_at <= 3 and not only_lyrics:
         logging.info("starting to download the mp3's")
         download.Download()
 
@@ -107,4 +107,4 @@ def cli(start_at: int = 0):
 
 
 if __name__ == "__main__":
-    cli(start_at=0)
+    cli(start_at=0, only_lyrics=True)

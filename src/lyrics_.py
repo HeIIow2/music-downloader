@@ -1,7 +1,7 @@
 from mutagen.id3 import ID3, USLT
 from metadata import database as db
-import logging
-import os
+
+from src.utils.shared import *
 
 from lyrics import genius
 from src.utils.shared import *
@@ -44,7 +44,9 @@ def get_lyrics(file_name):
 
 
 def fetch_single_lyrics(row: dict):
-    file_ = os.path.join(os.path.expanduser('~/Music'), row['file'])
+    if "file" in row:
+        return
+    file_ = os.path.join(MUSIC_DIR, row['file'])
     artist = row['artists'][0]['name']
     track = row['title']
 
