@@ -26,7 +26,7 @@ temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-mb_log = logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
+logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 

@@ -1,5 +1,5 @@
 from src.utils.shared import *
-from src.utils.object_handeling import get_elem_from_obj
+from src.utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
 from typing import List
 import musicbrainzngs
@@ -51,8 +51,6 @@ class MetadataDownloader:
 
             for i, release_group in enumerate(release_groups):
                 self.release_groups.append(MetadataDownloader.ReleaseGroup(
-                    database,
-                    logger,
                     musicbrainz_releasegroupid=release_group['id'],
                     artists=[self],
                     albumsort=i + 1

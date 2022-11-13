@@ -4,6 +4,7 @@ import logging
 import os
 
 from lyrics import genius
+from src.utils.shared import *
 
 """
 This whole Part is bodgy as hell and I need to rewrite this little file urgently. genius.py is really clean though :3
@@ -56,7 +57,7 @@ def fetch_single_lyrics(row: dict):
     add_lyrics(file_, lyrics[0])
 
 
-def fetch_lyrics(database: db.Database):
+def fetch_lyrics():
     for row in database.get_custom_track([]):
         print(row['title'])
         fetch_single_lyrics(row)
@@ -81,4 +82,4 @@ if __name__ == "__main__":
                            db_logger,
                            reset_anyways=False)
 
-    fetch_lyrics(database)
+    fetch_lyrics()

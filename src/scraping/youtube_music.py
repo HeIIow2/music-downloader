@@ -28,6 +28,9 @@ def get_youtube_from_isrc(isrc: str) -> List[dict]:
 
 
 def get_youtube_url(row):
+    if row['isrc'] is None:
+        return None
+
     real_title = row['title'].lower()
 
     final_result = None
