@@ -34,7 +34,7 @@ database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
                     DATABASE_STRUCTURE_FALLBACK,
                     DATABASE_LOGGER,
-                    reset_anyways=True)
+                    reset_anyways=False)
 
 
 TOR = False

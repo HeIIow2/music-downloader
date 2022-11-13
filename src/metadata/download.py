@@ -33,7 +33,10 @@ class MetadataDownloader:
 
             self.musicbrainz_artistid = musicbrainz_artistid
 
-            result = musicbrainzngs.get_artist_by_id(self.musicbrainz_artistid, includes=["release-groups", "releases"])
+            try:
+                result = musicbrainzngs.get_artist_by_id(self.musicbrainz_artistid, includes=["release-groups", "releases"])
+            except musicbrainzngs.musicbrainz.NetworkError:
+                return
             artist_data = get_elem_from_obj(result, ['artist'], return_if_none={})
 
             self.artist = get_elem_from_obj(artist_data, ['name'])
@@ -85,8 +88,11 @@ class MetadataDownloader:
             self.artists = artists
             self.releases = []
 
-            result = musicbrainzngs.get_release_group_by_id(musicbrainz_releasegroupid,
+            try:
+                result = musicbrainzngs.get_release_group_by_id(musicbrainz_releasegroupid,
                                                             includes=["artist-credits", "releases"])
+            except musicbrainzngs.musicbrainz.NetworkError:
+                return
             release_group_data = get_elem_from_obj(result, ['release-group'], return_if_none={})
             artist_datas = get_elem_from_obj(release_group_data, ['artist-credit'], return_if_none={})
             release_datas = get_elem_from_obj(release_group_data, ['release-list'], return_if_none={})
@@ -179,8 +185,11 @@ class MetadataDownloader:
             self.release_group = release_group
             self.tracklist = []
 
-            result = musicbrainzngs.get_release_by_id(self.musicbrainz_albumid,
+            try:
+                result = musicbrainzngs.get_release_by_id(self.musicbrainz_albumid,
                                                       includes=["recordings", "labels", "release-groups"])
+            except musicbrainzngs.musicbrainz.NetworkError:
+                return
             release_data = get_elem_from_obj(result, ['release'], return_if_none={})
             label_data = get_elem_from_obj(release_data, ['label-info-list'], return_if_none={})
             recording_datas = get_elem_from_obj(release_data, ['medium-list', 0, 'track-list'], return_if_none=[])
@@ -251,9 +260,12 @@ class MetadataDownloader:
 
             self.track_number = track_number
 
-            result = musicbrainzngs.get_recording_by_id(self.musicbrainz_releasetrackid,
+            try:
+                result = musicbrainzngs.get_recording_by_id(self.musicbrainz_releasetrackid,
                                                         includes=["artists", "releases", "recording-rels", "isrcs",
                                                                   "work-level-rels"])
+            except musicbrainzngs.musicbrainz.NetworkError:
+                return
             recording_data = result['recording']
             release_data = get_elem_from_obj(recording_data, ['release-list', -1])
             if self.release is None:

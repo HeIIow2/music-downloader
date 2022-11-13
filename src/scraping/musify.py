@@ -53,7 +53,7 @@ def download_from_musify(file, url):
     logging.info(f"downloading: '{url}'")
     try:
         r = session.get(url, timeout=15)
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError or requests.exceptions.ReadTimeout:
         return -1
     if r.status_code != 200:
         if r.status_code == 404:
