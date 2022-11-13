@@ -18,11 +18,14 @@ class Download:
                 logger.info(f"skipping the fetching of the download links, cuz {row['file']} already exists.")
                 continue
 
+            """
+            not implemented yet, will in one point crashe everything
             # check File System
             file_path = file_system.get_path(row)
             if file_path is not None:
                 self.add_url(file_path, 'file', id_)
                 continue
+            """
 
             # check YouTube
             youtube_url = youtube_music.get_youtube_url(row)
