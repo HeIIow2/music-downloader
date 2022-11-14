@@ -1,4 +1,5 @@
 # TO DO
+- be able to select multiple things at once (eg "0, 3, 5, 6") and then download this selection with ok
 - add the file system as audio source
 - add complete search of musify (scraping of artist page etc.) as last resort
 - add a check if the songs truly are the same with non changebal attributes (length etc.)
