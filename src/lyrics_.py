@@ -44,7 +44,9 @@ def get_lyrics(file_name):
 
 
 def fetch_single_lyrics(row: dict):
-    if "file" in row:
+    if "file" not in row:
+        return
+    if row["file"] is None:
         return
     file_ = os.path.join(MUSIC_DIR, row['file'])
     artist = row['artists'][0]['name']

@@ -107,4 +107,4 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
 
 if __name__ == "__main__":
-    cli(start_at=3, only_lyrics=False)
+    cli(start_at=3, only_lyrics=True)
