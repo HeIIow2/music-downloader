@@ -3,9 +3,9 @@ from typing import List
 from bs4 import BeautifulSoup
 import pycountry
 
-from src.utils.shared import *
-from src.utils import phonetic_compares
-from src.utils.object_handeling import get_elem_from_obj
+from ..utils.shared import *
+from ..utils import phonetic_compares
+from ..utils.object_handeling import get_elem_from_obj
 
 # search doesn't support isrc
 # https://genius.com/api/search/multi?q=I Prevail - Breaking Down

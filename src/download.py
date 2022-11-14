@@ -4,8 +4,8 @@ import os.path
 from mutagen.easyid3 import EasyID3
 from pydub import AudioSegment
 
-from src.utils.shared import *
-from src.scraping import musify, youtube_music
+from .utils.shared import *
+from .scraping import musify, youtube_music
 
 """
 https://en.wikipedia.org/wiki/ID3

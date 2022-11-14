@@ -3,7 +3,7 @@ import logging
 import tempfile
 import os
 
-from src.metadata.database import Database
+from ..metadata.database import Database
 
 TEMP_FOLDER = "music-downloader"
 LOG_FILE = "download_logs.log"

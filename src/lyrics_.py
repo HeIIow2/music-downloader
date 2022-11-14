@@ -1,10 +1,10 @@
 from mutagen.id3 import ID3, USLT
-from metadata import database as db
+from .metadata import database as db
 
-from src.utils.shared import *
+from .utils.shared import *
 
-from lyrics import genius
-from src.utils.shared import *
+from .lyrics import genius
+from .utils.shared import *
 
 """
 This whole Part is bodgy as hell and I need to rewrite this little file urgently. genius.py is really clean though :3
