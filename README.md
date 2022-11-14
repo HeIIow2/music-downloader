@@ -119,3 +119,50 @@ To get the Lyrics, I scrape them, and put those in the USLT ID3 Tags of for exam
 ### Genius
 
 For the lyrics source the page [https://genius.com/](https://genius.com/) is easily sufficient. It has most songs. Some songs are not present though, but that is fine, because the lyrics are optional anyways.
+
+## Project overview
+
+The file structure is as follows (might be slightly outdated):
+
+```
+music-downloader
+├── assets
+│   └── database_structure.sql
+├── LICENSE
+├── notes.md
+├── README.md
+├── requirements.txt
+└── src
+    ├── audio
+    │   └── song.py
+    ├── download_links.py
+    ├── download.py
+    ├── lyrics
+    │   ├── genius.py
+    │   └── lyrics.py
+    ├── __main__.py
+    ├── metadata
+    │   ├── database.py
+    │   ├── download.py
+    │   ├── object_handeling.py
+    │   └── search.py
+    ├── scraping
+    │   ├── file_system.py
+    │   ├── musify.py
+    │   ├── phonetic_compares.py
+    │   └── youtube_music.py
+    ├── url_to_path.py
+    └── utils
+        ├── object_handeling.py
+        ├── phonetic_compares.py
+        └── shared.py
+
+```
+
+You can obviously find the source code in the folder src. The two "most important" files are `__main__.py` and `utils/shared.py`.
+
+In the first one is the code gluing everything together and providing the cli.
+
+### utils
+
+The constants like the global database object can be found in `shared.py`.
