@@ -1,0 +1,84 @@
+Date : 2022-11-10 14:10:12
+Directory : /home/lars/Projects/music-downloader
+Total : 43 files,  2077 codes, 228 comments, 584 blanks, all 2889 lines
+
+Languages
++------------------+------------+------------+------------+------------+------------+
+| language         | files      | code       | comment    | blank      | total      |
++------------------+------------+------------+------------+------------+------------+
+| Python           |         17 |      1,503 |        228 |        456 |      2,187 |
+| Markdown         |         14 |        414 |          0 |        116 |        530 |
+| SQLite           |          2 |        102 |          0 |         12 |        114 |
+| XML              |          6 |         48 |          0 |          0 |         48 |
+| pip requirements |          1 |          7 |          0 |          0 |          7 |
+| JSON             |          3 |          3 |          0 |          0 |          3 |
++------------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                       |         43 |      2,077 |        228 |        584 |      2,889 |
+| .VSCodeCounter                                                                          |         15 |        304 |          0 |         78 |        382 |
+| .VSCodeCounter/2022-10-28_12-39-22                                                      |          5 |         75 |          0 |         26 |        101 |
+| .VSCodeCounter/2022-11-07_11-51-29                                                      |          5 |        111 |          0 |         26 |        137 |
+| .VSCodeCounter/2022-11-08_16-41-25                                                      |          5 |        118 |          0 |         26 |        144 |
+| .idea                                                                                   |          6 |         48 |          0 |          0 |         48 |
+| .idea/inspectionProfiles                                                                |          1 |          6 |          0 |          0 |          6 |
+| assets                                                                                  |          1 |         51 |          0 |          6 |         57 |
+| src                                                                                     |         18 |      1,554 |        228 |        462 |      2,244 |
+| src/lyrics                                                                              |          1 |        108 |         39 |         38 |        185 |
+| src/metadata                                                                            |          7 |        947 |        143 |        245 |      1,335 |
+| src/scraping                                                                            |          3 |        185 |          4 |         63 |        252 |
+| src/tools                                                                               |          2 |         41 |          0 |         16 |         57 |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| filename                                                                                | language         | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-10-28_12-39-22/details.md      | Markdown         |         31 |          0 |          6 |         37 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-10-28_12-39-22/diff-details.md | Markdown         |          9 |          0 |          6 |         15 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-10-28_12-39-22/diff.md         | Markdown         |         12 |          0 |          7 |         19 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-10-28_12-39-22/results.json    | JSON             |          1 |          0 |          0 |          1 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-10-28_12-39-22/results.md      | Markdown         |         22 |          0 |          7 |         29 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-07_11-51-29/details.md      | Markdown         |         37 |          0 |          6 |         43 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-07_11-51-29/diff-details.md | Markdown         |         25 |          0 |          6 |         31 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-07_11-51-29/diff.md         | Markdown         |         22 |          0 |          7 |         29 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-07_11-51-29/results.json    | JSON             |          1 |          0 |          0 |          1 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-07_11-51-29/results.md      | Markdown         |         26 |          0 |          7 |         33 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-08_16-41-25/details.md      | Markdown         |         43 |          0 |          6 |         49 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-08_16-41-25/diff-details.md | Markdown         |         25 |          0 |          6 |         31 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-08_16-41-25/diff.md         | Markdown         |         21 |          0 |          7 |         28 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-08_16-41-25/results.json    | JSON             |          1 |          0 |          0 |          1 |
+| /home/lars/Projects/music-downloader/.VSCodeCounter/2022-11-08_16-41-25/results.md      | Markdown         |         28 |          0 |          7 |         35 |
+| /home/lars/Projects/music-downloader/.idea/dataSources.xml                              | XML              |         12 |          0 |          0 |         12 |
+| /home/lars/Projects/music-downloader/.idea/inspectionProfiles/profiles_settings.xml     | XML              |          6 |          0 |          0 |          6 |
+| /home/lars/Projects/music-downloader/.idea/misc.xml                                     | XML              |          4 |          0 |          0 |          4 |
+| /home/lars/Projects/music-downloader/.idea/modules.xml                                  | XML              |          9 |          0 |          0 |          9 |
+| /home/lars/Projects/music-downloader/.idea/music-downloader.iml                         | XML              |         11 |          0 |          0 |         11 |
+| /home/lars/Projects/music-downloader/.idea/vcs.xml                                      | XML              |          6 |          0 |          0 |          6 |
+| /home/lars/Projects/music-downloader/README.md                                          | Markdown         |        102 |          0 |         36 |        138 |
+| /home/lars/Projects/music-downloader/assets/database_structure.sql                      | SQLite           |         51 |          0 |          6 |         57 |
+| /home/lars/Projects/music-downloader/notes.md                                           | Markdown         |         11 |          0 |          2 |         13 |
+| /home/lars/Projects/music-downloader/requirements.txt                                   | pip requirements |          7 |          0 |          0 |          7 |
+| /home/lars/Projects/music-downloader/src/download.py                                    | Python           |         57 |         11 |         19 |         87 |
+| /home/lars/Projects/music-downloader/src/download_links.py                              | Python           |         41 |          3 |         15 |         59 |
+| /home/lars/Projects/music-downloader/src/lyrics/genius.py                               | Python           |        108 |         39 |         38 |        185 |
+| /home/lars/Projects/music-downloader/src/lyrics_.py                                     | Python           |         44 |         19 |         22 |         85 |
+| /home/lars/Projects/music-downloader/src/main.py                                        | Python           |        104 |          3 |         31 |        138 |
+| /home/lars/Projects/music-downloader/src/metadata/database.py                           | Python           |        155 |         61 |         38 |        254 |
+| /home/lars/Projects/music-downloader/src/metadata/database_structure.sql                | SQLite           |         51 |          0 |          6 |         57 |
+| /home/lars/Projects/music-downloader/src/metadata/download.py                           | Python           |        272 |         25 |         68 |        365 |
+| /home/lars/Projects/music-downloader/src/metadata/metadata.py                           | Python           |        106 |          9 |         28 |        143 |
+| /home/lars/Projects/music-downloader/src/metadata/object_handeling.py                   | Python           |         19 |          0 |          6 |         25 |
+| /home/lars/Projects/music-downloader/src/metadata/options.py                            | Python           |         87 |          8 |         24 |        119 |
+| /home/lars/Projects/music-downloader/src/metadata/search.py                             | Python           |        257 |         40 |         75 |        372 |
+| /home/lars/Projects/music-downloader/src/scraping/musify.py                             | Python           |        103 |          2 |         37 |        142 |
+| /home/lars/Projects/music-downloader/src/scraping/phonetic_compares.py                  | Python           |         15 |          0 |          8 |         23 |
+| /home/lars/Projects/music-downloader/src/scraping/youtube_music.py                      | Python           |         67 |          2 |         18 |         87 |
+| /home/lars/Projects/music-downloader/src/tools/object_handeling.py                      | Python           |         19 |          0 |          6 |         25 |
+| /home/lars/Projects/music-downloader/src/tools/phonetic_compares.py                     | Python           |         22 |          0 |         10 |         32 |
+| /home/lars/Projects/music-downloader/src/url_to_path.py                                 | Python           |         27 |          6 |         13 |         46 |
+| Total                                                                                   |                  |      2,077 |        228 |        584 |      2,889 |
++-----------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
