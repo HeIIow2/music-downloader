@@ -205,13 +205,16 @@ GROUP BY track.id;
     def get_tracks_without_filepath(self):
         return self.get_custom_track(["(track.file IS NULL OR track.path IS NULL OR track.genre IS NULL)"])
 
+    def get_tracks_for_lyrics(self):
+        return self.get_custom_track(["track.lyrics IS NULL"])
+
     def add_lyrics(self, track_id: str, lyrics: str):
         query = f"""
 UPDATE track
 SET lyrics = ?
 WHERE '{track_id}' == id;
             """
-        self.cursor.execute(query, (lyrics, ))
+        self.cursor.execute(query, (str(lyrics), ))
         self.connection.commit()
 
     def update_download_status(self, track_id: str):

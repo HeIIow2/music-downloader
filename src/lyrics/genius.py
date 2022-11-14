@@ -56,7 +56,7 @@ class Song:
 
     def is_valid(self) -> bool:
         title_match, title_distance = phonetic_compares.match_titles(self.title, self.desired_data['track'])
-        artist_match, artist_distance = phonetic_compares.match_artists(self.artist, self.desired_data['artist'])
+        artist_match, artist_distance = phonetic_compares.match_artists(self.desired_data['artist'], self.artist)
 
         return not title_match and not artist_match
 

@@ -8,7 +8,7 @@ from . import url_to_path
 from . import download
 
 # NEEDS REFACTORING
-from .lyrics_ import fetch_lyrics
+from .lyrics.lyrics import fetch_lyrics
 
 import logging
 import os
