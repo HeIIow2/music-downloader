@@ -46,6 +46,7 @@ CREATE TABLE track (
     downloaded BOOLEAN NOT NULL DEFAULT 0,
     release_id TEXT NOT NULL,
     track TEXT,
+    length INT,
     tracknumber TEXT,
     isrc TEXT,
     genre TEXT,

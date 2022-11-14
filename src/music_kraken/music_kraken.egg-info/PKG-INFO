@@ -1,3 +1,16 @@
+Metadata-Version: 2.1
+Name: music-kraken
+Version: 0.0.1
+Summary: An extensive music downloader crawling the internet. It gets its metadata from a couple metadata provider, and it scrapes the audiofiles.
+Home-page: https://github.com/HeIIow2/music-downloader
+Author: Hellow2
+Author-email: Hellow2 <Hellow2@outlook.de>
+Project-URL: Homepage, https://github.com/HeIIow2/music-downloader
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
 # Music Kraken
 
 RUN WITH: `python3 -m src` from the project Directory
