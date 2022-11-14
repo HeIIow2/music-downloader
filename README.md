@@ -1,4 +1,7 @@
 # A Music-Downloader with CLI
+
+RUN WITH: `python3 -m src` from the project Directory
+
 This programm will first get the metadata of various songs from metadata provider like musicbrainz, and then search for download links on pages like bandcamp. Then it will download the song and edit the metadata according.
 
 ## Metadata
@@ -103,35 +106,63 @@ There are two bottlenecks with this approach though:
 
 **TODO**
 - look at how the isrc id derived an try to generate it for the tracks without directly getting it from mb.
-<<<<<<< HEAD
-=======
+
 
 **Progress**
 - There is a great site whith a huge isrc database [https://isrc.soundexchange.com/](https://isrc.soundexchange.com/).
 
 
-https://slavart.gamesdrive.net/
-https://getmetal.club/
-https://newalbumreleases.net/
-http://download-soundtracks.com/
-https://scnlog.me/
-https://intmusic.net/
-https://www.pluspremieres.ws/
-https://music4newgen.org/
-https://takemetal.org/
-https://coreradio.ru/
-https://alterportal.net/
-https://vk.com/mdcore
-https://vk.com/mdrock
-https://sophiesfloorboard.blogspot.com/
-https://funkysouls.org/
-https://www.deadpulpit.com/
-https://vk.com/filter_rock
-https://en.metal-tracker.com/
-https://thelastdisaster.org/
-https://vk.com/phc
-https://free-mp3-download.net/ requires recaptcha  
-https://vk.com/filter_rock
-https://t.me/ffilternews telegram?
-https://justanothermusic.site/index.php requires login
->>>>>>> 63f30bffbae20ec3fc368a6093b28e56f0230318
+## Lyrics
+
+To get the Lyrics, I scrape them, and put those in the USLT ID3 Tags of for example mp3 files. Unfortunately some players, like the one I use, Rhythmbox don't support USLT Lyrics. So I created an Plugin for Rhythmbox. You can find it here: [https://github.com/HeIIow2/rythmbox-id3-lyrics-support](https://github.com/HeIIow2/rythmbox-id3-lyrics-support).
+
+### Genius
+
+For the lyrics source the page [https://genius.com/](https://genius.com/) is easily sufficient. It has most songs. Some songs are not present though, but that is fine, because the lyrics are optional anyways.
+
+## Project overview
+
+The file structure is as follows (might be slightly outdated):
+
+```
+music-downloader
+├── assets
+│   └── database_structure.sql
+├── LICENSE
+├── notes.md
+├── README.md
+├── requirements.txt
+└── src
+    ├── audio
+    │   └── song.py
+    ├── download_links.py
+    ├── download.py
+    ├── lyrics
+    │   ├── genius.py
+    │   └── lyrics.py
+    ├── __main__.py
+    ├── metadata
+    │   ├── database.py
+    │   ├── download.py
+    │   ├── object_handeling.py
+    │   └── search.py
+    ├── scraping
+    │   ├── file_system.py
+    │   ├── musify.py
+    │   ├── phonetic_compares.py
+    │   └── youtube_music.py
+    ├── url_to_path.py
+    └── utils
+        ├── object_handeling.py
+        ├── phonetic_compares.py
+        └── shared.py
+
+```
+
+You can obviously find the source code in the folder src. The two "most important" files are `__main__.py` and `utils/shared.py`.
+
+In the first one is the code gluing everything together and providing the cli.
+
+### utils
+
+The constants like the global database object can be found in `shared.py`.

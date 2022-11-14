@@ -3,13 +3,13 @@ import logging
 import tempfile
 import os
 
-from src.metadata.database import Database
+from ..metadata.database import Database
 
 TEMP_FOLDER = "music-downloader"
 LOG_FILE = "download_logs.log"
 DATABASE_FILE = "metadata.db"
 DATABASE_STRUCTURE_FILE = "database_structure.sql"
-DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/new_metadata/assets/database_structure.sql"
+DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/master/assets/database_structure.sql"
 
 SEARCH_LOGGER = logging.getLogger("mb-cli")
 DATABASE_LOGGER = logging.getLogger("database")
@@ -17,6 +17,7 @@ METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
 URL_DOWNLOAD_LOGGER = logging.getLogger("ling-download")
 PATH_LOGGER = logging.getLogger("create-paths")
 DOWNLOAD_LOGGER = logging.getLogger("download")
+LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"

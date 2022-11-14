@@ -3,9 +3,9 @@ from typing import List
 from bs4 import BeautifulSoup
 import pycountry
 
-from src.utils.shared import *
-from src.utils import phonetic_compares
-from src.utils.object_handeling import get_elem_from_obj
+from ..utils.shared import *
+from ..utils import phonetic_compares
+from ..utils.object_handeling import get_elem_from_obj
 
 # search doesn't support isrc
 # https://genius.com/api/search/multi?q=I Prevail - Breaking Down
@@ -56,7 +56,7 @@ class Song:
 
     def is_valid(self) -> bool:
         title_match, title_distance = phonetic_compares.match_titles(self.title, self.desired_data['track'])
-        artist_match, artist_distance = phonetic_compares.match_artists(self.artist, self.desired_data['artist'])
+        artist_match, artist_distance = phonetic_compares.match_artists(self.desired_data['artist'], self.artist)
 
         return not title_match and not artist_match
 

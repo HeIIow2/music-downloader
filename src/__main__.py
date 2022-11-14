@@ -1,14 +1,14 @@
-from utils.shared import *
+from .utils.shared import *
 
-from metadata.download import MetadataDownloader
-import metadata.download
-import metadata.search
-import download_links
-import url_to_path
-import download
+from .metadata.download import MetadataDownloader
+from .metadata import download
+from .metadata import search as s
+from . import download_links
+from . import url_to_path
+from . import download
 
 # NEEDS REFACTORING
-from lyrics_ import fetch_lyrics
+from .lyrics.lyrics import fetch_lyrics
 
 import logging
 import os
@@ -34,7 +34,7 @@ def get_existing_genre():
 
 
 def search_for_metadata():
-    search = metadata.search.Search()
+    search = s.Search()
 
     while True:
         input_ = input(
@@ -107,4 +107,4 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
 
 if __name__ == "__main__":
-    cli(start_at=3, only_lyrics=True)
+    cli(start_at=0, only_lyrics=False)

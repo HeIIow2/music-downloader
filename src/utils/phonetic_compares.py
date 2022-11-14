@@ -28,13 +28,13 @@ def modify_title(to_modify: str) -> str:
     return to_modify
 
 
-def match_titles(title_1: str, title_2: str) -> (bool, int):
+def match_titles(title_1: str, title_2: str):
     title_1, title_2 = modify_title(title_1), modify_title(title_2)
     distance = jellyfish.levenshtein_distance(title_1, title_2)
     return distance > TITLE_THRESHOLD_LEVENSHTEIN, distance
 
 
-def match_artists(artist_1, artist_2: str) -> (bool, int):
+def match_artists(artist_1, artist_2: str):
     if type(artist_1) == list:
         distances = []
 

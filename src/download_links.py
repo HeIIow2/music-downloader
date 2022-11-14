@@ -1,7 +1,7 @@
 import requests
 
-from src.utils.shared import *
-from src.scraping import musify, youtube_music, file_system
+from .utils.shared import *
+from .scraping import musify, youtube_music, file_system
 
 logger = URL_DOWNLOAD_LOGGER
 

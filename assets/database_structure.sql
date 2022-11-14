@@ -49,6 +49,7 @@ CREATE TABLE track (
     tracknumber TEXT,
     isrc TEXT,
     genre TEXT,
+    lyrics TEXT,
     path TEXT,
     file TEXT,
     url TEXT,

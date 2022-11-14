@@ -1,0 +1,55 @@
+Date : 2022-11-14 12:36:23
+Directory : /home/lars/Projects/music-downloader/src
+Total : 25 files,  1392 codes, 218 comments, 439 blanks, all 2049 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Python   |         24 |      1,341 |        218 |        433 |      1,992 |
+| SQLite   |          1 |         51 |          0 |          6 |         57 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                     | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                        |         25 |      1,392 |        218 |        439 |      2,049 |
+| audio                                                                    |          2 |          3 |          0 |          2 |          5 |
+| lyrics                                                                   |          2 |         99 |         38 |         36 |        173 |
+| metadata                                                                 |          6 |        732 |        125 |        186 |      1,043 |
+| scraping                                                                 |          5 |        221 |          4 |         81 |        306 |
+| utils                                                                    |          4 |         88 |          1 |         33 |        122 |
++--------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                 | language | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/lars/Projects/music-downloader/src/__init__.py                     | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/__main__.py                     | Python   |         82 |          3 |         26 |        111 |
+| /home/lars/Projects/music-downloader/src/audio/__init__.py               | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/audio/song.py                   | Python   |          3 |          0 |          1 |          4 |
+| /home/lars/Projects/music-downloader/src/download.py                     | Python   |         56 |         11 |         18 |         85 |
+| /home/lars/Projects/music-downloader/src/download_links.py               | Python   |         30 |         11 |         15 |         56 |
+| /home/lars/Projects/music-downloader/src/lyrics/__init__.py              | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/lyrics/genius.py                | Python   |         99 |         38 |         35 |        172 |
+| /home/lars/Projects/music-downloader/src/lyrics_.py                      | Python   |         46 |         19 |         23 |         88 |
+| /home/lars/Projects/music-downloader/src/metadata/__init__.py            | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/metadata/database.py            | Python   |        155 |         61 |         38 |        254 |
+| /home/lars/Projects/music-downloader/src/metadata/database_structure.sql | SQLite   |         51 |          0 |          6 |         57 |
+| /home/lars/Projects/music-downloader/src/metadata/download.py            | Python   |        254 |         24 |         63 |        341 |
+| /home/lars/Projects/music-downloader/src/metadata/object_handeling.py    | Python   |         19 |          0 |          6 |         25 |
+| /home/lars/Projects/music-downloader/src/metadata/search.py              | Python   |        253 |         40 |         72 |        365 |
+| /home/lars/Projects/music-downloader/src/scraping/__init__.py            | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/scraping/file_system.py         | Python   |         40 |          0 |         18 |         58 |
+| /home/lars/Projects/music-downloader/src/scraping/musify.py              | Python   |        100 |          2 |         35 |        137 |
+| /home/lars/Projects/music-downloader/src/scraping/phonetic_compares.py   | Python   |         15 |          0 |          8 |         23 |
+| /home/lars/Projects/music-downloader/src/scraping/youtube_music.py       | Python   |         66 |          2 |         19 |         87 |
+| /home/lars/Projects/music-downloader/src/url_to_path.py                  | Python   |         35 |          6 |         18 |         59 |
+| /home/lars/Projects/music-downloader/src/utils/__init__.py               | Python   |          1 |          1 |          1 |          3 |
+| /home/lars/Projects/music-downloader/src/utils/object_handeling.py       | Python   |         19 |          0 |          6 |         25 |
+| /home/lars/Projects/music-downloader/src/utils/phonetic_compares.py      | Python   |         34 |          0 |         15 |         49 |
+| /home/lars/Projects/music-downloader/src/utils/shared.py                 | Python   |         34 |          0 |         11 |         45 |
+| Total                                                                    |          |      1,392 |        218 |        439 |      2,049 |
++--------------------------------------------------------------------------+----------+------------+------------+------------+------------+

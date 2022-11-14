@@ -1,10 +1,10 @@
+import mutagen
 from mutagen.id3 import ID3, USLT
-from .metadata import database as db
 
-from .utils.shared import *
 
-from .lyrics import genius
-from .utils.shared import *
+from ..metadata import database as db
+from ..utils.shared import *
+from . import genius
 
 logger = LYRICS_LOGGER
 
@@ -37,37 +37,32 @@ def add_lyrics(file_name, lyrics):
     if not os.path.exists(file_path):
         return
 
+    try:
+        tags = ID3(file_path)
+    except mutagen.id3.ID3NoHeaderError:
+        return
+
     logger.info(f"adding lyrics to the file {file_path}")
-    tags = ID3(file_path)
+
     uslt_output = USLT(encoding=3, lang=lyrics.lang, desc=u'desc', text=lyrics.lyrics)
     tags["USLT::'eng'"] = uslt_output
-
-    tags.save(file_name)
-
-
-def get_lyrics(file_name):
-    tags = ID3(file_name)
-    return tags.getall("USLT")
+    tags.save(file_path)
 
 
 def fetch_single_lyrics(row: dict):
-    if "file" not in row:
-        return
-    if row["file"] is None:
-        return
-    file_ = 
     artists = [artist['name'] for artist in row['artists']]
     track = row['title']
+    id_ = row['id']
 
     logger.info(f"try fetching lyrics for \"{track}\" by \"{', '.join(artists)}")
 
-    if not os.path.exists(file_):
-        return
     lyrics = genius.search(artists, track)
     if len(lyrics) == 0:
         return
-    print("found something")
-    add_lyrics(file_, lyrics[0])
+
+    logger.info("found lyrics")
+    database.add_lyrics(id_, lyrics=lyrics[0])
+    add_lyrics(row['file'], lyrics[0])
 
 
 def fetch_lyrics():
