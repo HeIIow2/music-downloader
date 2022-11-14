@@ -1,7 +1,5 @@
 # TO DO
-- refactor file system
-- genuis scraper only downloades partially lyrics: reproducable example https://genius.com/Zombiez-blut-lyrics
-- LYRICS
+- add the file system as audio source
 - add complete search of musify (scraping of artist page etc.) as last resort
 - add a check if the songs truly are the same with non changebal attributes (length etc.)
 - get additional ISRCs
@@ -11,4 +9,9 @@
   - proxies (maybe a boolean if tor should be enabled)
   - toggling of audio sources and sorting priorities of audio sources
 
-# Data for Testing
+# Wrong Audio
+- Crystal F - Hanging Man
+
+# Did not found whole release
+- Crystal F - Trail Mix 2 (Vollmond)
+- Crystal F - Was ist blos mit Hauke los
