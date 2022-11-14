@@ -56,7 +56,9 @@ def fetch_single_lyrics(row: dict):
 
     logger.info(f"try fetching lyrics for \"{track}\" by \"{', '.join(artists)}")
 
-    lyrics = genius.search(artists, track)
+    lyrics = []
+    for artist in artists:
+        lyrics.extend(genius.search(artist, track))
     if len(lyrics) == 0:
         return
 

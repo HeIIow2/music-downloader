@@ -121,7 +121,7 @@ def search_song_list(artist: str, track: str) -> List[Song]:
     return []
 
 
-def search(artist: str, track: str):
+def search(artist: str, track: str) -> list:
     results = []
     r = search_song_list(artist, track)
     for r_ in r:
