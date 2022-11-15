@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: music-kraken
-Version: 1.0.0
+Version: 1.0.1
 Summary: An extensive music downloader crawling the internet. It gets its metadata from a couple metadata provider, and it scrapes the audiofiles.
 Home-page: https://github.com/HeIIow2/music-downloader
 Author: Hellow2
@@ -22,8 +22,8 @@ You can find this project on PyPI [https://pypi.org/project/music-kraken/](https
 # install it with
 pip install music-kraken
 
-# and run it with (the -m is important)
-python3 -m music_kraken
+# and simply run it like this:
+music-kraken
 ```
 
 ## Quick-Guide

@@ -8,8 +8,8 @@ You can find this project on PyPI [https://pypi.org/project/music-kraken/](https
 # install it with
 pip install music-kraken
 
-# and run it with (the -m is important)
-python3 -m music_kraken
+# and simply run it like this:
+music-kraken
 ```
 
 ## Quick-Guide
