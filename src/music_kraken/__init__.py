@@ -5,7 +5,7 @@ from .metadata import download
 from .metadata import search as s
 from . import download_links
 from . import url_to_path
-from . import download
+from . import download as d
 
 # NEEDS REFACTORING
 from .lyrics.lyrics import fetch_lyrics
@@ -99,7 +99,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 3 and not only_lyrics:
         logging.info("starting to download the mp3's")
-        download.Download()
+        d.Download()
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
