@@ -1,8 +1,37 @@
 # Music Kraken
 
-RUN WITH: `python3 -m src` from the project Directory
+## Installation
 
-This programm will first get the metadata of various songs from metadata provider like musicbrainz, and then search for download links on pages like bandcamp. Then it will download the song and edit the metadata according.
+You can find this project on PyPI [https://pypi.org/project/music-kraken/](https://pypi.org/project/music-kraken/) or GitHub [https://github.com/HeIIow2/music-downloader](https://github.com/HeIIow2/music-downloader). If you enjoy this project, feel free to star it.
+
+```sh
+# install it with
+pip install music-kraken
+
+# and run it with (the -m is important)
+python3 -m music_kraken
+```
+
+## Quick-Guide
+
+**Genre:** First the cli asks you to input a gere you want to download to. The options it gives you (if it gives you any) are all the folders you got in the music directory. You also can just input a new one.
+
+**What to download:** After that it prompts you for a search. Here are a couple examples how you can search:
+
+```
+> #a Psychonaut 4
+searches for the artist "Psychonaut 4"
+
+> #a Crystal F #r das Leben dannach
+searches for the release (album) "das Leben dannach" by the artist "Crystal F"
+
+> #r Death Pierce Me #t sterile nails and thunderbowels
+searches for the track "sterile nails and thunderbowels" from the release "Death Pierce Me"
+```
+
+After searching with this syntax it prompts you with multiple results. You can either choose one of those by inputing its id `int` or you can search for a new query.
+
+After you chose either an artist, a release group, a release or a track by its id, download it by inputing the string `ok`. My downloader will download it automatically for you.
 
 ## Metadata
 
