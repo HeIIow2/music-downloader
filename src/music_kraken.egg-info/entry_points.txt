@@ -1,0 +1,2 @@
+[console_scripts]
+music-kraken = music_kraken:cli
