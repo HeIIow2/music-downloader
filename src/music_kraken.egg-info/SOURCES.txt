@@ -4,7 +4,7 @@ pyproject.toml
 setup.py
 src/music_kraken/__init__.py
 src/music_kraken/__main__.py
-src/music_kraken/download.py
+src/music_kraken/download_.py
 src/music_kraken/download_links.py
 src/music_kraken/url_to_path.py
 src/music_kraken.egg-info/PKG-INFO

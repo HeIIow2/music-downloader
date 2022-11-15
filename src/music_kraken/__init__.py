@@ -5,7 +5,7 @@ from .metadata import download
 from .metadata import search as s
 from . import download_links
 from . import url_to_path
-from . import download as d
+from . import download_
 
 # NEEDS REFACTORING
 from .lyrics.lyrics import fetch_lyrics
