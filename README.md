@@ -45,20 +45,7 @@ First the metadata has to be downloaded. The best api to do so is undeniably [Mu
 
 To fetch from [Musicbrainz](musicbrainz.org/) we first have to know what to fetch. A good start is to get an input querry, which can be just put into the MB-Api. It then returns a list of possible artists, releases and recordings.
 
-Then we can output them in the Terminal and ask for further input. Following can be inputed afterwards:
-
-- `q` to quit
-- `ok` to download
-- `..` for previous options 
-- `.` for current options
-- `an integer` for this element
-
 If the following chosen element is an artist, its discography + a couple tracks are outputed, if a release is chosen, the artists + tracklist + release is outputted, If a track is chosen its artists and releases are shown.
-
-**TO DO**
-
-- Schow always the whole tracklist of an release if it is chosen
-- Show always the whole discography of an artist if it is chosen
 
 Up to now it doesn't if the discography or tracklist is chosen.
 
@@ -134,13 +121,6 @@ For searching, as well as for downloading I use the programm `youtube-dl`, which
 There are two bottlenecks with this approach though:
 1. `youtube-dl` is just slow. Actually it has to be, to not get blocked by youtube.
 2. Ofthen musicbrainz just doesn't give the isrc for some songs.
-
-**TODO**
-- look at how the isrc id derived an try to generate it for the tracks without directly getting it from mb.
-
-
-**Progress**
-- There is a great site whith a huge isrc database [https://isrc.soundexchange.com/](https://isrc.soundexchange.com/).
 
 
 ## Lyrics
