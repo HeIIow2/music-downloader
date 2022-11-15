@@ -1,6 +1,7 @@
-pyinstaller --onefile src/run_cli.py
+mkdir -p dist/build_files
+mkdir -p dist/compiled
 
-exit
+pyinstaller --onefile src/music_kraken_cli.py --specpath dist/build_files --workpath dist/build_files --distpath dist/compiled
 
 # https://packaging.python.org/en/latest/tutorials/packaging-projects/
 echo "building......"
