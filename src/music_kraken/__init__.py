@@ -99,7 +99,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 3 and not only_lyrics:
         logging.info("starting to download the mp3's")
-        d.Download()
+        download_.Download()
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
