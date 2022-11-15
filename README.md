@@ -1,5 +1,7 @@
 # Music Kraken
 
+![](https://github.com/HeIIow2/music-downloader/blob/master/assets/logo_cropped.jpg?raw=true)
+
 ## Installation
 
 You can find this project on PyPI [https://pypi.org/project/music-kraken/](https://pypi.org/project/music-kraken/) or GitHub [https://github.com/HeIIow2/music-downloader](https://github.com/HeIIow2/music-downloader). If you enjoy this project, feel free to star it.
