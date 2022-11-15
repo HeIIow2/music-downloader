@@ -6,5 +6,7 @@ __pycache__/
 *.mp3
 *.cache*
 
+/dist/*
+
 /build/*
 !/build/build.sh
