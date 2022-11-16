@@ -10,6 +10,34 @@
   - proxies (maybe a boolean if tor should be enabled)
   - toggling of audio sources and sorting priorities of audio sources
 
+# Which "Modules" do I have
+## Overview
+- fetching of metadata
+- creating the target paths/filenames
+- fetching of the download sourced
+- downloading of the mp3
+- fetching of the lyrics
+
+## Naming and Structure of Modules
+- utils
+  - shared (equivalent to global variables and constants)
+  - config
+  - database
+  - some static methods that are in general usefull for me
+- tagging
+  - song (within a class Song used to get and set the metadata of mp3 files)
+- metadata
+  - search
+  - fetch
+- something with target
+- audio_source 
+  - fetch_source
+  - fetch_audio
+  - sources
+    - musify
+    - youtube
+- lyrics
+
 # Wrong Audio
 - Crystal F - Hanging Man
 
