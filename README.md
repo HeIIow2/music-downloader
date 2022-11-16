@@ -4,7 +4,10 @@
 
 ## Installation
 
-You can find this project on PyPI [https://pypi.org/project/music-kraken/](https://pypi.org/project/music-kraken/) or GitHub [https://github.com/HeIIow2/music-downloader](https://github.com/HeIIow2/music-downloader). If you enjoy this project, feel free to star it.
+You can find and get this project from either [PyPI](https://pypi.org/project/music-kraken/) as Python-Package 
+or simply the source code from [GitHub](https://github.com/HeIIow2/music-downloader). Note that even though
+everything **SHOULD** work cross Plattform, I only tested it on Ubuntu.
+If you enjoy this project, feel free to give it a Star on GitHub.
 
 ```sh
 # install it with
@@ -35,6 +38,40 @@ After searching with this syntax it prompts you with multiple results. You can e
 
 After you chose either an artist, a release group, a release or a track by its id, download it by inputing the string `ok`. My downloader will download it automatically for you.
 
+---
+
+## Programming interface
+
+If you want to use this project, or parts from it in youre own projects from it, 
+make sure to be familiar with [Python Modules](https://docs.python.org/3/tutorial/modules.html).
+Further and better documentation including code examples are yet to come, so here is the rough
+module structure for now. (should be up-to-date but no guarantee)
+
+### Modules
+
+- utils
+  - shared (equivalent to global variables and constants)
+  - config
+  - database
+  - some static methods that are in general useful for me
+- tagging
+  - song (within a class Song used to get and set the metadata of mp3 files)
+- metadata
+  - search
+  - fetch
+- target
+- audio_source 
+  - fetch_source
+  - fetch_audio
+  - sources
+    - musify
+    - youtube
+- lyrics
+  - lyrics
+  - genius (will eventually be moved in a folder with lyric sources)
+
+---
+
 ## Metadata
 
 First the metadata has to be downloaded. The best api to do so is undeniably [Musicbrainz](musicbrainz.org/). This is a result of them being a website with a large Database spanning over all Genres.
@@ -45,13 +82,13 @@ First the metadata has to be downloaded. The best api to do so is undeniably [Mu
 
 To fetch from [Musicbrainz](musicbrainz.org/) we first have to know what to fetch. A good start is to get an input querry, which can be just put into the MB-Api. It then returns a list of possible artists, releases and recordings.
 
-If the following chosen element is an artist, its discography + a couple tracks are outputed, if a release is chosen, the artists + tracklist + release is outputted, If a track is chosen its artists and releases are shown.
+If the following chosen element is an artist, its discography + a couple tracks are printed, if a release is chosen, the artists + tracklist + release is outputted, If a track is chosen its artists and releases are shown.
 
 Up to now it doesn't if the discography or tracklist is chosen.
 
 ### Metadata to fetch
 
-I orient on which metadata to download on the keys in `mutagen.EasyID3` . Following I fatch and thus tag the MP3 with:
+I orient on which metadata to download on the keys in `mutagen.EasyID3` . Following I fetch and thus tag the MP3 with:
 - title
 - artist
 - albumartist
@@ -74,9 +111,7 @@ Those Tags are for the musicplayer to not sort for Example the albums of a band 
 
 #### isrc
 
-This is the **international standart release code**. With this a track can be identified 100% percicely all of the time, if it is known and the website has a search api for that. Obviously this will get important later.
-
----
+This is the **international standart release code**. With this a track can be identified 99% of the time, if it is known and the website has a search api for that. Obviously this will get important later.
 
 ## Download
 
@@ -84,7 +119,7 @@ Now that the metadata is downloaded and cached, download sources need to be soun
 
 ### Musify
 
-The quickest source to get download links from is to my knowledge [musify](https://musify.club/). Its a russian music downloading page, where many many songs are available to stream and to download. Due to me not wanting to stress the server to much, I abuse a handy feature nearly every page where you can search suff has. The autocomplete api for the search input. Those always are quite limited in the number of results it returns, but it is optimized to be quick. Thus with the http header `Connection` set to `keep-alive` the bottelneck defently is not at the speed of those requests.
+The quickest source to get download links from is to my knowledge [musify](https://musify.club/). Its a russian music downloading page, where many many songs are available to stream and to download. Due to me not wanting to stress the server to much, I abuse a handy feature nearly every page where you can search suff has. The autocomplete api for the search input. Those always are quite limited in the number of results it returns, but it is optimized to be quick. Thus with the http header `Connection` set to `keep-alive` the bottleneck defently is not at the speed of those requests.
 
 For musify the endpoint is following: [https://musify.club/search/suggestions?term={title}](https://musify.club/search/suggestions?term=LornaShore) If the http headers are set correctly, then searching for example for "Lorna Shore" yields following result:
 
@@ -105,14 +140,14 @@ For musify the endpoint is following: [https://musify.club/search/suggestions?te
 
 This is a shortened example for the response the api gives. The results are very Limited, but it is also very efficient to parse. The steps I take are:
 
-- call the api with the querry being the track name
+- call the api with the query being the track name
 - parse the json response to an object
 - look at how different the title and artist are on every element from the category `Треки`, translated roughly to track or release.
 - If they match get the download links and cache them.
 
 ### Youtube
 
-Herte the **isrc** plays a huge role. You probaply know it, when you search on youtube for a song, and the music videos has a long intro or the first result is a live version. I don't want those in my music collection, only if the tracks are like this in the official release. Well how can you get around that?
+Herte the **isrc** plays a huge role. You probably know it, when you search on youtube for a song, and the music videos has a long intro or the first result is a live version. I don't want those in my music collection, only if the tracks are like this in the official release. Well how can you get around that?
 
 Turns out if you search for the **isrc** on youtube the results contain the music, like it is on the official release and some japanese meme videos. The tracks I wan't just have the title of the released track, so one can just compare those two.
 
@@ -130,50 +165,3 @@ To get the Lyrics, I scrape them, and put those in the USLT ID3 Tags of for exam
 ### Genius
 
 For the lyrics source the page [https://genius.com/](https://genius.com/) is easily sufficient. It has most songs. Some songs are not present though, but that is fine, because the lyrics are optional anyways.
-
-## Project overview
-
-The file structure is as follows (might be slightly outdated):
-
-```
-music-downloader
-├── assets
-│   └── database_structure.sql
-├── LICENSE
-├── notes.md
-├── README.md
-├── requirements.txt
-└── src
-    ├── audio
-    │   └── song.py
-    ├── download_links.py
-    ├── download.py
-    ├── lyrics
-    │   ├── genius.py
-    │   └── lyrics.py
-    ├── __main__.py
-    ├── metadata
-    │   ├── database.py
-    │   ├── download.py
-    │   ├── object_handeling.py
-    │   └── search.py
-    ├── scraping
-    │   ├── file_system.py
-    │   ├── musify.py
-    │   ├── phonetic_compares.py
-    │   └── youtube_music.py
-    ├── url_to_path.py
-    └── utils
-        ├── object_handeling.py
-        ├── phonetic_compares.py
-        └── shared.py
-
-```
-
-You can obviously find the source code in the folder src. The two "most important" files are `__main__.py` and `utils/shared.py`.
-
-In the first one is the code gluing everything together and providing the cli.
-
-### utils
-
-The constants like the global database object can be found in `shared.py`.

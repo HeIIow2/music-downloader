@@ -38,6 +38,8 @@
     - musify
     - youtube
 - lyrics
+  - lyrics
+  - genius (will eventually be moved in a folder with lyric sources)
 
 # Wrong Audio
 - Crystal F - Hanging Man
