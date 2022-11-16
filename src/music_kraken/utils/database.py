@@ -131,7 +131,8 @@ class Database:
             "track.release_id == release_.id",
             "release_group.id == release_.release_group_id",
             "artist_track.artist_id == artist.id",
-            "artist_track.track_id == track.id"
+            "artist_track.track_id == track.id",
+            "source.track_id == track.id"
         ]
         where_args.extend(custom_where)
 
@@ -144,6 +145,15 @@ SELECT DISTINCT
             SELECT DISTINCT json_object(
                 'id', artist.id,
                 'name', artist.name
+                )
+            )
+        ),
+        'source', json_group_array(
+            (
+            SELECT DISTINCT json_object(
+                'src', source.src,
+                'url', source.url,
+                'valid', source.valid
                 )
             )
         ),
@@ -174,7 +184,7 @@ SELECT DISTINCT
         'src', track.src,
         'lyrics', track.lyrics
         )
-FROM track, release_, release_group,artist, artist_track
+FROM track, release_, release_group, artist, artist_track, source
 WHERE
     {where_arg}
 GROUP BY track.id;
