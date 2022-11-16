@@ -1,4 +1,5 @@
 # TO DO
+- Create a super class for audio_source, from which yet to come classes like Musify or Youtube inherit.
 - be able to select multiple things at once (eg "0, 3, 5, 6") and then download this selection with ok
 - add the file system as audio source
 - add complete search of musify (scraping of artist page etc.) as last resort
