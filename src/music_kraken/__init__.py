@@ -1,13 +1,27 @@
 from .utils.shared import *
 
-from .metadata.fetch import MetadataDownloader
-from .metadata import fetch
-from .metadata import search as s
-from .audio_source import fetch_source, fetch_audio
+from .metadata import (
+    metadata_search,
+    metadata_fetch
+)
+
 from .target import set_target
 
+from .audio_source import (
+    fetch_source,
+    fetch_audio
+)
+
+from .lyrics import lyrics
+
+# from .metadata.fetch import MetadataDownloader
+# from .metadata import fetch
+# from .metadata import search as s
+# from .audio_source import fetch_source, fetch_audio
+# from .target import set_target
+
 # NEEDS REFACTORING
-from .lyrics.lyrics import fetch_lyrics
+# from .lyrics.lyrics import fetch_lyrics
 
 import logging
 import os
@@ -33,7 +47,7 @@ def get_existing_genre():
 
 
 def search_for_metadata():
-    search = s.Search()
+    search = metadata_search.Search()
 
     while True:
         input_ = input(
@@ -85,7 +99,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
         search = search_for_metadata()
         # search = metadata.search.Option("release", "f8d4b24d-2c46-4e9c-8078-0c0f337c84dd", "Beautyfall")
         logging.info("Starting Downloading of metadata")
-        metadata_downloader = MetadataDownloader()
+        metadata_downloader = metadata_fetch.MetadataDownloader()
         metadata_downloader.download({'type': search.type, 'id': search.id})
 
     if start_at <= 1 and not only_lyrics:
@@ -102,4 +116,4 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
-        fetch_lyrics()
+        lyrics.fetch_lyrics()
