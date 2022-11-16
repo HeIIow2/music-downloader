@@ -1,7 +1,9 @@
-import requests
-
-from .utils.shared import *
-from .scraping import musify, youtube_music, file_system
+from ..utils.shared import *
+from .sources import (
+    youtube,
+    musify,
+    local_files
+)
 
 logger = URL_DOWNLOAD_LOGGER
 
@@ -28,7 +30,7 @@ class Download:
             """
 
             # check YouTube
-            youtube_url = youtube_music.get_youtube_url(row)
+            youtube_url = youtube.get_youtube_url(row)
             if youtube_url is not None:
                 self.add_url(youtube_url, 'youtube', id_)
                 continue
@@ -47,7 +49,8 @@ class Download:
 
             logger.warning(f"Didn't find any sources for {row['title']}")
 
-    def add_url(self, url: str, src: str, id_: str):
+    @staticmethod
+    def add_url(url: str, src: str, id_: str):
         database.set_download_data(id_, url, src)
 
 

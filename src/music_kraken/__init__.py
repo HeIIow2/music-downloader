@@ -1,11 +1,10 @@
 from .utils.shared import *
 
-from .metadata.download import MetadataDownloader
-from .metadata import download
+from .metadata.fetch import MetadataDownloader
+from .metadata import fetch
 from .metadata import search as s
-from . import download_links
-from . import url_to_path
-from . import download_
+from .audio_source import fetch_source, fetch_audio
+from .target import set_target
 
 # NEEDS REFACTORING
 from .lyrics.lyrics import fetch_lyrics
@@ -91,15 +90,15 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 1 and not only_lyrics:
         logging.info("creating Paths")
-        url_to_path.UrlPath(genre=genre)
+        set_target.UrlPath(genre=genre)
 
     if start_at <= 2 and not only_lyrics:
         logging.info("Fetching Download Links")
-        download_links.Download()
+        fetch_source.Download()
 
     if start_at <= 3 and not only_lyrics:
         logging.info("starting to download the mp3's")
-        download_.Download()
+        fetch_audio.Download()
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")

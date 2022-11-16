@@ -4,8 +4,14 @@ import os.path
 from mutagen.easyid3 import EasyID3
 from pydub import AudioSegment
 
-from .utils.shared import *
-from .scraping import musify, youtube_music
+from ..utils.shared import *
+from .sources import (
+    youtube,
+    musify,
+    local_files
+)
+
+logger = DOWNLOAD_LOGGER
 
 """
 https://en.wikipedia.org/wiki/ID3
@@ -16,8 +22,6 @@ from mutagen.easyid3 import EasyID3
 print("\n".join(EasyID3.valid_keys.keys()))
 print(EasyID3.valid_keys.keys())
 """
-
-logger = DOWNLOAD_LOGGER
 
 
 class Download:
@@ -36,7 +40,7 @@ class Download:
             if src == 'musify':
                 download_success = musify.download(row)
             elif src == 'youtube':
-                download_success = youtube_music.download(row)
+                download_success = youtube.download(row)
 
             if download_success == -1:
                 logger.warning(f"couldn't download {row['url']} from {row['src']}")

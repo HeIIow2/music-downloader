@@ -1,8 +1,6 @@
 import mutagen
 from mutagen.id3 import ID3, USLT
 
-
-from ..metadata import database as db
 from ..utils.shared import *
 from . import genius
 

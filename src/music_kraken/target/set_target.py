@@ -1,7 +1,7 @@
 import os.path
 import logging
 
-from .utils.shared import *
+from ..utils.shared import *
 
 logger = PATH_LOGGER
 

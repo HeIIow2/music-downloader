@@ -1,7 +1,7 @@
 import os
 
-from ..utils.shared import *
-from ..utils import phonetic_compares
+from ...utils.shared import *
+from ...utils import phonetic_compares
 
 
 def is_valid(a1, a2, t1, t2) -> bool:

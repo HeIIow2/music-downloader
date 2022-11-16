@@ -4,8 +4,8 @@ import time
 import requests
 import bs4
 
-from ..utils.shared import *
-from ..utils import phonetic_compares
+from ...utils.shared import *
+from ...utils import phonetic_compares
 
 TRIES = 5
 TIMEOUT = 10
