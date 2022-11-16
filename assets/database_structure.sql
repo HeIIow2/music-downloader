@@ -56,3 +56,11 @@ CREATE TABLE track (
     url TEXT,
     src TEXT
 );
+
+DROP TABLE IF EXISTS source;
+CREATE TABLE source (
+    track_id TEXT NOT NULL,
+    src TEXT NOT NULL,
+    url TEXT NOT NULL,
+    valid BOOLEAN NOT NULL DEFAULT 1
+);
