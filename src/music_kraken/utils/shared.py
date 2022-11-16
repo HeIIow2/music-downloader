@@ -14,7 +14,8 @@ DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-d
 SEARCH_LOGGER = logging.getLogger("mb-cli")
 DATABASE_LOGGER = logging.getLogger("database")
 METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata-download")
-URL_DOWNLOAD_LOGGER = logging.getLogger("ling-download")
+URL_DOWNLOAD_LOGGER = logging.getLogger("AudioSource")
+YOUTUBE_LOGGER = logging.getLogger("Youtube")
 PATH_LOGGER = logging.getLogger("create-paths")
 DOWNLOAD_LOGGER = logging.getLogger("download")
 LYRICS_LOGGER = logging.getLogger("lyrics")
@@ -35,7 +36,7 @@ database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
                     DATABASE_STRUCTURE_FALLBACK,
                     DATABASE_LOGGER,
-                    reset_anyways=False)
+                    reset_anyways=True)
 
 
 TOR = False
@@ -43,3 +44,6 @@ proxies = {
     'http': 'socks5h://127.0.0.1:9150',
     'https': 'socks5h://127.0.0.1:9150'
 } if TOR else {}
+
+# only the sources here will get downloaded, in the order the list is ordered
+AUDIO_SOURCES = ["Youtube", "Musify"]

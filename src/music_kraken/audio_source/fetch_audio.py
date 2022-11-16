@@ -13,6 +13,12 @@ from .sources import (
 
 logger = DOWNLOAD_LOGGER
 
+# maps the classes to get data from to the source name
+sources = {
+    'Youtube': youtube.Youtube,
+    'Musify': musify.Musify
+}
+
 """
 https://en.wikipedia.org/wiki/ID3
 https://mutagen.readthedocs.io/en/latest/user/id3.html
@@ -35,18 +41,30 @@ class Download:
                 self.write_metadata(row, row['file'])
                 continue
 
+            download_success = Download.download_from_src(row['src'], row)
+
+            """
             download_success = None
             src = row['src']
             if src == 'musify':
                 download_success = musify.download(row)
             elif src == 'youtube':
                 download_success = youtube.download(row)
+            """
 
             if download_success == -1:
                 logger.warning(f"couldn't download {row['url']} from {row['src']}")
                 continue
 
             self.write_metadata(row, row['file'])
+
+    @staticmethod
+    def download_from_src(src, row):
+        if src not in sources:
+            raise ValueError(f"source {src} seems to not exist")
+        source_subclass = sources[src]
+
+        return source_subclass.fetch_audio(row)
 
     @staticmethod
     def write_metadata(row, file_path):

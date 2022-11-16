@@ -1,4 +1,3 @@
-import logging
 import time
 
 import requests
@@ -6,6 +5,8 @@ import bs4
 
 from ...utils.shared import *
 from ...utils import phonetic_compares
+
+from .source import AudioSource
 
 TRIES = 5
 TIMEOUT = 10
@@ -17,6 +18,38 @@ session.headers = {
     "Referer": "https://musify.club/"
 }
 session.proxies = proxies
+
+
+class Musify(AudioSource):
+    @classmethod
+    def fetch_source(cls, row: dict):
+        super().fetch_source(row)
+
+        title = row['title']
+        artists = row['artists']
+
+        url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
+
+        try:
+            r = session.get(url=url)
+        except requests.exceptions.ConnectionError:
+            return None
+        if r.status_code == 200:
+            autocomplete = r.json()
+            for row in autocomplete:
+                if any(a in row['label'] for a in artists) and "/track" in row['url']:
+                    return get_download_link(row['url'])
+
+        return None
+
+    @classmethod
+    def fetch_audio(cls, row: dict):
+        super().fetch_audio(row)
+
+        url = row['url']
+        file_ = row['file']
+        return download_from_musify(file_, url)
+
 
 
 def get_musify_url(row):
