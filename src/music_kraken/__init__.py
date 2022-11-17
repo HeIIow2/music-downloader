@@ -26,16 +26,6 @@ from .lyrics import lyrics
 import logging
 import os
 
-# configure logger default
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(os.path.join(temp_dir, LOG_FILE)),
-        logging.StreamHandler()
-    ]
-)
-
 
 def get_existing_genre():
     valid_directories = []

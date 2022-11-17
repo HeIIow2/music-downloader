@@ -11,6 +11,8 @@ from .source import AudioSource
 TRIES = 5
 TIMEOUT = 10
 
+logger = MUSIFY_LOGGER
+
 session = requests.Session()
 session.headers = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
@@ -22,23 +24,111 @@ session.proxies = proxies
 
 class Musify(AudioSource):
     @classmethod
-    def fetch_source(cls, row: dict):
+    def fetch_source(cls, row: dict) -> str | None:
         super().fetch_source(row)
 
         title = row['title']
         artists = row['artists']
 
-        url = f"https://musify.club/search/suggestions?term={artists[0]} - {title}"
+        # trying to get a download link via the autocomplete api
+        for artist in artists:
+            url = cls.fetch_source_from_autocomplete(title=title, artist=artist)
+            if url is not None:
+                logger.info(f"found download link {url}")
+                return url
+
+        # trying to get a download link via the html of the direct search page
+        for artist in artists:
+            url = cls.fetch_source_from_search(title=title, artist=artist)
+            if url is not None:
+                logger.info(f"found download link {url}")
+                return url
+
+        logger.warning(f"Didn't find the audio on {cls.__name__}")
+
+    @classmethod
+    def get_download_link(cls, track_url: str) -> str | None:
+        # https://musify.club/track/dl/18567672/rauw-alejandro-te-felicito-feat-shakira.mp3
+        # /track/sundenklang-wenn-mein-herz-schreit-3883217'
+
+        file_ = track_url.split("/")[-1]
+        if len(file_) == 0:
+            return None
+        musify_id = file_.split("-")[-1]
+        musify_name = "-".join(file_.split("-")[:-1])
+
+        return f"https://musify.club/track/dl/{musify_id}/{musify_name}.mp3"
+
+    @classmethod
+    def fetch_source_from_autocomplete(cls, title: str, artist: str) -> str | None:
+        url = f"https://musify.club/search/suggestions?term={artist} - {title}"
 
         try:
+            logger.info(f"calling {url}")
             r = session.get(url=url)
         except requests.exceptions.ConnectionError:
+            logger.info("connection error occurred")
             return None
         if r.status_code == 200:
             autocomplete = r.json()
             for row in autocomplete:
-                if any(a in row['label'] for a in artists) and "/track" in row['url']:
-                    return get_download_link(row['url'])
+                if artist in row['label'] and "/track" in row['url']:
+                    return cls.get_download_link(row['url'])
+
+        return None
+
+    @classmethod
+    def get_soup_of_search(cls, query: str, trie=0) -> bs4.BeautifulSoup | None:
+        url = f"https://musify.club/search?searchText={query}"
+        logger.debug(f"Trying to get soup from {url}")
+        r = session.get(url)
+        if r.status_code != 200:
+            if r.status_code in [503] and trie < TRIES:
+                logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
+                logging.warning(f"retrying in {TIMEOUT} seconds again")
+                time.sleep(TIMEOUT)
+                return get_soup_of_search(query, trie=trie + 1)
+
+            logging.warning("too many tries, returning")
+            return None
+        return bs4.BeautifulSoup(r.content, features="html.parser")
+
+    @classmethod
+    def fetch_source_from_search(cls, title: str, artist: str) -> str | None:
+        query: str = f"{artist[0]} - {title}"
+        search_soup = cls.get_soup_of_search(query=query)
+        if search_soup is None:
+            return None
+
+        # get the soup of the container with all track results
+        tracklist_container_soup = search_soup.find_all("div", {"class": "playlist"})
+        if len(tracklist_container_soup) == 0:
+            return None
+        if len(tracklist_container_soup) != 1:
+            logger.warning("HTML Layout of https://musify.club changed. (or bug)")
+        tracklist_container_soup = tracklist_container_soup[0]
+
+        tracklist_soup = tracklist_container_soup.find_all("div", {"class": "playlist__details"})
+
+        def parse_track_soup(_track_soup):
+            anchor_soups = _track_soup.find_all("a")
+            artist_ = anchor_soups[0].text.strip()
+            track_ = anchor_soups[1].text.strip()
+            url_ = anchor_soups[1]['href']
+            return artist_, track_, url_
+
+        # check each track in the container, if they match
+        for track_soup in tracklist_soup:
+            artist_option, title_option, track_url = parse_track_soup(track_soup)
+
+            title_match, title_distance = phonetic_compares.match_titles(title, title_option)
+            artist_match, artist_distance = phonetic_compares.match_artists(artist, artist_option)
+
+            logging.debug(f"{(title, title_option, title_match, title_distance)}")
+            logging.debug(f"{(artist, artist_option, artist_match, artist_distance)}")
+
+            if not title_match and not artist_match:
+                return cls.get_download_link(track_url)
 
         return None
 
@@ -49,7 +139,6 @@ class Musify(AudioSource):
         url = row['url']
         file_ = row['file']
         return download_from_musify(file_, url)
-
 
 
 def get_musify_url(row):
