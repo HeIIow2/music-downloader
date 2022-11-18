@@ -141,6 +141,7 @@ class Musify(AudioSource):
         return download_from_musify(file_, url)
 
 
+"""
 def get_musify_url(row):
     title = row['title']
     artists = row['artists']
@@ -252,7 +253,7 @@ def get_musify_url_slow(row):
     result = search_for_track(row)
     if result is not None:
         return result
-
+"""
 
 if __name__ == "__main__":
     pass
