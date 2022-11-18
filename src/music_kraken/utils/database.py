@@ -146,8 +146,8 @@ SELECT DISTINCT
         ),
         'source', json_group_array(
             (
-            SELECT json_object(
-                'src_', src_.src,
+            SELECT DISTINCT json_object(
+                'src', src_.src,
                 'url', src_.url,
                 'valid', src_.valid
                 )
@@ -185,7 +185,7 @@ LEFT JOIN release_ id ON track.release_id = release_.id
 LEFT JOIN release_group id ON release_.id = release_group.id
 LEFT JOIN artist_track track_id ON track.id = artist_track.track_id
 LEFT JOIN artist id ON artist_track.artist_id = artist.id
-LEFT JOIN source src_ ON track.id = src_.track_id
+LEFT OUTER JOIN source src_ ON track.id = src_.track_id
 WHERE
     {where_arg}
 GROUP BY track.id;
