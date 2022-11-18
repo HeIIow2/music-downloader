@@ -1,0 +1,56 @@
+Date : 2022-11-18 09:40:36
+Directory : /home/lars/Projects/music-downloader/src/music_kraken
+Total : 25 files,  1378 codes, 462 comments, 442 blanks, all 2282 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Python   |         25 |      1,378 |        462 |        442 |      2,282 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                      | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                         |         25 |      1,378 |        462 |        442 |      2,282 |
+| audio_source                                                                              |          8 |        347 |        240 |        120 |        707 |
+| audio_source/sources                                                                      |          5 |        245 |        192 |         82 |        519 |
+| lyrics                                                                                    |          3 |        148 |         57 |         61 |        266 |
+| metadata                                                                                  |          3 |        507 |         64 |        136 |        707 |
+| tagging                                                                                   |          2 |          3 |          0 |          2 |          5 |
+| target                                                                                    |          2 |         36 |          7 |         19 |         62 |
+| utils                                                                                     |          5 |        258 |         83 |         74 |        415 |
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                  | language | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/lars/Projects/music-downloader/src/music_kraken/__init__.py                         | Python   |         75 |          8 |         27 |        110 |
+| /home/lars/Projects/music-downloader/src/music_kraken/__main__.py                         | Python   |          4 |          3 |          3 |         10 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/__init__.py            | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/fetch_audio.py         | Python   |         65 |         20 |         22 |        107 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/fetch_source.py        | Python   |         37 |         28 |         15 |         80 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/sources/__init__.py    | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/sources/local_files.py | Python   |         40 |          0 |         18 |         58 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/sources/musify.py      | Python   |        126 |        120 |         37 |        283 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/sources/source.py      | Python   |         10 |          5 |          6 |         21 |
+| /home/lars/Projects/music-downloader/src/music_kraken/audio_source/sources/youtube.py     | Python   |         69 |         67 |         20 |        156 |
+| /home/lars/Projects/music-downloader/src/music_kraken/lyrics/__init__.py                  | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/lyrics/genius.py                    | Python   |         99 |         38 |         35 |        172 |
+| /home/lars/Projects/music-downloader/src/music_kraken/lyrics/lyrics.py                    | Python   |         49 |         19 |         25 |         93 |
+| /home/lars/Projects/music-downloader/src/music_kraken/metadata/__init__.py                | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/metadata/metadata_fetch.py          | Python   |        254 |         24 |         63 |        341 |
+| /home/lars/Projects/music-downloader/src/music_kraken/metadata/metadata_search.py         | Python   |        253 |         40 |         72 |        365 |
+| /home/lars/Projects/music-downloader/src/music_kraken/tagging/__init__.py                 | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/tagging/song.py                     | Python   |          3 |          0 |          1 |          4 |
+| /home/lars/Projects/music-downloader/src/music_kraken/target/__init__.py                  | Python   |          0 |          0 |          1 |          1 |
+| /home/lars/Projects/music-downloader/src/music_kraken/target/set_target.py                | Python   |         36 |          7 |         18 |         61 |
+| /home/lars/Projects/music-downloader/src/music_kraken/utils/__init__.py                   | Python   |          1 |          1 |          1 |          3 |
+| /home/lars/Projects/music-downloader/src/music_kraken/utils/database.py                   | Python   |        158 |         80 |         40 |        278 |
+| /home/lars/Projects/music-downloader/src/music_kraken/utils/object_handeling.py           | Python   |         19 |          0 |          6 |         25 |
+| /home/lars/Projects/music-downloader/src/music_kraken/utils/phonetic_compares.py          | Python   |         34 |          0 |         15 |         49 |
+| /home/lars/Projects/music-downloader/src/music_kraken/utils/shared.py                     | Python   |         46 |          2 |         12 |         60 |
+| Total                                                                                     |          |      1,378 |        462 |        442 |      2,282 |
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
