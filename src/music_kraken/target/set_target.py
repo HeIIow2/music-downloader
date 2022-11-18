@@ -22,7 +22,7 @@ class UrlPath:
         self.genre = genre
 
         for row in database.get_tracks_without_filepath():
-            print(row)
+            # print(row)
             file, path = self.get_path_from_row(row)
             logger.info(f"setting target to {file}")
             database.set_filepath(row['id'], file, path, genre)

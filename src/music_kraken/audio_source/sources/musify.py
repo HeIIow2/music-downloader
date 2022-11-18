@@ -133,12 +133,35 @@ class Musify(AudioSource):
         return None
 
     @classmethod
+    def download_from_musify(cls, file, url):
+        logger.info(f"downloading: '{url}'")
+        try:
+            r = session.get(url, timeout=15)
+        except requests.exceptions.ConnectionError or requests.exceptions.ReadTimeout:
+            return False
+        if r.status_code != 200:
+            if r.status_code == 404:
+                logger.warning(f"{r.url} was not found")
+                return False
+            if r.status_code == 503:
+                logger.warning(f"{r.url} raised an internal server error")
+                return False
+            logger.error(f"\"{url}\" returned {r.status_code}: {r.text}")
+            return False
+
+        # write to the file
+        with open(file, "wb") as mp3_file:
+            mp3_file.write(r.content)
+        logger.info("finished")
+        return True
+
+    @classmethod
     def fetch_audio(cls, row: dict):
         super().fetch_audio(row)
 
         url = row['url']
         file_ = row['file']
-        return download_from_musify(file_, url)
+        return cls.download_from_musify(file_, url)
 
 
 """
