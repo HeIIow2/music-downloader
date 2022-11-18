@@ -128,11 +128,7 @@ class Database:
     @staticmethod
     def get_custom_track_query(custom_where: list) -> str:
         where_args = [
-            "track.release_id == release_.id",
-            "release_group.id == release_.release_group_id",
-            "artist_track.artist_id == artist.id",
-            "artist_track.track_id == track.id",
-            "(track.id == source.track_id OR track.id NOT IN (SELECT track_id FROM source))"
+            "1 = 1"
         ]
         where_args.extend(custom_where)
 
@@ -150,10 +146,10 @@ SELECT DISTINCT
         ),
         'source', json_group_array(
             (
-            SELECT DISTINCT json_object(
-                'src', source.src,
-                'url', source.url,
-                'valid', source.valid
+            SELECT json_object(
+                'src_', src_.src,
+                'url', src_.url,
+                'valid', src_.valid
                 )
             )
         ),
@@ -184,7 +180,12 @@ SELECT DISTINCT
         'src', track.src,
         'lyrics', track.lyrics
         )
-FROM track, release_, release_group, artist, artist_track, source
+FROM track, release_, release_group, artist, artist_track
+LEFT JOIN release_ id ON track.release_id = release_.id
+LEFT JOIN release_group id ON release_.id = release_group.id
+LEFT JOIN artist_track track_id ON track.id = artist_track.track_id
+LEFT JOIN artist id ON artist_track.artist_id = artist.id
+LEFT JOIN source src_ ON track.id = src_.track_id
 WHERE
     {where_arg}
 GROUP BY track.id;
@@ -274,61 +275,3 @@ if __name__ == "__main__":
 
     database = Database(os.path.join(temp_dir, "metadata.db"), os.path.join(temp_dir, "database_structure.sql"), logger,
                         reset_anyways=True)
-
-    """
-    
-SELECT DISTINCT
-    json_object(
-        'artists', json_group_array(
-            (
-            SELECT DISTINCT json_object(
-                'id', artist.id,
-                'name', artist.name
-                )
-            )
-        ),
-        'source', json_group_array(
-            (
-            SELECT json_object(
-                'src_', src_.src,
-                'url', src_.url,
-                'valid', src_.valid
-                )
-            )
-        ),
-        'id', track.id,
-        'tracknumber', track.tracknumber,
-        'titlesort  ', track.tracknumber,
-        'musicbrainz_releasetrackid', track.id,
-        'musicbrainz_albumid', release_.id,
-        'title', track.track,
-        'isrc', track.isrc,
-        'album', release_.title,
-        'copyright', release_.copyright,
-        'album_status', release_.album_status,
-        'language', release_.language,
-        'year', release_.year,
-        'date', release_.date,
-        'country', release_.country,
-        'barcode', release_.barcode,
-        'albumartist', release_group.albumartist,
-        'albumsort', release_group.albumsort,
-        'musicbrainz_albumtype', release_group.musicbrainz_albumtype,
-        'compilation', release_group.compilation,
-        'album_artist_id', release_group.album_artist_id,
-        'path', track.path,
-        'file', track.file,
-        'genre', track.genre,
-        'url', track.url,
-        'src', track.src,
-        'lyrics', track.lyrics
-        )
-FROM track, release_, release_group, artist, artist_track
-LEFT JOIN release_ id ON track.release_id = release_.id
-LEFT JOIN release_group id ON release_.id = release_group.id
-LEFT JOIN artist_track track_id ON track.id = artist_track.track_id
-LEFT JOIN artist id ON artist_track.artist_id = artist.id
-LEFT JOIN source src_ ON track.id = src_.track_id
-GROUP BY track.id;
-
-    """
