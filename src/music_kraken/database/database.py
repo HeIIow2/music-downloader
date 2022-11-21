@@ -4,6 +4,7 @@ import logging
 import json
 import requests
 
+from . import song
 
 class Database:
     def __init__(self, path_to_db: str, db_structure: str, db_structure_fallback: str, logger: logging.Logger, reset_anyways: bool = False):
@@ -194,7 +195,7 @@ GROUP BY track.id;
 
     def get_custom_track(self, custom_where: list):
         query = Database.get_custom_track_query(custom_where=custom_where)
-        return [json.loads(i[0]) for i in self.cursor.execute(query)]
+        return [song.Song(json.loads(i[0])) for i in self.cursor.execute(query)]
 
     def get_track_metadata(self, musicbrainz_releasetrackid: str):
         # this would be vulnerable if musicbrainz_releasetrackid would be user input
