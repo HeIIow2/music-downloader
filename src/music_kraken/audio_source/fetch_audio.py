@@ -41,7 +41,16 @@ class Download:
                 self.write_metadata(row, row['file'])
                 continue
 
-            download_success = Download.download_from_src(row['src'], row)
+            # download_success = Download.download_from_src(row['src'], row)
+            sources = row['source']
+            for source in sources:
+                if source['src'] is None:
+                    continue
+                download_success = Download.download_from_src(source['src'], source['url'], row)
+                if download_success != -1:
+                    break
+                else:
+                    logger.warning(f"couldn't download {row['url']} from {row['src']}")
 
             """
             download_success = None
@@ -52,24 +61,20 @@ class Download:
                 download_success = youtube.download(row)
             """
 
-            if download_success == -1:
-                logger.warning(f"couldn't download {row['url']} from {row['src']}")
-                continue
-
             self.write_metadata(row, row['file'])
 
     @staticmethod
-    def download_from_src(src, row):
+    def download_from_src(src, url, row):
         if src not in sources:
             raise ValueError(f"source {src} seems to not exist")
         source_subclass = sources[src]
 
-        return source_subclass.fetch_audio(row)
+        return source_subclass.fetch_audio(url, row)
 
     @staticmethod
     def write_metadata(row, file_path):
         if not os.path.exists(file_path):
-            logger.warning("something went really wrong")
+            logger.warning(f"file {file_path} doesn't exist")
             return False
 
         # only convert the file to the proper format if mutagen doesn't work with it due to time

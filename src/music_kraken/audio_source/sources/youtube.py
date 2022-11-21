@@ -59,10 +59,9 @@ class Youtube(AudioSource):
         return final_result['url']
 
     @classmethod
-    def fetch_audio(cls, row: dict, trie: int=0):
-        super().fetch_audio(row)
+    def fetch_audio(cls, url: str, row: dict, trie: int=0):
+        super().fetch_audio(url, row)
 
-        url = row['url']
         file_ = row['file']
         options = {
             'format': 'bestaudio/best',
@@ -79,7 +78,7 @@ class Youtube(AudioSource):
                 logger.warning("too many tries, returning")
             logger.warning(f"retrying in {WAIT_BETWEEN_BLOCK} seconds again")
             time.sleep(WAIT_BETWEEN_BLOCK)
-            return cls.fetch_audio(row, trie=trie + 1)
+            return cls.fetch_audio(url, row, trie=trie + 1)
 
 """
 def get_youtube_from_isrc(isrc: str) -> List[dict]:

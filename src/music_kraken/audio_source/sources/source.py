@@ -16,5 +16,5 @@ class AudioSource:
         logger.info(f"try getting source {row['title']} from {cls.__name__}")
 
     @classmethod
-    def fetch_audio(cls, row: dict):
+    def fetch_audio(cls, url: str,row: dict):
         logger.info(f"downloading audio from {row['url']} from {cls.__name__} to {row['file']}")

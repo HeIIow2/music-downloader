@@ -156,10 +156,9 @@ class Musify(AudioSource):
         return True
 
     @classmethod
-    def fetch_audio(cls, row: dict):
-        super().fetch_audio(row)
+    def fetch_audio(cls, url: str, row: dict):
+        super().fetch_audio(url, row)
 
-        url = row['url']
         file_ = row['file']
         return cls.download_from_musify(file_, url)
 
