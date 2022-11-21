@@ -17,7 +17,9 @@ class Song:
     def __init__(self, json_response) -> None:
         self.json_data = json_response
 
+        self.title = self.json_data['title']
         self.artists = [Artist(a) for a in self.json_data['artists']]
+
         self.sources = []
         for src in self.json_data['source']:
             if src['src'] is None:

@@ -27,8 +27,8 @@ class Musify(AudioSource):
     def fetch_source(cls, row: dict) -> str | None:
         super().fetch_source(row)
 
-        title = row['title']
-        artists = row['artists']
+        title = row.title
+        artists = row.get_artist_names()
 
         # trying to get a download link via the autocomplete api
         for artist in artists:
