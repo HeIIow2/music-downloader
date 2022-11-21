@@ -147,15 +147,15 @@ SELECT DISTINCT
         'source', json_group_array(
             (
             SELECT DISTINCT json_object(
-                'src', src_.src,
-                'url', src_.url,
-                'valid', src_.valid
+                'src', src_table.src,
+                'url', src_table.url,
+                'valid', src_table.valid
                 )
             )
         ),
         'id', track.id,
         'tracknumber', track.tracknumber,
-        'titlesort  ', track.tracknumber,
+        'titlesort', track.tracknumber,
         'musicbrainz_releasetrackid', track.id,
         'musicbrainz_albumid', release_.id,
         'title', track.track,
@@ -180,12 +180,12 @@ SELECT DISTINCT
         'src', track.src,
         'lyrics', track.lyrics
         )
-FROM track, release_, release_group, artist, artist_track
-LEFT JOIN release_ id ON track.release_id = release_.id
-LEFT JOIN release_group id ON release_.id = release_group.id
-LEFT JOIN artist_track track_id ON track.id = artist_track.track_id
-LEFT JOIN artist id ON artist_track.artist_id = artist.id
-LEFT JOIN source src_ ON track.id = src_.track_id
+FROM track
+LEFT JOIN release_          ON track.release_id = release_.id
+LEFT JOIN release_group     ON release_.id = release_group.id
+LEFT JOIN artist_track      ON track.id = artist_track.track_id
+LEFT JOIN artist            ON artist_track.artist_id = artist.id
+LEFT JOIN source src_table  ON track.id = src_table.track_id
 WHERE
     {where_arg}
 GROUP BY track.id;
@@ -241,6 +241,10 @@ SET url = ?,
 WHERE '{track_id}' == id;
             """
         self.cursor.execute(query, (url, src))
+        self.connection.commit()
+        
+        query = "INSERT OR REPLACE INTO source (track_id, src, url) VALUES (?, ?, ?);"
+        self.cursor.execute(query, (track_id, src, url))
         self.connection.commit()
 
     def set_filepath(self, track_id: str, file: str, path: str, genre: str):

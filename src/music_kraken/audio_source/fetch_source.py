@@ -58,7 +58,6 @@ class Download:
                 res = Download.fetch_from_src(row, src)
                 if res is not None:
                     Download.add_url(res, src, id_)
-                    break
 
             logger.warning(f"Didn't find any sources for {row['title']}")
 
