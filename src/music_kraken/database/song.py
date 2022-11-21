@@ -5,12 +5,24 @@ class Artist:
         self.id = self.artist_data['id']
         self.name = self.artist_data['name']
 
+class Source:
+    def __init__(self, src_data) -> None:
+        self.src_data = src_data
+
+        self.src = self.src_data['src']
+        self.url = self.src_data['url']
+
 
 class Song:
     def __init__(self, json_response) -> None:
         self.json_data = json_response
 
         self.artists = [Artist(a) for a in self.json_data['artists']]
+        self.sources = []
+        for src in self.json_data['source']:
+            if src['src'] is None:
+                continue
+            self.sources.append(Source(src))
         """
         artist
         source
