@@ -131,4 +131,6 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
 
 def gtk_gui():
+    # please maximaly a minimal gui, the fully fleshed out gui should be made externally
+    # to avoid ending up with a huge monolyth
     pass
