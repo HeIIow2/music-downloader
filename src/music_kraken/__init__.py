@@ -1,3 +1,4 @@
+from .utils.functions import *
 from .utils.shared import *
 
 from .metadata import (
@@ -37,24 +38,42 @@ def get_existing_genre():
 
 
 def search_for_metadata():
+    clear_console()
+
     search = metadata_search.Search()
 
     while True:
         input_ = input(
-            "q to quit, .. for previous options, int for this element, str to search for query, ok to download\n")
-        input_.strip()
-        if input_.lower() == "ok":
-            break
-        if input_.lower() == "q":
-            break
-        if input_.lower() == "..":
-            print()
-            print(search.get_previous_options())
-            continue
-        if input_.isdigit():
-            print()
-            print(search.choose(int(input_)))
-            continue
+"""
+- - - Type the command you want to execute - - -
+.. - Previous Options
+(query_string) - Search for songs, albums, bands...
+(int) - Select an item from the search results
+d - Start the download
+h - Help
+q - Quit / Exit
+
+command: """
+        )
+
+        match (input_.strip().lower()):
+            case "d" | "ok" | "dl" | "download":
+                break
+            case "q" | "quit" | "exit":
+                clear_console()
+                exit()
+            case "h" | "help":
+                print()
+                # TODO: Help text (mainly explaining query strings and alternative command functionalities)
+                print("Insert here help text....")
+            case inp if inp.isdigit():
+                print()
+                print(search.choose(int(input_)))
+                continue
+            case ".." :
+                print()
+                print(search.get_previous_options())
+
         print()
         print(search.search_from_query(input_))
 
@@ -81,6 +100,8 @@ def get_genre():
 
 
 def cli(start_at: int = 0, only_lyrics: bool = False):
+    clear_console()
+
     if start_at <= 2 and not only_lyrics:
         genre = get_genre()
         logging.info(f"{genre} has been set as genre.")
@@ -107,3 +128,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
         lyrics.fetch_lyrics()
+
+
+def gtk_gui():
+    pass

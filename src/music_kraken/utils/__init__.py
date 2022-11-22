@@ -1,2 +1,2 @@
 # tells what exists
-__all__ = ["shared", "object_handeling", "phonetic_compares"]
+__all__ = ["shared", "object_handeling", "phonetic_compares", "functions"]
