@@ -32,47 +32,44 @@ print(EasyID3.valid_keys.keys())
 
 class Download:
     def __init__(self):
-        for row in database.get_tracks_to_download():
-            row['artist'] = [i['name'] for i in row['artists']]
-            row['file'] = os.path.join(MUSIC_DIR, row['file'])
-            row['path'] = os.path.join(MUSIC_DIR, row['path'])
+        for song in database.get_tracks_to_download():
+            song['artist'] = [i['name'] for i in song['artists']]
+            song['file'] = os.path.join(MUSIC_DIR, song['file'])
+            song['path'] = os.path.join(MUSIC_DIR, song['path'])
 
-            if self.path_stuff(row['path'], row['file']):
-                self.write_metadata(row, row['file'])
+            if self.path_stuff(song['path'], song['file']):
+                self.write_metadata(song, song['file'])
                 continue
 
-            # download_success = Download.download_from_src(row['src'], row)
-            sources = row['source']
-            for source in sources:
-                if source['src'] is None:
-                    continue
-                download_success = Download.download_from_src(source['src'], source['url'], row)
+            # download_success = Download.download_from_src(song['src'], song)
+            for source in song.sources:
+                download_success = Download.download_from_src(source.src, source.url, song)
                 if download_success != -1:
                     break
                 else:
-                    logger.warning(f"couldn't download {row['url']} from {row['src']}")
+                    logger.warning(f"couldn't download {song['url']} from {song['src']}")
 
             """
             download_success = None
-            src = row['src']
+            src = song['src']
             if src == 'musify':
-                download_success = musify.download(row)
+                download_success = musify.download(song)
             elif src == 'youtube':
-                download_success = youtube.download(row)
+                download_success = youtube.download(song)
             """
 
-            self.write_metadata(row, row['file'])
+            self.write_metadata(song, song['file'])
 
     @staticmethod
-    def download_from_src(src, url, row):
+    def download_from_src(src, url, song):
         if src not in sources:
             raise ValueError(f"source {src} seems to not exist")
         source_subclass = sources[src]
 
-        return source_subclass.fetch_audio(url, row)
+        return source_subclass.fetch_audio(url, song)
 
     @staticmethod
-    def write_metadata(row, file_path):
+    def write_metadata(song, file_path):
         if not os.path.exists(file_path):
             logger.warning(f"file {file_path} doesn't exist")
             return False
@@ -86,11 +83,11 @@ class Download:
 
         valid_keys = list(EasyID3.valid_keys.keys())
 
-        for key in list(row.keys()):
-            if key in valid_keys and row[key] is not None:
-                if type(row[key]) != list:
-                    row[key] = str(row[key])
-                audiofile[key] = row[key]
+        for key in list(song.keys()):
+            if key in valid_keys and song[key] is not None:
+                if type(song[key]) != list:
+                    song[key] = str(song[key])
+                audiofile[key] = song[key]
 
         logger.info("saving")
         audiofile.save(file_path, v1=2)

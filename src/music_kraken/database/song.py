@@ -1,3 +1,6 @@
+from typing import List
+
+
 class Artist:
     def __init__(self, artist_data) -> None:
         self.artist_data
@@ -20,7 +23,7 @@ class Song:
         self.title = self.json_data['title']
         self.artists = [Artist(a) for a in self.json_data['artists']]
 
-        self.sources = []
+        self.sources: List[Source] = []
         for src in self.json_data['source']:
             if src['src'] is None:
                 continue

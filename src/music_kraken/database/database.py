@@ -1,3 +1,4 @@
+from typing import List
 import sqlite3
 import os
 import logging
@@ -193,7 +194,7 @@ GROUP BY track.id;
         """
         return query
 
-    def get_custom_track(self, custom_where: list):
+    def get_custom_track(self, custom_where: list) -> List[song.Song]:
         query = Database.get_custom_track_query(custom_where=custom_where)
         return [song.Song(json.loads(i[0])) for i in self.cursor.execute(query)]
 
@@ -205,19 +206,19 @@ GROUP BY track.id;
 
         return resulting_tracks[0]
 
-    def get_tracks_to_download(self):
+    def get_tracks_to_download(self) -> List[song.Song]:
         return self.get_custom_track(['track.downloaded == 0'])
 
-    def get_tracks_without_src(self):
+    def get_tracks_without_src(self) -> List[song.Song]:
         return self.get_custom_track(["(track.url IS NULL OR track.src IS NULL)"])
 
-    def get_tracks_without_isrc(self):
+    def get_tracks_without_isrc(self) -> List[song.Song]:
         return self.get_custom_track(["track.isrc IS NULL"])
 
-    def get_tracks_without_filepath(self):
+    def get_tracks_without_filepath(self) -> List[song.Song]:
         return self.get_custom_track(["(track.file IS NULL OR track.path IS NULL OR track.genre IS NULL)"])
 
-    def get_tracks_for_lyrics(self):
+    def get_tracks_for_lyrics(self) -> List[song.Song]:
         return self.get_custom_track(["track.lyrics IS NULL"])
 
     def add_lyrics(self, track_id: str, lyrics: str):
