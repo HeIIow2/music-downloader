@@ -35,30 +35,30 @@ class Youtube(AudioSource):
         } for video in videos]
 
     @classmethod
-    def fetch_source(cls, row: dict):
+    def fetch_source(cls, song: song_objects.Song):
         # https://stackoverflow.com/questions/63388364/searching-youtube-videos-using-youtube-dl
-        super().fetch_source(row)
+        super().fetch_source(song)
 
-        if row['isrc'] is None:
-            return None
+        if not song.has_isrc():
+            return
 
-        real_title = row['title'].lower()
+        real_title = song.title.lower()
 
         final_result = None
-        results = cls.get_youtube_from_isrc(row['isrc'])
+        results = cls.get_youtube_from_isrc(song.isrc)
         for result in results:
-            video_title = result['title'].lower()
+            video_title = result.title.lower()
             match, distance = phonetic_compares.match_titles(video_title, real_title)
 
             if match:
-                logger.warning(
-                    f"dont downloading {result['url']} cuz the phonetic distance ({distance}) between {real_title} and {video_title} is to high.")
+                # logger.warning(
+                #     f"dont downloading {result['url']} cuz the phonetic distance ({distance}) between {real_title} and {video_title} is to high.")
                 continue
 
             final_result = result
 
         if final_result is None:
-            return None
+            return False
         return final_result['url']
 
     @classmethod
