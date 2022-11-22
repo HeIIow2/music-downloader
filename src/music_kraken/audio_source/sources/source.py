@@ -20,4 +20,4 @@ class AudioSource:
 
     @classmethod
     def fetch_audio(cls, song: song_objects.Song, src: song_objects.Sourcet):
-        logger.info(f"downloading audio from {src.url} from {cls.__name__} to {song['file']}")
+        logger.info(f"downloading {song}: {cls.__name__} {src.url} -> {song.target.file}")
