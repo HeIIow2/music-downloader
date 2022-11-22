@@ -34,6 +34,9 @@ class Artist:
         self.id = self.artist_data['id']
         self.name = self.artist_data['name']
 
+    def __str__(self) -> str:
+        return self.name
+
 class Source:
     def __init__(self, src_data) -> None:
         self.src_data = src_data
@@ -62,6 +65,9 @@ class Song:
         self.target = Target()
         self.target.file = self.json_data['file']
         self.target.path = self.json_data['path']
+
+    def __str__(self) -> str:
+        return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
 
     def has_isrc(self) -> bool:
         return self.isrc is not None
