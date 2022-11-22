@@ -70,8 +70,6 @@ class Song:
         return [a.name for a in self.aritsts]
 
     def __getitem__(self, item):
-        print(item)
-        print(self.json_data)
         if item not in self.json_data:
             return None
         return self.json_data[item]
@@ -83,5 +81,5 @@ class Song:
         if item == "path":
             self.target.path = value
             return
-        print(item, value)
+
         self.json_data[item] = value
