@@ -15,15 +15,6 @@ from .audio_source import (
 
 from .lyrics import lyrics
 
-# from .metadata.fetch import MetadataDownloader
-# from .metadata import fetch
-# from .metadata import search as s
-# from .audio_source import fetch_source, fetch_audio
-# from .target import set_target
-
-# NEEDS REFACTORING
-# from .lyrics.lyrics import fetch_lyrics
-
 import logging
 import os
 
