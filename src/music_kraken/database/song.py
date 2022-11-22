@@ -1,5 +1,7 @@
 from typing import List
-from ..utils.shared import *
+from ..utils.shared import (
+    MUSIC_DIR
+)
 
 import os
 
@@ -29,7 +31,7 @@ class Target:
 
 class Artist:
     def __init__(self, artist_data) -> None:
-        self.artist_data
+        self.artist_data = artist_data
 
         self.id = self.artist_data['id']
         self.name = self.artist_data['name']
@@ -73,7 +75,7 @@ class Song:
         return self.isrc is not None
 
     def get_artist_names(self) -> List[str]:
-        return [a.name for a in self.aritsts]
+        return [a.name for a in self.artists]
 
     def __getitem__(self, item):
         if item not in self.json_data:

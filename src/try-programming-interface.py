@@ -1,10 +1,14 @@
 import music_kraken as mk
 print(mk.__path__)
 
-# mk.fetch_source.Download()
-db = mk.utils.shared.database
-if len(db.get_custom_track([])) == 0:
-    mk.cli()
+# mk.cli()
+
+mk.fetch_source.Download()
+# db = mk.utils.shared.database
+# if len(db.get_custom_track([])) == 0:
+    
+
+mk.target.set_target.UrlPath(genre="test")
 
 mk.fetch_audio.Download()
 

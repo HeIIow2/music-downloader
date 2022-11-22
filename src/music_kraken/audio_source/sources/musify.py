@@ -26,11 +26,11 @@ session.proxies = proxies
 
 class Musify(AudioSource):
     @classmethod
-    def fetch_source(cls, row: dict) -> str | None:
-        super().fetch_source(row)
+    def fetch_source(cls, song: dict) -> str | None:
+        super().fetch_source(song)
 
-        title = row.title
-        artists = row.get_artist_names()
+        title = song.title
+        artists = song.get_artist_names()
 
         # trying to get a download link via the autocomplete api
         for artist in artists:
@@ -73,9 +73,9 @@ class Musify(AudioSource):
             return None
         if r.status_code == 200:
             autocomplete = r.json()
-            for row in autocomplete:
-                if artist in row['label'] and "/track" in row['url']:
-                    return cls.get_download_link(row['url'])
+            for song in autocomplete:
+                if artist in song['label'] and "/track" in song['url']:
+                    return cls.get_download_link(song['url'])
 
         return None
 

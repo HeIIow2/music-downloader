@@ -3,7 +3,6 @@ import logging
 import tempfile
 import os
 
-from ..database.database import Database
 
 TEMP_FOLDER = "music-downloader"
 LOG_FILE = "download_logs.log"
@@ -40,13 +39,6 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
-
-
-database = Database(os.path.join(temp_dir, DATABASE_FILE),
-                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
-                    DATABASE_STRUCTURE_FALLBACK,
-                    DATABASE_LOGGER,
-                    reset_anyways=False)
 
 
 TOR = False

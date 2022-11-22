@@ -6,6 +6,8 @@ from .sources import (
     local_files
 )
 
+from .. import database
+
 logger = URL_DOWNLOAD_LOGGER
 
 # maps the classes to get data from to the source name

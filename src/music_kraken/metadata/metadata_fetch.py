@@ -1,6 +1,8 @@
 from ..utils.shared import *
 from ..utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
+from .. import database
+
 from typing import List
 import musicbrainzngs
 import logging

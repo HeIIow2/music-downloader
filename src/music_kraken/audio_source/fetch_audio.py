@@ -10,6 +10,7 @@ from .sources import (
     musify,
     local_files
 )
+from ..database import song as song_objects
 
 logger = DOWNLOAD_LOGGER
 
@@ -33,11 +34,8 @@ print(EasyID3.valid_keys.keys())
 class Download:
     def __init__(self):
         for song in database.get_tracks_to_download():
-            song['artist'] = [i['name'] for i in song['artists']]
-            song['file'] = os.path.join(MUSIC_DIR, song['file'])
-            song['path'] = os.path.join(MUSIC_DIR, song['path'])
 
-            if self.path_stuff(song['path'], song['file']):
+            if self.path_stuff(song.target):
                 self.write_metadata(song, song['file'])
                 continue
 
@@ -93,12 +91,12 @@ class Download:
         audiofile.save(file_path, v1=2)
 
     @staticmethod
-    def path_stuff(path: str, file_: str):
+    def path_stuff(target: song_objects.Target):
         # returns true if it shouldn't be downloaded
-        if os.path.exists(file_):
-            logger.info(f"'{file_}' does already exist, thus not downloading.")
+        if os.path.exists(target.file):
+            logger.info(f"'{target.file}' does already exist, thus not downloading.")
             return True
-        os.makedirs(path, exist_ok=True)
+        os.makedirs(target.path, exist_ok=True)
         return False
 
 

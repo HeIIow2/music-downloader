@@ -14,10 +14,17 @@ from .audio_source import (
 )
 
 from .lyrics import lyrics
+from .database.database import Database
 
 import logging
 import os
 
+
+database = Database(os.path.join(temp_dir, DATABASE_FILE),
+                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
+                    DATABASE_STRUCTURE_FALLBACK,
+                    DATABASE_LOGGER,
+                    reset_anyways=False)
 
 def get_existing_genre():
     valid_directories = []

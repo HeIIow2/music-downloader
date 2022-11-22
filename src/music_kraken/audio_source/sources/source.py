@@ -19,5 +19,5 @@ class AudioSource:
         logger.info(f"try getting source {row['title']} from {cls.__name__}")
 
     @classmethod
-    def fetch_audio(cls, song: song_objects.Song, src: song_objects.Sourcet):
+    def fetch_audio(cls, song: song_objects.Song, src: song_objects.Source):
         logger.info(f"downloading {song}: {cls.__name__} {src.url} -> {song.target.file}")
