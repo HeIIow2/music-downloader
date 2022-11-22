@@ -77,5 +77,11 @@ class Song:
         return self.json_data[item]
 
     def __setitem__(self, item, value):
+        if item == "file":
+            self.target.file = value
+            return
+        if item == "path":
+            self.target.path = value
+            return
         print(item, value)
         self.json_data[item] = value
