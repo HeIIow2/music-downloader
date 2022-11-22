@@ -26,7 +26,7 @@ class UrlPath:
             # print(row)
             file, path = self.get_path_from_row(row)
             logger.info(f"setting target to {file}")
-            database.set_filepath(row['id'], file, path, genre)
+            temp_database.set_filepath(row['id'], file, path, genre)
 
     def get_path_from_row(self, row):
         """

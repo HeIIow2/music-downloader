@@ -47,7 +47,7 @@ class Youtube(AudioSource):
         final_result = None
         results = cls.get_youtube_from_isrc(song.isrc)
         for result in results:
-            video_title = result.title.lower()
+            video_title = result['title'].lower()
             match, distance = phonetic_compares.match_titles(video_title, real_title)
 
             if match:

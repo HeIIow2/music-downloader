@@ -1,7 +1,7 @@
 from ..utils.shared import *
 from ..utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
-from .. import database
+from ..database.temp_database import temp_database
 
 from typing import List
 import musicbrainzngs
@@ -67,7 +67,7 @@ class MetadataDownloader:
 
         def save(self):
             logger.info(f"caching {self}")
-            database.add_artist(
+            temp_database.add_artist(
                 musicbrainz_artistid=self.musicbrainz_artistid,
                 artist=self.artist
             )
@@ -130,7 +130,7 @@ class MetadataDownloader:
 
         def save(self):
             logger.info(f"caching {self}")
-            database.add_release_group(
+            temp_database.add_release_group(
                 musicbrainz_releasegroupid=self.musicbrainz_releasegroupid,
                 artist_ids=[artist.musicbrainz_artistid for artist in self.artists],
                 albumartist=self.albumartist,
@@ -221,7 +221,7 @@ class MetadataDownloader:
 
         def save(self):
             logger.info(f"caching {self}")
-            database.add_release(
+            temp_database.add_release(
                 musicbrainz_albumid=self.musicbrainz_albumid,
                 release_group_id=self.release_group.musicbrainz_releasegroupid,
                 title=self.title,
@@ -287,7 +287,7 @@ class MetadataDownloader:
         def save(self):
             logger.info(f"caching {self}")
 
-            database.add_track(
+            temp_database.add_track(
                 musicbrainz_releasetrackid=self.musicbrainz_releasetrackid,
                 musicbrainz_albumid=self.release.musicbrainz_albumid,
                 feature_aritsts=[artist.musicbrainz_artistid for artist in self.artists],

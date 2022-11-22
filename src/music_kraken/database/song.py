@@ -4,6 +4,8 @@ from ..utils.shared import (
 )
 
 import os
+from mutagen.easyid3 import EasyID3
+
 
 class Target:
     def __init__(self) -> None:
@@ -46,6 +48,22 @@ class Source:
         self.src = self.src_data['src']
         self.url = self.src_data['url']
 
+class Metadata:
+    def __init__(self) -> None:
+        self.data = {}
+
+    def get_all_metadata(self):
+        pass
+
+    def __setitem__(self, item, value):
+        if item in EasyID3.valid_keys.keys():
+            self.data[item] = value
+
+    def __getitem__(self, item):
+        if item not in self.data:
+            return None
+        return self.data[item]
+
 
 class Song:
     def __init__(self, json_response) -> None:
@@ -67,6 +85,10 @@ class Song:
         self.target = Target()
         self.target.file = self.json_data['file']
         self.target.path = self.json_data['path']
+
+        # initialize id3 metadata
+        self.metadata = Metadata()
+        # EasyID3.valid_keys.keys()
 
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
