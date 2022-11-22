@@ -31,6 +31,7 @@ class Target:
     file = property(fget=get_file, fset=set_file)
     path = property(fget=get_path, fset=set_path)
 
+
 class Artist:
     def __init__(self, artist_data) -> None:
         self.artist_data = artist_data
@@ -41,6 +42,7 @@ class Artist:
     def __str__(self) -> str:
         return self.name
 
+
 class Source:
     def __init__(self, src_data) -> None:
         self.src_data = src_data
@@ -48,12 +50,13 @@ class Source:
         self.src = self.src_data['src']
         self.url = self.src_data['url']
 
+
 class Metadata:
     def __init__(self) -> None:
         self.data = {}
 
     def get_all_metadata(self):
-        pass
+        return list(self.data.items())
 
     def __setitem__(self, item, value):
         if item in EasyID3.valid_keys.keys():
@@ -80,7 +83,7 @@ class Song:
             if src['src'] is None:
                 continue
             self.sources.append(Source(src))
-        
+
         # initialize the target
         self.target = Target()
         self.target.file = self.json_data['file']
@@ -88,10 +91,16 @@ class Song:
 
         # initialize id3 metadata
         self.metadata = Metadata()
+        for key, value in self.json_data.items():
+            self.metadata[key] = value
+        self.metadata['artist'] = self.get_artist_names()
         # EasyID3.valid_keys.keys()
 
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
+
+    def get_metadata(self):
+        return self.metadata.get_all_metadata()
 
     def has_isrc(self) -> bool:
         return self.isrc is not None

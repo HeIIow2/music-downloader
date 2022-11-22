@@ -40,7 +40,7 @@ class Youtube(AudioSource):
         super().fetch_source(song)
 
         if not song.has_isrc():
-            return
+            return None
 
         real_title = song.title.lower()
 
@@ -58,7 +58,8 @@ class Youtube(AudioSource):
             final_result = result
 
         if final_result is None:
-            return False
+            return None
+        logger.info(f"found video {final_result}")
         return final_result['url']
 
     @classmethod
@@ -84,6 +85,7 @@ class Youtube(AudioSource):
             logger.warning(f"youtube blocked downloading. ({trie}-{MAX_TRIES})")
             if trie >= MAX_TRIES:
                 logger.warning("too many tries, returning")
+                return False
             logger.warning(f"retrying in {WAIT_BETWEEN_BLOCK} seconds again")
             time.sleep(WAIT_BETWEEN_BLOCK)
             return cls.fetch_audio(song, src, trie=trie + 1)

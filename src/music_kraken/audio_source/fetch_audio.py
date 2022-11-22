@@ -37,7 +37,7 @@ class Download:
         for song in temp_database.get_tracks_to_download():
 
             if self.path_stuff(song.target):
-                self.write_metadata(song, song.target.file)
+                self.write_metadata(song)
                 continue
 
             # download_success = Download.download_from_src(song['src'], song)
@@ -57,7 +57,7 @@ class Download:
                 download_success = youtube.download(song)
             """
 
-            self.write_metadata(song, song['file'])
+            self.write_metadata(song)
 
     @staticmethod
     def download_from_src(song, src):
@@ -68,31 +68,28 @@ class Download:
         return source_subclass.fetch_audio(song, src)
 
     @staticmethod
-    def write_metadata(song, file_path):
-        if not os.path.exists(file_path):
-            logger.warning(f"file {file_path} doesn't exist")
+    def write_metadata(song: song_objects.Song):
+        if not os.path.exists(song.target.file):
+            logger.warning(f"file {song.target.file} doesn't exist")
             return False
 
         # only convert the file to the proper format if mutagen doesn't work with it due to time
         try:
-            audiofile = EasyID3(file_path)
+            audiofile = EasyID3(song.target.file)
         except mutagen.id3.ID3NoHeaderError:
-            AudioSegment.from_file(file_path).export(file_path, format="mp3")
-            audiofile = EasyID3(file_path)
+            AudioSegment.from_file(song.target.file).export(song.target.file, format="mp3")
+            audiofile = EasyID3(song.target.file)
 
-        valid_keys = list(EasyID3.valid_keys.keys())
-
-        for key in list(song.keys()):
-            if key in valid_keys and song[key] is not None:
-                if type(song[key]) != list:
-                    song[key] = str(song[key])
-                audiofile[key] = song[key]
+        for key, value in song.get_metadata():
+            if type(value) != list:
+                value = str(value)
+            audiofile[key] = value
 
         logger.info("saving")
-        audiofile.save(file_path, v1=2)
+        audiofile.save(song.target.file, v1=2)
 
     @staticmethod
-    def path_stuff(target: song_objects.Target):
+    def path_stuff(target: song_objects.Target) -> bool:
         # returns true if it shouldn't be downloaded
         if os.path.exists(target.file):
             logger.info(f"'{target.file}' does already exist, thus not downloading.")

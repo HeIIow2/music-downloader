@@ -4,6 +4,8 @@ from mutagen.id3 import ID3, USLT
 from ..utils.shared import *
 from . import genius
 
+from ..database.temp_database import temp_database
+
 logger = LYRICS_LOGGER
 
 """
@@ -61,12 +63,12 @@ def fetch_single_lyrics(row: dict):
         return
 
     logger.info("found lyrics")
-    database.add_lyrics(id_, lyrics=lyrics[0])
+    temp_database.add_lyrics(id_, lyrics=lyrics[0])
     add_lyrics(row['file'], lyrics[0])
 
 
 def fetch_lyrics():
-    for row in database.get_tracks_for_lyrics():
+    for row in temp_database.get_tracks_for_lyrics():
         fetch_single_lyrics(row)
 
 
