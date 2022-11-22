@@ -7,6 +7,9 @@ from ...utils.shared import *
 from ...utils import phonetic_compares
 from .source import AudioSource
 
+from ...database import song as song_objects
+
+
 logger = YOUTUBE_LOGGER
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
@@ -59,10 +62,10 @@ class Youtube(AudioSource):
         return final_result['url']
 
     @classmethod
-    def fetch_audio(cls, url: str, row: dict, trie: int=0):
-        super().fetch_audio(url, row)
+    def fetch_audio(cls, song: song_objects.Song, src: song_objects.Source, trie: int=0):
+        super().fetch_audio(song, src)
 
-        file_ = row['file']
+        file_ = song['file']
         options = {
             'format': 'bestaudio/best',
             'keepvideo': False,
@@ -71,14 +74,14 @@ class Youtube(AudioSource):
 
         try:
             with youtube_dl.YoutubeDL(options) as ydl:
-                ydl.download([url])
+                ydl.download([src.url])
         except youtube_dl.utils.DownloadError:
             logger.warning(f"youtube blocked downloading. ({trie}-{MAX_TRIES})")
             if trie >= MAX_TRIES:
                 logger.warning("too many tries, returning")
             logger.warning(f"retrying in {WAIT_BETWEEN_BLOCK} seconds again")
             time.sleep(WAIT_BETWEEN_BLOCK)
-            return cls.fetch_audio(url, row, trie=trie + 1)
+            return cls.fetch_audio(song, src, trie=trie + 1)
 
 """
 def get_youtube_from_isrc(isrc: str) -> List[dict]:

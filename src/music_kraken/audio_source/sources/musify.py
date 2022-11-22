@@ -7,6 +7,8 @@ from ...utils.shared import *
 from ...utils import phonetic_compares
 
 from .source import AudioSource
+from ...database import song as song_objects
+
 
 TRIES = 5
 TIMEOUT = 10
@@ -156,11 +158,11 @@ class Musify(AudioSource):
         return True
 
     @classmethod
-    def fetch_audio(cls, url: str, row: dict):
-        super().fetch_audio(url, row)
+    def fetch_audio(cls, song: song_objects.Song, src: song_objects.Source):
+        super().fetch_audio(song, src)
 
-        file_ = row['file']
-        return cls.download_from_musify(file_, url)
+        file_ = song['file']
+        return cls.download_from_musify(file_, src.url)
 
 
 """

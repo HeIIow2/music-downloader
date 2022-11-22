@@ -1,6 +1,9 @@
 from ...utils.shared import *
 from typing import Tuple
 
+from ...database import song as song_objects
+
+
 logger = URL_DOWNLOAD_LOGGER
 
 """
@@ -16,5 +19,5 @@ class AudioSource:
         logger.info(f"try getting source {row['title']} from {cls.__name__}")
 
     @classmethod
-    def fetch_audio(cls, url: str,row: dict):
-        logger.info(f"downloading audio from {row['url']} from {cls.__name__} to {row['file']}")
+    def fetch_audio(cls, song: song_objects.Song, src: song_objects.Sourcet):
+        logger.info(f"downloading audio from {src.url} from {cls.__name__} to {song['file']}")
