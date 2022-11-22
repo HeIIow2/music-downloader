@@ -11,6 +11,7 @@ from .sources import (
     local_files
 )
 from ..database import song as song_objects
+from ..database.temp_database import temp_database
 
 logger = DOWNLOAD_LOGGER
 
@@ -33,15 +34,15 @@ print(EasyID3.valid_keys.keys())
 
 class Download:
     def __init__(self):
-        for song in database.get_tracks_to_download():
+        for song in temp_database.get_tracks_to_download():
 
             if self.path_stuff(song.target):
-                self.write_metadata(song, song['file'])
+                self.write_metadata(song, song.target.file)
                 continue
 
             # download_success = Download.download_from_src(song['src'], song)
             for source in song.sources:
-                download_success = Download.download_from_src(source.src, source.url, song)
+                download_success = Download.download_from_src(song, source)
                 if download_success != -1:
                     break
                 else:
@@ -59,12 +60,12 @@ class Download:
             self.write_metadata(song, song['file'])
 
     @staticmethod
-    def download_from_src(src, url, song):
-        if src not in sources:
-            raise ValueError(f"source {src} seems to not exist")
-        source_subclass = sources[src]
+    def download_from_src(song, src):
+        if src.src not in sources:
+            raise ValueError(f"source {src.src} seems to not exist")
+        source_subclass = sources[src.src]
 
-        return source_subclass.fetch_audio(url, song)
+        return source_subclass.fetch_audio(song, src)
 
     @staticmethod
     def write_metadata(song, file_path):

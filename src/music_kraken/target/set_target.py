@@ -2,6 +2,7 @@ import os.path
 import logging
 
 from ..utils.shared import *
+from ..database.temp_database import temp_database
 
 logger = PATH_LOGGER
 
@@ -21,7 +22,7 @@ class UrlPath:
 
         self.genre = genre
 
-        for row in database.get_tracks_without_filepath():
+        for row in temp_database.get_tracks_without_filepath():
             # print(row)
             file, path = self.get_path_from_row(row)
             logger.info(f"setting target to {file}")

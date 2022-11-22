@@ -6,7 +6,7 @@ from .sources import (
     local_files
 )
 
-from .. import database
+from ..database.temp_database import temp_database
 
 logger = URL_DOWNLOAD_LOGGER
 
@@ -21,7 +21,7 @@ class Download:
     def __init__(self) -> None:
         self.urls = []
 
-        for row in database.get_tracks_without_src():
+        for row in temp_database.get_tracks_without_src():
             row['artists'] = [artist['name'] for artist in row['artists']]
 
             id_ = row['id']

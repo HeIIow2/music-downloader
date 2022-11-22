@@ -19,12 +19,16 @@ from .database.database import Database
 import logging
 import os
 
+logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
+musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
+"""
 database = Database(os.path.join(temp_dir, DATABASE_FILE),
                     os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
                     DATABASE_STRUCTURE_FALLBACK,
                     DATABASE_LOGGER,
                     reset_anyways=False)
+"""
 
 def get_existing_genre():
     valid_directories = []

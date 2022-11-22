@@ -6,12 +6,14 @@ import os
 
 TEMP_FOLDER = "music-downloader"
 LOG_FILE = "download_logs.log"
-DATABASE_FILE = "metadata.db"
+TEMP_DATABASE_FILE = "metadata.db"
 DATABASE_STRUCTURE_FILE = "database_structure.sql"
 DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/master/assets/database_structure.sql"
 temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
+
+TEMP_DATABASE_PATH = os.path.join(temp_dir, TEMP_DATABASE_FILE)
 
 # configure logger default
 logging.basicConfig(
@@ -33,9 +35,6 @@ PATH_LOGGER = logging.getLogger("create-paths")
 DOWNLOAD_LOGGER = logging.getLogger("download")
 LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
-
-logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
-musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.expanduser('~/Music')
