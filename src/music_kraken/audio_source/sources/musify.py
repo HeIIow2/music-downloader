@@ -89,7 +89,7 @@ class Musify(AudioSource):
                 logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
                 logging.warning(f"retrying in {TIMEOUT} seconds again")
                 time.sleep(TIMEOUT)
-                return get_soup_of_search(query, trie=trie + 1)
+                return cls.get_soup_of_search(query, trie=trie + 1)
 
             logging.warning("too many tries, returning")
             return None
