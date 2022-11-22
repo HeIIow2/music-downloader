@@ -135,7 +135,13 @@ class Musify(AudioSource):
         return None
 
     @classmethod
-    def download_from_musify(cls, file, url):
+    def download_from_musify(cls, target: song_objects.Target, url):
+        # returns if target hasn't been set
+        if target.path is None or target.file is None:
+            logger.warning(f"target hasn't been set. Can't download. Most likely a bug.")
+            return False
+
+        # download the audio data
         logger.info(f"downloading: '{url}'")
         try:
             r = session.get(url, timeout=15)
@@ -151,8 +157,10 @@ class Musify(AudioSource):
             logger.error(f"\"{url}\" returned {r.status_code}: {r.text}")
             return False
 
-        # write to the file
-        with open(file, "wb") as mp3_file:
+        # write to the file and create folder if it doesn't exist
+        if not os.path.exists(target.path):
+            os.makedirs(target.path, exist_ok=True)
+        with open(target.file, "wb") as mp3_file:
             mp3_file.write(r.content)
         logger.info("finished")
         return True
@@ -160,9 +168,7 @@ class Musify(AudioSource):
     @classmethod
     def fetch_audio(cls, song: song_objects.Song, src: song_objects.Source):
         super().fetch_audio(song, src)
-
-        file_ = song['file']
-        return cls.download_from_musify(file_, src.url)
+        return cls.download_from_musify(song.target, src.url)
 
 
 if __name__ == "__main__":
