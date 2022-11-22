@@ -10,3 +10,6 @@ __pycache__/
 
 /build/*
 !/build/build.sh
+
+# Virtual Environment
+venv

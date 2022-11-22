@@ -14,7 +14,7 @@ class Option:
     def __init__(self, type_: str, id_: str, name: str, additional_info: str = "") -> None:
         # print(type_, id_, name)
         if type_ not in OPTION_TYPES:
-            raise ValueError(f"type: {type_} doesn't exist. Leagal Values: {OPTION_TYPES}")
+            raise ValueError(f"type: {type_} doesn't exist. Legal Values: {OPTION_TYPES}")
         self.type = type_
         self.name = name
         self.id = id_
