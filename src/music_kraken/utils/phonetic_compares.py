@@ -1,7 +1,7 @@
 import jellyfish
 import string
 
-TITLE_THRESHOLD_LEVENSHTEIN = 2
+TITLE_THRESHOLD_LEVENSHTEIN = 1
 UNIFY_TO = " "
 
 

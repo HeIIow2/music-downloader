@@ -32,13 +32,23 @@ def get_existing_genre():
 
 def help_search_metadata():
     msg = """
-- - - Type the command you want to execute - - -
+- - - Available Options - - -
 .. - Previous Options
 (query_string) - Search for songs, albums, bands...
 (int) - Select an item from the search results
 d - Start the download
 h - Help
 q - Quit / Exit
+
+- - - How the Query works (examples) - - -
+> #a <any artist>
+searches for the artist <any artist>
+
+> #a <any artist> #r <any releas>
+searches for the release (album) <any release> by the artist <any artist>
+
+> #r <any release> Me #t <any track>
+searches for the track <any track> from the release <any relaese>
 """
     print(msg)
 
