@@ -35,7 +35,11 @@ printed or converted to a string.
 print(multiple_objects)
 
 """
-After the first "text search" you can either search 
+After the first "text search" you can either again search again with the same function,
+or you can further explore one of the options from the previous search.
+For this simply call Search.choose(self, index: int).
+The index represents the number in the previously returned instance of MultipleOptions. Thus
+you **NEED TO BEFORHAND DO A "TEX SEARCH"**. Else it will not work.
 """
 
 """
