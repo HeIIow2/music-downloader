@@ -71,7 +71,7 @@ def search_for_metadata():
     search = metadata_search.Search()
 
     while True:
-        _input = input("\"help\" for an overfiew of commands: ")
+        _input = input("\"help\" for an overview of commands: ")
         if execute_input(_input=_input, search=search):
             break
 
