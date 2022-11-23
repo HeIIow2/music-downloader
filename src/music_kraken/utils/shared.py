@@ -37,8 +37,7 @@ LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
-MUSIC_DIR = os.path.expanduser('~/Music')
-
+MUSIC_DIR = os.path.join(os.path.expanduser("~"), "Music")
 
 TOR = False
 proxies = {
