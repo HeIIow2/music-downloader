@@ -19,7 +19,7 @@ music-kraken
 
 ### Notes for WSL
 
-If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PATH` #2
+If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PATH` issues#2
 
 ## Quick-Guide
 
