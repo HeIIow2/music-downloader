@@ -292,4 +292,4 @@ To get the Lyrics, I scrape them, and put those in the USLT ID3 Tags of for exam
 For the lyrics source the page [https://genius.com/](https://genius.com/) is easily sufficient. It has most songs. Some songs are not present though, but that is fine, because the lyrics are optional anyways.
 
 
-[i2]: https://github.com/user/repo/issues/2
+[i2]: https://github.com/HeIIow2/music-downloader/issues/2
