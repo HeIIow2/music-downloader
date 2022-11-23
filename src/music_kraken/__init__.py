@@ -38,15 +38,8 @@ def get_existing_genre():
 
     return valid_directories
 
-
-def search_for_metadata():
-    clear_console()
-
-    search = metadata_search.Search()
-
-    while True:
-        input_ = input(
-"""
+def help_search_metadata():
+    msg = """
 - - - Type the command you want to execute - - -
 .. - Previous Options
 (query_string) - Search for songs, albums, bands...
@@ -54,9 +47,17 @@ def search_for_metadata():
 d - Start the download
 h - Help
 q - Quit / Exit
+"""
+    print(msg)
 
-command: """
-        )
+
+def search_for_metadata():
+    clear_console()
+
+    search = metadata_search.Search()
+
+    while True:
+        input_ = input("\"help\" for an overfiew of commands: ")
 
         match (input_.strip().lower()):
             case "d" | "ok" | "dl" | "download":
@@ -65,9 +66,7 @@ command: """
                 clear_console()
                 exit()
             case "h" | "help":
-                print()
-                # TODO: Help text (mainly explaining query strings and alternative command functionalities)
-                print("Insert here help text....")
+                help_search_metadata()
             case inp if inp.isdigit():
                 print()
                 print(search.choose(int(input_)))
