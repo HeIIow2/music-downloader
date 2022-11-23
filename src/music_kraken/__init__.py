@@ -17,7 +17,6 @@ from .audio_source import (
 )
 from .lyrics import lyrics
 
-
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
@@ -29,6 +28,7 @@ def get_existing_genre():
             valid_directories.append(elem)
 
     return valid_directories
+
 
 def help_search_metadata():
     msg = """
@@ -59,13 +59,14 @@ def execute_input(_input: str, search: metadata_search.Search) -> bool:
         print()
         print(search.choose(int(_input)))
         return False
-    if _input == ".." :
+    if _input == "..":
         print()
         print(search.get_previous_options())
         return False
-    
+
     print()
     print(search.search_from_query(_input))
+
 
 def search_for_metadata():
     search = metadata_search.Search()

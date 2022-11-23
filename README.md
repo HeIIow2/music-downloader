@@ -40,35 +40,156 @@ After you chose either an artist, a release group, a release or a track by its i
 
 ---
 
-## Programming interface
+## Programming Interface / use as Library
 
-If you want to use this project, or parts from it in youre own projects from it, 
+If you want to use this project, or parts from it in your own projects from it, 
 make sure to be familiar with [Python Modules](https://docs.python.org/3/tutorial/modules.html).
 Further and better documentation including code examples are yet to come, so here is the rough
 module structure for now. (should be up-to-date but no guarantee)
 
-### Modules
+Music Kraken can be imported like this:
+```python
+import music_kraken as mk
+```
 
-- utils
-  - shared (equivalent to global variables and constants)
-  - config
-  - database
-  - some static methods that are in general useful for me
-- tagging
-  - song (within a class Song used to get and set the metadata of mp3 files)
-- metadata
-  - search
-  - fetch
-- target
-- audio_source 
-  - fetch_source
-  - fetch_audio
-  - sources
-    - musify
-    - youtube
-- lyrics
-  - lyrics
-  - genius (will eventually be moved in a folder with lyric sources)
+if you simply want to run the builtin minimal cli just do this:
+```python
+mk.cli()
+```
+
+### Search for Metadata
+
+The whole programm takes the data it processes further from the cache, a sqlite database.
+So before you can do anything, you will need to fill it with the songs you want to download.  
+For now the base of everything is musicbrainz, so you need to get the
+musicbrainz id and the type the id corresponds to (artist/release group/release/track).
+To get this you first have to initialize a search object (`music_kraken.metadata.metadata_search.Search`).
+
+```python
+search_object = mk.metadata.metadata_search.Search()
+```
+
+Then you need an initial "text search" to get some options you can choose from. For
+this you can either specify artists releases and whatever directly with one of the following functions:
+
+```python
+# you can directly specify artist, release group, release or recording/track
+multiple_options = search_object.search_from_text(artist=input("input the name of the artist: "))
+# you can specify a query see the simple integrated cli on how to use the query
+multiple_options = search_object.search_from_query(query=input("input the query: "))
+```
+
+both possible methods return an instance of `MultipleOptions`, which can be directly converted to a string.
+
+```python
+print(multiple_options)
+```
+
+After the first "*text search*" you can either again search the same way as before,
+or you can further explore one of the options from the previous search.  
+To explore and select one options from `MultipleOptions`, simply call `Search.choose(self, index: int)`.
+The index represents the number in the previously returned instance of MultipleOptions. 
+The selected Option will be selected and can be downloaded in the next step.
+
+*Thus, this has to be done **after either search_from_text or search_from_query***
+
+```python
+# choosing the best matching band
+multiple_options = search_object.choose(0)
+# choosing the first ever release group of this band
+multiple_options = search_object.choose(1)
+# printing out the current options
+print(multiple_options)
+```
+
+This process can be repeated indefinitely (until you run out of memory). 
+A search history is kept in the Search instance. You could go back to 
+the previous search (without any loading time) like this:
+
+```python
+multiple_options = search.get_previous_options()
+```
+
+### Downloading Metadata / Filling up the Cache
+
+If you selected the Option you want with `Search.choose(i)`, you can
+finally download the metadata of either:
+ - an artist (the whole discography)
+ - a release group
+ - a release
+ - a track/recording
+To download you need the selected Option Object (`music_kraken.metadata.metadata_search.Option`)
+it is simply stored in `Search.current_option`.
+
+If you already know what you want to download you can skip all the steps above and just create
+a dictionary like this and use it later (*might change and break after I add multiple metadata sources which I will*):
+```python
+download_dict = {
+    'type': option_type,
+    'id': musicbrainz_id
+}
+```
+The option type is a string (I'm sorry for not making it an enum I know its a bad pratice), which can
+have following values:
+ - 'artist'
+ - 'release_group'
+ - 'release'
+ - 'recording'
+ - 
+**PAY ATTENTION TO TYPOS, ITS CASE SENSITIVE**
+
+The musicbrainz id is just the id of the object from musicbrainz.
+
+```python
+# in this example I will choose the previous selected option.
+option_to_download = search_object.current_option
+print(option_to_download)
+
+download_dict = {
+    'type': option_to_download.type,
+    'id': option_to_download.id
+}
+```
+
+If you got the Option instance you want to download and created the dictionary, then downloading the metadata is really straight
+forward, so I just show the code.
+
+```python
+# I am aware of abstrackt classes
+metadata_downloader = mk.metadata.metadata_fetch.MetadataDownloader()
+metadata_downloader.download(download_dict)
+```
+
+After following those steps, it might take a couple seconds/minutes to execute, but then the Cache will be filled.
+
+
+### Cache / Temporary Database
+
+All the data, the functions that download stuff use, can be gotten from the temporary database / cache.
+You can get the database object like this:
+
+```python
+cache = mk.database.temp_database.temp_database
+print(cache)
+```
+
+When fetching any song data from the cache, you will get it as Song
+object (music_kraken.database.song.Song). There are multiple methods
+to get different sets of Songs. The names explain the methods pretty
+well:
+
+```python
+# gets a single track specified by the id
+cache.get_track_metadata(id: str)
+
+# gets a list of tracks.
+cache.get_tracks_to_download()
+cache.get_tracks_without_src()
+cache.get_tracks_without_isrc()
+cache.get_tracks_without_filepath()
+```
+
+the id always is a musicbrainz id and distinct for every track
 
 ---
 
