@@ -1,5 +1,11 @@
-from .utils.functions import *
-from .utils.shared import *
+import musicbrainzngs
+import logging
+import os
+
+from .utils.shared import (
+    MUSIC_DIR,
+    NOT_A_GENRE
+)
 
 from .metadata import (
     metadata_search,
@@ -16,19 +22,10 @@ from .audio_source import (
 from .lyrics import lyrics
 from .database.database import Database
 
-import logging
-import os
 
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
-"""
-database = Database(os.path.join(temp_dir, DATABASE_FILE),
-                    os.path.join(temp_dir, DATABASE_STRUCTURE_FILE),
-                    DATABASE_STRUCTURE_FALLBACK,
-                    DATABASE_LOGGER,
-                    reset_anyways=False)
-"""
 
 def get_existing_genre():
     valid_directories = []
@@ -51,34 +48,39 @@ q - Quit / Exit
     print(msg)
 
 
-def search_for_metadata():
-    clear_console()
+def execute_input(_input: str, search: metadata_search.Search) -> bool:
+    """
+    :returns: True if it should break out of the loop else False
+    """
+    _input = _input.strip().lower()
+    if _input in ("d", "ok", "dl", "download"):
+        return True
+    if _input in ("q", "quit", "exit"):
+        exit()
+    if _input in ("h", "help"):
+        help_search_metadata()
+        return False
+    if _input.isdigit():
+        print()
+        print(search.choose(int(_input)))
+        return False
+    if _input == ".." :
+        print()
+        print(search.get_previous_options())
+        return False
+    
+    print()
+    print(search.search_from_query(_input))
 
+def search_for_metadata():
     search = metadata_search.Search()
 
     while True:
-        input_ = input("\"help\" for an overfiew of commands: ")
+        _input = input("\"help\" for an overfiew of commands: ")
+        if execute_input(_input=_input, search=search):
+            break
 
-        match (input_.strip().lower()):
-            case "d" | "ok" | "dl" | "download":
-                break
-            case "q" | "quit" | "exit":
-                clear_console()
-                exit()
-            case "h" | "help":
-                help_search_metadata()
-            case inp if inp.isdigit():
-                print()
-                print(search.choose(int(input_)))
-                continue
-            case ".." :
-                print()
-                print(search.get_previous_options())
-
-        print()
-        print(search.search_from_query(input_))
-
-    print(search.current_option)
+    print(f"downloading: {search.current_option}")
     return search.current_option
 
 
@@ -100,10 +102,7 @@ def get_genre():
     return genre
 
 
-def cli(start_at: int = 0, only_lyrics: bool = False, cleare_console: bool = True):
-    if clear_console:
-        clear_console()
-
+def cli(start_at: int = 0, only_lyrics: bool = False):
     if start_at <= 2 and not only_lyrics:
         genre = get_genre()
         logging.info(f"{genre} has been set as genre.")
