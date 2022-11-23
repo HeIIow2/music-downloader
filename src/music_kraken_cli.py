@@ -62,6 +62,7 @@ def search_for_metadata():
                 exit()
             case "h" | "help":
                 help_search_metadata()
+                continue
             case inp if inp.isdigit():
                 print()
                 print(search.choose(int(input_)))
@@ -69,6 +70,7 @@ def search_for_metadata():
             case ".." :
                 print()
                 print(search.get_previous_options())
+                continue
 
         print()
         print(search.search_from_query(input_))
