@@ -97,7 +97,7 @@ def get_genre():
     return genre
 
 
-def cli(start_at: int = 0, only_lyrics: bool = False, cleare_console: bool = True):
+def cli(start_at: int = 0, only_lyrics: bool = False, clear_console: bool = True):
     if clear_console:
         clear_console()
 
