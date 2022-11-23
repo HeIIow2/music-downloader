@@ -104,7 +104,6 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 0:
         search = search_for_metadata()
-        # search = metadata.search.Option("release", "f8d4b24d-2c46-4e9c-8078-0c0f337c84dd", "Beautyfall")
         logging.info("Starting Downloading of metadata")
         metadata_downloader = metadata_fetch.MetadataDownloader()
         metadata_downloader.download({'type': search.type, 'id': search.id})
