@@ -7,6 +7,13 @@ except ImportError:
 
 #     packages=['music_kraken'],
 
+#packages = find_packages(where="src")
+packages = ['music_kraken', 'music_kraken.lyrics', 'music_kraken.audio_source', 'music_kraken.target', 'music_kraken.metadata', 'music_kraken.tagging', 'music_kraken.utils', 'music_kraken.audio_source.sources', 'music_kraken.database']
+
+print("packages")
+print(packages)
+# packages.extend(["music_kraken.database"])
+
 setup(
     name='music-kraken',
     version='1.0',
@@ -15,7 +22,7 @@ setup(
     author='Hellow2',
     author_email='Hellow2@outlook.de',
     url='https://github.com/HeIIow2/music-downloader',
-    packages=find_packages(where="src"),
+    packages=packages,
     package_dir={'': 'src'},
     install_requires=[
         "requests~=2.28.1",
