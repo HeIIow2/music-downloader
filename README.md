@@ -17,6 +17,10 @@ pip install music-kraken
 music-kraken
 ```
 
+### Notes for WSL
+
+If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PATH` #2
+
 ## Quick-Guide
 
 **Genre:** First the cli asks you to input a gere you want to download to. The options it gives you (if it gives you any) are all the folders you got in the music directory. You also can just input a new one.
