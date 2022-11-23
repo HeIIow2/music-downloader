@@ -24,14 +24,14 @@ music-kraken
 **What to download:** After that it prompts you for a search. Here are a couple examples how you can search:
 
 ```
-> #a Psychonaut 4
-searches for the artist "Psychonaut 4"
+> #a <any artist>
+searches for the artist <any artist>
 
-> #a Crystal F #r das Leben dannach
-searches for the release (album) "das Leben dannach" by the artist "Crystal F"
+> #a <any artist> #r <any releas>
+searches for the release (album) <any release> by the artist <any artist>
 
-> #r Death Pierce Me #t sterile nails and thunderbowels
-searches for the track "sterile nails and thunderbowels" from the release "Death Pierce Me"
+> #r <any release> Me #t <any track>
+searches for the track <any track> from the release <any relaese>
 ```
 
 After searching with this syntax it prompts you with multiple results. You can either choose one of those by inputing its id `int` or you can search for a new query.

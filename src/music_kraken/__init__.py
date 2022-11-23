@@ -6,21 +6,16 @@ from .utils.shared import (
     MUSIC_DIR,
     NOT_A_GENRE
 )
-
 from .metadata import (
     metadata_search,
     metadata_fetch
 )
-
 from .target import set_target
-
 from .audio_source import (
     fetch_source,
     fetch_audio
 )
-
 from .lyrics import lyrics
-from .database.database import Database
 
 
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
