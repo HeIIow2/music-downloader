@@ -39,6 +39,11 @@ class Artist:
         self.id = self.artist_data['id']
         self.name = self.artist_data['name']
 
+    def __eq__(self, __o: object) -> bool:
+        if type(__o) != type(self):
+            return False
+        return self.id == __o.id
+
     def __str__(self) -> str:
         return self.name
 
@@ -74,7 +79,16 @@ class Song:
 
         # initialize the data
         self.title = self.json_data['title']
-        self.artists = [Artist(a) for a in self.json_data['artists']]
+        self.artists = []
+        for a in self.json_data['artists']:
+            new_artist = Artist(a)
+            exists = False
+            for existing_artist in self.artists:
+                if new_artist == existing_artist:
+                    exists = True
+                    break
+            if not exists:
+                self.artists.append(new_artist)
         self.isrc = self.json_data['isrc']
 
         # initialize the sources
