@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: music-kraken
-Version: 1.1.3
+Version: 1.1.4
 Summary: An extensive music downloader crawling the internet. It gets its metadata from a couple metadata provider, and it scrapes the audiofiles.
 Home-page: https://github.com/HeIIow2/music-downloader
 Author: Hellow2
