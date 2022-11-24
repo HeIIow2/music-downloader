@@ -1,3 +1,4 @@
+from typing import List
 import mutagen.id3
 import requests
 import os.path
@@ -10,7 +11,11 @@ from .sources import (
     musify,
     local_files
 )
-from ..database import song as song_objects
+from ..database.song import (
+    Song as song_object,
+    Target as target_object,
+    Source as source_object
+)
 from ..database.temp_database import temp_database
 
 logger = DOWNLOAD_LOGGER
@@ -34,41 +39,38 @@ print(EasyID3.valid_keys.keys())
 
 class Download:
     def __init__(self):
-        for song in temp_database.get_tracks_to_download():
+        Download.fetch_audios(temp_database.get_tracks_to_download())
 
-            if self.path_stuff(song.target):
-                self.write_metadata(song)
+    @classmethod
+    def fetch_audios(cls, songs: List[song_object], override_existing: bool = False):
+        for song in songs:
+            if not cls.path_stuff(song.target) and not override_existing:
+                cls.write_metadata(song)
                 continue
 
-            # download_success = Download.download_from_src(song['src'], song)
+            is_downloaded = False
             for source in song.sources:
                 download_success = Download.download_from_src(song, source)
-                if download_success != -1:
-                    break
-                else:
+
+                if download_success == -1:
                     logger.warning(f"couldn't download {song['url']} from {song['src']}")
+                else:
+                    is_downloaded = True
+                    break
 
-            """
-            download_success = None
-            src = song['src']
-            if src == 'musify':
-                download_success = musify.download(song)
-            elif src == 'youtube':
-                download_success = youtube.download(song)
-            """
+            if is_downloaded:
+                cls.write_metadata(song)
 
-            self.write_metadata(song)
+    @classmethod
+    def download_from_src(cls, song: song_object, source: source_object):
+        if source.src not in sources:
+            raise ValueError(f"source {source.src} seems to not exist")
+        source_subclass = sources[source.src]
 
-    @staticmethod
-    def download_from_src(song, src):
-        if src.src not in sources:
-            raise ValueError(f"source {src.src} seems to not exist")
-        source_subclass = sources[src.src]
+        return source_subclass.fetch_audio(song, source)
 
-        return source_subclass.fetch_audio(song, src)
-
-    @staticmethod
-    def write_metadata(song: song_objects.Song):
+    @classmethod
+    def write_metadata(cls, song: song_object):
         if not os.path.exists(song.target.file):
             logger.warning(f"file {song.target.file} doesn't exist")
             return False
@@ -88,14 +90,14 @@ class Download:
         logger.info("saving")
         audiofile.save(song.target.file, v1=2)
 
-    @staticmethod
-    def path_stuff(target: song_objects.Target) -> bool:
-        # returns true if it shouldn't be downloaded
+    @classmethod
+    def path_stuff(cls, target: target_object) -> bool:
+        # returns true if it should be downloaded
         if os.path.exists(target.file):
             logger.info(f"'{target.file}' does already exist, thus not downloading.")
-            return True
+            return False
         os.makedirs(target.path, exist_ok=True)
-        return False
+        return True
 
 
 if __name__ == "__main__":

@@ -78,6 +78,7 @@ class Song:
         self.json_data = json_response
 
         # initialize the data
+        self.id = self.json_data['id']
         self.title = self.json_data['title']
         self.artists = []
         for a in self.json_data['artists']:
