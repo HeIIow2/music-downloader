@@ -170,15 +170,14 @@ After following those steps, it might take a couple seconds/minutes to execute, 
 ### Cache / Temporary Database
 
 All the data, the functions that download stuff use, can be gotten from the temporary database / cache.
-You can get the database object like this:
+The cache can be simply used like this:
 
 ```python
-cache = mk.database.temp_database.temp_database
-print(cache)
+music_kraken.cache
 ```
 
 When fetching any song data from the cache, you will get it as Song
-object (music_kraken.database.song.Song). There are multiple methods
+object (music_kraken.Song). There are multiple methods
 to get different sets of Songs. The names explain the methods pretty
 well:
 
@@ -208,27 +207,32 @@ The concept of genres is too loose, to definitly say, this band exclusively play
 
 As a result of this decision you will have to pass the genre in this function (*actually its a class but it doesn't make any difference*).
 
-### Get the Download Links / Audio Sources
+### Get Audio
 
-This is most likely the most usefull and unique feature of this Project. If the cache is filled you can get audio sources for the songs you only have the metadata. This works for most songs. I'd guess for about 97% (?)
+This is most likely the most usefull and unique feature of this Project. If the cache is filled you can get audio sources for the songs you only have the metadata, and download them. This works for most songs. I'd guess for about 97% (?)
+
+First of you will need a List of song objects `music_kraken.Song`. As [mentioned above](#cache-/-temporary-database), you could get a list like that from the cache.
 
 ```python
-# this is how you do it.
-mk.audio_source.fetch_source.Download()
+# Here is an Example
+from music_kraken import (
+    cache,
+    fetch_sources,
+    fetch_audios
+)
+
+# scanning pages, searching for a download and storing results
+fetch_sources(cache.get_tracks_without_src())
+
+# downloading all previously fetched sources to previously defined targets
+fetch_audios(cache.get_tracks_to_download())
+
 ``` 
 
-Now the audio sources are int the cache, and you can get them as mentioned above  (`Song.sources: List[Source]`). 
-
-### Downloading the Audio
-
-If the target paths fields and audio sources are set in the database field, then the audio files can just be downloaded and automatically tagged like this:
-
-```python
-mk.audio_source.fetch_audio.Download()
-
-# after that the lyrics can be added
-mk.lyrics.lyrics.fetch_lyrics()
-```
+*Note:*  
+To download audio two cases have to be met:
+ 1. The target has to be set beforehand
+ 2. The sources have to be fetched beforehand
 
 ---
 
