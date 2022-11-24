@@ -1,6 +1,12 @@
+from typing import List
 import musicbrainzngs
 import logging
 import os
+
+from . import (
+    database,
+    audio_source
+)
 
 from .utils.shared import (
     MUSIC_DIR,
@@ -19,6 +25,17 @@ from .lyrics import lyrics
 
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
+
+# define the most important values and function for import in the __init__ file
+Song = database.song.Song
+
+cache = database.cache
+
+def fetch_sources(songs: List[Song], skip_existing_files: bool = True):
+    audio_source.fetch_sources(songs=songs, skip_existing_files=skip_existing_files)
+
+def fetch_audios(songs: List[Song], override_existing: bool = False):
+    audio_source.fetch_audios(songs=songs, override_existing=override_existing)
 
 
 def get_existing_genre():
@@ -125,11 +142,11 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 2 and not only_lyrics:
         logging.info("Fetching Download Links")
-        fetch_source.Download()
+        fetch_sources(cache.get_tracks_without_src())
 
     if start_at <= 3 and not only_lyrics:
         logging.info("starting to download the mp3's")
-        fetch_audio.Download()
+        fetch_audios(cache.get_tracks_to_download())
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
