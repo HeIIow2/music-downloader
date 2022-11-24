@@ -55,12 +55,15 @@ class Download:
                 self.add_url(musify_url, 'musify', id_)
                 continue
             """
+            sucess = False
             for src in AUDIO_SOURCES:
                 res = Download.fetch_from_src(song, src)
                 if res is not None:
+                    sucess = True
                     Download.add_url(res, src, id_)
 
-            logger.warning(f"Didn't find any sources for {song}")
+            if not sucess:
+                logger.warning(f"Didn't find any sources for {song}")
 
     @staticmethod
     def fetch_from_src(song, src):
