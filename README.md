@@ -211,7 +211,7 @@ As a result of this decision you will have to pass the genre in this function.
 
 This is most likely the most usefull and unique feature of this Project. If the cache is filled you can get audio sources for the songs you only have the metadata, and download them. This works for most songs. I'd guess for about 97% (?)
 
-First of you will need a List of song objects `music_kraken.Song`. As [mentioned above](#cache-/-temporary-database), you could get a list like that from the cache.
+First of you will need a List of song objects `music_kraken.Song`. As [mentioned above](#cache--temporary-database), you could get a list like that from the cache.
 
 ```python
 # Here is an Example
