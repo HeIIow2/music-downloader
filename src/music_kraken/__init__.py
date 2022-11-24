@@ -14,10 +14,6 @@ from .utils.shared import (
     MUSIC_DIR,
     NOT_A_GENRE
 )
-from .metadata import (
-    metadata_search,
-    metadata_fetch
-)
 
 from .lyrics import lyrics
 
@@ -27,14 +23,16 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 # define the most important values and function for import in the __init__ file
 Song = database.song.Song
 MetadataSearch = metadata.metadata_search.Search
+MetadataDownload = metadata.metadata_fetch.MetadataDownloader()
 
 cache = database.cache
 
 def fetch_metadata(type: str, id_: str):
-    metadata_downloader = metadata_fetch.MetadataDownloader()
+    metadata_downloader = MetadataDownload()
     metadata_downloader.download({'type': type, 'id': id_})
 
 def fetch_metadata_from_search(search_instace: MetadataSearch):
+     current_option = search_instace.current_option
      fetch_metadata(type=current_option.type, id_= current_option.id)
 
 def set_targets(genre: str):
@@ -80,10 +78,11 @@ searches for the track <any track> from the release <any relaese>
     print(msg)
 
 
-def execute_input(_input: str, search: metadata_search.Search) -> bool:
+def execute_input(_input: str, search: MetadataSearch) -> bool:
     """
     :returns: True if it should break out of the loop else False
     """
+    query_input = _input.strip()
     _input = _input.strip().lower()
     if _input in ("d", "ok", "dl", "download"):
         return True
@@ -102,7 +101,7 @@ def execute_input(_input: str, search: metadata_search.Search) -> bool:
         return False
 
     print()
-    print(search.search_from_query(_input))
+    print(search.search_from_query(query_input))
 
 
 def search_for_metadata():
