@@ -35,8 +35,7 @@ def fetch_metadata(type: str, id_: str):
     metadata_downloader.download({'type': type, 'id': id_})
 
 def fetch_metadata_from_search(search_instace: MetadataSearch):
-    current_option = search_instace.current_option
-    fetch_metadata(type=current_option.type, id_= current_option.id)
+     fetch_metadata(type=current_option.type, id_= current_option.id)
 
 def set_targets(genre: str):
     target.set_target.UrlPath(genre=genre)
@@ -115,7 +114,7 @@ def search_for_metadata():
             break
 
     print(f"downloading: {search.current_option}")
-    return search.current_option
+    return search
 
 
 def get_genre():

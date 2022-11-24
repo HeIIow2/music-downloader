@@ -18,6 +18,7 @@ src/music_kraken/audio_source/sources/local_files.py
 src/music_kraken/audio_source/sources/musify.py
 src/music_kraken/audio_source/sources/source.py
 src/music_kraken/audio_source/sources/youtube.py
+src/music_kraken/database/__init__.py
 src/music_kraken/database/database.py
 src/music_kraken/database/song.py
 src/music_kraken/database/temp_database.py

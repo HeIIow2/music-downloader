@@ -5,10 +5,10 @@ python3 -m build
 
 echo "uploading............"
 python3 -m pip install --upgrade twine
-twine upload dist/music_kraken*
+#twine upload dist/music_kraken*
 
-# twine upload --repository testpypi dist/music_kraken*
-# exit
+twine upload --repository testpypi dist/music_kraken*
+exit
 
 echo "pushing............"
 git add .
