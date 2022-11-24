@@ -195,9 +195,40 @@ cache.get_tracks_without_filepath()
 
 the id always is a musicbrainz id and distinct for every track.
 
-### setting the Target
+### Setting the Target
 
-If you
+By default the music downloader doesn't know where to save the music file, if downloaded. To set those variables (the directory to save the file in and the filepath), it is enough to run one single command:
+
+```python
+# adds file path, file directory and the genre to the database 
+mk.target.set_target.UrlPath(genre="some test genre")
+```
+
+The concept of genres is too loose, to definitly say, this band exclusively plays this genre, or this song is this genre. This doesn't work manually, this will never work automatically. Thus I've decided to just use the genre as category, to sort the artists and songs by. Most Music players support that.
+
+As a result of this decision you will have to pass the genre in this function (*actually its a class but it doesn't make any difference*).
+
+### Get the Download Links / Audio Sources
+
+This is most likely the most usefull and unique feature of this Project. If the cache is filled you can get audio sources for the songs you only have the metadata. This works for most songs. I'd guess for about 97% (?)
+
+```python
+# this is how you do it.
+mk.audio_source.fetch_source.Download()
+``` 
+
+Now the audio sources are int the cache, and you can get them as mentioned above  (`Song.sources: List[Source]`). 
+
+### Downloading the Audio
+
+If the target paths fields and audio sources are set in the database field, then the audio files can just be downloaded and automatically tagged like this:
+
+```python
+mk.audio_source.fetch_audio.Download()
+
+# after that the lyrics can be added
+mk.lyrics.lyrics.fetch_lyrics()
+```
 
 ---
 
