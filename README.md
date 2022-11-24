@@ -200,12 +200,12 @@ By default the music downloader doesn't know where to save the music file, if do
 
 ```python
 # adds file path, file directory and the genre to the database 
-mk.target.set_target.UrlPath(genre="some test genre")
+music_kraken.set_target(genre="some test genre")
 ```
 
 The concept of genres is too loose, to definitly say, this band exclusively plays this genre, or this song is this genre. This doesn't work manually, this will never work automatically. Thus I've decided to just use the genre as category, to sort the artists and songs by. Most Music players support that.
 
-As a result of this decision you will have to pass the genre in this function (*actually its a class but it doesn't make any difference*).
+As a result of this decision you will have to pass the genre in this function.
 
 ### Get Audio
 
@@ -231,7 +231,7 @@ fetch_audios(cache.get_tracks_to_download())
 
 *Note:*  
 To download audio two cases have to be met:
- 1. The target has to be set beforehand
+ 1. [The target](#setting-the-target) has to be set beforehand
  2. The sources have to be fetched beforehand
 
 ---

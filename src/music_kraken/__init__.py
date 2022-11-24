@@ -5,7 +5,8 @@ import os
 
 from . import (
     database,
-    audio_source
+    audio_source,
+    target
 )
 
 from .utils.shared import (
@@ -16,11 +17,7 @@ from .metadata import (
     metadata_search,
     metadata_fetch
 )
-from .target import set_target
-from .audio_source import (
-    fetch_source,
-    fetch_audio
-)
+
 from .lyrics import lyrics
 
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
@@ -31,11 +28,15 @@ Song = database.song.Song
 
 cache = database.cache
 
+def set_targets(genre: str):
+    target.set_target.UrlPath(genre=genre)
+
 def fetch_sources(songs: List[Song], skip_existing_files: bool = True):
     audio_source.fetch_sources(songs=songs, skip_existing_files=skip_existing_files)
 
 def fetch_audios(songs: List[Song], override_existing: bool = False):
     audio_source.fetch_audios(songs=songs, override_existing=override_existing)
+
 
 
 def get_existing_genre():
@@ -138,7 +139,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 1 and not only_lyrics:
         logging.info("creating Paths")
-        set_target.UrlPath(genre=genre)
+        set_targets(genre=genre)
 
     if start_at <= 2 and not only_lyrics:
         logging.info("Fetching Download Links")
