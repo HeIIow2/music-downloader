@@ -51,14 +51,11 @@ make sure to be familiar with [Python Modules](https://docs.python.org/3/tutoria
 Further and better documentation including code examples are yet to come, so here is the rough
 module structure for now. (should be up-to-date but no guarantee)
 
-Music Kraken can be imported like this:
+If you simply want to run the builtin minimal cli just do this:
 ```python
-import music_kraken as mk
-```
+from music_kraken import cli
 
-if you simply want to run the builtin minimal cli just do this:
-```python
-mk.cli()
+cli()
 ```
 
 ### Search for Metadata
@@ -130,6 +127,8 @@ You can download following metadata:
 If you got an instance of `MetadataSearch`, like I elaborated [previously](#search-for-metadata), downloading every piece of metadata from the currently selected Option is really quite easy.
 
 ```python
+from music_kraken import fetch_metadata_from_search
+
 # this is it :)
 music_kraken.fetch_metadata_from_search(search_object)
 ```
@@ -137,9 +136,11 @@ music_kraken.fetch_metadata_from_search(search_object)
 If you already know what you want to download you can skip the search instance and simply do the following.
 
 ```python
+from music_kraken import fetch_metadata
+
 # might change and break after I add multiple metadata sources which I will
 
-music_kraken.fetch_metadata(id_=musicbrainz_id, type=metadata_type)
+fetch_metadata(id_=musicbrainz_id, type=metadata_type)
 ```
 The option type is a string (*I'm sorry for not making it an enum I know its a bad pratice*), which can
 have following values:
@@ -147,7 +148,7 @@ have following values:
  - 'release_group'
  - 'release'
  - 'recording'
- - 
+  
 **PAY ATTENTION TO TYPOS, ITS CASE SENSITIVE**
 
 The musicbrainz id is just the id of the object from musicbrainz.
@@ -170,6 +171,8 @@ to get different sets of Songs. The names explain the methods pretty
 well:
 
 ```python
+from music_kraken import cache
+
 # gets a single track specified by the id
 cache.get_track_metadata(id: str)
 
@@ -187,8 +190,10 @@ the id always is a musicbrainz id and distinct for every track.
 By default the music downloader doesn't know where to save the music file, if downloaded. To set those variables (the directory to save the file in and the filepath), it is enough to run one single command:
 
 ```python
+from music_kraken import set_target
+
 # adds file path, file directory and the genre to the database 
-music_kraken.set_target(genre="some test genre")
+set_target(genre="some test genre")
 ```
 
 The concept of genres is too loose, to definitly say, this band exclusively plays this genre, or this song is this genre. This doesn't work manually, this will never work automatically. Thus I've decided to just use the genre as category, to sort the artists and songs by. Most Music players support that.
