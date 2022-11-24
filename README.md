@@ -1,5 +1,12 @@
 # Music Kraken
 
+1. [Installlation](#installation)
+2. [Command Line Usage](#quick-guide)
+3. [Library Usage / Python Interface](#programming-interface--use-as-library)
+4. [About Metadata](#metadata)
+5. [About the Audio](#download)
+6. [About the Lyrics](#lyrics)
+
 ![](https://github.com/HeIIow2/music-downloader/blob/master/assets/logo_cropped.jpg?raw=true)
 
 ## Installation
