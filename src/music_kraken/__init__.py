@@ -6,7 +6,8 @@ import os
 from . import (
     database,
     audio_source,
-    target
+    target,
+    metadata
 )
 
 from .utils.shared import (
@@ -25,8 +26,17 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 # define the most important values and function for import in the __init__ file
 Song = database.song.Song
+MetadataSearch = metadata.metadata_search.Search
 
 cache = database.cache
+
+def fetch_metadata(type: str, id_: str):
+    metadata_downloader = metadata_fetch.MetadataDownloader()
+    metadata_downloader.download({'type': type, 'id': id_})
+
+def fetch_metadata_from_search(search_instace: MetadataSearch):
+    current_option = search_instace.current_option
+    fetch_metadata(type=current_option.type, id_= current_option.id)
 
 def set_targets(genre: str):
     target.set_target.UrlPath(genre=genre)
@@ -97,7 +107,7 @@ def execute_input(_input: str, search: metadata_search.Search) -> bool:
 
 
 def search_for_metadata():
-    search = metadata_search.Search()
+    search = MetadataSearch()
 
     while True:
         _input = input("\"help\" for an overview of commands: ")
@@ -134,8 +144,8 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
     if start_at <= 0:
         search = search_for_metadata()
         logging.info("Starting Downloading of metadata")
-        metadata_downloader = metadata_fetch.MetadataDownloader()
-        metadata_downloader.download({'type': search.type, 'id': search.id})
+        fetch_metadata_from_search(search)
+
 
     if start_at <= 1 and not only_lyrics:
         logging.info("creating Paths")
