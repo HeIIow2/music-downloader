@@ -4,7 +4,8 @@ from . import (
     artist,
     metadata,
     source,
-    target
+    target,
+    lyrics
 )
 
 Song = song.Song
@@ -12,5 +13,6 @@ Artist = artist.Artist
 Source = source.Source
 Target = target.Target
 Metadata = metadata.Metadata
+Lyrics = lyrics.Lyrics
 
 cache = temp_database.TempDatabase()

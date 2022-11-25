@@ -47,6 +47,9 @@ class Song:
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
 
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def get_metadata(self):
         return self.metadata.get_all_metadata()
 

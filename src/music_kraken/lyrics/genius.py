@@ -3,6 +3,9 @@ from typing import List
 from bs4 import BeautifulSoup
 import pycountry
 
+from ..database import (
+    Lyrics
+)
 from ..utils.shared import *
 from ..utils import phonetic_compares
 from ..utils.object_handeling import get_elem_from_obj
@@ -132,39 +135,6 @@ def search(artist: str, track: str) -> list:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-
-    """
-    song = Song(
-        {'highlights': [], 'index': 'song', 'type': 'song',
-         'result': {'_type': 'song', 'annotation_count': 0, 'api_path': '/songs/6142483',
-                    'artist_names': 'Psychonaut 4',
-                    'full_title': 'Sana Sana Sana, Cura Cura Cura by\xa0Psychonaut\xa04',
-                    'header_image_thumbnail_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.300x300x1.jpg',
-                    'header_image_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.651x651x1.jpg',
-                    'id': 6142483, 'instrumental': False, 'language': 'en', 'lyrics_owner_id': 4443216,
-                    'lyrics_state': 'complete', 'lyrics_updated_at': 1604698709,
-                    'path': '/Psychonaut-4-sana-sana-sana-cura-cura-cura-lyrics', 'pyongs_count': None,
-                    'relationships_index_url': 'https://genius.com/Psychonaut-4-sana-sana-sana-cura-cura-cura-sample',
-                    'release_date_components': {'year': 2020, 'month': 7, 'day': 1},
-                    'release_date_for_display': 'July 1, 2020',
-                    'release_date_with_abbreviated_month_for_display': 'Jul. 1, 2020',
-                    'song_art_image_thumbnail_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.300x300x1.jpg',
-                    'song_art_image_url': 'https://images.genius.com/f9f67a3f9c801f697fbaf68c7efd3599.651x651x1.jpg',
-                    'stats': {'unreviewed_annotations': 0, 'hot': False}, 'title': 'Sana Sana Sana, Cura Cura Cura',
-                    'title_with_featured': 'Sana Sana Sana, Cura Cura Cura', 'updated_by_human_at': 1647353214,
-                    'url': 'https://genius.com/Psychonaut-4-sana-sana-sana-cura-cura-cura-lyrics',
-                    'featured_artists': [], 'primary_artist': {'_type': 'artist', 'api_path': '/artists/1108956',
-                                                               'header_image_url': 'https://images.genius.com/ff13efc74a043237cfca3fc0a6cb12dd.1000x563x1.jpg',
-                                                               'id': 1108956,
-                                                               'image_url': 'https://images.genius.com/25ff7cfdcb6d92a9f19ebe394a895736.640x640x1.jpg',
-                                                               'index_character': 'p', 'is_meme_verified': False,
-                                                               'is_verified': False, 'name': 'Psychonaut 4',
-                                                               'slug': 'Psychonaut-4',
-                                                               'url': 'https://genius.com/artists/Psychonaut-4'}}},
-        {'artist': 'Psychonaut 4', 'track': 'Sana Sana Sana, Cura Cura Cura'}
-    )
-    print(song.fetch_lyrics())
-    """
 
     songs = search("Zombiez", "WALL OF Z")
     for song in songs:
