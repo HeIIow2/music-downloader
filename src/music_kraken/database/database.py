@@ -235,6 +235,11 @@ WHERE '{track_id}' == id;
         self.cursor.execute(query)
         self.connection.commit()
 
+    def set_field_of_song(self, track_id: str, key: str, value: str):
+        query = f"UPDATE track SET {key} = ? WHERE '{track_id}' == id;"
+        self.cursor.execute(query, (value, ))
+        self.connection.commit()
+
     def set_download_data(self, track_id: str, url: str, src: str):
         query = f"""
 UPDATE track
