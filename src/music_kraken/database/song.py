@@ -1,76 +1,9 @@
 from typing import List
-from ..utils.shared import (
-    MUSIC_DIR
-)
 
-import os
-from mutagen.easyid3 import EasyID3
-
-
-class Target:
-    def __init__(self) -> None:
-        self._file = None
-        self._path = None
-
-    def set_file(self, _file: str):
-        self._file = _file
-
-    def get_file(self) -> str | None:
-        if self._file is None:
-            return None
-        return os.path.join(MUSIC_DIR, self._file)
-
-    def set_path(self, _path: str):
-        self._path = _path
-
-    def get_path(self) -> str | None:
-        if self._path is None:
-            return None
-        return os.path.join(MUSIC_DIR, self._path)
-
-    file = property(fget=get_file, fset=set_file)
-    path = property(fget=get_path, fset=set_path)
-
-
-class Artist:
-    def __init__(self, artist_data) -> None:
-        self.artist_data = artist_data
-
-        self.id = self.artist_data['id']
-        self.name = self.artist_data['name']
-
-    def __eq__(self, __o: object) -> bool:
-        if type(__o) != type(self):
-            return False
-        return self.id == __o.id
-
-    def __str__(self) -> str:
-        return self.name
-
-
-class Source:
-    def __init__(self, src_data) -> None:
-        self.src_data = src_data
-
-        self.src = self.src_data['src']
-        self.url = self.src_data['url']
-
-
-class Metadata:
-    def __init__(self) -> None:
-        self.data = {}
-
-    def get_all_metadata(self):
-        return list(self.data.items())
-
-    def __setitem__(self, item, value):
-        if item in EasyID3.valid_keys.keys():
-            self.data[item] = value
-
-    def __getitem__(self, item):
-        if item not in self.data:
-            return None
-        return self.data[item]
+from .artist import Artist
+from .metadata import Metadata
+from .source import Source
+from .target import Target
 
 
 class Song:
