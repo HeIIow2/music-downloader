@@ -178,7 +178,7 @@ def cli(start_at: int = 0, only_lyrics: bool = False):
 
     if start_at <= 4:
         logging.info("starting to fetch the lyrics")
-        lyrics.fetch_lyrics()
+        lyrics.fetch_lyrics(cache.get_tracks_for_lyrics())
 
 
 def gtk_gui():

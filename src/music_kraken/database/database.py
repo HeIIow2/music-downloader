@@ -7,16 +7,17 @@ import requests
 
 from . import song
 
+
 class Database:
-    def __init__(self, path_to_db: str, db_structure: str, db_structure_fallback: str, logger: logging.Logger, reset_anyways: bool = False):
-        self.logger = logger
+    def __init__(self, path_to_db: str, db_structure: str, db_structure_fallback: str, reset_anyways: bool = False):
         self.path_to_db = path_to_db
 
         self.connection = sqlite3.connect(self.path_to_db)
         self.cursor = self.connection.cursor()
 
         # init database
-        self.init_db(database_structure=db_structure, database_structure_fallback=db_structure_fallback, reset_anyways=reset_anyways)
+        self.init_db(database_structure=db_structure, database_structure_fallback=db_structure_fallback,
+                     reset_anyways=reset_anyways)
 
     def init_db(self, database_structure: str, database_structure_fallback: str, reset_anyways: bool = False):
         # check if db exists
@@ -29,16 +30,16 @@ class Database:
             exists = False
 
         if not exists:
-            self.logger.info("Database does not exist yet.")
+            logger.info("Database does not exist yet.")
 
         if reset_anyways or not exists:
             # reset the database if reset_anyways is true or if an error has been thrown previously.
-            self.logger.info("Creating/Reseting Database.")
+            logger.info("Creating/Reseting Database.")
 
             if not os.path.exists(database_structure):
-                self.logger.info("database structure file doesn't exist yet, fetching from github")
+                logger.info("database structure file doesn't exist yet, fetching from github")
                 r = requests.get(database_structure_fallback)
-                
+
                 with open(database_structure, "w") as f:
                     f.write(r.text)
 
@@ -221,13 +222,13 @@ GROUP BY track.id;
     def get_tracks_for_lyrics(self) -> List[song.Song]:
         return self.get_custom_track(["track.lyrics IS NULL"])
 
-    def add_lyrics(self, track_id: str, lyrics: str):
+    def add_lyrics(self, song: song.Song, lyrics: song.Lyrics):
         query = f"""
 UPDATE track
 SET lyrics = ?
-WHERE '{track_id}' == id;
+WHERE '{song.id}' == id;
             """
-        self.cursor.execute(query, (str(lyrics), ))
+        self.cursor.execute(query, (str(lyrics.text),))
         self.connection.commit()
 
     def update_download_status(self, track_id: str):
@@ -237,7 +238,7 @@ WHERE '{track_id}' == id;
 
     def set_field_of_song(self, track_id: str, key: str, value: str):
         query = f"UPDATE track SET {key} = ? WHERE '{track_id}' == id;"
-        self.cursor.execute(query, (value, ))
+        self.cursor.execute(query, (value,))
         self.connection.commit()
 
     def set_download_data(self, track_id: str, url: str, src: str):
@@ -249,7 +250,7 @@ WHERE '{track_id}' == id;
             """
         self.cursor.execute(query, (url, src))
         self.connection.commit()
-        
+
         query = "INSERT OR REPLACE INTO source (track_id, src, url) VALUES (?, ?, ?);"
         self.cursor.execute(query, (track_id, src, url))
         self.connection.commit()

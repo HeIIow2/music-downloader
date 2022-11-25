@@ -5,9 +5,14 @@ from .metadata import Metadata
 from .source import Source
 from .target import Target
 
+# I don't import cache from the db module because it would lead to circular imports
+# from .temp_database import temp_database as cache
+# from . import cache
+
+
 
 class Song:
-    def __init__(self, json_response) -> None:
+    def __init__(self, json_response: dict) -> None:
         self.json_data = json_response
 
         # initialize the data
@@ -44,6 +49,10 @@ class Song:
         self.metadata['artist'] = self.get_artist_names()
         # EasyID3.valid_keys.keys()
 
+        # the lyrics are not in the metadata class because the field isn't supported
+        # by easyid3
+        self.lyrics: LyricsContainer = LyricsContainer(parent=self)
+
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
 
@@ -73,3 +82,36 @@ class Song:
             return
 
         self.json_data[item] = value
+
+
+class Lyrics:
+    def __init__(self, text: str, language: str) -> None:
+        self.text = text
+        self.language = language
+
+
+class LyricsContainer:
+    def __init__(self, parent: Song):
+        self.lyrics_list: List[Lyrics] = []
+
+        self.parent = parent
+
+    def append(self, lyrics: Lyrics):
+        # due to my db not supporting multiple Lyrics yet, I just use for doing stuff with the lyrics
+        # the first element. I know this implementation is junk, but take it or leave it, it is going
+        # soon anyway
+        if len(self.lyrics_list) >= 1:
+            return
+
+        self.lyrics_list.append(lyrics)
+        # unfortunately can't do this here directly, because of circular imports. If anyone
+        # took the time to get familiar with this codebase... thank you, and if you have any
+        # suggestion of resolving this, please open an issue.
+        # cache.add_lyrics(track_id=self.parent.id, lyrics=lyrics.text)
+
+    def extend(self, lyrics_list: List[Lyrics]):
+        for lyrics in lyrics_list:
+            self.append(lyrics)
+
+    is_empty = property(fget=lambda self: len(self.lyrics_list) <= 0)
+

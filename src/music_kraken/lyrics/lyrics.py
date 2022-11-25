@@ -1,3 +1,5 @@
+from typing import List
+
 import mutagen
 from mutagen.id3 import ID3, USLT
 
@@ -5,7 +7,9 @@ from ..utils.shared import *
 from . import genius
 from ..database import (
     Song,
-    cache
+    cache,
+    Lyrics,
+    Target
 )
 
 logger = LYRICS_LOGGER
@@ -34,36 +38,43 @@ I have written that Rhythmbox plugin: https://github.com/HeIIow2/rythmbox-id3-ly
 # https://code.activestate.com/recipes/577138-embed-lyrics-into-mp3-files-using-mutagen-uslt-tag/
 
 
-def add_lyrics(file_path: str, lyrics):
-    if not os.path.exists(file_path):
+def add_lyrics(target: Target, lyrics):
+    if not os.path.exists(target.file):
         return
 
     try:
-        tags = ID3(file_path)
+        tags = ID3(target.file)
     except mutagen.id3.ID3NoHeaderError:
         return
 
-    logger.info(f"adding lyrics to the file {file_path}")
+    logger.info(f"adding lyrics to the file {target.file}")
 
-    uslt_output = USLT(encoding=3, lang=lyrics.lang, desc=u'desc', text=lyrics.lyrics)
+    uslt_output = USLT(encoding=3, lang=lyrics.language, desc=u'desc', text=lyrics.text)
     tags["USLT::'eng'"] = uslt_output
-    tags.save(file_path)
+    tags.save(target.file)
 
 
 def fetch_single_lyrics(song: Song):
     logger.info(f"try fetching lyrics for {song}")
 
-    lyrics = []
+    lyrics_list: List[Lyrics] = genius.fetch_lyrics(song)
+    """
     for artist in song.get_artist_names():
         lyrics.extend(genius.search(artist, song.title))
-    if len(lyrics) == 0:
+    """
+    if len(lyrics_list) == 0:
         return
 
-    logger.info("found lyrics")
-    cache.add_lyrics(song.id, lyrics=lyrics[0])
-    add_lyrics(song.target.file, lyrics[0])
+    logger.info(f"found lyrics for {song}")
+    song.lyrics.extend(lyrics_list)
+    print(lyrics_list)
+    cache.add_lyrics(song=song, lyrics=lyrics_list[0])
+    add_lyrics(song.target, lyrics_list[0])
+
+    # cache.add_lyrics(song.id, lyrics=lyrics[0])
+    # add_lyrics(song.target.file, lyrics[0])
 
 
-def fetch_lyrics():
-    for song in cache.get_tracks_for_lyrics():
+def fetch_lyrics(songs: List[Song]):
+    for song in songs:
         fetch_single_lyrics(song)

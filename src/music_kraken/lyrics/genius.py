@@ -4,7 +4,9 @@ from bs4 import BeautifulSoup
 import pycountry
 
 from ..database import (
-    Lyrics
+    Lyrics,
+    Song,
+    Artist
 )
 from ..utils.shared import *
 from ..utils import phonetic_compares
@@ -25,7 +27,7 @@ session.proxies = proxies
 logger = GENIUS_LOGGER
 
 
-class Song:
+class LyricsSong:
     def __init__(self, raw_data: dict, desirered_data: dict):
         self.raw_data = raw_data
         self.desired_data = desirered_data
@@ -72,7 +74,7 @@ class Song:
 
         r = session.get(self.url)
         if r.status_code != 200:
-            logging.warning(f"{r.url} returned {r.status_code}:\n{r.content}")
+            logger.warning(f"{r.url} returned {r.status_code}:\n{r.content}")
             return None
 
         soup = BeautifulSoup(r.content, "html.parser")
@@ -80,23 +82,29 @@ class Song:
         if len(lyrics_soups) == 0:
             logger.warning(f"didn't found lyrics on {self.url}")
             return None
-        if len(lyrics_soups) != 1:
-            logger.warning(f"number of lyrics_soups doesn't equals 1, but {len(lyrics_soups)} on {self.url}")
+        # if len(lyrics_soups) != 1:
+        #     logger.warning(f"number of lyrics_soups doesn't equals 1, but {len(lyrics_soups)} on {self.url}")
 
         lyrics = "\n".join([lyrics_soup.getText(separator="\n", strip=True) for lyrics_soup in lyrics_soups])
-        print(lyrics)
 
         # <div data-lyrics-container="true" class="Lyrics__Container-sc-1ynbvzw-6 YYrds">With the soundle
         self.lyrics = lyrics
         return lyrics
 
+    def get_lyrics_object(self) -> Lyrics | None:
+        if self.lyrics is None:
+            return None
+        return Lyrics(text=self.lyrics, language=self.lang or "en")
 
-def process_multiple_songs(song_datas: list, desired_data: dict) -> List[Song]:
-    all_songs = [Song(song_data, desired_data) for song_data in song_datas]
+    lyrics_object = property(fget=get_lyrics_object)
+
+
+def process_multiple_songs(song_datas: list, desired_data: dict) -> List[LyricsSong]:
+    all_songs = [LyricsSong(song_data, desired_data) for song_data in song_datas]
     return all_songs
 
 
-def search_song_list(artist: str, track: str) -> List[Song]:
+def search_song_list(artist: str, track: str) -> List[LyricsSong]:
     endpoint = "https://genius.com/api/search/multi?q="
     url = f"{endpoint}{artist} - {track}"
     logging.info(f"requesting {url}")
@@ -124,18 +132,31 @@ def search_song_list(artist: str, track: str) -> List[Song]:
     return []
 
 
-def search(artist: str, track: str) -> list:
-    results = []
-    r = search_song_list(artist, track)
-    for r_ in r:
-        if r_.valid:
-            results.append(r_)
-    return results
+def fetch_lyrics_from_artist(song: Song, artist: Artist) -> List[Lyrics]:
+    lyrics_list: List[Lyrics] = []
+    lyrics_song_list = search_song_list(artist.name, song.title)
+
+    for lyrics_song in lyrics_song_list:
+        if lyrics_song.valid:
+            lyrics_list.append(lyrics_song.lyrics_object)
+
+    return lyrics_list
 
 
+def fetch_lyrics(song: Song) -> List[Lyrics]:
+    lyrics: List[Lyrics] = []
+
+    for artist in song.artists:
+        lyrics.extend(fetch_lyrics_from_artist(song, artist))
+
+    return lyrics
+
+
+"""
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     songs = search("Zombiez", "WALL OF Z")
     for song in songs:
         print(song)
+"""

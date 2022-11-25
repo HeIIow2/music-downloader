@@ -7,9 +7,10 @@ from ..utils.shared import (
     DATABASE_LOGGER
 )
 
+
 class TempDatabase(Database):
     def __init__(self) -> None:
-        super().__init__(TEMP_DATABASE_PATH, DATABASE_STRUCTURE_FILE, DATABASE_STRUCTURE_FALLBACK, DATABASE_LOGGER, False)
+        super().__init__(TEMP_DATABASE_PATH, DATABASE_STRUCTURE_FILE, DATABASE_STRUCTURE_FALLBACK, False)
 
 
 temp_database = TempDatabase()
