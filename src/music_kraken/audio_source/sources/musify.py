@@ -83,7 +83,10 @@ class Musify(AudioSource):
     def get_soup_of_search(cls, query: str, trie=0) -> bs4.BeautifulSoup | None:
         url = f"https://musify.club/search?searchText={query}"
         logger.debug(f"Trying to get soup from {url}")
-        r = session.get(url)
+        try:
+            r = session.get(url, timeout=15)
+        except requests.exceptions.Timeout:
+            return None
         if r.status_code != 200:
             if r.status_code in [503] and trie < TRIES:
                 logging.warning(f"youtube blocked downloading. ({trie}-{TRIES})")
