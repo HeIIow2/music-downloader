@@ -6,7 +6,11 @@ import json
 import requests
 
 from . import song
+from ..utils.shared import (
+    DATABASE_LOGGER
+)
 
+logger = DATABASE_LOGGER
 
 class Database:
     def __init__(self, path_to_db: str, db_structure: str, db_structure_fallback: str, reset_anyways: bool = False):

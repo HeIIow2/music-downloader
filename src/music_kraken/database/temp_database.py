@@ -7,6 +7,8 @@ from ..utils.shared import (
     DATABASE_LOGGER
 )
 
+logger = DATABASE_LOGGER
+
 
 class TempDatabase(Database):
     def __init__(self) -> None:
