@@ -12,6 +12,8 @@ from ..utils.shared import *
 from ..utils import phonetic_compares
 from ..utils.object_handeling import get_elem_from_obj
 
+TIMEOUT = 10
+
 # search doesn't support isrc
 # https://genius.com/api/search/multi?q=I Prevail - Breaking Down
 # https://genius.com/api/songs/6192944
@@ -72,7 +74,11 @@ class LyricsSong:
         if not self.valid:
             logger.warning(f"{self.__repr__()} is invalid but the lyrics still get fetched. Something could be wrong.")
 
-        r = session.get(self.url)
+        try:
+            r = session.get(self.url, timeout=TIMEOUT)
+        except requests.exceptions.Timeout:
+            logger.warning(f"{self.url} timed out after {TIMEOUT} seconds")
+            return None
         if r.status_code != 200:
             logger.warning(f"{r.url} returned {r.status_code}:\n{r.content}")
             return None
@@ -114,7 +120,11 @@ def search_song_list(artist: str, track: str) -> List[LyricsSong]:
         'track': track
     }
 
-    r = session.get(url)
+    try:
+        r = session.get(url, timeout=TIMEOUT)
+    except requests.exceptions.Timeout:
+        logger.warning(f"{url} timed out after {TIMEOUT} seconds")
+        return []
     if r.status_code != 200:
         logging.warning(f"{r.url} returned {r.status_code}:\n{r.content}")
         return []
