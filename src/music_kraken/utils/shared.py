@@ -40,11 +40,11 @@ LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
-MUSIC_DIR = os.path.join("~", ".config", "user-dirs.dirs")
+MUSIC_DIR = os.path.join(os.path.expanduser("~"), "Music")
 
 if current_os == "linux":
     # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
-    XDG_USER_DIRS_FILE = os.path.expanduser("~/.config/user-dirs.dirs")
+    XDG_USER_DIRS_FILE = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
     logger = logging.getLogger("init_path")
     logger.setLevel(logging.WARNING)
     try:
@@ -56,11 +56,10 @@ if current_os == "linux":
         MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
     except (FileNotFoundError, KeyError) as E:
         logger.warning(f'''
-Missing file or key at: '{XDG_USER_DIRS_FILE}'.
+Missing file or No entry found for "xdg_music_dir" in: \'{XDG_USER_DIRS_FILE}\'.
 Will fallback on default '$HOME/Music'.
 ----
-                        ''')
-
+                                ''')
 TOR = False
 proxies = {
     'http': 'socks5h://127.0.0.1:9150',
