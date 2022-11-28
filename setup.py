@@ -34,5 +34,9 @@ setup(
         "beautifulsoup4~=4.11.1", 
         "pycountry~=22.3.5"
     ],
-    entry_points={'console_scripts': ['music-kraken = music_kraken:cli']}
+    entry_points={'console_scripts': ['music-kraken = music_kraken:cli']},
+    include_package_data=False,
+    data_files=[
+        ('music_kraken', ['database_structure.sql'])
+    ]
 )
