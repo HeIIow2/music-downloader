@@ -2,7 +2,6 @@ import musicbrainzngs
 import logging
 import tempfile
 import os
-import io
 import configparser
 from sys import platform as current_os
 
@@ -44,19 +43,19 @@ NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.join("~", ".config", "user-dirs.dirs")
 
 if current_os == "linux":
-    USER_XDG_DIR_FILE = os.path.expanduser("~/.config/user-dirs.dirss")
+    USER_XDG_DIR_FILE = os.path.expanduser("~/.config/user-dirs.dirs")
     logger = logging.getLogger("init_path")
     logger.setLevel(logging.WARNING)
     try:
         with open(USER_XDG_DIR_FILE, 'r') as f:
-            data = io.StringIO("[XDG_USER_DIRS]\n" + f.read())
+            data = "[XDG_USER_DIRS]\n" + f.read()
         config = configparser.ConfigParser(allow_no_value=True)
-        config.read_file(data)
+        config.read_string(data)
         xdg_config = config['XDG_USER_DIRS']
         MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
-    except FileNotFoundError as N:
+    except (FileNotFoundError, KeyError) as E:
         logger.warning(f'''
-Missing XDG_USER_DIRS file at: '{USER_XDG_DIR_FILE}'.
+Missing file or key at: '{USER_XDG_DIR_FILE}'.
 Will fallback on default '$HOME/Music'.
 ----
                         ''')
