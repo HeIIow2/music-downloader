@@ -2,6 +2,8 @@ import musicbrainzngs
 import logging
 import tempfile
 import os
+import configparser
+from sys import platform as current_os
 
 
 TEMP_FOLDER = "music-downloader"
@@ -26,6 +28,7 @@ logging.basicConfig(
 )
 
 SEARCH_LOGGER = logging.getLogger("mb-cli")
+INIT_PATH_LOGGER = logging.getLogger("init_path")
 DATABASE_LOGGER = logging.getLogger("database")
 METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata")
 URL_DOWNLOAD_LOGGER = logging.getLogger("AudioSource")
@@ -39,6 +42,24 @@ GENIUS_LOGGER = logging.getLogger("genius")
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.join(os.path.expanduser("~"), "Music")
 
+if current_os == "linux":
+    # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
+    XDG_USER_DIRS_FILE = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
+    logger = logging.getLogger("init_path")
+    logger.setLevel(logging.WARNING)
+    try:
+        with open(XDG_USER_DIRS_FILE, 'r') as f:
+            data = "[XDG_USER_DIRS]\n" + f.read()
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read_string(data)
+        xdg_config = config['XDG_USER_DIRS']
+        MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
+    except (FileNotFoundError, KeyError) as E:
+        logger.warning(f'''
+Missing file or No entry found for "xdg_music_dir" in: \'{XDG_USER_DIRS_FILE}\'.
+Will fallback on default '$HOME/Music'.
+----
+                                ''')
 TOR = False
 proxies = {
     'http': 'socks5h://127.0.0.1:9150',
