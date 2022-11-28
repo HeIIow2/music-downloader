@@ -43,11 +43,12 @@ NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.join("~", ".config", "user-dirs.dirs")
 
 if current_os == "linux":
-    USER_XDG_DIR_FILE = os.path.expanduser("~/.config/user-dirs.dirs")
+    # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
+    XDG_USER_DIRS_FILE = os.path.expanduser("~/.config/user-dirs.dirs")
     logger = logging.getLogger("init_path")
     logger.setLevel(logging.WARNING)
     try:
-        with open(USER_XDG_DIR_FILE, 'r') as f:
+        with open(XDG_USER_DIRS_FILE, 'r') as f:
             data = "[XDG_USER_DIRS]\n" + f.read()
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(data)
@@ -55,7 +56,7 @@ if current_os == "linux":
         MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
     except (FileNotFoundError, KeyError) as E:
         logger.warning(f'''
-Missing file or key at: '{USER_XDG_DIR_FILE}'.
+Missing file or key at: '{XDG_USER_DIRS_FILE}'.
 Will fallback on default '$HOME/Music'.
 ----
                         ''')
