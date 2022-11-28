@@ -19,14 +19,14 @@ from .utils.shared import (
 
 from .lyrics import lyrics
 
-
+"""
 # try reading a static file:
 print("TEST")
 import pkgutil
 
 data = pkgutil.get_data(__name__, "temp_database_structure.sql")
 print(data)
-
+"""
 """
 At the start I modify the garbage collector to run a bit fewer times.
 This should increase speed:
