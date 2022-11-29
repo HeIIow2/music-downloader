@@ -106,7 +106,8 @@ class Database:
             feature_aritsts: list,
             tracknumber: str = None,
             track: str = None,
-            isrc: str = None
+            isrc: str = None,
+            length: int = None
     ):
         # add adjacency
         adjacency_list = []
@@ -118,8 +119,8 @@ class Database:
         self.connection.commit()
 
         # add track
-        query = "INSERT OR REPLACE INTO track (id, release_id, track, isrc, tracknumber) VALUES (?, ?, ?, ?, ?);"
-        values = musicbrainz_releasetrackid, musicbrainz_albumid, track, isrc, tracknumber
+        query = "INSERT OR REPLACE INTO track (id, release_id, track, isrc, tracknumber, length) VALUES (?, ?, ?, ?, ?, ?);"
+        values = musicbrainz_releasetrackid, musicbrainz_albumid, track, isrc, tracknumber, length
         self.cursor.execute(query, values)
         self.connection.commit()
 
@@ -171,6 +172,7 @@ SELECT DISTINCT
         'musicbrainz_albumtype', release_group.musicbrainz_albumtype,
         'compilation', release_group.compilation,
         'album_artist_id', release_group.album_artist_id,
+        'length', track.length,
         'path', track.path,
         'file', track.file,
         'genre', track.genre,

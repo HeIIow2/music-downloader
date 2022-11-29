@@ -1,12 +1,13 @@
 import music_kraken as mk
 print(mk.__file__)
 
+mk.clear_cache()
 song_list = mk.cache.get_custom_track([])
-
 print(mk.cache, len(song_list))
-print(song_list)
+#recording/694bfd3c-9d2d-4d67-9bfc-cee5bf77166e
+id_="694bfd3c-9d2d-4d67-9bfc-cee5bf77166e"
+mk.fetch_metadata(id_=id_, type_="recording")
 
-for song in song_list:
-    print()
-    print(song)
-    print(song.json_data)
+song = mk.cache.get_track_metadata(musicbrainz_releasetrackid=id_)
+print(song)
+print(song.length)

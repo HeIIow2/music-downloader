@@ -147,7 +147,7 @@ from music_kraken import fetch_metadata
 
 # might change and break after I add multiple metadata sources which I will
 
-fetch_metadata(id_=musicbrainz_id, type=metadata_type)
+fetch_metadata(id_=musicbrainz_id, type_=metadata_type)
 ```
 The option type is a string (*I'm sorry for not making it an enum I know its a bad pratice*), which can
 have following values:

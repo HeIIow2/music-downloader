@@ -62,5 +62,6 @@ CREATE TABLE source (
     track_id TEXT NOT NULL,
     src TEXT NOT NULL,
     url TEXT NOT NULL,
+    certainty INT NOT NULL DEFAULT 0,   -- certainty=0 -> it is definitly a valid source
     valid BOOLEAN NOT NULL DEFAULT 1
 );

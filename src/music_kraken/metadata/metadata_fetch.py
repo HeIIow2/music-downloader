@@ -279,6 +279,8 @@ class MetadataDownloader:
             self.isrc = get_elem_from_obj(recording_data, ['isrc-list', 0])
             self.title = recording_data['title']
 
+            self.lenth = get_elem_from_obj(recording_data, ['length'])
+
             self.save()
 
         def __str__(self):
@@ -293,7 +295,8 @@ class MetadataDownloader:
                 feature_aritsts=[artist.musicbrainz_artistid for artist in self.artists],
                 tracknumber=self.track_number,
                 track=self.title,
-                isrc=self.isrc
+                isrc=self.isrc,
+                length=int(self.lenth)
             )
 
         def append_artist(self, artist_id: str):

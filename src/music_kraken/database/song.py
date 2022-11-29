@@ -47,6 +47,8 @@ class Song:
         for key, value in self.json_data.items():
             self.metadata[key] = value
         self.metadata['artist'] = self.get_artist_names()
+
+        self.length = self.json_data['length']
         # EasyID3.valid_keys.keys()
 
         # the lyrics are not in the metadata class because the field isn't supported
