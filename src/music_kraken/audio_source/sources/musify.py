@@ -147,8 +147,11 @@ class Musify(AudioSource):
         # download the audio data
         logger.info(f"downloading: '{url}'")
         try:
-            r = session.get(url, timeout=15)
-        except requests.exceptions.ConnectionError or requests.exceptions.ReadTimeout:
+            r = session.get(url, timeout=TIMEOUT)
+        except requests.exceptions.ConnectionError:
+            return False
+        except requests.exceptions.ReadTimeout:
+            logger.warning(f"musify server didn't respond after {TIMEOUT} seconds")
             return False
         if r.status_code != 200:
             if r.status_code == 404:
