@@ -192,6 +192,14 @@ cache.get_tracks_without_filepath()
 
 the id always is a musicbrainz id and distinct for every track.
 
+**clearing the cache** is easy too.
+
+```
+from music_kraken import clear_cache
+
+clear_cache()
+```
+
 ### Setting the Target
 
 By default the music downloader doesn't know where to save the music file, if downloaded. To set those variables (the directory to save the file in and the filepath), it is enough to run one single command:

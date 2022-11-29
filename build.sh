@@ -1,12 +1,15 @@
 #!/bin/bash
 test=true
 
-
 rm /tmp/music-downloader/*.db
 rm /tmp/music-downloader/*.sql
 
 version=$(cut -d@ -f1 version)
 echo version:  $version
+
+git add .
+git commit -am "ready for build $version"
+git push
 
 sudo python3 -m pip install -U twine wheel setuptools
 
@@ -25,6 +28,12 @@ then
 fi
 
 twine upload dist/music_kraken*
+
+echo "compiling............"
+mkdir -p dist/build_files
+mkdir -p dist/compiled
+
+pyinstaller --onefile src/music_kraken_cli.py --specpath dist/build_files --workpath dist/build_files --distpath dist/compiled
 exit
 
 # https://packaging.python.org/en/latest/tutorials/packaging-projects/
