@@ -13,6 +13,27 @@ from .target import Target
 
 class Song:
     def __init__(self, json_response: dict) -> None:
+        """
+        id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
+        mb_id: is the musicbrainz_id
+        target: Each Song can have exactly one target which can be either full or empty
+        lyrics: There can be multiple lyrics. Each Lyrics object can me added to multiple lyrics
+        """
+        # attributes
+        self.id: str | None = None
+        self.mb_id: str | None = None
+        self.title: str | None = None
+        self.isrc: str | None = None
+        self.length: int | None = None
+
+        self.metadata: Metadata = Metadata()
+        # joins
+        self.artists: List[Artist] = []
+        self.lyrics: LyricsContainer = LyricsContainer(parent=self)
+
+        self.sources: List[Source] = []
+        self.target: Target = Target()
+
         self.json_data = json_response
 
         # initialize the data
