@@ -19,14 +19,7 @@ from .utils.shared import (
 
 from .lyrics import lyrics
 
-"""
-# try reading a static file:
-print("TEST")
-import pkgutil
 
-data = pkgutil.get_data(__name__, "temp_database_structure.sql")
-print(data)
-"""
 """
 At the start I modify the garbage collector to run a bit fewer times.
 This should increase speed:
@@ -73,6 +66,9 @@ def fetch_sources(songs: List[Song], skip_existing_files: bool = True):
 def fetch_audios(songs: List[Song], override_existing: bool = False):
     audio_source.fetch_audios(songs=songs, override_existing=override_existing)
 
+
+def clear_cache():
+    cache.init_db(reset_anyways=True)
 
 def get_existing_genre():
     valid_directories = []

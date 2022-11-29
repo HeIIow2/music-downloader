@@ -1,3 +1,17 @@
+
+rm /tmp/music-downloader/*.db
+rm /tmp/music-downloader/*.sql
+
+version=$(cut -d@ -f1 version)
+echo version:  $version
+
+python3 setup.py sdist bdist_wheel  
+sudo python3 -m pip uninstall music-kraken -y
+
+python3 -m pip install dist/music-kraken-$version.tar.gz --user
+music-kraken
+exit
+
 # https://packaging.python.org/en/latest/tutorials/packaging-projects/
 #echo "building............"
 #echo "python3 -m pip install --upgrade build"

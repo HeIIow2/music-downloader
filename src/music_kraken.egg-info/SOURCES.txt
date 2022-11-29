@@ -1,8 +1,9 @@
 LICENSE
 README.md
-database_structure.sql
-pyproject.toml
+requirements.txt
 setup.py
+version
+assets/database_structure.sql
 assets/temp_database_structure.sql
 src/music_kraken/__init__.py
 src/music_kraken/__main__.py
