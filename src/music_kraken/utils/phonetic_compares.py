@@ -49,5 +49,9 @@ def match_artists(artist_1, artist_2: str):
         return True, min(distances)
     return match_titles(artist_1, artist_2)
 
-def match_length(length_1: int, length_2: int) -> bool:
+def match_length(length_1: int | None, length_2: int | None) -> bool:
+    # returning true if either one is Null, because if one value is not known,
+    # then it shouldn't be an attribute which could reject an audio source
+    if length_1 is None or length_2 is None:
+        return True
     return abs(length_1 - length_2) <= ALLOWED_LENGTH_DISTANCE
