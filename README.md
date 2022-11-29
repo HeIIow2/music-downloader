@@ -194,7 +194,7 @@ the id always is a musicbrainz id and distinct for every track.
 
 **clearing the cache** is easy too.
 
-```
+```python
 from music_kraken import clear_cache
 
 clear_cache()
