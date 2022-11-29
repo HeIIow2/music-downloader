@@ -4,6 +4,8 @@ import string
 TITLE_THRESHOLD_LEVENSHTEIN = 1
 UNIFY_TO = " "
 
+ALLOWED_LENGTH_DISTANCE = 20
+
 
 def unify_punctuation(to_unify: str) -> str:
     for char in string.punctuation:
@@ -46,3 +48,6 @@ def match_artists(artist_1, artist_2: str):
             distances.append(distance)
         return True, min(distances)
     return match_titles(artist_1, artist_2)
+
+def match_length(length_1: int, length_2: int) -> bool:
+    return abs(length_1 - length_2) <= ALLOWED_LENGTH_DISTANCE

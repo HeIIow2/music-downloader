@@ -18,6 +18,9 @@ YOUTUBE_TITLE_KEY = 'title'
 WAIT_BETWEEN_BLOCK = 10
 MAX_TRIES = 3
 
+def youtube_length_to_mp3_length(youtube_len: float) -> int:
+    return int(youtube_len * 1000) 
+
 
 class Youtube(AudioSource):
     @classmethod
@@ -31,7 +34,8 @@ class Youtube(AudioSource):
 
         return [{
             'url': video[YOUTUBE_URL_KEY],
-            'title': video[YOUTUBE_TITLE_KEY]
+            'title': video[YOUTUBE_TITLE_KEY],
+            'length': youtube_length_to_mp3_length(float(videos[0]['duration']))
         } for video in videos]
 
     @classmethod
@@ -51,8 +55,10 @@ class Youtube(AudioSource):
             match, distance = phonetic_compares.match_titles(video_title, real_title)
 
             if match:
-                # logger.warning(
-                #     f"dont downloading {result['url']} cuz the phonetic distance ({distance}) between {real_title} and {video_title} is to high.")
+                continue
+
+            if not phonetic_compares.match_length(song.length, result['length']):
+                logger.warning(f"{song.length} doesn't match with {result}")
                 continue
 
             final_result = result
