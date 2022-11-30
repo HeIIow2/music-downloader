@@ -8,7 +8,7 @@ from . import (
 )
 
 Song = song.Song
-Artist = artist.Artist
+Artist = song.Artist
 Source = source.Source
 Target = target.Target
 Metadata = metadata.Metadata

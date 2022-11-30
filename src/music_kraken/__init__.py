@@ -39,6 +39,7 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 # define the most important values and function for import in the __init__ file
 Song = database.Song
+Artist = database.Artist
 MetadataSearch = metadata.MetadataSearch
 MetadataDownload = metadata.MetadataDownload
 

@@ -1,19 +1,15 @@
-import music_kraken as mk
-print(mk.__file__)
+import music_kraken
 
-"""
-mk.clear_cache()
-song_list = mk.cache.get_custom_track([])
-print(mk.cache, len(song_list))
-id_="694bfd3c-9d2d-4d67-9bfc-cee5bf77166e"
-id_="5cc28584-10c6-40e2-b6d4-6891e7e7c575"
-mk.fetch_metadata(id_=id_, type_="recording")
+artist = music_kraken.Artist(
+    name="I'm in a Coffin"
+)
 
-song = mk.cache.get_track_metadata(musicbrainz_releasetrackid=id_)
+song = music_kraken.Song(
+    title="Vein Deep in the Solution",
+    release="One Final Action",
+    artists=[artist]
+)
+
 print(song)
-print(song.length)
-mk.set_targets(genre="test")
 
-song = mk.cache.get_track_metadata(musicbrainz_releasetrackid=id_)
-"""
-mk.fetch_audios(mk.cache.get_tracks_to_download())
+music_kraken.fetch_sources([song])

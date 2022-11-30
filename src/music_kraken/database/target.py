@@ -25,6 +25,9 @@ class Target:
         if self._path is None:
             return None
         return os.path.join(MUSIC_DIR, self._path)
+    
+    def is_set(self) -> bool:
+        return not (self._file is None or self._path is None)
 
     file = property(fget=get_file, fset=set_file)
     path = property(fget=get_path, fset=set_path)

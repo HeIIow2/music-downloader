@@ -13,7 +13,7 @@ from .song import (
 
 def get_song_from_response(response: dict) -> Song:
     # artists
-    artists = [Artist(a) for a in response['artists']]
+    artists = [Artist(id_=a['id'], name=a['name']) for a in response['artists']]
 
     # metadata
     metadata = Metadata()

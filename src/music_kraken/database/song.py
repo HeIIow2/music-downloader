@@ -6,6 +6,19 @@ from .source import Source
 from .target import Target
 
 
+class Artist:
+    def __init__(self, id_: str = None, name: str = None) -> None:
+        self.id = id_
+        self.name = name
+
+    def __eq__(self, __o: object) -> bool:
+        if type(__o) != type(self):
+            return False
+        return self.id == __o.id
+
+    def __str__(self) -> str:
+        return self.name
+
 
 class Lyrics:
     def __init__(self, text: str, language: str) -> None:

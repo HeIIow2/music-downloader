@@ -39,9 +39,10 @@ class Download:
     @classmethod
     def fetch_sources(cls, songs: List[song_object], skip_existing_files: bool = False):
         for song in songs:
-            if os.path.exists(song.target.file) and skip_existing_files:
-                logger.info(f"skipping the fetching of the download links, cuz {song.target.file} already exists.")
-                continue
+            if song.target.is_set():
+                if os.path.exists(song.target.file) and skip_existing_files:
+                    logger.info(f"skipping the fetching of the download links, cuz {song.target.file} already exists.")
+                    continue
 
             sucess = False
             for src in AUDIO_SOURCES:
