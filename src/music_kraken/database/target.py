@@ -25,9 +25,21 @@ class Target:
         if self._path is None:
             return None
         return os.path.join(MUSIC_DIR, self._path)
+
+    def get_exists_on_disc(self) -> bool:
+        """
+        returns True when file can be found on disc
+        returns False when file can't be found on disc or no filepath is set
+        """
+        if not self.is_set():
+            return False
+
+        return os.path.exists(self.file)
     
     def is_set(self) -> bool:
         return not (self._file is None or self._path is None)
 
     file = property(fget=get_file, fset=set_file)
     path = property(fget=get_path, fset=set_path)
+
+    exists_on_disc = property(fget=get_exists_on_disc)

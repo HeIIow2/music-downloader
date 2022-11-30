@@ -26,34 +26,32 @@ class Download:
                 logger.info(f"skipping the fetching of the download links, cuz {song.target.file} already exists.")
                 continue
 
-            sucess = False
+            success = False
             for src in AUDIO_SOURCES:
                 res = Download.fetch_from_src(song, src)
                 if res is not None:
-                    sucess = True
+                    success = True
                     Download.add_url(res, src, id_)
 
-            if not sucess:
+            if not success:
                 logger.warning(f"Didn't find any sources for {song}")
 
     @classmethod
     def fetch_sources(cls, songs: List[song_object], skip_existing_files: bool = False):
         for song in songs:
-            if song.target.is_set():
-                if os.path.exists(song.target.file) and skip_existing_files:
-                    logger.info(f"skipping the fetching of the download links, cuz {song.target.file} already exists.")
-                    continue
+            if song.target.exists_on_disc and skip_existing_files:
+                logger.info(f"skipping the fetching of the download links, cuz {song.target.file} already exists.")
+                continue
 
-            sucess = False
+            success = False
             for src in AUDIO_SOURCES:
                 res = cls.fetch_from_src(song, src)
                 if res is not None:
-                    sucess = True
+                    success = True
                     cls.add_url(res, src, song.id)
 
-            if not sucess:
+            if not success:
                 logger.warning(f"Didn't find any sources for {song}")
-    
 
     @classmethod
     def fetch_from_src(cls, song, src):
