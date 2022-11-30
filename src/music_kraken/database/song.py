@@ -12,7 +12,10 @@ from .target import Target
 
 
 class Song:
-    def __init__(self, json_response: dict) -> None:
+    def __init__(
+        self, 
+        json_response: dict,
+        ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
         mb_id: is the musicbrainz_id
