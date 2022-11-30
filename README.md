@@ -11,13 +11,13 @@
 
 ## Installation
 
-You can find and get this project from either [PyPI](https://pypi.org/project/music-kraken/) as Python-Package 
+You can find and get this project from either [PyPI](https://pypi.org/project/music-kraken/) as a Python-Package, 
 or simply the source code from [GitHub](https://github.com/HeIIow2/music-downloader). Note that even though
-everything **SHOULD** work cross Plattform, I only tested it on Ubuntu.
-If you enjoy this project, feel free to give it a Star on GitHub.
+everything **SHOULD** work cross-platform, I have only tested it on Ubuntu.
+If you enjoy this project, feel free to give it a star on GitHub.
 
 ```sh
-# install it with
+# Install it with
 pip install music-kraken
 
 # and simply run it like this:
@@ -30,7 +30,7 @@ If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PAT
 
 ## Quick-Guide
 
-**Genre:** First the cli asks you to input a gere you want to download to. The options it gives you (if it gives you any) are all the folders you got in the music directory. You also can just input a new one.
+**Genre:** First, the cli asks you to input a genre you want to download to. The options it gives you (if it gives you any) are all the folders you have in the music directory. You can also just input a new one.
 
 **What to download:** After that it prompts you for a search. Here are a couple examples how you can search:
 
@@ -45,18 +45,18 @@ searches for the release (album) <any release> by the artist <any artist>
 searches for the track <any track> from the release <any relaese>
 ```
 
-After searching with this syntax it prompts you with multiple results. You can either choose one of those by inputing its id `int` or you can search for a new query.
+After searching with this syntax, it prompts you with multiple results. You can either choose one of those by inputing its id `int`, or you can search for a new query.
 
-After you chose either an artist, a release group, a release or a track by its id, download it by inputing the string `ok`. My downloader will download it automatically for you.
+After you chose either an artist, a release group, a release, or a track by its id, download it by inputting the string `ok`. My downloader will download it automatically for you.
 
 ---
 
-## Programming Interface / use as Library
+## Programming Interface / Use as Library
 
 If you want to use this project, or parts from it in your own projects from it, 
 make sure to be familiar with [Python Modules](https://docs.python.org/3/tutorial/modules.html).
 Further and better documentation including code examples are yet to come, so here is the rough
-module structure for now. (should be up-to-date but no guarantee)
+module structure for now. (Should be up-to-date, but no guarantees)
 
 If you simply want to run the builtin minimal cli just do this:
 ```python
@@ -67,15 +67,15 @@ cli()
 
 ### Search for Metadata
 
-The whole programm takes the data it processes further from the cache, a sqlite database.
+The whole program takes the data it processes further from the cache, a sqlite database.
 So before you can do anything, you will need to fill it with the songs you want to download (*or create song objects manually, but more on that later*).
 
-For now the base of everything is [musicbrainz][mb], so you need to get the musicbrainz `id` and `type` the id corresponds to either 
+For now the base of everything is [musicbrainz][mb], so you need to get the musicbrainz `id` and `type`. The `id` corresponds to either 
  - an artist
  - a release group 
  - a release
  - a recording/track).
-  
+
 To get this info, you first have to initialize a search object (`music_kraken.MetadataSearch`).
 
 ```python
@@ -92,7 +92,7 @@ multiple_options = search_object.search_from_text(artist=input("input the name o
 multiple_options = search_object.search_from_query(query=input("input the query: "))
 ```
 
-both possible methods return an instance of `MultipleOptions`, which can be directly converted to a string.
+Both methods return an instance of `MultipleOptions`, which can be directly converted to a string.
 
 ```python
 print(multiple_options)
@@ -147,7 +147,7 @@ from music_kraken import fetch_metadata
 
 # might change and break after I add multiple metadata sources which I will
 
-fetch_metadata(id_=musicbrainz_id, type_=metadata_type)
+fetch_metadata(id_=musicbrainz_id, type=metadata_type)
 ```
 The option type is a string (*I'm sorry for not making it an enum I know its a bad pratice*), which can
 have following values:
@@ -156,7 +156,7 @@ have following values:
  - 'release'
  - 'recording'
   
-**PAY ATTENTION TO TYPOS, ITS CASE SENSITIVE**
+**PAY ATTENTION TO TYPOS, IT'S CASE SENSITIVE**
 
 The musicbrainz id is just the id of the object from musicbrainz.
 
@@ -190,15 +190,7 @@ cache.get_tracks_without_isrc()
 cache.get_tracks_without_filepath()
 ```
 
-the id always is a musicbrainz id and distinct for every track.
-
-**clearing the cache** is easy too.
-
-```python
-from music_kraken import clear_cache
-
-clear_cache()
-```
+The id always is a musicbrainz id and distinct for every track.
 
 ### Setting the Target
 
@@ -211,13 +203,13 @@ from music_kraken import set_target
 set_target(genre="some test genre")
 ```
 
-The concept of genres is too loose, to definitly say, this band exclusively plays this genre, or this song is this genre. This doesn't work manually, this will never work automatically. Thus I've decided to just use the genre as category, to sort the artists and songs by. Most Music players support that.
+The concept of genres is too loose, to definitely say, this band exclusively plays this genre, or this song is this genre. This doesn't work manually, this will never work automatically. Thus, I've decided to just use the genre as category, to sort the artists and songs by. Most Music players support that.
 
 As a result of this decision you will have to pass the genre in this function.
 
 ### Get Audio
 
-This is most likely the most usefull and unique feature of this Project. If the cache is filled you can get audio sources for the songs you only have the metadata, and download them. This works for most songs. I'd guess for about 97% (?)
+This is most likely the most useful and unique feature of this Project. If the cache is filled, you can get audio sources for the songs you only have the metadata, and download them. This works for most songs. I'd guess for about 97% (?)
 
 First of you will need a List of song objects `music_kraken.Song`. As [mentioned above](#cache--temporary-database), you could get a list like that from the cache.
 
@@ -252,15 +244,15 @@ First the metadata has to be downloaded. The best api to do so is undeniably [Mu
 
 ![Musicbrainz Data Scheme](https://wiki.musicbrainz.org/-/images/9/9e/pymb3-model-core.png)
 
-To fetch from [Musicbrainz][mb] we first have to know what to fetch. A good start is to get an input querry, which can be just put into the MB-Api. It then returns a list of possible artists, releases and recordings.
+To fetch from [Musicbrainz][mb] we first have to know what to fetch. A good start is to get an input query, which can be just put into the MB-Api. It then returns a list of possible artists, releases and recordings.
 
 If the following chosen element is an artist, its discography + a couple tracks are printed, if a release is chosen, the artists + tracklist + release is outputted, If a track is chosen its artists and releases are shown.
 
-Up to now it doesn't if the discography or tracklist is chosen.
+For now, it doesn't if the discography or tracklist is chosen.
 
 ### Metadata to fetch
 
-I orient on which metadata to download on the keys in `mutagen.EasyID3` . Following I fetch and thus tag the MP3 with:
+I orient on which metadata to download on the keys in `mutagen.EasyID3`. The following I fetch and tag the MP3 with:
 - title
 - artist
 - albumartist
@@ -291,7 +283,7 @@ Now that the metadata is downloaded and cached, download sources need to be soun
 
 ### Musify
 
-The quickest source to get download links from is to my knowledge [musify](https://musify.club/). Its a russian music downloading page, where many many songs are available to stream and to download. Due to me not wanting to stress the server to much, I abuse a handy feature nearly every page where you can search suff has. The autocomplete api for the search input. Those always are quite limited in the number of results it returns, but it is optimized to be quick. Thus with the http header `Connection` set to `keep-alive` the bottleneck defently is not at the speed of those requests.
+The quickest source to get download links from is to my knowledge [musify](https://musify.club/). It's a Russian music downloading page, where many many songs are available to stream and to download. Due to me not wanting to stress the server to much, I abuse a handy feature nearly every page where you can search suff has. The autocomplete api for the search input. Those always are quite limited in the number of results it returns, but it is optimized to be quick. Thus with the http header `Connection` set to `keep-alive` the bottleneck definitely is not at the speed of those requests.
 
 For musify the endpoint is following: [https://musify.club/search/suggestions?term={title}](https://musify.club/search/suggestions?term=LornaShore) If the http headers are set correctly, then searching for example for "Lorna Shore" yields following result:
 
