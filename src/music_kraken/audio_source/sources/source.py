@@ -16,7 +16,7 @@ calling of the functions do search for a song and to download it.
 class AudioSource:
     @classmethod
     def fetch_source(cls, row: dict):
-        logger.info(f"try getting source {row['title']} from {cls.__name__}")
+        logger.info(f"try getting source {row.title} from {cls.__name__}")
 
     @classmethod
     def fetch_audio(cls, song: song_objects.Song, src: song_objects.Source):

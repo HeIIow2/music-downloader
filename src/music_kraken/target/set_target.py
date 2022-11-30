@@ -22,22 +22,22 @@ class UrlPath:
 
         self.genre = genre
 
-        for row in temp_database.get_tracks_without_filepath():
-            # print(row)
-            file, path = self.get_path_from_row(row)
+        for song in temp_database.get_tracks_without_filepath():
+            # print(song)
+            file, path = self.get_path_from_song(song)
             logger.info(f"setting target to {file}")
-            temp_database.set_filepath(row['id'], file, path, genre)
+            temp_database.set_filepath(song.id, file, path, genre)
 
-    def get_path_from_row(self, row):
+    def get_path_from_song(self, song):
         """
         genre/artist/song.mp3
 
-        :param row:
+        :param song:
         :return: path:
         """
-        return os.path.join(self.get_genre(), self.get_artist(row), self.get_album(row),
-                            f"{self.get_song(row)}.mp3"), os.path.join(self.get_genre(), self.get_artist(row),
-                                                                       self.get_album(row))
+        return os.path.join(self.get_genre(), self.get_artist(song), self.get_album(song),
+                            f"{self.get_song(song)}.mp3"), os.path.join(self.get_genre(), self.get_artist(song),
+                                                                       self.get_album(song))
 
     @staticmethod
     def escape_part(part: str):
@@ -46,15 +46,15 @@ class UrlPath:
     def get_genre(self):
         return self.escape_part(self.genre)
 
-    def get_album(self, row):
-        return self.escape_part(row['album'])
+    def get_album(self, song):
+        return self.escape_part(song.release)
 
-    def get_artist(self, row):
-        artists = [artist['name'] for artist in row['artists']]
+    def get_artist(self, song):
+        artists = song.get_artist_names()
         return self.escape_part(artists[0])
 
-    def get_song(self, row):
-        return self.escape_part(row['title'])
+    def get_song(self, song):
+        return self.escape_part(song.title)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import requests
 from pkg_resources import resource_string
 
 from . import song
+from .get_song import get_song_from_response
 from ..utils.shared import (
     DATABASE_LOGGER
 )
@@ -194,7 +195,7 @@ GROUP BY track.id;
 
     def get_custom_track(self, custom_where: list) -> List[song.Song]:
         query = Database.get_custom_track_query(custom_where=custom_where)
-        return [song.Song(json.loads(i[0])) for i in self.cursor.execute(query)]
+        return [get_song_from_response(json.loads(i[0])) for i in self.cursor.execute(query)]
 
     def get_track_metadata(self, musicbrainz_releasetrackid: str):
         # this would be vulnerable if musicbrainz_releasetrackid would be user input
