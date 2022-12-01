@@ -13,7 +13,7 @@ from .song import (
 
 def get_song_from_response(response: dict) -> Song:
     # artists
-    artists = [Artist(id_=a['id'], name=a['name']) for a in response['artists']]
+    artists = [Artist(id_=a['id'], mb_id=a['id'], name=a['name']) for a in response['artists']]
 
     # metadata
     metadata = Metadata()
@@ -26,12 +26,10 @@ def get_song_from_response(response: dict) -> Song:
     for src in response['source']:
         if src['src'] is None:
             continue
-        sources.append(Source(src))
+        sources.append(Source(src=src['src'], url=src['url']))
 
     # target
-    target = Target()
-    target.set_file(response['file'])
-    target.set_path(response['path'])
+    target = Target(file=response['file'], path=response['path'])
 
     # Lyrics
     lyrics_container = LyricsContainer()

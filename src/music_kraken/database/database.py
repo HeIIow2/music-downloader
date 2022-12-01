@@ -7,7 +7,11 @@ from pkg_resources import resource_string
 
 from .song import (
     Song,
-    Lyrics
+    Lyrics,
+    Metadata,
+    Target,
+    Artist,
+    Source
 )
 from .get_song import get_song_from_response
 from ..utils.shared import (
@@ -285,31 +289,40 @@ WHERE '{track_id}' == id;
         self.cursor.execute(query, (file, path, genre))
         self.connection.commit()
 
+    def write_target(self, song_id: str, target: Target):
+        query = f"UPDATE track SET file = ?, path = ? WHERE '{song_id}' == id;"
+        self.cursor.execute(query, (target.file, target.path))
+        self.connection.commit()
+
+    def write_artist(self, artist: Artist, song_id: str = None, release_group_id: str = None):
+        artist_id = artist.id
+
+        query = "INSERT OR REPLACE INTO artist (id, mb_id, name) VALUES (?, ?, ?);"
+        self.cursor.execute(query, (artist_id, artist.mb_id, artist.name))
+        self.connection.commit()
+
+        if song_id is not None:
+            adjacency_query = "INSERT OR REPLACE INTO artist_track (artist_id, track_id) VALUES (?, ?);"
+            self.cursor.execute(adjacency_query, (artist_id, song_id))
+            self.connection.commit()
+
+        if release_group_id is not None:
+            adjacency_query = "INSERT OR REPLACE INTO artist_release_group (artist_id, release_group_id) VALUES (?, ?);"
+            self.cursor.execute(adjacency_query, (artist_id, release_group_id))
+            self.connection.commit()
+
+    def write_many_artists(self, song_id: str, artist_list: List[Artist]):
+        for artist in artist_list:
+            self.write_artist(song_id=song_id, artist=artist)
+
     def write_song(self, song: Song):
-        pass
+        song_id = song.id
+        
+        # write artists
+        self.write_many_artists(song_id=song_id, artist_list=song.artists)
+        # write target
+        self.write_target(song_id=song_id, target=song.target)
 
     def write_many_song(self, songs: List[Song]):
         for song in songs:
             self.write_song(song=song)
-
-
-if __name__ == "__main__":
-    import tempfile
-
-    temp_folder = "music-downloader"
-    temp_dir = os.path.join(tempfile.gettempdir(), temp_folder)
-    if not os.path.exists(temp_dir):
-        os.mkdir(temp_dir)
-
-    temp_dir = get_temp_dir()
-    DATABASE_FILE = "metadata.db"
-    DATABASE_STRUCTURE_FILE = "database_structure.sql"
-    db_path = os.path.join(TEMP_DIR, DATABASE_FILE)
-
-    logging.basicConfig()
-
-    logger = logging.getLogger("database")
-    logger.setLevel(logging.DEBUG)
-
-    database = Database(os.path.join(temp_dir, "metadata.db"), os.path.join(temp_dir, "database_structure.sql"), logger,
-                        reset_anyways=True)

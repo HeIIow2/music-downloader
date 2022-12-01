@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS artist;
 CREATE TABLE artist (
     id TEXT PRIMARY KEY NOT NULL,
+    mb_id TEXT,
     name TEXT
 );
 

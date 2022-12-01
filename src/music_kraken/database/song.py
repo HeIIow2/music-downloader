@@ -26,18 +26,19 @@ class Metadata:
         return self.data[item]
 
 
-class Source:
-    def __init__(self, src_data) -> None:
-        self.src_data = src_data
+class Source(DatabaseObject):
+    def __init__(self, id_: str = None, src: str = None, url: str = None) -> None:
+        super().__init__(id_=id_)
 
-        self.src = self.src_data['src']
-        self.url = self.src_data['url']
+        self.src = src
+        self.url = url
 
 
-class Target:
-    def __init__(self) -> None:
-        self._file = None
-        self._path = None
+class Target(DatabaseObject):
+    def __init__(self, id_:str = None, file: str = None, path: str = None) -> None:
+        super().__init__(id_=id_)
+        self._file = file
+        self._path = path
 
     def set_file(self, _file: str):
         self._file = _file
@@ -74,9 +75,10 @@ class Target:
     exists_on_disc = property(fget=get_exists_on_disc)
 
 
-class Artist:
-    def __init__(self, id_: str = None, name: str = None) -> None:
-        self.id = id_
+class Artist(DatabaseObject):
+    def __init__(self, id_: str = None, mb_id: str = None, name: str = None) -> None:
+        super().__init__(id_=id_)
+        self.mb_id = mb_id
         self.name = name
 
     def __eq__(self, __o: object) -> bool:
@@ -88,8 +90,9 @@ class Artist:
         return self.name
 
 
-class Lyrics:
-    def __init__(self, text: str, language: str) -> None:
+class Lyrics(DatabaseObject):
+    def __init__(self, text: str, language: str, id_: str = None) -> None:
+        super().__init__(id_=id_)
         self.text = text
         self.language = language
 
