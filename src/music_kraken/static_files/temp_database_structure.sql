@@ -81,3 +81,6 @@ CREATE TABLE source (
     certainty INT NOT NULL DEFAULT 0,   -- certainty=0 -> it is definitly a valid source
     valid BOOLEAN NOT NULL DEFAULT 1
 );
+
+DROP TABLE IF EXISTS easy_id3;
+CREATE TABLE easy_id3 ();

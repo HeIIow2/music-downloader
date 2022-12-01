@@ -315,11 +315,20 @@ WHERE '{track_id}' == id;
         for artist in artist_list:
             self.write_artist(song_id=song_id, artist=artist)
 
+    def write_source(self, song_id: str, source: Source):
+        pass
+
+    def write_many_sources(self, song_id: str, source_list: List[Source]):
+        for source in source_list:
+            self.write_source(song_id=song_id, source=source)
+
     def write_song(self, song: Song):
         song_id = song.id
         
         # write artists
         self.write_many_artists(song_id=song_id, artist_list=song.artists)
+        # write sources
+        self.write_many_sources(song_id=song_id, source_list=song.sources)
         # write target
         self.write_target(song_id=song_id, target=song.target)
 
