@@ -1,9 +1,77 @@
 from typing import List
+import uuid
+import os
+from mutagen.easyid3 import EasyID3
 
-from .artist import Artist
-from .metadata import Metadata
-from .source import Source
-from .target import Target
+from ..utils.shared import (
+    MUSIC_DIR,
+    SONG_LOGGER as logger
+)
+from .database_object import DatabaseObject
+
+class Metadata:
+    def __init__(self) -> None:
+        self.data = {}
+
+    def get_all_metadata(self):
+        return list(self.data.items())
+
+    def __setitem__(self, item, value):
+        if item in EasyID3.valid_keys.keys():
+            self.data[item] = value
+
+    def __getitem__(self, item):
+        if item not in self.data:
+            return None
+        return self.data[item]
+
+
+class Source:
+    def __init__(self, src_data) -> None:
+        self.src_data = src_data
+
+        self.src = self.src_data['src']
+        self.url = self.src_data['url']
+
+
+class Target:
+    def __init__(self) -> None:
+        self._file = None
+        self._path = None
+
+    def set_file(self, _file: str):
+        self._file = _file
+
+    def get_file(self) -> str | None:
+        if self._file is None:
+            return None
+        return os.path.join(MUSIC_DIR, self._file)
+
+    def set_path(self, _path: str):
+        self._path = _path
+
+    def get_path(self) -> str | None:
+        if self._path is None:
+            return None
+        return os.path.join(MUSIC_DIR, self._path)
+
+    def get_exists_on_disc(self) -> bool:
+        """
+        returns True when file can be found on disc
+        returns False when file can't be found on disc or no filepath is set
+        """
+        if not self.is_set():
+            return False
+
+        return os.path.exists(self.file)
+    
+    def is_set(self) -> bool:
+        return not (self._file is None or self._path is None)
+
+    file = property(fget=get_file, fset=set_file)
+    path = property(fget=get_path, fset=set_path)
+
+    exists_on_disc = property(fget=get_exists_on_disc)
 
 
 class Artist:
@@ -50,7 +118,7 @@ class LyricsContainer:
     is_empty = property(fget=lambda self: len(self.lyrics_list) <= 0)
 
 
-class Song:
+class Song(DatabaseObject):
     def __init__(
         self, 
         id_: str = None,
@@ -71,8 +139,9 @@ class Song:
         target: Each Song can have exactly one target which can be either full or empty
         lyrics: There can be multiple lyrics. Each Lyrics object can me added to multiple lyrics
         """
+        super().__init__(id_=id_)
         # attributes
-        self.id: str | None = id_
+        # self.id_: str | None = id_
         self.mb_id: str | None = mb_id
         self.title: str | None = title
         self.release: str | None = release

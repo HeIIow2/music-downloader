@@ -27,6 +27,7 @@ logging.basicConfig(
     ]
 )
 
+SONG_LOGGER = logging.getLogger("song-obj")
 SEARCH_LOGGER = logging.getLogger("mb-cli")
 INIT_PATH_LOGGER = logging.getLogger("init_path")
 DATABASE_LOGGER = logging.getLogger("database")

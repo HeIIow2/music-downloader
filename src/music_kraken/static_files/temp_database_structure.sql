@@ -45,6 +45,7 @@ CREATE TABLE track (
     id TEXT PRIMARY KEY NOT NULL,
     downloaded BOOLEAN NOT NULL DEFAULT 0,
     release_id TEXT NOT NULL,
+    mb_id TEXT,
     track TEXT,
     length INT,
     tracknumber TEXT,
@@ -55,6 +56,20 @@ CREATE TABLE track (
     file TEXT,
     url TEXT,
     src TEXT
+);
+
+DROP TABLE IF EXISTS lyrics;
+CREATE TABLE lyrics (
+    track_id TEXT NOT NULL,
+    text TEXT,
+    language TEXT
+);
+
+DROP TABLE IF EXISTS target;
+CREATE TABLE target (
+    track_id TEXT NOT NULL,
+    file TEXT,
+    path TEXT
 );
 
 DROP TABLE IF EXISTS source;

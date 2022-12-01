@@ -3,10 +3,12 @@ import sqlite3
 import os
 import logging
 import json
-import requests
 from pkg_resources import resource_string
 
-from . import song
+from .song import (
+    Song,
+    Lyrics
+)
 from .get_song import get_song_from_response
 from ..utils.shared import (
     DATABASE_LOGGER
@@ -153,7 +155,24 @@ SELECT DISTINCT
                 )
             )
         ),
+        'lyrics', json_group_array(
+            (
+            SELECT DISTINCT json_object(
+                'text', lyrics_table.text
+                'language', lyrics_table.language
+                )
+            )
+        ),
+        'target', json_group_array(
+            (
+            SELECT DISTINCT json_object(
+                'file', target.file
+                'path', target.path
+                )
+            )
+        ),
         'id', track.id,
+        'mb_id', track.mb_id,
         'tracknumber', track.tracknumber,
         'titlesort', track.tracknumber,
         'musicbrainz_releasetrackid', track.id,
@@ -187,13 +206,15 @@ LEFT JOIN release_group     ON release_.id = release_group.id
 LEFT JOIN artist_track      ON track.id = artist_track.track_id
 LEFT JOIN artist            ON artist_track.artist_id = artist.id
 LEFT JOIN source src_table  ON track.id = src_table.track_id
+LEFT JOIN lyrics lyrics_table ON track.id = lyrics_table.track_id
+LEFT JOIN target            ON track.id = target.track_id
 WHERE
     {where_arg}
 GROUP BY track.id;
         """
         return query
 
-    def get_custom_track(self, custom_where: list) -> List[song.Song]:
+    def get_custom_track(self, custom_where: list) -> List[Song]:
         query = Database.get_custom_track_query(custom_where=custom_where)
         return [get_song_from_response(json.loads(i[0])) for i in self.cursor.execute(query)]
 
@@ -205,22 +226,22 @@ GROUP BY track.id;
 
         return resulting_tracks[0]
 
-    def get_tracks_to_download(self) -> List[song.Song]:
+    def get_tracks_to_download(self) -> List[Song]:
         return self.get_custom_track(['track.downloaded == 0'])
 
-    def get_tracks_without_src(self) -> List[song.Song]:
+    def get_tracks_without_src(self) -> List[Song]:
         return self.get_custom_track(["(track.url IS NULL OR track.src IS NULL)"])
 
-    def get_tracks_without_isrc(self) -> List[song.Song]:
+    def get_tracks_without_isrc(self) -> List[Song]:
         return self.get_custom_track(["track.isrc IS NULL"])
 
-    def get_tracks_without_filepath(self) -> List[song.Song]:
+    def get_tracks_without_filepath(self) -> List[Song]:
         return self.get_custom_track(["(track.file IS NULL OR track.path IS NULL OR track.genre IS NULL)"])
 
-    def get_tracks_for_lyrics(self) -> List[song.Song]:
+    def get_tracks_for_lyrics(self) -> List[Song]:
         return self.get_custom_track(["track.lyrics IS NULL"])
 
-    def add_lyrics(self, song: song.Song, lyrics: song.Lyrics):
+    def add_lyrics(self, song: Song, lyrics: Lyrics):
         query = f"""
 UPDATE track
 SET lyrics = ?
@@ -263,6 +284,13 @@ WHERE '{track_id}' == id;
         """
         self.cursor.execute(query, (file, path, genre))
         self.connection.commit()
+
+    def write_song(self, song: Song):
+        pass
+
+    def write_many_song(self, songs: List[Song]):
+        for song in songs:
+            self.write_song(song=song)
 
 
 if __name__ == "__main__":

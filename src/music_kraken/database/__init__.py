@@ -1,17 +1,13 @@
 from . import (
     temp_database,
-    song,
-    artist,
-    metadata,
-    source,
-    target,
+    song
 )
 
 Song = song.Song
 Artist = song.Artist
-Source = source.Source
-Target = target.Target
-Metadata = metadata.Metadata
+Source = song.Source
+Target = song.Target
+Metadata = song.Metadata
 Lyrics = song.Lyrics
 
 cache = temp_database.TempDatabase()
