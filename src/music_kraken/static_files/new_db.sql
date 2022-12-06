@@ -40,10 +40,6 @@ CREATE TABLE Lyrics
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
-CREATE TABLE EasyId3
-(
-);
-
 CREATE TABLE SongArtist
 (
       song_id   BIGINT,
