@@ -12,7 +12,7 @@ import music_kraken.database.new_database as db
 cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
 
-song = Song(
+song_input = Song(
     title="Vein Deep in the Solution",
     release_name="One Final Action",
     length=666,
@@ -37,4 +37,5 @@ lyrics = Lyrics(text="these are some Lyrics that don't belong to any Song", lang
 
 cache.push([song, lyrics])
 
-cache.pull_single_song(song_ref=song_ref)
+song_output = cache.pull_single_song(song_ref=song_ref)
+print(song_output)

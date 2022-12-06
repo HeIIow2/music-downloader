@@ -186,7 +186,30 @@ class Database:
         pass
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
-        pass
+        """
+        Gets a list of sources. if lyrics_ref is passed in the List will most likely only
+        contain one Element if everything goes accordingly.
+        **If neither song_ref nor lyrics_ref are passed in it will return ALL lyrics**
+        :param song_ref:
+        :param lyrics_ref:
+        :return:
+        """
+
+        where = "1=1"
+        if song_ref is not None:
+            where = f"song_id=\"{song_ref.id}\""
+        elif lyrics_ref is not None:
+            where = f"id=\"{lyrics_ref.id}\""
+
+        query = LYRICS_QUERY.format(where=where)
+        self.cursor.execute(query)
+
+        lyrics_rows = self.cursor.fetchall()
+        return [Lyrics(
+            id_=lyrics_row['id'],
+            text=lyrics_row['text'],
+            language=lyrics_row['language']
+        ) for lyrics_row in lyrics_rows]
 
     def pull_sources(self, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
         """
@@ -234,7 +257,7 @@ class Database:
             logger.warning(f"Multiple Songs found for the id {song_ref.id}. Defaulting to the first one.")
         song_result = song_rows[0]
 
-        song = Song(
+        return Song(
             id_=song_result['song_id'],
             title=song_result['title'],
             isrc=song_result['isrc'],
@@ -244,10 +267,9 @@ class Database:
                 file=song_result['file'],
                 path=song_result['path']
             ),
-            sources=self.pull_sources(song_ref=song_ref)
+            sources=self.pull_sources(song_ref=song_ref),
+            lyrics=self.pull_lyrics(song_ref=song_ref)
         )
-
-        return song
 
 
 if __name__ == "__main__":
