@@ -1,16 +1,23 @@
-from typing import List
-import uuid
 import os
+from typing import List
 from mutagen.easyid3 import EasyID3
 
-from ..utils.shared import (
+from ...utils.shared import (
     MUSIC_DIR,
-    SONG_LOGGER as logger
+    DATABASE_LOGGER as logger
 )
-from .objects.database_object import DatabaseObject
+from .database_object import (
+    DatabaseObject,
+    Reference
+)
+
 
 class Metadata:
-    def __init__(self) -> None:
+    """
+    Shall only be read or edited via the Song object.
+    For this reason there is no reference to the song needed.
+    """
+    def __init__(self, data: dict = {}) -> None:
         self.data = {}
 
     def get_all_metadata(self):
@@ -27,6 +34,13 @@ class Metadata:
 
 
 class Source(DatabaseObject):
+    """
+    create somehow like that
+    ```python
+    # url won't be a valid one due to it being just an example
+    Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
+    ```
+    """
     def __init__(self, id_: str = None, src: str = None, url: str = None) -> None:
         super().__init__(id_=id_)
 
@@ -35,6 +49,13 @@ class Source(DatabaseObject):
 
 
 class Target(DatabaseObject):
+    """
+    create somehow like that
+    ```python
+    # I know path is pointles, and I will change that (don't worry about backwards compatibility there)
+    Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album")
+    ```
+    """
     def __init__(self, id_:str = None, file: str = None, path: str = None) -> None:
         super().__init__(id_=id_)
         self._file = file
@@ -75,50 +96,11 @@ class Target(DatabaseObject):
     exists_on_disc = property(fget=get_exists_on_disc)
 
 
-class Artist(DatabaseObject):
-    def __init__(self, id_: str = None, mb_id: str = None, name: str = None) -> None:
-        super().__init__(id_=id_)
-        self.mb_id = mb_id
-        self.name = name
-
-    def __eq__(self, __o: object) -> bool:
-        if type(__o) != type(self):
-            return False
-        return self.id == __o.id
-
-    def __str__(self) -> str:
-        return self.name
-
-
 class Lyrics(DatabaseObject):
     def __init__(self, text: str, language: str, id_: str = None) -> None:
         super().__init__(id_=id_)
         self.text = text
         self.language = language
-
-
-class LyricsContainer:
-    def __init__(self):
-        self.lyrics_list: List[Lyrics] = []
-
-    def append(self, lyrics: Lyrics):
-        # due to my db not supporting multiple Lyrics yet, I just use for doing stuff with the lyrics
-        # the first element. I know this implementation is junk, but take it or leave it, it is going
-        # soon anyway
-        if len(self.lyrics_list) >= 1:
-            return
-
-        self.lyrics_list.append(lyrics)
-        # unfortunately can't do this here directly, because of circular imports. If anyone
-        # took the time to get familiar with this codebase... thank you, and if you have any
-        # suggestion of resolving this, please open an issue.
-        # cache.add_lyrics(track_id=self.parent.id, lyrics=lyrics.text)
-
-    def extend(self, lyrics_list: List[Lyrics]):
-        for lyrics in lyrics_list:
-            self.append(lyrics)
-
-    is_empty = property(fget=lambda self: len(self.lyrics_list) <= 0)
 
 
 class Song(DatabaseObject):
@@ -127,14 +109,16 @@ class Song(DatabaseObject):
         id_: str = None,
         mb_id: str = None,
         title: str = None,
-        release: str = None,
+        release_name: str = None,
+        artist_names: List[str] = [],
         isrc: str = None,
         length: int = None,
-        artists: List[Artist] = None,
-        metadata: Metadata = None,
         sources: List[Source] = None,
         target: Target = None,
-        lyrics: LyricsContainer = None
+        lyrics: List[Lyrics] = None,
+        metadata: dict = {},
+        release_ref: str = None,
+        artist_refs: List[Reference] = None
         ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
@@ -147,18 +131,13 @@ class Song(DatabaseObject):
         # self.id_: str | None = id_
         self.mb_id: str | None = mb_id
         self.title: str | None = title
-        self.release: str | None = release
+        self.release_name: str | None = release_name
         self.isrc: str | None = isrc
         self.length: int | None = length
+        self.artist_names = artist_names
 
-        if metadata is None:
-            metadata = Metadata()
-        self.metadata: Metadata = metadata
+        self.metadata = Metadata(data=metadata)
         
-        # joins
-        if artists is None:
-            artists = []
-        self.artists: List[Artist] = artists
 
         if sources is None:
             sources = []
@@ -169,9 +148,11 @@ class Song(DatabaseObject):
         self.target: Target = target
 
         if lyrics is None:
-            lyrics = LyricsContainer()
-        self.lyrics: LyricsContainer = lyrics
+            lyrics = []
+        self.lyrics: List[Lyrics] = lyrics
 
+        self.release_ref = release_ref
+        self.artist_refs = artist_refs
 
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
@@ -187,3 +168,23 @@ class Song(DatabaseObject):
 
     def get_artist_names(self) -> List[str]:
         return [a.name for a in self.artists]
+
+if __name__ == "__main__":
+    """
+    Example for creating a Song object
+    """
+
+    song = Song(
+        title="Vein Deep in the Solution",
+        release_name="One Final Action",
+        target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
+        metadata={
+            "album": "One Final Action"
+        },
+        lyrics=[
+            Lyrics(text="these are some depressive lyrics", language="en")
+        ],
+        sources=[
+            Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
+        ]
+    )

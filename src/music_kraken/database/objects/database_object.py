@@ -1,14 +1,19 @@
 import uuid
 
-from ..utils.shared import (
+from ...utils.shared import (
     SONG_LOGGER as logger
 )
+
+class Reference:
+    def __init__(self, id_: str) -> None:
+        self.id = id_
+
 
 class DatabaseObject:
     def __init__(self, id_: str = None) -> None:
         self.id_: str | None = id_
         
-    def get_id(self):
+    def get_id(self) -> str:
         """
         returns the id if it is set, else
         it returns a randomly generated UUID
@@ -20,4 +25,8 @@ class DatabaseObject:
 
         return self.id_
 
+    def get_reference(self) -> Reference:
+        return Reference(self.id)
+
     id = property(fget=get_id)
+    reference = property(fget=get_reference)
