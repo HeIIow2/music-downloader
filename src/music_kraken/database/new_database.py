@@ -4,7 +4,7 @@ import logging
 from typing import List
 from pkg_resources import resource_string
 
-from .song import (
+from .objects import (
     Song,
     Lyrics,
     Metadata,
@@ -74,7 +74,22 @@ class Database:
             self.push_one(db_object)
 
     def push_song(self, song: Song):
-        pass
+        # ADDING THE DATA FOR THE SONG OBJECT
+        """
+        db_field    - object attribute
+        -------------------------------
+        id          - id
+        name        - title
+        """
+        table = "Song"
+        query = f"INSERT OR REPLACE INTO {table} (id, name) VALUES (?, ?);"
+        values = (
+            song.id,
+            song.title
+        )
+
+        self.cursor.execute(query, values)
+        self.connection.commit()
 
     def push_lyrics(self, lyrics: Lyrics):
         pass

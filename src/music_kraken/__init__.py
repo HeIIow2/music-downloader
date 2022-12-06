@@ -17,7 +17,7 @@ from .utils.shared import (
     NOT_A_GENRE
 )
 
-from .lyrics import lyrics
+# from .lyrics import lyrics
 
 
 """
@@ -40,10 +40,13 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 # define the most important values and function for import in the __init__ file
 Song = database.Song
 Artist = database.Artist
+Source = database.Source
+Target = database.Target
+Lyrics = database.Lyrics
 MetadataSearch = metadata.MetadataSearch
 MetadataDownload = metadata.MetadataDownload
 
-cache = database.cache
+# cache = database.cache
 
 
 def fetch_metadata(type_: str, id_: str):
