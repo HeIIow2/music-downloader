@@ -43,8 +43,8 @@ with open('version', 'r') as version_file:
 setup(
     name='music-kraken',
     version=version,
-    description='An extensive music downloader crawling the internet. It gets its metadata from a couple metadata '
-                'provider, and it scrapes the audiofiles.',
+    description='An extensive music downloader crawling the internet. It gets its metadata from a couple of metadata '
+                'providers, and it scrapes the audiofiles.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Hellow2',

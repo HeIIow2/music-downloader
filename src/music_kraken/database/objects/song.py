@@ -12,13 +12,33 @@ from .database_object import (
 )
 
 
+class SongAttribute:
+    def __init__(self, song_ref: Reference = None):
+        # the reference to the song the lyrics belong to
+        self.song_ref = song_ref
+
+    def add_song(self, song_ref: Reference):
+        self.song_ref = song_ref
+
+    def get_ref_song_id(self):
+        if self.song_ref is None:
+            return None
+        return self.song_ref.id
+
+    def set_ref_song_id(self, song_id):
+        self.song_ref = Reference(song_id)
+
+    song_ref_id = property(fget=get_ref_song_id, fset=set_ref_song_id)
+
+
 class Metadata:
     """
     Shall only be read or edited via the Song object.
     For this reason there is no reference to the song needed.
     """
+
     def __init__(self, data: dict = {}) -> None:
-        self.data = {}
+        self.data = data
 
     def get_all_metadata(self):
         return list(self.data.items())
@@ -33,7 +53,7 @@ class Metadata:
         return self.data[item]
 
 
-class Source(DatabaseObject):
+class Source(DatabaseObject, SongAttribute):
     """
     create somehow like that
     ```python
@@ -41,23 +61,30 @@ class Source(DatabaseObject):
     Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
     ```
     """
+
     def __init__(self, id_: str = None, src: str = None, url: str = None) -> None:
-        super().__init__(id_=id_)
+        DatabaseObject.__init__(self, id_=id_)
+        SongAttribute.__init__(self)
 
         self.src = src
         self.url = url
 
+    def __str__(self):
+        return f"{self.src}: {self.url}"
 
-class Target(DatabaseObject):
+
+class Target(DatabaseObject, SongAttribute):
     """
     create somehow like that
     ```python
-    # I know path is pointles, and I will change that (don't worry about backwards compatibility there)
+    # I know path is pointless, and I will change that (don't worry about backwards compatibility there)
     Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album")
     ```
     """
-    def __init__(self, id_:str = None, file: str = None, path: str = None) -> None:
-        super().__init__(id_=id_)
+
+    def __init__(self, id_: str = None, file: str = None, path: str = None) -> None:
+        DatabaseObject.__init__(self, id_=id_)
+        SongAttribute.__init__(self)
         self._file = file
         self._path = path
 
@@ -86,7 +113,7 @@ class Target(DatabaseObject):
             return False
 
         return os.path.exists(self.file)
-    
+
     def is_set(self) -> bool:
         return not (self._file is None or self._path is None)
 
@@ -96,30 +123,31 @@ class Target(DatabaseObject):
     exists_on_disc = property(fget=get_exists_on_disc)
 
 
-class Lyrics(DatabaseObject):
+class Lyrics(DatabaseObject, SongAttribute):
     def __init__(self, text: str, language: str, id_: str = None) -> None:
-        super().__init__(id_=id_)
+        DatabaseObject.__init__(self, id_=id_)
+        SongAttribute.__init__(self)
         self.text = text
         self.language = language
 
 
 class Song(DatabaseObject):
     def __init__(
-        self, 
-        id_: str = None,
-        mb_id: str = None,
-        title: str = None,
-        release_name: str = None,
-        artist_names: List[str] = [],
-        isrc: str = None,
-        length: int = None,
-        sources: List[Source] = None,
-        target: Target = None,
-        lyrics: List[Lyrics] = None,
-        metadata: dict = {},
-        release_ref: str = None,
-        artist_refs: List[Reference] = None
-        ) -> None:
+            self,
+            id_: str = None,
+            mb_id: str = None,
+            title: str = None,
+            release_name: str = None,
+            artist_names: List[str] = [],
+            isrc: str = None,
+            length: int = None,
+            sources: List[Source] = None,
+            target: Target = None,
+            lyrics: List[Lyrics] = None,
+            metadata: dict = {},
+            release_ref: str = None,
+            artist_refs: List[Reference] = None
+    ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
         mb_id: is the musicbrainz_id
@@ -133,29 +161,33 @@ class Song(DatabaseObject):
         self.title: str | None = title
         self.release_name: str | None = release_name
         self.isrc: str | None = isrc
-        self.length: int | None = length
+        self.length_: int | None = length
         self.artist_names = artist_names
 
         self.metadata = Metadata(data=metadata)
-        
 
         if sources is None:
             sources = []
         self.sources: List[Source] = sources
-        
+        for source in self.sources:
+            source.add_song(self.reference)
+
         if target is None:
             target = Target()
         self.target: Target = target
+        self.target.add_song(self.reference)
 
         if lyrics is None:
             lyrics = []
         self.lyrics: List[Lyrics] = lyrics
+        for lyrics_ in self.lyrics:
+            lyrics_.add_song(self.reference)
 
         self.release_ref = release_ref
         self.artist_refs = artist_refs
 
     def __str__(self) -> str:
-        return f"\"{self.title}\" by {', '.join([str(a) for a in self.artists])}"
+        return f"\"{self.title}\" by {', '.join(self.artist_names)}"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -167,7 +199,20 @@ class Song(DatabaseObject):
         return self.isrc is not None
 
     def get_artist_names(self) -> List[str]:
-        return [a.name for a in self.artists]
+        return self.artist_names
+
+    def get_length(self):
+        if self.length_ is None:
+            return None
+        return int(self.length_)
+
+    def set_length(self, length: int):
+        if type(length) != int:
+            raise TypeError(f"length of a song must be of the type int not {type(length)}")
+        self.length_ = length
+
+    length = property(fget=get_length, fset=set_length)
+
 
 if __name__ == "__main__":
     """

@@ -1,14 +1,20 @@
 CREATE TABLE Song
 (
-    id      BIGINT AUTO_INCREMENT PRIMARY KEY, 
-    name    TEXT
+    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name    TEXT,
+    isrc    TEXT,
+    length  INT     -- length is in milliseconds (could be wrong)
 );
 
 
 CREATE TABLE Source
 (
-    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    song_id BIGINT,
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    src         TEXT NOT NULL,
+    url         TEXT NOT NULL,
+    certainty   INT NOT NULL DEFAULT 0,   -- certainty=0 -> it is definitely a valid source
+    valid       BOOLEAN NOT NULL DEFAULT 1,
+    song_id     BIGINT,
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
@@ -29,14 +35,18 @@ CREATE TABLE Album
 CREATE TABLE Target
 (
     id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    song_id BIGINT,
+    file    TEXT NOT NULL,
+    path    TEXT,
+    song_id BIGINT UNIQUE,
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
 CREATE TABLE Lyrics
 (
-    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    song_id BIGINT,
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    text        TEXT,
+    language    TEXT,
+    song_id     BIGINT,
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
@@ -55,9 +65,3 @@ CREATE TABLE AlbumArtist
       FOREIGN KEY(album_id) REFERENCES Album(id),
       FOREIGN KEY(artist_id) REFERENCES Artist(id)
 );
-
-
-SELECT 
-    Song.id,
-    Song.name
-FROM Song

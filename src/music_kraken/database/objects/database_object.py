@@ -4,15 +4,19 @@ from ...utils.shared import (
     SONG_LOGGER as logger
 )
 
+
 class Reference:
     def __init__(self, id_: str) -> None:
         self.id = id_
+
+    def __str__(self):
+        return f"references to an object with the id: {self.id}"
 
 
 class DatabaseObject:
     def __init__(self, id_: str = None) -> None:
         self.id_: str | None = id_
-        
+
     def get_id(self) -> str:
         """
         returns the id if it is set, else
