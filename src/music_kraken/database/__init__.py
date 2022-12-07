@@ -10,4 +10,6 @@ Target = objects.Target
 Metadata = objects.Metadata
 Lyrics = objects.Lyrics
 
+Album = objects.Album
+
 # cache = temp_database.TempDatabase()

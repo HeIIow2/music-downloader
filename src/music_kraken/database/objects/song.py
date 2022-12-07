@@ -12,6 +12,10 @@ from .database_object import (
 )
 
 
+"""
+All Objects dependent 
+"""
+
 class SongAttribute:
     def __init__(self, song_ref: Reference = None):
         # the reference to the song the lyrics belong to
@@ -137,7 +141,7 @@ class Song(DatabaseObject):
             id_: str = None,
             mb_id: str = None,
             title: str = None,
-            release_name: str = None,
+            album_name: str = None,
             artist_names: List[str] = [],
             isrc: str = None,
             length: int = None,
@@ -145,7 +149,7 @@ class Song(DatabaseObject):
             target: Target = None,
             lyrics: List[Lyrics] = None,
             metadata: dict = {},
-            release_ref: str = None,
+            album_ref: Reference = None,
             artist_refs: List[Reference] = None
     ) -> None:
         """
@@ -159,7 +163,7 @@ class Song(DatabaseObject):
         # self.id_: str | None = id_
         self.mb_id: str | None = mb_id
         self.title: str | None = title
-        self.release_name: str | None = release_name
+        self.album_name: str | None = album_name
         self.isrc: str | None = isrc
         self.length_: int | None = length
         self.artist_names = artist_names
@@ -183,7 +187,7 @@ class Song(DatabaseObject):
         for lyrics_ in self.lyrics:
             lyrics_.add_song(self.reference)
 
-        self.release_ref = release_ref
+        self.album_ref = album_ref
         self.artist_refs = artist_refs
 
     def __str__(self) -> str:
@@ -211,7 +215,64 @@ class Song(DatabaseObject):
             raise TypeError(f"length of a song must be of the type int not {type(length)}")
         self.length_ = length
 
+    def get_album_id(self) -> str | None:
+        if self.album_ref is None:
+            return None
+        return self.album_ref.id
+
     length = property(fget=get_length, fset=set_length)
+
+
+"""
+All objects dependend on Album
+"""
+
+class Album(DatabaseObject):
+    """
+    -------DB-FIELDS-------
+    title           TEXT, 
+    copyright       TEXT,
+    album_status    TEXT,
+    language        TEXT,
+    year            TEXT,
+    date            TEXT,
+    country         TEXT,
+    barcode         TEXT,
+    song_id         BIGINT,
+    """
+    def __init__(
+        self,
+        id_: str = None,
+        title: str = None,
+        copyright_: str = None,
+        album_status: str = None,
+        language: str = None,
+        year: str = None,
+        date: str = None,
+        country: str = None,
+        barcode: str = None,
+        song_ref_list: List[Reference] = []
+    ) -> None:
+        DatabaseObject.__init__(self, id_=id_)
+        self.title: str = title
+        self.copyright: str = copyright_
+        self.album_status: str = album_status
+        self.language: str = language
+        self.year: str = year
+        self.date: str = date
+        self.country: str = country
+        self.barcode: str = barcode
+
+        self.song_ref_list: List[Reference] = song_ref_list
+
+    def add_song(self, song_ref: Reference):
+        for existing_song_ref in self.song_ref_list:
+            if song_ref == existing_song_ref:
+                return
+        self.song_ref_list.append(song_ref)
+
+
+
 
 
 if __name__ == "__main__":

@@ -43,6 +43,7 @@ Artist = database.Artist
 Source = database.Source
 Target = database.Target
 Lyrics = database.Lyrics
+Album = database.Album
 MetadataSearch = metadata.MetadataSearch
 MetadataDownload = metadata.MetadataDownload
 

@@ -12,6 +12,11 @@ class Reference:
     def __str__(self):
         return f"references to an object with the id: {self.id}"
 
+    def __eq__(self, __o: object) -> bool:
+        if type(__o) != type(self):
+            return False
+        return self.id == __o.id
+
 
 class DatabaseObject:
     def __init__(self, id_: str = None) -> None:

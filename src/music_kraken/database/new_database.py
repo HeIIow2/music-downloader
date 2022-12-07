@@ -11,7 +11,8 @@ from .objects import (
     Metadata,
     Target,
     Artist,
-    Source
+    Source,
+    Album
 )
 
 logger = logging.getLogger("database")
@@ -21,11 +22,11 @@ logger = logging.getLogger("database")
 # use complicated query builder
 SONG_QUERY = """
 SELECT 
-Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length,
+Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id,
 Target.id AS target_id, Target.file AS file, Target.path AS path
 FROM Song
 LEFT JOIN Target ON Song.id=Target.song_id 
-WHERE Song.id="{song_id}";
+WHERE {where};
 """
 SOURCE_QUERY = """
 SELECT id, src, url, song_id 
@@ -74,7 +75,7 @@ class Database:
         self.cursor = self.connection.cursor()
         return self.connection, self.cursor
 
-    def push_one(self, db_object: Song | Lyrics | Target | Artist | Source):
+    def push_one(self, db_object: Song | Lyrics | Target | Artist | Source | Album):
         if type(db_object) == Song:
             return self.push_song(song=db_object)
 
@@ -90,7 +91,12 @@ class Database:
         if type(db_object) == Source:
             return self.push_source(source=db_object)
 
-    def push(self, db_object_list: List[Song | Lyrics | Target | Artist | Source]):
+        if type(db_object) == Album:
+            return self.push_album(album=db_object)
+
+        logger.warning(f"type {type(db_object)} isn't yet supported by the db")
+
+    def push(self, db_object_list: List[Song | Lyrics | Target | Artist | Source | Album]):
         """
         This function is used to Write the data of any db_object to the database
 
@@ -103,6 +109,24 @@ class Database:
         for db_object in db_object_list:
             self.push_one(db_object)
 
+    def push_album(self, album: Album):
+        table = "Album"
+        query = f"INSERT OR REPLACE INTO {table} (id, title, copyright, album_status, language, year, date, country, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
+
+        values = (
+            album.id,
+            album.title,
+            album.copyright,
+            album.album_status,
+            album.language,
+            album.year,
+            album.date,
+            album.country,
+            album.barcode
+        )
+        self.cursor.execute(query, values)
+        self.connection.commit()
+
     def push_song(self, song: Song):
         # ADDING THE DATA FOR THE SONG OBJECT
         """
@@ -112,13 +136,15 @@ class Database:
         name        - title
         """
         table = "Song"
-        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length) VALUES (?, ?, ?, ?);"
+
         values = (
             song.id,
             song.title,
             song.isrc,
-            song.length
+            song.length,
+            song.get_album_id()
         )
+        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length, album_id) VALUES (?, ?, ?, ?, ?);"
 
         self.cursor.execute(query, values)
         self.connection.commit()
@@ -237,28 +263,11 @@ class Database:
             url=source_row['url']
         ) for source_row in source_rows]
 
-    def pull_single_song(self, song_ref: Reference = None) -> Song:
-        """
-        This function is used to get one song (including its children like Sources etc)
-        from one song id (a reference object)
-        :param song_ref:
-        :return requested_song:
-        """
-        if song_ref.id is None:
-            raise ValueError("The Song ref doesn't point anywhere. Remember to use the debugger.")
-        query = SONG_QUERY.format(song_id=song_ref.id)
-        self.cursor.execute(query)
-
-        song_rows = self.cursor.fetchall()
-        if len(song_rows) == 0:
-            logger.warning(f"No song found for the id {song_ref.id}")
-            return Song()
-        if len(song_rows) > 1:
-            logger.warning(f"Multiple Songs found for the id {song_ref.id}. Defaulting to the first one.")
-        song_result = song_rows[0]
-
+    def get_song_from_row(self, song_result) -> Song:
+        song_id = song_result['song_id']
+        
         return Song(
-            id_=song_result['song_id'],
+            id_=song_id,
             title=song_result['title'],
             isrc=song_result['isrc'],
             length=song_result['length'],
@@ -267,10 +276,44 @@ class Database:
                 file=song_result['file'],
                 path=song_result['path']
             ),
-            sources=self.pull_sources(song_ref=song_ref),
-            lyrics=self.pull_lyrics(song_ref=song_ref)
+            sources=self.pull_sources(song_ref=Reference(id_=song_id)),
+            lyrics=self.pull_lyrics(song_ref=Reference(id_=song_id)),
+            album_ref=Reference(song_result['album_id'])
         )
 
+    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None) -> List[Song]:
+        """
+        This function is used to get one song (including its children like Sources etc)
+        from one song id (a reference object)
+        :param song_ref:
+        :return requested_song:
+        """
+        """
+        if song_ref is None:
+            raise ValueError("The Song ref doesn't point anywhere. Remember to use the debugger.")
+        """
+        where = "1=1"
+        if song_ref is not None:
+            where = f"Song.id=\"{song_ref.id}\""
+        elif album_ref is not None:
+            where = f"Song.album_id=\"{album_ref.id}\""
+        
+        query = SONG_QUERY.format(where=where)
+        self.cursor.execute(query)
+
+        song_rows = self.cursor.fetchall()
+        """
+        if len(song_rows) == 0:
+            logger.warning(f"No song found for the id {song_ref.id}")
+            return Song()
+        if len(song_rows) > 1:
+            logger.warning(f"Multiple Songs found for the id {song_ref.id}. Defaulting to the first one.")
+        """
+
+        return [self.get_song_from_row(song_result=song_result) for song_result in song_rows]       
+
+    def pull_albums(self, album_ref: Reference = None) -> List[Album]:
+        pass
 
 if __name__ == "__main__":
     cache = Database("")

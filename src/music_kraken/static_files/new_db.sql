@@ -1,9 +1,11 @@
 CREATE TABLE Song
 (
-    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name    TEXT,
-    isrc    TEXT,
-    length  INT     -- length is in milliseconds (could be wrong)
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name        TEXT,
+    isrc        TEXT,
+    length      INT,    -- length is in milliseconds (could be wrong)
+    album_id    BIGINT,
+    FOREIGN KEY(album_id) REFERENCES Album(id)
 );
 
 
@@ -27,15 +29,21 @@ CREATE TABLE Artist
 
 CREATE TABLE Album
 (
-    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    song_id BIGINT,
-    FOREIGN KEY(song_id) REFERENCES Song(id)
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title           TEXT, 
+    copyright       TEXT,
+    album_status    TEXT,
+    language        TEXT,
+    year            TEXT,
+    date            TEXT,
+    country         TEXT,
+    barcode         TEXT
 );
 
 CREATE TABLE Target
 (
     id      BIGINT AUTO_INCREMENT PRIMARY KEY,
-    file    TEXT NOT NULL,
+    file    TEXT,
     path    TEXT,
     song_id BIGINT UNIQUE,
     FOREIGN KEY(song_id) REFERENCES Song(id)
