@@ -264,12 +264,19 @@ class Album(DatabaseObject):
         self.barcode: str = barcode
 
         self.song_ref_list: List[Reference] = song_ref_list
+        self.track_names = {}
 
-    def add_song(self, song_ref: Reference):
+    def add_song(self, song_ref: Reference, name: str = None):
+        if name is not None:
+            self.track_names[song_ref.id] = name
+        
         for existing_song_ref in self.song_ref_list:
             if song_ref == existing_song_ref:
                 return
         self.song_ref_list.append(song_ref)
+
+        if song_ref.id not in self.track_names:
+            self.track_names[song_ref.id] = None
 
 
 

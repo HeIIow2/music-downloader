@@ -38,6 +38,11 @@ SELECT id, text, language, song_id
 FROM Lyrics
 WHERE {where};
 """
+ALBUM_QUERY = """
+SELECT Album.id AS album_id, title, copyright, album_status, year, date, country, barcode
+FROM Album
+WHERE {where};
+"""
 
 
 class Database:
@@ -312,8 +317,43 @@ class Database:
 
         return [self.get_song_from_row(song_result=song_result) for song_result in song_rows]       
 
+    def get_album_from_row(self, album_result) -> Album:
+        album_id = album_result['album_id']
+
+        album_obj = Album(
+            id_=album_id,
+            title=album_result['title'],
+            copyright_=album_result['copyright'],
+            album_status=album_result['album_status'],
+            language=album_result['language'],
+            year=album_result['year'],
+            date=album_result['date'],
+            country=album_result['country'],
+            barcode=album_result['barcode']
+        )
+
+        # getting the tracklist
+        tracklist: List[Song] = self.pull_songs(album_ref=Reference(id_=album_id))
+        for track in tracklist:
+            album_obj.add_song(track.reference, name=track.title)
+
+        return album_obj
+
     def pull_albums(self, album_ref: Reference = None) -> List[Album]:
-        pass
+        """
+        This function is used to get matching albums/releses 
+        from one song id (a reference object)
+        :param album_ref:
+        :return requested_album_list:
+        """
+        where = "1=1"
+        if album_ref is not None:
+            where = f"Album.id=\"{album_ref.id}\""
+
+        query = ALBUM_QUERY.format(where=where)
+        self.cursor.execute(query)
+
+        album_rows = self.cursor.fetchall()
 
 if __name__ == "__main__":
     cache = Database("")
