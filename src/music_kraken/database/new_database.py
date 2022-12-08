@@ -39,7 +39,7 @@ FROM Lyrics
 WHERE {where};
 """
 ALBUM_QUERY = """
-SELECT Album.id AS album_id, title, copyright, album_status, year, date, country, barcode
+SELECT Album.id AS album_id, title, copyright, album_status, language, year, date, country, barcode
 FROM Album
 WHERE {where};
 """
@@ -268,7 +268,7 @@ class Database:
             url=source_row['url']
         ) for source_row in source_rows]
 
-    def get_song_from_row(self, song_result) -> Song:
+    def get_song_from_row(self, song_result, exclude_independent_relations: bool = False) -> Song:
         song_id = song_result['song_id']
         
         return Song(
@@ -286,17 +286,18 @@ class Database:
             album_ref=Reference(song_result['album_id'])
         )
 
-    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None) -> List[Song]:
+    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None, exclude_independent_relations: bool = False) -> List[Song]:
         """
         This function is used to get one song (including its children like Sources etc)
         from one song id (a reference object)
         :param song_ref:
+        :param album_ref:
+        :param exclude_independent_relations:
+        This excludes all relations from being fetched like for example the Album of the Song.
+        This is necessary when adding the Song as subclass as e.g. an Album (as tracklist or whatever).
         :return requested_song:
         """
-        """
-        if song_ref is None:
-            raise ValueError("The Song ref doesn't point anywhere. Remember to use the debugger.")
-        """
+
         where = "1=1"
         if song_ref is not None:
             where = f"Song.id=\"{song_ref.id}\""
@@ -307,17 +308,13 @@ class Database:
         self.cursor.execute(query)
 
         song_rows = self.cursor.fetchall()
-        """
-        if len(song_rows) == 0:
-            logger.warning(f"No song found for the id {song_ref.id}")
-            return Song()
-        if len(song_rows) > 1:
-            logger.warning(f"Multiple Songs found for the id {song_ref.id}. Defaulting to the first one.")
-        """
 
-        return [self.get_song_from_row(song_result=song_result) for song_result in song_rows]       
+        return [self.get_song_from_row(
+            song_result=song_result,
+            exclude_independent_relations=exclude_independent_relations
+        ) for song_result in song_rows]
 
-    def get_album_from_row(self, album_result) -> Album:
+    def get_album_from_row(self, album_result, exclude_independent_relations: bool = False) -> Album:
         album_id = album_result['album_id']
 
         album_obj = Album(
@@ -332,14 +329,17 @@ class Database:
             barcode=album_result['barcode']
         )
 
-        # getting the tracklist
-        tracklist: List[Song] = self.pull_songs(album_ref=Reference(id_=album_id))
-        for track in tracklist:
-            album_obj.add_song(track.reference, name=track.title)
+        if not exclude_independent_relations:
+            # getting the tracklist
+            tracklist: List[Song] = self.pull_songs(
+                album_ref=Reference(id_=album_id),
+                exclude_independent_relations=True
+            )
+            album_obj.set_tracklist(tracklist=tracklist)
 
         return album_obj
 
-    def pull_albums(self, album_ref: Reference = None) -> List[Album]:
+    def pull_albums(self, album_ref: Reference = None, exclude_independent_relations: bool = False) -> List[Album]:
         """
         This function is used to get matching albums/releses 
         from one song id (a reference object)
@@ -354,6 +354,12 @@ class Database:
         self.cursor.execute(query)
 
         album_rows = self.cursor.fetchall()
+
+        return [self.get_album_from_row(
+            album_result=album_row,
+            exclude_independent_relations=exclude_independent_relations
+        ) for album_row in album_rows]
+
 
 if __name__ == "__main__":
     cache = Database("")

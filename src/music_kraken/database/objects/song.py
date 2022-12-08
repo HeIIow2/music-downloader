@@ -11,10 +11,10 @@ from .database_object import (
     Reference
 )
 
-
 """
 All Objects dependent 
 """
+
 
 class SongAttribute:
     def __init__(self, song_ref: Reference = None):
@@ -190,6 +190,11 @@ class Song(DatabaseObject):
         self.album_ref = album_ref
         self.artist_refs = artist_refs
 
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.id == other.id
+
     def __str__(self) -> str:
         return f"\"{self.title}\" by {', '.join(self.artist_names)}"
 
@@ -227,6 +232,7 @@ class Song(DatabaseObject):
 All objects dependend on Album
 """
 
+
 class Album(DatabaseObject):
     """
     -------DB-FIELDS-------
@@ -240,18 +246,18 @@ class Album(DatabaseObject):
     barcode         TEXT,
     song_id         BIGINT,
     """
+
     def __init__(
-        self,
-        id_: str = None,
-        title: str = None,
-        copyright_: str = None,
-        album_status: str = None,
-        language: str = None,
-        year: str = None,
-        date: str = None,
-        country: str = None,
-        barcode: str = None,
-        song_ref_list: List[Reference] = []
+            self,
+            id_: str = None,
+            title: str = None,
+            copyright_: str = None,
+            album_status: str = None,
+            language: str = None,
+            year: str = None,
+            date: str = None,
+            country: str = None,
+            barcode: str = None,
     ) -> None:
         DatabaseObject.__init__(self, id_=id_)
         self.title: str = title
@@ -263,41 +269,13 @@ class Album(DatabaseObject):
         self.country: str = country
         self.barcode: str = barcode
 
-        self.song_ref_list: List[Reference] = song_ref_list
-        self.track_names = {}
+        self.tracklist: List[Song] = []
 
-    def add_song(self, song_ref: Reference, name: str = None):
-        if name is not None:
-            self.track_names[song_ref.id] = name
-        
-        for existing_song_ref in self.song_ref_list:
-            if song_ref == existing_song_ref:
+    def set_tracklist(self, tracklist: List[Song]):
+        self.tracklist = tracklist
+
+    def add_song(self, song: Song):
+        for existing_song in self.tracklist:
+            if existing_song == song:
                 return
-        self.song_ref_list.append(song_ref)
-
-        if song_ref.id not in self.track_names:
-            self.track_names[song_ref.id] = None
-
-
-
-
-
-if __name__ == "__main__":
-    """
-    Example for creating a Song object
-    """
-
-    song = Song(
-        title="Vein Deep in the Solution",
-        release_name="One Final Action",
-        target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
-        metadata={
-            "album": "One Final Action"
-        },
-        lyrics=[
-            Lyrics(text="these are some depressive lyrics", language="en")
-        ],
-        sources=[
-            Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
-        ]
-    )
+        self.tracklist.append(song)

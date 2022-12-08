@@ -60,5 +60,7 @@ song_output_list = cache.pull_songs(album_ref=album_input.reference)
 print(len(song_output_list), song_output_list)
 
 # getting album
-album_output_list = cache.pull_albums(album_ref=album_input.ref)
-print(album_output_list[0])
+album_output_list = cache.pull_albums(album_ref=album_input.reference)
+album_output = album_output_list[0]
+print(album_output)
+print(album_output.tracklist)
