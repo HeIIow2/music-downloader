@@ -268,10 +268,13 @@ class Database:
             url=source_row['url']
         ) for source_row in source_rows]
 
-    def get_song_from_row(self, song_result, exclude_independent_relations: bool = False) -> Song:
+    def get_song_from_row(self, song_result, exclude_relations: set = set()) -> Song:
+        new_exclude_relations: set = set(exclude_relations)
+        new_exclude_relations.add(Song)
+
         song_id = song_result['song_id']
         
-        return Song(
+        song_obj = Song(
             id_=song_id,
             title=song_result['title'],
             isrc=song_result['isrc'],
@@ -286,7 +289,14 @@ class Database:
             album_ref=Reference(song_result['album_id'])
         )
 
-    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None, exclude_independent_relations: bool = False) -> List[Song]:
+        if Album not in exclude_relations and song_result['album_id'] is not None:
+            album_obj = self.pull_albums(album_ref=Reference(song_result['album_id']), exclude_relations=new_exclude_relations)
+            if len(album_obj) > 0:
+                song_obj.album = album_obj[0]
+
+        return song_obj
+
+    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None, exclude_relations: set = set()) -> List[Song]:
         """
         This function is used to get one song (including its children like Sources etc)
         from one song id (a reference object)
@@ -311,10 +321,14 @@ class Database:
 
         return [self.get_song_from_row(
             song_result=song_result,
-            exclude_independent_relations=exclude_independent_relations
+            exclude_relations=exclude_relations
         ) for song_result in song_rows]
 
-    def get_album_from_row(self, album_result, exclude_independent_relations: bool = False) -> Album:
+    def get_album_from_row(self, album_result, exclude_relations: set = set()) -> Album:
+        new_exclude_relations: set = exclude_relations.copy()
+        
+        new_exclude_relations.add(Album)
+        
         album_id = album_result['album_id']
 
         album_obj = Album(
@@ -329,17 +343,20 @@ class Database:
             barcode=album_result['barcode']
         )
 
-        if not exclude_independent_relations:
+        print(exclude_relations)
+
+        if Song not in exclude_relations:
+            print("yay")
             # getting the tracklist
             tracklist: List[Song] = self.pull_songs(
                 album_ref=Reference(id_=album_id),
-                exclude_independent_relations=True
+                exclude_relations=new_exclude_relations
             )
             album_obj.set_tracklist(tracklist=tracklist)
 
         return album_obj
 
-    def pull_albums(self, album_ref: Reference = None, exclude_independent_relations: bool = False) -> List[Album]:
+    def pull_albums(self, album_ref: Reference = None, exclude_relations: set = set()) -> List[Album]:
         """
         This function is used to get matching albums/releses 
         from one song id (a reference object)
@@ -357,7 +374,7 @@ class Database:
 
         return [self.get_album_from_row(
             album_result=album_row,
-            exclude_independent_relations=exclude_independent_relations
+            exclude_relations=exclude_relations
         ) for album_row in album_rows]
 
 

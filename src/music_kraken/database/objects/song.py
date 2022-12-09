@@ -190,6 +190,8 @@ class Song(DatabaseObject):
         self.album_ref = album_ref
         self.artist_refs = artist_refs
 
+        self.album: Album = None
+
     def __eq__(self, other):
         if type(other) != type(self):
             return False

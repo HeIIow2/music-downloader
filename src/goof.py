@@ -50,7 +50,7 @@ cache.push([album_input, song_input, lyrics, additional_song])
 
 # getting song by song ref
 song_output_list = cache.pull_songs(song_ref=song_ref)
-print(len(song_output_list), song_output_list)
+print(len(song_output_list), song_output_list, song_output_list[0].album)
 # song_output = song_output_list[0]
 # print(song_output)
 # print("album id", song_output.album_ref)
