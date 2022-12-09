@@ -22,7 +22,7 @@ logger = logging.getLogger("database")
 # use complicated query builder
 SONG_QUERY = """
 SELECT 
-Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id,
+Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id, Song.tracksort,
 Target.id AS target_id, Target.file AS file, Target.path AS path
 FROM Song
 LEFT JOIN Target ON Song.id=Target.song_id 
@@ -38,9 +38,15 @@ SELECT id, text, language, song_id
 FROM Lyrics
 WHERE {where};
 """
-ALBUM_QUERY = """
+ALBUM_QUERY_UNJOINED = """
 SELECT Album.id AS album_id, title, copyright, album_status, language, year, date, country, barcode
 FROM Album
+WHERE {where};
+"""
+ALBUM_QUERY_JOINED = """
+SELECT a.id AS album_id, a.title, a.copyright, a.album_status, a.language, a.year, a.date, a.country, a.barcode
+FROM Song
+INNER JOIN Album a ON Song.album_id=a.id
 WHERE {where};
 """
 
@@ -147,9 +153,10 @@ class Database:
             song.title,
             song.isrc,
             song.length,
-            song.get_album_id()
+            song.get_album_id(),
+            song.tracksort
         )
-        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length, album_id) VALUES (?, ?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length, album_id, tracksort) VALUES (?, ?, ?, ?, ?, ?);"
 
         self.cursor.execute(query, values)
         self.connection.commit()
@@ -268,17 +275,20 @@ class Database:
             url=source_row['url']
         ) for source_row in source_rows]
 
-    def get_song_from_row(self, song_result, exclude_relations: set = set()) -> Song:
+    def get_song_from_row(self, song_result, exclude_relations: set = None) -> Song:
+        if exclude_relations is None:
+            exclude_relations = set()
         new_exclude_relations: set = set(exclude_relations)
         new_exclude_relations.add(Song)
 
         song_id = song_result['song_id']
-        
+
         song_obj = Song(
             id_=song_id,
             title=song_result['title'],
             isrc=song_result['isrc'],
             length=song_result['length'],
+            tracksort=song_result['tracksort'],
             target=Target(
                 id_=song_result['target_id'],
                 file=song_result['file'],
@@ -290,21 +300,24 @@ class Database:
         )
 
         if Album not in exclude_relations and song_result['album_id'] is not None:
-            album_obj = self.pull_albums(album_ref=Reference(song_result['album_id']), exclude_relations=new_exclude_relations)
+            album_obj = self.pull_albums(album_ref=Reference(song_result['album_id']),
+                                         exclude_relations=new_exclude_relations)
             if len(album_obj) > 0:
                 song_obj.album = album_obj[0]
 
         return song_obj
 
-    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None, exclude_relations: set = set()) -> List[Song]:
+    def pull_songs(self, song_ref: Reference = None, album_ref: Reference = None, exclude_relations: set = set()) -> \
+            List[Song]:
         """
         This function is used to get one song (including its children like Sources etc)
         from one song id (a reference object)
+        :param exclude_relations:
+        By default all relations are pulled by this funktion. If the class object of for
+        example the Artists is in the set it won't get fetched.
+        This is done to prevent an infinite recursion.
         :param song_ref:
         :param album_ref:
-        :param exclude_independent_relations:
-        This excludes all relations from being fetched like for example the Album of the Song.
-        This is necessary when adding the Song as subclass as e.g. an Album (as tracklist or whatever).
         :return requested_song:
         """
 
@@ -313,7 +326,7 @@ class Database:
             where = f"Song.id=\"{song_ref.id}\""
         elif album_ref is not None:
             where = f"Song.album_id=\"{album_ref.id}\""
-        
+
         query = SONG_QUERY.format(where=where)
         self.cursor.execute(query)
 
@@ -324,11 +337,12 @@ class Database:
             exclude_relations=exclude_relations
         ) for song_result in song_rows]
 
-    def get_album_from_row(self, album_result, exclude_relations: set = set()) -> Album:
+    def get_album_from_row(self, album_result, exclude_relations=None) -> Album:
+        if exclude_relations is None:
+            exclude_relations = set()
         new_exclude_relations: set = exclude_relations.copy()
-        
         new_exclude_relations.add(Album)
-        
+
         album_id = album_result['album_id']
 
         album_obj = Album(
@@ -343,10 +357,7 @@ class Database:
             barcode=album_result['barcode']
         )
 
-        print(exclude_relations)
-
         if Song not in exclude_relations:
-            print("yay")
             # getting the tracklist
             tracklist: List[Song] = self.pull_songs(
                 album_ref=Reference(id_=album_id),
@@ -356,18 +367,30 @@ class Database:
 
         return album_obj
 
-    def pull_albums(self, album_ref: Reference = None, exclude_relations: set = set()) -> List[Album]:
+    def pull_albums(self, album_ref: Reference = None, song_ref: Reference = None, exclude_relations: set = None) -> List[Album]:
         """
         This function is used to get matching albums/releses 
         from one song id (a reference object)
+        :param exclude_relations:
+        By default all relations are pulled by this funktion. If the class object of for
+        example the Artists is in the set it won't get fetched.
+        This is done to prevent an infinite recursion.
         :param album_ref:
         :return requested_album_list:
         """
+        if exclude_relations is None:
+            exclude_relations = set()
+
+        query = ALBUM_QUERY_UNJOINED
         where = "1=1"
         if album_ref is not None:
+            query = ALBUM_QUERY_UNJOINED
             where = f"Album.id=\"{album_ref.id}\""
+        elif song_ref is not None:
+            query = ALBUM_QUERY_JOINED
+            where = f"Song.id=\"{song_ref.id}\""
 
-        query = ALBUM_QUERY.format(where=where)
+        query = query.format(where=where)
         self.cursor.execute(query)
 
         album_rows = self.cursor.fetchall()

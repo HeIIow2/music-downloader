@@ -4,6 +4,7 @@ CREATE TABLE Song
     name        TEXT,
     isrc        TEXT,
     length      INT,    -- length is in milliseconds (could be wrong)
+    tracksort   INT,
     album_id    BIGINT,
     FOREIGN KEY(album_id) REFERENCES Album(id)
 );

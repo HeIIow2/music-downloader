@@ -145,6 +145,7 @@ class Song(DatabaseObject):
             artist_names: List[str] = [],
             isrc: str = None,
             length: int = None,
+            tracksort: int = None,
             sources: List[Source] = None,
             target: Target = None,
             lyrics: List[Lyrics] = None,
@@ -167,6 +168,7 @@ class Song(DatabaseObject):
         self.isrc: str | None = isrc
         self.length_: int | None = length
         self.artist_names = artist_names
+        self.tracksort: int | None = tracksort
 
         self.metadata = Metadata(data=metadata)
 
@@ -190,7 +192,7 @@ class Song(DatabaseObject):
         self.album_ref = album_ref
         self.artist_refs = artist_refs
 
-        self.album: Album = None
+        self._album: Album | None = None
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -227,11 +229,20 @@ class Song(DatabaseObject):
             return None
         return self.album_ref.id
 
-    length = property(fget=get_length, fset=set_length)
+    def set_album(self, album):
+        if self.album_ref.id is not None:
+            if self.album_ref.id != album.id:
+                logger.warning(f"song already refers to different album, overriding reference.")
+
+        self.album_ref = Reference(album.id)
+        self._album = album
+
+    album = property(fget=lambda self: self._album, fset=set_album)
+    length: int = property(fget=get_length, fset=set_length)
 
 
 """
-All objects dependend on Album
+All objects dependent on Album
 """
 
 
@@ -273,11 +284,22 @@ class Album(DatabaseObject):
 
         self.tracklist: List[Song] = []
 
+    def __str__(self) -> str:
+        return f"Album: \"{self.title}\""
+
+    def __len__(self) -> int:
+        return len(self.tracklist)
+
     def set_tracklist(self, tracklist: List[Song]):
         self.tracklist = tracklist
+
+        for i, track in enumerate(self.tracklist):
+            track.tracksort = i+1
 
     def add_song(self, song: Song):
         for existing_song in self.tracklist:
             if existing_song == song:
                 return
+
+        song.tracksort = len(self.tracklist)
         self.tracklist.append(song)

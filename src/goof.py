@@ -9,6 +9,9 @@ from music_kraken import (
 
 import music_kraken.database.new_database as db
 
+def div():
+    print("-"*100)
+
 
 cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
@@ -21,6 +24,7 @@ song_input = Song(
     title="Vein Deep in the Solution",
     album_name=album_input.title,
     length=666,
+    tracksort=2,
     target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
     metadata={
         "album": "One Final Action"
@@ -49,18 +53,28 @@ lyrics = Lyrics(text="these are some Lyrics that don't belong to any Song", lang
 cache.push([album_input, song_input, lyrics, additional_song])
 
 # getting song by song ref
+div()
 song_output_list = cache.pull_songs(song_ref=song_ref)
-print(len(song_output_list), song_output_list, song_output_list[0].album)
-# song_output = song_output_list[0]
-# print(song_output)
-# print("album id", song_output.album_ref)
+print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
+print("tracksort", song_output_list[0].tracksort, sep=": ")
 
 # getting song  by album ref
+div()
 song_output_list = cache.pull_songs(album_ref=album_input.reference)
 print(len(song_output_list), song_output_list)
+for song in song_output_list:
+    print(song, song.album)
 
 # getting album
+div()
 album_output_list = cache.pull_albums(album_ref=album_input.reference)
 album_output = album_output_list[0]
 print(album_output)
-print(album_output.tracklist)
+for track in album_output.tracklist:
+    print(track.tracksort, track)
+
+# getting album by song
+div()
+album_output_list = cache.pull_albums(song_ref=song_ref)
+print(album_output_list)
+print("len of album ->", len(album_output_list[0]), album_output_list[0], sep=" | ")
