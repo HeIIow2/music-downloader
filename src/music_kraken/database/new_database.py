@@ -39,12 +39,12 @@ FROM Lyrics
 WHERE {where};
 """
 ALBUM_QUERY_UNJOINED = """
-SELECT Album.id AS album_id, title, copyright, album_status, language, year, date, country, barcode
+SELECT Album.id AS album_id, title, copyright, album_status, language, year, date, country, barcode, albumsort, is_split
 FROM Album
 WHERE {where};
 """
 ALBUM_QUERY_JOINED = """
-SELECT a.id AS album_id, a.title, a.copyright, a.album_status, a.language, a.year, a.date, a.country, a.barcode
+SELECT a.id AS album_id, a.title, a.copyright, a.album_status, a.language, a.year, a.date, a.country, a.barcode, a.albumsort, a.is_split
 FROM Song
 INNER JOIN Album a ON Song.album_id=a.id
 WHERE {where};
@@ -87,6 +87,9 @@ class Database:
         return self.connection, self.cursor
 
     def push_one(self, db_object: Song | Lyrics | Target | Artist | Source | Album):
+        if db_object.dynamic:
+            return
+
         if type(db_object) == Song:
             return self.push_song(song=db_object)
 
@@ -122,7 +125,7 @@ class Database:
 
     def push_album(self, album: Album):
         table = "Album"
-        query = f"INSERT OR REPLACE INTO {table} (id, title, copyright, album_status, language, year, date, country, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, title, copyright, album_status, language, year, date, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
 
         values = (
             album.id,
@@ -133,7 +136,9 @@ class Database:
             album.year,
             album.date,
             album.country,
-            album.barcode
+            album.barcode,
+            album.albumsort,
+            album.is_split
         )
         self.cursor.execute(query, values)
         self.connection.commit()
@@ -220,8 +225,36 @@ class Database:
         self.cursor.execute(query, values)
         self.connection.commit()
 
+    def push_artist_song(self, artist_ref: Reference, song_ref: Reference, is_feature: bool):
+        table = "SongArtist"
+        # checking if already exists
+        query = f"SELECT * FROM {table} WHERE song_id=\"{song_ref.id}\" AND artist_id=\"{artist_ref.id}\""
+        self.cursor.execute(query)
+        if len(self.cursor.fetchall()) > 0:
+            # join already exists
+            return
+
+        query = f"INSERT OR REPLACE INTO {table} (song_id, artist_id, is_feature) VALUES (?, ?, ?);"
+        values = (
+            song_ref.id,
+            artist_ref.id,
+            is_feature
+        )
+
+        self.cursor.execute(query, values)
+        self.connection.commit()
+
     def push_artist(self, artist: Artist):
-        pass
+        table = "Artist"
+        query = f"INSERT OR REPLACE INTO {table} (id, name) VALUES (?, ?);"
+        values = (
+            artist.id,
+            artist.name
+        )
+
+        self.cursor.execute(query, values)
+        self.connection.commit()
+
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
         """
@@ -354,7 +387,9 @@ class Database:
             year=album_result['year'],
             date=album_result['date'],
             country=album_result['country'],
-            barcode=album_result['barcode']
+            barcode=album_result['barcode'],
+            is_split=album_result['is_split'],
+            albumsort=album_result['albumsort']
         )
 
         if Song not in exclude_relations:

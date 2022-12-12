@@ -4,7 +4,8 @@ from music_kraken import (
     Lyrics,
     Target,
     Source,
-    Album
+    Album,
+    Artist
 )
 
 import music_kraken.database.new_database as db
@@ -15,6 +16,18 @@ def div():
 
 cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
+
+main_artist = Artist(
+    name="I'm in a coffin"
+)
+
+split_artist = Artist(
+    name="split"
+)
+
+feature_artist = Artist(
+    name="feature"
+)
 
 album_input = Album(
     title="One Final Action"

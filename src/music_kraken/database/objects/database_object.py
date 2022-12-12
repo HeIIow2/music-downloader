@@ -19,15 +19,21 @@ class Reference:
 
 
 class DatabaseObject:
-    def __init__(self, id_: str = None) -> None:
+    def __init__(self, id_: str = None, dynamic: bool = False) -> None:
         self.id_: str | None = id_
+        self.dynamic = dynamic
 
     def get_id(self) -> str:
         """
         returns the id if it is set, else
         it returns a randomly generated UUID
         https://docs.python.org/3/library/uuid.html
+
+        if the object is dynamic, it raises an error
         """
+        if self.dynamic:
+            raise ValueError("Dynamic objects have no idea, because they are not in the database")
+
         if self.id_ is None:
             self.id_ = str(uuid.uuid4())
             logger.info(f"id for {self.__str__()} isn't set. Setting to {self.id_}")

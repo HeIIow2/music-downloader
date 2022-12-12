@@ -21,12 +21,6 @@ CREATE TABLE Source
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
-CREATE TABLE Artist
-(
-    id      INTEGER AUTO_INCREMENT PRIMARY KEY, 
-    name    TEXT
-);
-
 
 CREATE TABLE Album
 (
@@ -38,7 +32,9 @@ CREATE TABLE Album
     year            TEXT,
     date            TEXT,
     country         TEXT,
-    barcode         TEXT
+    barcode         TEXT,
+    album_sort      INT,
+    is_split        BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE TABLE Target
@@ -59,18 +55,25 @@ CREATE TABLE Lyrics
     FOREIGN KEY(song_id) REFERENCES Song(id)
 );
 
+CREATE TABLE Artist
+(
+    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name    TEXT
+);
+
 CREATE TABLE SongArtist
 (
-      song_id   BIGINT,
-      artist_id INTEGER,
+      song_id       BIGINT NOT NULL,
+      artist_id     BIGINT NOT NULL,
+      is_feature    BOOLEAN NOT NULL DEFAULT 0,
       FOREIGN KEY(song_id) REFERENCES Song(id),
       FOREIGN KEY(artist_id) REFERENCES Artist(id)
 );
 
 CREATE TABLE AlbumArtist
 (
-      album_id   BIGINT,
-      artist_id INTEGER,
+      album_id      BIGINT,
+      artist_id     BIGINT,
       FOREIGN KEY(album_id) REFERENCES Album(id),
       FOREIGN KEY(artist_id) REFERENCES Artist(id)
 );

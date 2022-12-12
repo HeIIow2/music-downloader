@@ -3,9 +3,7 @@ from . import (
 )
 
 Song = song.Song
-
-Song = song.Song
-Artist = None
+Artist = song.Artist
 Source = song.Source
 Target = song.Target
 Metadata = song.Metadata

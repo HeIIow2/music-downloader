@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Tuple
 from mutagen.easyid3 import EasyID3
 
 from ...utils.shared import (
@@ -258,6 +258,7 @@ class Album(DatabaseObject):
     country         TEXT,
     barcode         TEXT,
     song_id         BIGINT,
+    is_split        BOOLEAN NOT NULL DEFAULT 0
     """
 
     def __init__(
@@ -271,8 +272,11 @@ class Album(DatabaseObject):
             date: str = None,
             country: str = None,
             barcode: str = None,
+            is_split: bool = False,
+            albumsort: int = None,
+            dynamic: bool = False
     ) -> None:
-        DatabaseObject.__init__(self, id_=id_)
+        DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
         self.title: str = title
         self.copyright: str = copyright_
         self.album_status: str = album_status
@@ -281,6 +285,8 @@ class Album(DatabaseObject):
         self.date: str = date
         self.country: str = country
         self.barcode: str = barcode
+        self.is_split: bool = is_split
+        self.albumsort: int | None = albumsort
 
         self.tracklist: List[Song] = []
 
@@ -294,7 +300,7 @@ class Album(DatabaseObject):
         self.tracklist = tracklist
 
         for i, track in enumerate(self.tracklist):
-            track.tracksort = i+1
+            track.tracksort = i + 1
 
     def add_song(self, song: Song):
         for existing_song in self.tracklist:
@@ -303,3 +309,90 @@ class Album(DatabaseObject):
 
         song.tracksort = len(self.tracklist)
         self.tracklist.append(song)
+
+
+"""
+All objects dependent on Artist
+"""
+
+
+class ArtistSong(Song):
+    """
+    A subclass of Song with the additional attribute is_feature, which
+    makes only sense when in/from the Artist class
+    """
+    is_feature: bool = False
+
+
+class Artist(DatabaseObject):
+    def __init__(
+            self,
+            id_: str = None,
+            name: str = None,
+            discography: List[Album] = [],
+            features: List[Song] = []
+    ):
+        DatabaseObject.__init__(self, id_=id_)
+
+        self.name: str | None = name
+
+        self.songs: List[ArtistSong] = []
+        self.album_refs: List[Album] = []
+        self.song
+
+        self.set_discography(discography)
+        self.set_features(features)
+
+    def __str__(self):
+        return self.name or ""
+
+    def add_album(self, album: Album):
+        self.album_refs.append(album)
+
+        for song in album.tracklist:
+            song.__class__ = ArtistSong
+            song.is_feature = False
+
+            self.songs.append(song)
+
+    def set_discography(self, discography: List[Album]):
+        """
+        :param discography:
+        :return:
+        """
+        for album in discography:
+            self.add_album(album)
+
+    def get_discography(self) -> List[Album]:
+        flat_copy_discography = self.discography.copy()
+        feature_release = Album(
+            title="features",
+            copyright_=self.name,
+            album_status="dynamically generated",
+            is_split=True,
+            albumsort=666,
+            dynamic=True
+        )
+        for song in self.songs:
+            if song.is_feature:
+                feature_release.add_song(song)
+
+        flat_copy_discography.append(feature_release)
+        return flat_copy_discography
+
+    def set_features(self, feature_tracks: List[Song]):
+        for song in feature_tracks:
+            song.__class__ = ArtistSong
+            song.is_feature = True
+
+            self.songs.append(song)
+
+    def get_features(self) -> List[ArtistSong]:
+        feature_releases = []
+        for song in self.songs:
+            if song.is_feature:
+                feature_releases.append(song)
+        return feature_releases
+
+    discography = property(fget=get_discography, fset=set_discography)
+    features = property(fget=get_features, fset=set_features)
