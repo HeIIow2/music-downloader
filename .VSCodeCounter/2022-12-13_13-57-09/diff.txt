@@ -1,0 +1,42 @@
+Date : 2022-12-13 13:57:09
+Directory : /home/lars/Projects/music-downloader/src
+Total : 10 files,  326 codes, 36 comments, 80 blanks, all 442 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Python   |          8 |        314 |         36 |         80 |        430 |
+| Database |          1 |          8 |          0 |          0 |          8 |
+| SQLite   |          1 |          4 |          0 |          0 |          4 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                      | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                         |         10 |        326 |         36 |         80 |        442 |
+| music_kraken                                                                              |          8 |        288 |         37 |         73 |        398 |
+| music_kraken/database                                                                     |          5 |        239 |         31 |         62 |        332 |
+| music_kraken/database/objects                                                             |          3 |         82 |         11 |         27 |        120 |
+| music_kraken/metadata                                                                     |          2 |         45 |          6 |         11 |         62 |
+| music_kraken/metadata/sources                                                             |          2 |         45 |          6 |         11 |         62 |
+| music_kraken/static_files                                                                 |          1 |          4 |          0 |          0 |          4 |
++-------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                  | language | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/lars/Projects/music-downloader/src/goof.py                                          | Python   |         30 |         -1 |          7 |         36 |
+| /home/lars/Projects/music-downloader/src/music_kraken/database/new_database.py            | Python   |        155 |         20 |         34 |        209 |
+| /home/lars/Projects/music-downloader/src/music_kraken/database/objects/__init__.py        | Python   |         -1 |          0 |         -1 |         -2 |
+| /home/lars/Projects/music-downloader/src/music_kraken/database/objects/database_object.py | Python   |          7 |          2 |          2 |         11 |
+| /home/lars/Projects/music-downloader/src/music_kraken/database/objects/song.py            | Python   |         76 |          9 |         26 |        111 |
+| /home/lars/Projects/music-downloader/src/music_kraken/database/temp_database.py           | Python   |          2 |          0 |          1 |          3 |
+| /home/lars/Projects/music-downloader/src/music_kraken/metadata/sources/__init__.py        | Python   |          3 |          0 |          2 |          5 |
+| /home/lars/Projects/music-downloader/src/music_kraken/metadata/sources/musicbrainz.py     | Python   |         42 |          6 |          9 |         57 |
+| /home/lars/Projects/music-downloader/src/music_kraken/static_files/new_db.sql             | SQLite   |          4 |          0 |          0 |          4 |
+| /home/lars/Projects/music-downloader/src/test.db                                          | Database |          8 |          0 |          0 |          8 |
+| Total                                                                                     |          |        326 |         36 |         80 |        442 |
++-------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

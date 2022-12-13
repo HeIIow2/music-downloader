@@ -26,7 +26,7 @@ split_artist = Artist(
 )
 
 feature_artist = Artist(
-    name="feature"
+    name="Ghost"
 )
 
 album_input = Album(
@@ -35,7 +35,6 @@ album_input = Album(
 
 song_input = Song(
     title="Vein Deep in the Solution",
-    album_name=album_input.title,
     length=666,
     tracksort=2,
     target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
@@ -54,6 +53,8 @@ song_input = Song(
     main_artist_list = [main_artist],
     feature_artist_list = [feature_artist]
 )
+
+print(song_input)
 
 additional_song = Song(
     title="A fcking Song",

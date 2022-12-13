@@ -49,6 +49,11 @@ FROM Song
 INNER JOIN Album a ON Song.album_id=a.id
 WHERE {where};
 """
+ARTIST_QUERY = """
+SELECT id as artist_id, name as artist_name
+FROM Artist
+WHERE {where};
+"""
 
 
 class Database:
@@ -176,6 +181,14 @@ class Database:
 
         # add target
         self.push_target(target=song.target)
+
+        for main_artist in song.main_artist_list:
+            self.push_artist_song(artist_ref=Reference(main_artist.id), song_ref=Reference(song.id), is_feature=False)
+            self.push_artist(artist=main_artist)           
+
+        for feature_artist in song.feature_artist_list:
+            self.push_artist_song(artist_ref=Reference(feature_artist.id), song_ref=Reference(song.id), is_feature=True)
+            self.push_artist(artist=feature_artist)
 
     def push_lyrics(self, lyrics: Lyrics, ):
         if lyrics.song_ref_id is None:
@@ -308,7 +321,51 @@ class Database:
             url=source_row['url']
         ) for source_row in source_rows]
 
-    def get_song_from_row(self, song_result, exclude_relations: set = None) -> Song:
+    def pull_artist_song(self, song_ref: Reference = None, artist_ref: Reference = None) -> List[tuple]:
+        table = "SongArtist"
+        wheres = []
+        if song_ref is not None:
+            wheres.append("song_id=\"{song_ref.id}\"")
+        if artist_ref is not None:
+            wheres.append("artist_id=\"{artist_ref.id}\"")
+        where_str = ""
+        if len(wheres) > 0:
+            where_str = "WHERE " + " AND ".join(wheres)
+            
+        query = f"SELECT * FROM {table} {where_str};"
+        self.cursor.execute(query)
+        joins = self.cursor.fetchall()
+
+        return [(
+            Reference(join["song_id"]),
+            Reference(join["artist_id"]),
+            bool(join["is_feature"])
+        ) for join in joins]
+
+    def get_artist_from_row(self, artist_row, exclude_relations: set = None) -> Artist:
+        if exclude_relations is None:
+            exclude_relations = set()
+        new_exclude_relations: set = set(exclude_relations)
+        new_exclude_relations.add(Song)
+        return Artist(
+            id_=artist_row['artist_id'],
+            name=artist_row['name']
+        )
+
+    def pull_artists(self, artist_ref: Reference = None, exclude_relations: set = None) -> List[Artist]:
+        where = "1=1"
+        if artist_ref is not None:
+            where = f"Artist.id=\"{artist_ref.id}\""
+
+        query = ARTIST_QUERY.format(where=where)
+        self.cursor.execute(query)
+
+        artist_rows = self.cursor.fetchall()
+        return [(
+            self.get_artist_from_row(artist_row)
+        ) for artist_row in artist_rows]
+
+    def get_song_from_row(self, song_result, exclude_relations: set = set()) -> Song:
         if exclude_relations is None:
             exclude_relations = set()
         new_exclude_relations: set = set(exclude_relations)
@@ -317,7 +374,6 @@ class Database:
         song_id = song_result['song_id']
 
         # maybee fetch album
-        album = None
 
         song_obj = Song(
             id_=song_id,
@@ -339,6 +395,21 @@ class Database:
                                          exclude_relations=new_exclude_relations)
             if len(album_obj) > 0:
                 song_obj.album = album_obj[0]
+
+        main_artists = []
+        feature_artists = []
+        print(exclude_relations)
+        if Artist not in exclude_relations:
+            for song_ref, artist_ref, is_feature in self.pull_artist_song(song_ref=song_id):
+                print(artist_ref)
+                if not is_feature:
+                    feature_artists.extend(self.pull_artists(artist_ref=artist_ref))
+                else:
+                    main_artists.extend(self.pull_artists(artist_ref=artist_ref))
+        
+            song_obj.main_artist_list = main_artists
+            song_obj.feature_artist_list = feature_artists
+
 
         return song_obj
 
