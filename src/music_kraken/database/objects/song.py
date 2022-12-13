@@ -17,17 +17,17 @@ All Objects dependent
 
 
 class SongAttribute:
-    def __init__(self, song_ref: Reference = None):
+    def __init__(self, song = None):
         # the reference to the song the lyrics belong to
-        self.song_ref = song_ref
+        self.song = song
 
-    def add_song(self, song_ref: Reference):
-        self.song_ref = song_ref
+    def add_song(self, song):
+        self.song = song
 
     def get_ref_song_id(self):
-        if self.song_ref is None:
+        if self.song is None:
             return None
-        return self.song_ref.id
+        return self.song.reference.id
 
     def set_ref_song_id(self, song_id):
         self.song_ref = Reference(song_id)
@@ -150,8 +150,9 @@ class Song(DatabaseObject):
             target: Target = None,
             lyrics: List[Lyrics] = None,
             metadata: dict = {},
-            album_ref: Reference = None,
-            artist_refs: List[Reference] = None
+            album = None,
+            main_artist_list: list = [],
+            feature_artist_list: list = []
     ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
@@ -176,31 +177,42 @@ class Song(DatabaseObject):
             sources = []
         self.sources: List[Source] = sources
         for source in self.sources:
-            source.add_song(self.reference)
+            source.add_song(self)
 
         if target is None:
             target = Target()
         self.target: Target = target
-        self.target.add_song(self.reference)
+        self.target.add_song(self)
 
         if lyrics is None:
             lyrics = []
         self.lyrics: List[Lyrics] = lyrics
         for lyrics_ in self.lyrics:
-            lyrics_.add_song(self.reference)
+            lyrics_.add_song(self)
 
-        self.album_ref = album_ref
-        self.artist_refs = artist_refs
+        self.album: Album = album
 
-        self._album: Album | None = None
+        self.main_artist_list = main_artist_list
+        self.feature_artist_list = feature_artist_list
 
     def __eq__(self, other):
         if type(other) != type(self):
             return False
         return self.id == other.id
 
+    def get_artist_credits(self) -> str:
+        feature_str = ""
+        if len(self.feature_artist_list) > 0:
+            feature_str = " feat. " + ", ".join([artist.name for artist in self.feature_artist_list])
+        return ", ".join([artist.name for artist in self.main_artist_list]) + feature_str
+
     def __str__(self) -> str:
-        return f"\"{self.title}\" by {', '.join(self.artist_names)}"
+        artist_credit_str = ""
+        artist_credits = self.get_artist_credits()
+        if artist_credits != "":
+            artist_credit_str = f" by {artist_credits}"
+
+        return f"\"{self.title}\"{artist_credit_str}"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -224,20 +236,12 @@ class Song(DatabaseObject):
             raise TypeError(f"length of a song must be of the type int not {type(length)}")
         self.length_ = length
 
-    def get_album_id(self) -> str | None:
-        if self.album_ref is None:
+    def get_album_id(self):
+        if self.album is None:
             return None
-        return self.album_ref.id
+        return self.album.id
 
-    def set_album(self, album):
-        if self.album_ref.id is not None:
-            if self.album_ref.id != album.id:
-                logger.warning(f"song already refers to different album, overriding reference.")
-
-        self.album_ref = Reference(album.id)
-        self._album = album
-
-    album = property(fget=lambda self: self._album, fset=set_album)
+    album_id: str = property(fget=get_album_id)
     length: int = property(fget=get_length, fset=set_length)
 
 
@@ -338,7 +342,6 @@ class Artist(DatabaseObject):
 
         self.songs: List[ArtistSong] = []
         self.album_refs: List[Album] = []
-        self.song
 
         self.set_discography(discography)
         self.set_features(features)

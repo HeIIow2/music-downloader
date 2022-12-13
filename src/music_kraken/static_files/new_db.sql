@@ -33,7 +33,7 @@ CREATE TABLE Album
     date            TEXT,
     country         TEXT,
     barcode         TEXT,
-    album_sort      INT,
+    albumsort      INT,
     is_split        BOOLEAN NOT NULL DEFAULT 0
 );
 

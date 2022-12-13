@@ -316,6 +316,9 @@ class Database:
 
         song_id = song_result['song_id']
 
+        # maybee fetch album
+        album = None
+
         song_obj = Song(
             id_=song_id,
             title=song_result['title'],
@@ -329,7 +332,6 @@ class Database:
             ),
             sources=self.pull_sources(song_ref=Reference(id_=song_id)),
             lyrics=self.pull_lyrics(song_ref=Reference(id_=song_id)),
-            album_ref=Reference(song_result['album_id'])
         )
 
         if Album not in exclude_relations and song_result['album_id'] is not None:

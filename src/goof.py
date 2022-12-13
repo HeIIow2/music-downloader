@@ -50,12 +50,14 @@ song_input = Song(
         Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd"),
         Source(src="musify", url="https://ln.topdf.de/Music-Kraken/")
     ],
-    album_ref=album_input.reference
+    album = album_input,
+    main_artist_list = [main_artist],
+    feature_artist_list = [feature_artist]
 )
 
 additional_song = Song(
     title="A fcking Song",
-    album_ref=album_input.reference
+    album=album_input
 )
 
 song_ref = song_input.reference
