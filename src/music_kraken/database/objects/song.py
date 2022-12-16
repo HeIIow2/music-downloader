@@ -298,6 +298,9 @@ class Album(DatabaseObject):
     def __str__(self) -> str:
         return f"Album: \"{self.title}\""
 
+    def __repr__(self):
+        return self.__str__()
+
     def __len__(self) -> int:
         return len(self.tracklist)
 
@@ -335,7 +338,7 @@ class Artist(DatabaseObject):
             name: str = None,
             main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
-            main_albums: List[Song] = None
+            main_albums: List[Album] = None
     ):
         DatabaseObject.__init__(self, id_=id_)
 
@@ -389,7 +392,7 @@ class Artist(DatabaseObject):
         return song_release
 
     def get_discography(self) -> List[Album]:
-        flat_copy_discography = self.discography.copy()
+        flat_copy_discography = self.main_albums.copy()
         flat_copy_discography.append(self.get_features())
 
         return flat_copy_discography
