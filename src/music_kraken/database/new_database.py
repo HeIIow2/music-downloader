@@ -148,6 +148,12 @@ class Database:
         self.cursor.execute(query, values)
         self.connection.commit()
 
+        for song in album.tracklist:
+            self.push_song(song)
+        for artist in album.artists:
+            self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
+            self.push_artist(artist)
+
     def push_song(self, song: Song):
         # ADDING THE DATA FOR THE SONG OBJECT
         """
@@ -184,7 +190,7 @@ class Database:
 
         for main_artist in song.main_artist_list:
             self.push_artist_song(artist_ref=Reference(main_artist.id), song_ref=Reference(song.id), is_feature=False)
-            self.push_artist(artist=main_artist)           
+            self.push_artist(artist=main_artist)
 
         for feature_artist in song.feature_artist_list:
             self.push_artist_song(artist_ref=Reference(feature_artist.id), song_ref=Reference(song.id), is_feature=True)
@@ -257,6 +263,24 @@ class Database:
         self.cursor.execute(query, values)
         self.connection.commit()
 
+    def push_artist_album(self, artist_ref: Reference, album_ref: Reference):
+        table = "AlbumArtist"
+        # checking if already exists
+        query = f"SELECT * FROM {table} WHERE album_id=\"{album_ref.id}\" AND artist_id=\"{artist_ref.id}\""
+        self.cursor.execute(query)
+        if len(self.cursor.fetchall()) > 0:
+            # join already exists
+            return
+
+        query = f"INSERT OR REPLACE INTO {table} (album_id, artist_id) VALUES (?, ?);"
+        values = (
+            album_ref.id,
+            artist_ref.id
+        )
+
+        self.cursor.execute(query, values)
+        self.connection.commit()
+
     def push_artist(self, artist: Artist):
         table = "Artist"
         query = f"INSERT OR REPLACE INTO {table} (id, name) VALUES (?, ?);"
@@ -268,6 +292,16 @@ class Database:
         self.cursor.execute(query, values)
         self.connection.commit()
 
+        for song in artist.feature_songs:
+            self.push_artist_song(artist_ref=artist.reference, song_ref=song.reference, is_feature=True)
+            self.push_song(song=song)
+
+        for song in artist.main_songs:
+            self.push_artist_song(artist_ref=artist.reference, song_ref=song.reference, is_feature=False)
+            self.push_song(song=song)
+
+        for album in artist.main_albums:
+            self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
         """
@@ -331,7 +365,7 @@ class Database:
         where_str = ""
         if len(wheres) > 0:
             where_str = "WHERE " + " AND ".join(wheres)
-            
+
         query = f"SELECT * FROM {table} {where_str};"
         self.cursor.execute(query)
         joins = self.cursor.fetchall()
@@ -342,17 +376,71 @@ class Database:
             bool(join["is_feature"])
         ) for join in joins]
 
-    def get_artist_from_row(self, artist_row, exclude_relations: set = None) -> Artist:
+    def pull_artist_album(self, album_ref: Reference = None, artist_ref: Reference = None) -> List[tuple]:
+        table = "AlbumArtist"
+        wheres = []
+        if album_ref is not None:
+            wheres.append(f"album_id=\"{album_ref.id}\"")
+        if artist_ref is not None:
+            wheres.append(f"artist_id=\"{artist_ref.id}\"")
+        where_str = ""
+        if len(wheres) > 0:
+            where_str = "WHERE " + " AND ".join(wheres)
+
+        query = f"SELECT * FROM {table} {where_str};"
+        self.cursor.execute(query)
+        joins = self.cursor.fetchall()
+
+        return [(
+            Reference(join["album_id"]),
+            Reference(join["artist_id"])
+        ) for join in joins]
+
+    def get_artist_from_row(self, artist_row, exclude_relations: set = None, flat: bool = False) -> Artist:
         if exclude_relations is None:
             exclude_relations = set()
         new_exclude_relations: set = set(exclude_relations)
-        new_exclude_relations.add(Song)
-        return Artist(
-            id_=artist_row['artist_id'],
+        new_exclude_relations.add(Artist)
+
+        artist_id = artist_row['artist_id']
+
+        artist_obj = Artist(
+            id_=artist_id,
             name=artist_row['artist_name']
         )
+        if flat:
+            return artist_obj
 
-    def pull_artists(self, artist_ref: Reference = None, exclude_relations: set = None) -> List[Artist]:
+        # fetch songs :D
+        for song_ref, _, is_feature in self.pull_artist_song(artist_ref=Reference(id_=artist_id)):
+            new_songs = self.pull_songs(song_ref=song_ref, exclude_relations=new_exclude_relations)
+            if len(new_songs) < 1:
+                continue
+            new_song = new_songs[0]
+
+            if is_feature:
+                artist_obj.feature_songs.append(new_song)
+            else:
+                artist_obj.main_songs.append(new_song)
+
+        # fetch albums
+        for album_ref, _ in self.pull_artist_album(artist_ref=Reference(id_=artist_id)):
+            new_albums = self.pull_albums(album_ref=album_ref, exclude_relations=new_exclude_relations)
+            if len(new_albums) < 1:
+                continue
+            artist_obj.main_albums.append(new_albums[0])
+
+        return artist_obj
+
+    def pull_artists(self, artist_ref: Reference = None, exclude_relations: set = None, flat: bool = False) -> List[Artist]:
+        """
+
+        :param artist_ref:
+        :param exclude_relations:
+        :param flat: if it is true it ONLY fetches the artist data
+        :return:
+        """
+
         where = "1=1"
         if artist_ref is not None:
             where = f"Artist.id=\"{artist_ref.id}\""
@@ -362,10 +450,10 @@ class Database:
 
         artist_rows = self.cursor.fetchall()
         return [(
-            self.get_artist_from_row(artist_row)
+            self.get_artist_from_row(artist_row, exclude_relations=exclude_relations, flat=flat)
         ) for artist_row in artist_rows]
 
-    def get_song_from_row(self, song_result, exclude_relations: set = set()) -> Song:
+    def get_song_from_row(self, song_result, exclude_relations: set = None) -> Song:
         if exclude_relations is None:
             exclude_relations = set()
         new_exclude_relations: set = set(exclude_relations)
@@ -396,19 +484,18 @@ class Database:
             if len(album_obj) > 0:
                 song_obj.album = album_obj[0]
 
+        flat_artist = Artist in exclude_relations
+
         main_artists = []
         feature_artists = []
-        if Artist not in exclude_relations:
-            for song_ref, artist_ref, is_feature in self.pull_artist_song(song_ref=Reference(song_id)):
-                print(artist_ref)
-                if is_feature:
-                    feature_artists.extend(self.pull_artists(artist_ref=artist_ref))
-                else:
-                    main_artists.extend(self.pull_artists(artist_ref=artist_ref))
-        
-            song_obj.main_artist_list = main_artists
-            song_obj.feature_artist_list = feature_artists
+        for song_ref, artist_ref, is_feature in self.pull_artist_song(song_ref=Reference(song_id)):
+            if is_feature:
+                feature_artists.extend(self.pull_artists(artist_ref=artist_ref, flat=flat_artist))
+            else:
+                main_artists.extend(self.pull_artists(artist_ref=artist_ref, flat=flat_artist))
 
+        song_obj.main_artist_list = main_artists
+        song_obj.feature_artist_list = feature_artists
 
         return song_obj
 
@@ -472,9 +559,17 @@ class Database:
             )
             album_obj.set_tracklist(tracklist=tracklist)
 
+        flat_artist = Artist in exclude_relations
+        for _, artist_ref in self.pull_artist_album(album_ref=Reference(id_=album_id)):
+            artists = self.pull_artists(artist_ref, flat=flat_artist, exclude_relations=new_exclude_relations)
+            if len(artists) < 1:
+                continue
+            album_obj.artists.append(artists[0])
+
         return album_obj
 
-    def pull_albums(self, album_ref: Reference = None, song_ref: Reference = None, exclude_relations: set = None) -> List[Album]:
+    def pull_albums(self, album_ref: Reference = None, song_ref: Reference = None, exclude_relations: set = None) -> \
+    List[Album]:
         """
         This function is used to get matching albums/releses 
         from one song id (a reference object)

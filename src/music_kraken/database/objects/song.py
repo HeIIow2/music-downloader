@@ -17,7 +17,7 @@ All Objects dependent
 
 
 class SongAttribute:
-    def __init__(self, song = None):
+    def __init__(self, song=None):
         # the reference to the song the lyrics belong to
         self.song = song
 
@@ -150,7 +150,7 @@ class Song(DatabaseObject):
             target: Target = None,
             lyrics: List[Lyrics] = None,
             metadata: dict = {},
-            album = None,
+            album=None,
             main_artist_list: list = [],
             feature_artist_list: list = []
     ) -> None:
@@ -293,6 +293,7 @@ class Album(DatabaseObject):
         self.albumsort: int | None = albumsort
 
         self.tracklist: List[Song] = []
+        self.artists: List[Artist] = []
 
     def __str__(self) -> str:
         return f"Album: \"{self.title}\""
@@ -321,94 +322,78 @@ All objects dependent on Artist
 
 
 class Artist(DatabaseObject):
+    """
+    main_songs
+    feature_song
+
+    albums
+    """
+
     def __init__(
             self,
             id_: str = None,
             name: str = None,
-            discography: List[Album] = [],
-            features: List[Song] = []
+            main_songs: List[Song] = None,
+            feature_songs: List[Song] = None,
+            main_albums: List[Song] = None
     ):
         DatabaseObject.__init__(self, id_=id_)
 
+        if main_albums is None:
+            main_albums = []
+        if feature_songs is None:
+            feature_songs = []
+        if main_songs is None:
+            main_songs = []
+
         self.name: str | None = name
 
-        self.main_songs = []
-        self.feature_songs = []
+        self.main_songs = main_songs
+        self.feature_songs = feature_songs
 
-        self.main_albums = []
-        self.feature_albums = []
-
-        self.songs: List[Song] = []
-        self.album_refs: List[Album] = []
-
-        self.set_discography(discography)
-        self.set_features(features)
+        self.main_albums = main_albums
 
     def __str__(self):
         return self.name or ""
 
-    def add_song(self, song: Song, is_feature: bool):
-        """
-        it is reccomendet, that the song object already contains the album,
-        else you will have to add it youreself
-        """
+    def __repr__(self):
+        return self.__str__()
 
-        if is_feature:
-            self.feature_songs.append(song)
-            if song.album is not None:
-                self.feature_albums.append(song.album)
-        else:
-            self.main_songs.append(song)
-            if song.album is not None:
-                self.main_albums(song.album)
-
-    def add_album(self, album: Album):
-        self.album_refs.append(album)
-
-        for song in album.tracklist:
-            song.__class__ = ArtistSong
-            song.is_feature = False
-
-            self.songs.append(song)
-
-    def set_discography(self, discography: List[Album]):
-        """
-        :param discography:
-        :return:
-        """
-        for album in discography:
-            self.add_album(album)
-
-    def get_discography(self) -> List[Album]:
-        flat_copy_discography = self.discography.copy()
+    def get_features(self) -> Album:
         feature_release = Album(
             title="features",
             copyright_=self.name,
-            album_status="dynamically generated",
+            album_status="dynamic",
             is_split=True,
             albumsort=666,
             dynamic=True
         )
-        for song in self.songs:
-            if song.is_feature:
-                feature_release.add_song(song)
+        for feature in self.feature_songs:
+            feature_release.add_song(feature)
 
-        flat_copy_discography.append(feature_release)
+        return feature_release
+
+    def get_songs(self) -> Album:
+        song_release = Album(
+            title="song collection",
+            copyright_=self.name,
+            album_status="dynamic",
+            is_split=False,
+            albumsort=666,
+            dynamic=True
+        )
+        for song in self.main_songs:
+            song_release.add_song(song)
+        for song in self.feature_songs:
+            song_release.add_song(song)
+        return song_release
+
+    def get_discography(self) -> List[Album]:
+        flat_copy_discography = self.discography.copy()
+        flat_copy_discography.append(self.get_features())
+
         return flat_copy_discography
 
-    def set_features(self, feature_tracks: List[Song]):
-        for song in feature_tracks:
-            song.__class__ = ArtistSong
-            song.is_feature = True
-
-            self.songs.append(song)
-
-    def get_features(self) -> List[ArtistSong]:
-        feature_releases = []
-        for song in self.songs:
-            if song.is_feature:
-                feature_releases.append(song)
-        return feature_releases
-
-    discography = property(fget=get_discography, fset=set_discography)
-    features = property(fget=get_features, fset=set_features)
+    discography: List[Album] = property(fget=get_discography)
+    features: Album = property(fget=get_features)
+    songs: Album = property(fget=get_songs)

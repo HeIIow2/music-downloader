@@ -21,6 +21,8 @@ main_artist = Artist(
     name="I'm in a coffin"
 )
 
+artist_ref = main_artist.reference
+
 split_artist = Artist(
     name="split"
 )
@@ -94,3 +96,11 @@ div()
 album_output_list = cache.pull_albums(song_ref=song_ref)
 print(album_output_list)
 print("len of album ->", len(album_output_list[0]), album_output_list[0], sep=" | ")
+
+# get artist
+div()
+artist_output = cache.pull_artists(artist_ref=artist_ref)[0]
+print(artist_output)
+print(artist_output.main_albums)
+print(artist_output.main_songs)
+print(artist_output.feature_songs)
