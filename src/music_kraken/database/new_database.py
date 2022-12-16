@@ -325,9 +325,9 @@ class Database:
         table = "SongArtist"
         wheres = []
         if song_ref is not None:
-            wheres.append("song_id=\"{song_ref.id}\"")
+            wheres.append(f"song_id=\"{song_ref.id}\"")
         if artist_ref is not None:
-            wheres.append("artist_id=\"{artist_ref.id}\"")
+            wheres.append(f"artist_id=\"{artist_ref.id}\"")
         where_str = ""
         if len(wheres) > 0:
             where_str = "WHERE " + " AND ".join(wheres)
@@ -349,7 +349,7 @@ class Database:
         new_exclude_relations.add(Song)
         return Artist(
             id_=artist_row['artist_id'],
-            name=artist_row['name']
+            name=artist_row['artist_name']
         )
 
     def pull_artists(self, artist_ref: Reference = None, exclude_relations: set = None) -> List[Artist]:
@@ -398,11 +398,10 @@ class Database:
 
         main_artists = []
         feature_artists = []
-        print(exclude_relations)
         if Artist not in exclude_relations:
-            for song_ref, artist_ref, is_feature in self.pull_artist_song(song_ref=song_id):
+            for song_ref, artist_ref, is_feature in self.pull_artist_song(song_ref=Reference(song_id)):
                 print(artist_ref)
-                if not is_feature:
+                if is_feature:
                     feature_artists.extend(self.pull_artists(artist_ref=artist_ref))
                 else:
                     main_artists.extend(self.pull_artists(artist_ref=artist_ref))

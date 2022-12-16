@@ -320,14 +320,6 @@ All objects dependent on Artist
 """
 
 
-class ArtistSong(Song):
-    """
-    A subclass of Song with the additional attribute is_feature, which
-    makes only sense when in/from the Artist class
-    """
-    is_feature: bool = False
-
-
 class Artist(DatabaseObject):
     def __init__(
             self,
@@ -340,7 +332,13 @@ class Artist(DatabaseObject):
 
         self.name: str | None = name
 
-        self.songs: List[ArtistSong] = []
+        self.main_songs = []
+        self.feature_songs = []
+
+        self.main_albums = []
+        self.feature_albums = []
+
+        self.songs: List[Song] = []
         self.album_refs: List[Album] = []
 
         self.set_discography(discography)
@@ -348,6 +346,21 @@ class Artist(DatabaseObject):
 
     def __str__(self):
         return self.name or ""
+
+    def add_song(self, song: Song, is_feature: bool):
+        """
+        it is reccomendet, that the song object already contains the album,
+        else you will have to add it youreself
+        """
+
+        if is_feature:
+            self.feature_songs.append(song)
+            if song.album is not None:
+                self.feature_albums.append(song.album)
+        else:
+            self.main_songs.append(song)
+            if song.album is not None:
+                self.main_albums(song.album)
 
     def add_album(self, album: Album):
         self.album_refs.append(album)
