@@ -171,7 +171,8 @@ class Song(DatabaseObject):
         self.artist_names = artist_names
         self.tracksort: int | None = tracksort
 
-        self.metadata = Metadata(data=metadata)
+        # self.metadata = Metadata(data=metadata)
+        self.metadata = None
 
         if sources is None:
             sources = []
