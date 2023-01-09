@@ -77,3 +77,11 @@ CREATE TABLE AlbumArtist
       FOREIGN KEY(album_id) REFERENCES Album(id),
       FOREIGN KEY(artist_id) REFERENCES Artist(id)
 );
+
+CREATE TABLE id3
+(
+    frame       TEXT,       -- 4 capital leters like TXXX
+    value       TEXT,
+    song_id     BIGINT,
+    FOREIGN KEY(song_id) REFERENCES Song(id)
+);
