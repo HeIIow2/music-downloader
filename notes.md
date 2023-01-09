@@ -65,9 +65,30 @@ There are two types:
  1. lossless compression
  2. lossy compression
 
+
+[Here a comperison of audio coding formats.](https://en.wikipedia.org/wiki/Comparison_of_audio_coding_formats)
+
+The two criterias, which NEED to be met is:
+1. open source
+2. the encoder as well as the player need to be free to use
+
 ## container
 
 [Wikipedia](https://en.wikipedia.org/wiki/Container_format)
+
+A container embeddes the metadata in a file. In this case I am interested in containers regarding audio.
+
+### considerations
+
+Important differences between container, that I need to consider when choosing one, *cuz I only implement this shit once*, are:
+1. advanced content, meaning which fields there are, for example title, length, ...
+2. popularity *(the more poppular it is, the better will be the support between different software)*
+3. support for different [codec features](#audio-codec) *(older codecs might not support newer frames)*
+4. overhead *(different file size with different data, though this certainly is less an issue with audio)*
+5. support streaming the media
+
+These destinctions are sorted from top to bottom.
+
 
 ## audio codec
 
