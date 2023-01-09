@@ -48,3 +48,29 @@
 - Crystal F - Trail Mix 2 (Vollmond)
 - Crystal F - Was ist blos mit Hauke los
 - Psychonaut 4 - Neurasthenia (Sweet Decadence)
+
+# Audio Formats
+
+[Wikipedia](https://en.wikipedia.org/wiki/Audio_file_format)
+
+> It is important to distinguish between the audio coding format, the container containing the raw audio data, and an audio codec. 
+
+## audio coding format
+
+[Wikipedia](https://en.wikipedia.org/wiki/Audio_coding_format)
+
+The audio coding format is a format, which tries to store audio in a minimal space, while still allowing a decent quality.
+
+There are two types:
+ 1. lossless compression
+ 2. lossy compression
+
+## container
+
+[Wikipedia](https://en.wikipedia.org/wiki/Container_format)
+
+## audio codec
+
+[Wikipedia](https://en.wikipedia.org/wiki/Audio_codec)
+
+The audio codec is simply software/hardware, to convert audio from an [audio coding format](#audio-coding-format) to playable audio and vice versa.
