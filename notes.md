@@ -98,7 +98,7 @@ The audio codec is simply software/hardware, to convert audio from an [audio cod
 
 # ID3
 
-[ID3](https://en.wikipedia.org/wiki/ID3) is a metadata container format for audio. I am going for [ID3v2](https://en.wikipedia.org/wiki/ID3#ID3v2)
+[ID3](https://en.wikipedia.org/wiki/ID3) is a metadata container format for audio. I am going for [ID3v2.4](https://en.wikipedia.org/wiki/ID3#ID3v2)
 
 An Application can define its own types of frames.
 
@@ -107,3 +107,14 @@ There are standard frames for containing cover art, BPM, copyright and license, 
 Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. The null character varies by [character encoding](https://en.wikipedia.org/wiki/Character_encoding). 
 
 [id3 fields docs](https://docs.puddletag.net/source/id3.html)
+
+[forum](https://hydrogenaud.io/index.php/topic,51504.0.html)
+> Hence, for the best possible compatibility I recommend writing ID3v2.3 tags in the ISO 8859 format. 
+
+[ID3 tag mapping](https://wiki.hydrogenaud.io/index.php?title=Foobar2000:ID3_Tag_Mapping)
+
+## Frames
+
+A frame Name is composed from 4 capital letters $XXXX$
+
+The first letter of text frames is $TXXX$
