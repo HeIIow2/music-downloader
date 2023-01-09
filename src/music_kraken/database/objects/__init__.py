@@ -1,6 +1,9 @@
 from . import (
-    song
+    song,
+    id3_mapping
 )
+
+ID3_MAPPING = id3_mapping.Mapping
 
 Song = song.Song
 Artist = song.Artist

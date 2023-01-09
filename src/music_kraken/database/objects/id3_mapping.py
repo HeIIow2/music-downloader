@@ -57,3 +57,4 @@ class Mapping(Enum):
     ALBUM = "TALB"
     ALBUMSORTORDER = "TSOA"
     ALBUMARTISTSORTORDER = "TSO2"
+    
