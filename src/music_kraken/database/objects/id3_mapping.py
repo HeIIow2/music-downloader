@@ -1,11 +1,13 @@
 from enum import Enum
 
 class Mapping(Enum):
+    TITLE = "TIT2"
+    ISRC = "TSRC"
+    LENGTH = "TLEN"
     DATE = "TYER"
     UNSYNCED_LYRICS = "USLT"
     TRACKNUMBER = "TRCK"
     TOTALTRACKS = "TRCK" # Stored in the same frame with TRACKNUMBER, separated by '/': e.g. '4/9'.
-    TITLE = "TIT2"
     TITLESORTORDER = "TSOT"
     ENCODING_SETTINGS = "TSSE"
     SUBTITLE = "TIT3"
@@ -34,7 +36,6 @@ class Mapping(Enum):
     ARTIST = "TPE1"
     LANGUAGE = "TLAN"
     ITUNESCOMPILATION = "TCMP"
-    ISRC = "TSRC"
     REMIXED_BY = "TPE4"
     RADIO_STATION_OWNER = "TRSO"
     RADIO_STATION = "TRSN"

@@ -10,8 +10,9 @@ from music_kraken import (
 
 import music_kraken.database.new_database as db
 
-def div(msg:str=""):
-    print("-"*50+msg+"-"*50)
+
+def div(msg: str = ""):
+    print("-" * 50 + msg + "-" * 50)
 
 
 cache = music_kraken.database.new_database.Database("test.db")
@@ -42,6 +43,7 @@ album_input.artists = [
 song_input = Song(
     title="Vein Deep in the Solution",
     length=666,
+    isrc="US-S1Z-99-00001",
     tracksort=2,
     target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
     lyrics=[
@@ -52,9 +54,9 @@ song_input = Song(
         Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd"),
         Source(src="musify", url="https://ln.topdf.de/Music-Kraken/")
     ],
-    album = album_input,
-    main_artist_list = [main_artist],
-    feature_artist_list = [feature_artist]
+    album=album_input,
+    main_artist_list=[main_artist],
+    feature_artist_list=[feature_artist]
 )
 
 other_song = Song(
@@ -82,7 +84,8 @@ div()
 song_output_list = cache.pull_songs(song_ref=song_ref)
 print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
 print("tracksort", song_output_list[0].tracksort, sep=": ")
-print("id3", str(song_output_list[0].metadata))
+print("ID3 stuff")
+print(str(song_output_list[0].metadata))
 
 # getting song  by album ref
 div()
@@ -102,7 +105,6 @@ for track in album_output.tracklist:
 print("--artist--")
 for artist in album_output.artists:
     print(artist)
-
 
 # getting album by song
 div()

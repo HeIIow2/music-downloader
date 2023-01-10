@@ -65,7 +65,6 @@ class Metadata:
         return "\n".join(rows)
 
 
-
 class Source(DatabaseObject, SongAttribute):
     """
     create somehow like that
@@ -170,19 +169,21 @@ class Song(DatabaseObject):
         """
         super().__init__(id_=id_)
         # attributes
-        # self.id_: str | None = id_
+        # *private* attributes
         self._title = None
-
-        self.mb_id: str | None = mb_id
-        self.album_name: str | None = album_name
-        self.isrc: str | None = isrc
-        self.length_: int | None = length
-        self.artist_names = artist_names
-        self.tracksort: int | None = tracksort
+        self._isrc = None
+        self._length = None
 
         self.metadata = Metadata()
 
         self.title = title
+        self.isrc = isrc
+        self.length = length
+
+        self.mb_id: str | None = mb_id
+        self.album_name: str | None = album_name
+        self.artist_names = artist_names
+        self.tracksort: int | None = tracksort
 
         if sources is None:
             sources = []
@@ -240,44 +241,51 @@ class Song(DatabaseObject):
         the attribute the same as the defined property, but with one underscore infront:
         title -> _title
         """
+        if value is None:
+            return
 
         attribute_map = {
-            "_title": ID3_MAPPING.TITLE
+            "_title": ID3_MAPPING.TITLE,
+            "_isrc": ID3_MAPPING.ISRC,
+            "_length": ID3_MAPPING.LENGTH
         }
 
-        # if this crashes/raises an error the function is 
-        # called wrongly. I DO NOT CACH ERRORS DUE TO PERFORMANCE AND DEBUGGING
+        # if this crashes/raises an error the function is
+        # called wrongly. I DO NOT CATCH ERRORS DUE TO PERFORMANCE AND DEBUGGING
         self.__setattr__(name, value)
-        self.metadata[attribute_map[name].value] = value 
 
+        # convert value to id3 value if necessary
+        id3_value = value
+        if type(value) == int:
+            id3_value = str(value)
+
+        self.metadata[attribute_map[name].value] = id3_value
 
     def get_metadata(self):
         return self.metadata.get_all_metadata()
 
     def has_isrc(self) -> bool:
-        return self.isrc is not None
+        return self._isrc is not None
 
     def get_artist_names(self) -> List[str]:
         return self.artist_names
 
     def get_length(self):
-        if self.length_ is None:
+        if self._length is None:
             return None
-        return int(self.length_)
-
-    def set_length(self, length: int):
-        if type(length) != int:
-            raise TypeError(f"length of a song must be of the type int not {type(length)}")
-        self.length_ = length
+        return int(self._length)
 
     def get_album_id(self):
         if self.album is None:
             return None
         return self.album.id
 
-    title: str = property(fget=lambda self: self._title, fset=lambda self, value: self.set_simple_metadata("_title", value))
+    title: str = property(fget=lambda self: self._title,
+                          fset=lambda self, value: self.set_simple_metadata("_title", value))
+    isrc: str = property(fget=lambda self: self._isrc,
+                         fset=lambda self, value: self.set_simple_metadata("_isrc", value))
+    length: int = property(fget=get_length, fset=lambda self, value: self.set_simple_metadata("_length", value))
     album_id: str = property(fget=get_album_id)
-    length: int = property(fget=get_length, fset=set_length)
 
 
 """
