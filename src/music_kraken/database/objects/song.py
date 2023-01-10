@@ -1,7 +1,8 @@
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from mutagen.easyid3 import EasyID3
 
+from .id3_mapping import Mapping as ID3_MAPPING
 from ...utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as logger
@@ -38,23 +39,31 @@ class SongAttribute:
 class Metadata:
     """
     Shall only be read or edited via the Song object.
-    For this reason there is no reference to the song needed.
+    call it like a dict to read/write values
     """
 
     def __init__(self, data: dict = {}) -> None:
-        self.data = data
+        # this is pretty self explanatory
+        # the key is a 4 letter key from the id3 standarts like TITL
+        self.id3_attributes: Dict[str, any] = {}
 
     def get_all_metadata(self):
-        return list(self.data.items())
+        return list(self.id3_attributes.items())
 
     def __setitem__(self, item, value):
-        if item in EasyID3.valid_keys.keys():
-            self.data[item] = value
+        self.id3_attributes[item] = value
 
     def __getitem__(self, item):
         if item not in self.data:
             return None
         return self.data[item]
+
+    def __str__(self) -> str:
+        rows = []
+        for key, value in self.id3_attributes.items():
+            rows.append(f"{key} - {str(value)}")
+        return "\n".join(rows)
+
 
 
 class Source(DatabaseObject, SongAttribute):
@@ -149,7 +158,6 @@ class Song(DatabaseObject):
             sources: List[Source] = None,
             target: Target = None,
             lyrics: List[Lyrics] = None,
-            metadata: dict = {},
             album=None,
             main_artist_list: list = [],
             feature_artist_list: list = []
@@ -163,16 +171,18 @@ class Song(DatabaseObject):
         super().__init__(id_=id_)
         # attributes
         # self.id_: str | None = id_
+        self._title = None
+
         self.mb_id: str | None = mb_id
-        self.title: str | None = title
         self.album_name: str | None = album_name
         self.isrc: str | None = isrc
         self.length_: int | None = length
         self.artist_names = artist_names
         self.tracksort: int | None = tracksort
 
-        # self.metadata = Metadata(data=metadata)
-        self.metadata = None
+        self.metadata = Metadata()
+
+        self.title = title
 
         if sources is None:
             sources = []
@@ -218,6 +228,29 @@ class Song(DatabaseObject):
     def __repr__(self) -> str:
         return self.__str__()
 
+    def set_simple_metadata(self, name: str, value):
+        """
+        this method is for setting values of attributes,
+        that directly map to an ID3 value.
+        A good example is the title or the isrc.
+
+        for more complex data I will use seperate functions
+
+        the naming convention for the name I follow is, to name
+        the attribute the same as the defined property, but with one underscore infront:
+        title -> _title
+        """
+
+        attribute_map = {
+            "_title": ID3_MAPPING.TITLE
+        }
+
+        # if this crashes/raises an error the function is 
+        # called wrongly. I DO NOT CACH ERRORS DUE TO PERFORMANCE AND DEBUGGING
+        self.__setattr__(name, value)
+        self.metadata[attribute_map[name].value] = value 
+
+
     def get_metadata(self):
         return self.metadata.get_all_metadata()
 
@@ -242,6 +275,7 @@ class Song(DatabaseObject):
             return None
         return self.album.id
 
+    title: str = property(fget=lambda self: self._title, fset=lambda self, value: self.set_simple_metadata("_title", value))
     album_id: str = property(fget=get_album_id)
     length: int = property(fget=get_length, fset=set_length)
 

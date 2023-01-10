@@ -44,9 +44,6 @@ song_input = Song(
     length=666,
     tracksort=2,
     target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
-    metadata={
-        "album": "One Final Action"
-    },
     lyrics=[
         Lyrics(text="these are some depressive lyrics", language="en"),
         Lyrics(text="test", language="en")
@@ -85,6 +82,7 @@ div()
 song_output_list = cache.pull_songs(song_ref=song_ref)
 print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
 print("tracksort", song_output_list[0].tracksort, sep=": ")
+print("id3", str(song_output_list[0].metadata))
 
 # getting song  by album ref
 div()
