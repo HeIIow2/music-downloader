@@ -8,6 +8,12 @@ from music_kraken import (
     Artist
 )
 
+from music_kraken.tagging import (
+    AudioMetadata,
+    write_metadata,
+    write_many_metadata
+)
+
 import music_kraken.database.new_database as db
 
 
@@ -45,7 +51,7 @@ song_input = Song(
     length=666,
     isrc="US-S1Z-99-00001",
     tracksort=2,
-    target=Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album"),
+    target=Target(file="~/Music/test/Linkin Park/Hybrid Theory/Cure for the Itch.mp3", path="~/Music/test/Linkin Park/Hybrid Theory/"),
     lyrics=[
         Lyrics(text="these are some depressive lyrics", language="en"),
         Lyrics(text="test", language="en")
@@ -90,6 +96,9 @@ print(str(song_output_list[0].metadata))
 print("--src--")
 for source in song.sources:
     print(source)
+
+# try writing metadata
+write_metadata(song)
 
 # getting song  by album ref
 div()

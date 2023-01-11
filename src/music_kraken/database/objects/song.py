@@ -301,6 +301,7 @@ class Song(DatabaseObject):
         self._sources = source_list
         for source in self._sources:
             source.add_song(self)
+            
         self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
 
     def get_metadata(self):

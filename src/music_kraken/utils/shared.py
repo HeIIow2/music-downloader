@@ -39,6 +39,7 @@ PATH_LOGGER = logging.getLogger("create-paths")
 DOWNLOAD_LOGGER = logging.getLogger("download")
 LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
+TAGGING_LOGGER = logging.getLogger("tagging")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.join(os.path.expanduser("~"), "Music")
