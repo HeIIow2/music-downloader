@@ -83,9 +83,13 @@ cache.push([album_input, song_input, lyrics, additional_song, other_song])
 div()
 song_output_list = cache.pull_songs(song_ref=song_ref)
 print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
+song = song_output_list[0]
 print("tracksort", song_output_list[0].tracksort, sep=": ")
 print("ID3 stuff")
 print(str(song_output_list[0].metadata))
+print("sources:")
+for source in song.sources:
+    print(source)
 
 # getting song  by album ref
 div()

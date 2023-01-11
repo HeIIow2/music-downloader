@@ -50,13 +50,17 @@ class Metadata:
     def get_all_metadata(self):
         return list(self.id3_attributes.items())
 
-    def __setitem__(self, item, value):
-        self.id3_attributes[item] = value
+    def __setitem__(self, key, value):
+        self.id3_attributes[key] = value
 
-    def __getitem__(self, item):
-        if item not in self.data:
+    def __getitem__(self, key):
+        if key not in self.id3_attributes:
             return None
-        return self.data[item]
+        return self.id3_attributes[key]
+
+    def delete_item(self, key: str):
+        if key in self.id3_attributes:
+            return self.id3_attributes.pop(key)
 
     def __str__(self) -> str:
         rows = []
@@ -173,6 +177,7 @@ class Song(DatabaseObject):
         self._title = None
         self._isrc = None
         self._length = None
+        self._sources: List[Source] = []
 
         self.metadata = Metadata()
 
@@ -185,11 +190,10 @@ class Song(DatabaseObject):
         self.artist_names = artist_names
         self.tracksort: int | None = tracksort
 
-        if sources is None:
-            sources = []
-        self.sources: List[Source] = sources
-        for source in self.sources:
-            source.add_song(self)
+        if sources is not None:
+            fuck_you_garbage_collector = sources[:]
+            print("constructor", sources)
+            self.sources = sources
 
         if target is None:
             target = Target()
@@ -261,11 +265,27 @@ class Song(DatabaseObject):
 
         self.metadata[attribute_map[name].value] = id3_value
 
+    def add_source(self, source_obj: Source):
+        source_obj.add_song(self)
+
+        print(source_obj)
+        self._sources.append(source_obj)
+        self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = source_obj.url
+
+    def set_sources(self, source_list):
+        self.metadata.delete_item(ID3_MAPPING.FILE_WEBPAGE_URL.value)
+        self._sources = []
+        for source in source_list:
+            self.add_source(source)
+
     def get_metadata(self):
         return self.metadata.get_all_metadata()
 
     def has_isrc(self) -> bool:
         return self._isrc is not None
+
+    def add_source(self, source: Source):
+        pass
 
     def get_artist_names(self) -> List[str]:
         return self.artist_names
@@ -286,6 +306,8 @@ class Song(DatabaseObject):
                          fset=lambda self, value: self.set_simple_metadata("_isrc", value))
     length: int = property(fget=get_length, fset=lambda self, value: self.set_simple_metadata("_length", value))
     album_id: str = property(fget=get_album_id)
+
+    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
 
 
 """
