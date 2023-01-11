@@ -45,12 +45,19 @@ class Metadata:
     def __init__(self, data: dict = {}) -> None:
         # this is pretty self explanatory
         # the key is a 4 letter key from the id3 standarts like TITL
-        self.id3_attributes: Dict[str, any] = {}
+        self.id3_attributes: Dict[str, list] = {}
+        
+        # its a null byte for the later concatination of text frames
+        self.null_byte = "\x00"
 
     def get_all_metadata(self):
         return list(self.id3_attributes.items())
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: list):
+        if len(value) == 0:
+            return
+        if type(value) != list:
+            raise ValueError(f"can only set attribute to list, not {type(value)}")
         self.id3_attributes[key] = value
 
     def __getitem__(self, key):
@@ -61,6 +68,26 @@ class Metadata:
     def delete_item(self, key: str):
         if key in self.id3_attributes:
             return self.id3_attributes.pop(key)
+
+    def get_id3_value(self, key: str):
+        if key not in self.id3_attributes:
+            return None
+        
+        list_data = self.id3_attributes[key]
+
+        """
+        Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. 
+        Thus if above conditions are met, I concetonate the list,
+        else I take the first element
+        """
+        if key[0].upper() == "T" and key.upper() != "TXXX":
+            return self.null_byte.join(list_data)
+
+        return list_data[0]
+
+    def __iter__(self):
+        for key in self.id3_attributes:
+            yield (key, self.get_id3_value(key))
 
     def __str__(self) -> str:
         rows = []
@@ -191,9 +218,7 @@ class Song(DatabaseObject):
         self.tracksort: int | None = tracksort
 
         if sources is not None:
-            fuck_you_garbage_collector = sources[:]
-            print("constructor", sources)
-            self.sources = sources
+            self.set_sources(source_list=sources)
 
         if target is None:
             target = Target()
@@ -263,7 +288,7 @@ class Song(DatabaseObject):
         if type(value) == int:
             id3_value = str(value)
 
-        self.metadata[attribute_map[name].value] = id3_value
+        self.metadata[attribute_map[name].value] = [id3_value]
 
     def add_source(self, source_obj: Source):
         source_obj.add_song(self)
@@ -273,10 +298,10 @@ class Song(DatabaseObject):
         self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = source_obj.url
 
     def set_sources(self, source_list):
-        self.metadata.delete_item(ID3_MAPPING.FILE_WEBPAGE_URL.value)
-        self._sources = []
-        for source in source_list:
-            self.add_source(source)
+        self._sources = source_list
+        for source in self._sources:
+            source.add_song(self)
+        self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
 
     def get_metadata(self):
         return self.metadata.get_all_metadata()

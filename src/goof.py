@@ -85,9 +85,9 @@ song_output_list = cache.pull_songs(song_ref=song_ref)
 print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
 song = song_output_list[0]
 print("tracksort", song_output_list[0].tracksort, sep=": ")
-print("ID3 stuff")
+print("ID3", dict(song.metadata))
 print(str(song_output_list[0].metadata))
-print("sources:")
+print("--src--")
 for source in song.sources:
     print(source)
 
