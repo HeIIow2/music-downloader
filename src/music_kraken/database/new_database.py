@@ -222,7 +222,7 @@ class Database:
         values = (
             source.id,
             source.song_ref_id,
-            source.src,
+            source.type_str,
             source.url
         )
 

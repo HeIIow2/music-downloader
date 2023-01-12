@@ -64,3 +64,10 @@ class SongAttribute:
         self.song_ref = Reference(song_id)
 
     song_ref_id = property(fget=get_ref_song_id, fset=set_ref_song_id)
+
+
+class ID3Metadata:
+    def get_id3_dict(self) -> dict:
+        return {}
+
+    id3_dict: dict = property(fget=get_id3_dict)

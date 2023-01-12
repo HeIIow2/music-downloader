@@ -10,16 +10,14 @@ from ...utils.shared import (
 from .parents import (
     DatabaseObject,
     Reference,
-    SongAttribute
+    SongAttribute,
+    ID3Metadata
 )
 from .source import Source
 
 """
 All Objects dependent 
 """
-
-
-
 
 
 class Metadata:
@@ -39,19 +37,34 @@ class Metadata:
     def get_all_metadata(self):
         return list(self.id3_attributes.items())
 
-    def __setitem__(self, key: str, value: list):
+    def __setitem__(self, key: str, value: list, override_existing: bool = True):
         if len(value) == 0:
             return
         if type(value) != list:
             raise ValueError(f"can only set attribute to list, not {type(value)}")
 
         # self.id3_attributes[key] = [value[0], "HHHHSSSS"]
-        self.id3_attributes[key] = value[0]
+        if override_existing:
+            self.id3_attributes[key] = value
+        else:
+            if key not in self.id3_attributes:
+                self.id3_attributes[key] = value
+                return
+            self.id3_attributes[key].extend(value)
 
     def __getitem__(self, key):
         if key not in self.id3_attributes:
             return None
         return self.id3_attributes[key]
+
+    def add_id3_metadata_obj(self, id3_metadata: ID3Metadata, override_existing: bool = True):
+        metadata_dict = id3_metadata.get_id3_dict()
+        for field_enum, value in metadata_dict.items():
+            self.__setitem__(field_enum.value, value, override_existing=override_existing)
+
+    def add_many_id3_metadata_obj(self, id3_metadata_list: List[ID3Metadata], override_existing: bool = False):
+        for id3_metadata in id3_metadata_list:
+            self.add_id3_metadata_obj(id3_metadata, override_existing=override_existing)
 
     def delete_item(self, key: str):
         if key in self.id3_attributes:
@@ -273,7 +286,8 @@ class Song(DatabaseObject):
         for source in self._sources:
             source.add_song(self)
             
-        self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
+        # self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
+        self.metadata.add_many_id3_metadata_obj(self._sources)
 
     def get_metadata(self):
         return self.metadata.get_all_metadata()

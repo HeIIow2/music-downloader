@@ -1,11 +1,14 @@
 from enum import Enum
 
 class Mapping(Enum):
+    """
+    These frames belong to the id3 standart
+    """
+    # Textframes
     TITLE = "TIT2"
     ISRC = "TSRC"
     LENGTH = "TLEN"
     DATE = "TYER"
-    UNSYNCED_LYRICS = "USLT"
     TRACKNUMBER = "TRCK"
     TOTALTRACKS = "TRCK" # Stored in the same frame with TRACKNUMBER, separated by '/': e.g. '4/9'.
     TITLESORTORDER = "TSOT"
@@ -24,12 +27,6 @@ class Mapping(Enum):
     ORIGINAL_RELEASE_DATE = "TDOR"
     ORIGINAL_ARTIST = "TOPE"
     ORIGINAL_ALBUM = "TOAL"
-    INTERNET_RADIO_WEBPAGE_URL = "WORS"
-    SOURCE_WEBPAGE_URL = "WOAS"
-    FILE_WEBPAGE_URL = "WOAF"
-    ARTIST_WEBPAGE_URL = "WOAR"
-    MOVEMENT_INDEX = "MVIN"
-    MOVEMENT_NAME = "MVNM"
     MEDIA_TYPE = "TMED"
     LYRICIST = "TEXT"
     WRITER = "TEXT"
@@ -42,15 +39,12 @@ class Mapping(Enum):
     INITIAL_KEY = "TKEY"
     OWNER = "TOWN"
     ENCODED_BY = "TENC"
-    COPYRIGHT_URL = "WCOP"
     COPYRIGHT = "TCOP"
     GENRE = "TCON"
     GROUPING = "TIT1"
     CONDUCTOR = "TPE3"
     COMPOSERSORTORDER = "TSOC"
     COMPOSER = "TCOM"
-    COMMERCIAL_INFORMATION_URL = "WCOM"
-    COMMENT = "COMM"
     BPM = "TBPM"
     ALBUM_ARTIST = "TPE2"
     BAND = "TPE2"
@@ -58,4 +52,17 @@ class Mapping(Enum):
     ALBUM = "TALB"
     ALBUMSORTORDER = "TSOA"
     ALBUMARTISTSORTORDER = "TSO2"
+
+    SOURCE_WEBPAGE_URL = "WOAS"
+    FILE_WEBPAGE_URL = "WOAF"
+    INTERNET_RADIO_WEBPAGE_URL = "WORS"
+    ARTIST_WEBPAGE_URL = "WOAR"
+    COPYRIGHT_URL = "WCOP"
+    COMMERCIAL_INFORMATION_URL = "WCOM"
+
+    MOVEMENT_INDEX = "MVIN"
+    MOVEMENT_NAME = "MVNM"
+    
+    UNSYNCED_LYRICS = "USLT"
+    COMMENT = "COMM"
     
