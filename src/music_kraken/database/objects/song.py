@@ -2,7 +2,10 @@ import os
 from typing import List, Tuple, Dict
 from mutagen.easyid3 import EasyID3
 
-from .id3_mapping import Mapping as ID3_MAPPING
+from .metadata import (
+    Mapping as ID3_MAPPING,
+    Metadata
+)
 from ...utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as logger
@@ -18,86 +21,6 @@ from .source import Source
 """
 All Objects dependent 
 """
-
-
-class Metadata:
-    """
-    Shall only be read or edited via the Song object.
-    call it like a dict to read/write values
-    """
-
-    def __init__(self, data: dict = {}) -> None:
-        # this is pretty self explanatory
-        # the key is a 4 letter key from the id3 standarts like TITL
-        self.id3_attributes: Dict[str, list] = {}
-        
-        # its a null byte for the later concatination of text frames
-        self.null_byte = "\x00"
-
-    def get_all_metadata(self):
-        return list(self.id3_attributes.items())
-
-    def __setitem__(self, key: str, value: list, override_existing: bool = True):
-        if len(value) == 0:
-            return
-        if type(value) != list:
-            raise ValueError(f"can only set attribute to list, not {type(value)}")
-
-        # self.id3_attributes[key] = [value[0], "HHHHSSSS"]
-        if override_existing:
-            self.id3_attributes[key] = value
-        else:
-            if key not in self.id3_attributes:
-                self.id3_attributes[key] = value
-                return
-            self.id3_attributes[key].extend(value)
-
-    def __getitem__(self, key):
-        if key not in self.id3_attributes:
-            return None
-        return self.id3_attributes[key]
-
-    def add_id3_metadata_obj(self, id3_metadata: ID3Metadata, override_existing: bool = True):
-        metadata_dict = id3_metadata.get_id3_dict()
-        for field_enum, value in metadata_dict.items():
-            self.__setitem__(field_enum.value, value, override_existing=override_existing)
-
-    def add_many_id3_metadata_obj(self, id3_metadata_list: List[ID3Metadata], override_existing: bool = False):
-        for id3_metadata in id3_metadata_list:
-            self.add_id3_metadata_obj(id3_metadata, override_existing=override_existing)
-
-    def delete_item(self, key: str):
-        if key in self.id3_attributes:
-            return self.id3_attributes.pop(key)
-
-    def get_id3_value(self, key: str):
-        if key not in self.id3_attributes:
-            return None
-        
-        list_data = self.id3_attributes[key]
-
-        """
-        Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. 
-        Thus if above conditions are met, I concetonate the list,
-        else I take the first element
-        """
-        if key[0].upper() == "T" and key.upper() != "TXXX":
-            return self.null_byte.join(list_data)
-
-        return list_data[0]
-
-    def __iter__(self):
-        for key in self.id3_attributes:
-            yield (key, self.get_id3_value(key))
-
-    def __str__(self) -> str:
-        rows = []
-        for key, value in self.id3_attributes.items():
-            rows.append(f"{key} - {str(value)}")
-        return "\n".join(rows)
-
-
-
 
 
 class Target(DatabaseObject, SongAttribute):
@@ -285,7 +208,7 @@ class Song(DatabaseObject):
         self._sources = source_list
         for source in self._sources:
             source.add_song(self)
-            
+
         # self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
         self.metadata.add_many_id3_metadata_obj(self._sources)
 

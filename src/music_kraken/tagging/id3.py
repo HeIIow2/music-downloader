@@ -22,14 +22,15 @@ class AudioMetadata:
             self.file_location = file_location
 
     def add_song_metadata(self, song: Song):
-        print("adding")
         for key, value in song.metadata:
             """
             https://www.programcreek.com/python/example/84797/mutagen.id3.ID3
             """
-            self.frames.add(mutagen.id3.Frames[key](encoding=3, text=value))
+            self.frames.add(value)
 
     def save(self, file_location: str = None):
+        print("saving")
+        print(self.frames.pprint())
         if file_location is not None:
             self.file_location = file_location
 
@@ -41,6 +42,7 @@ class AudioMetadata:
         # try loading the data from the given file. if it doesn't succeed the frame remains empty
         try:
             self.frames.load(file_location, v2_version=4)
+            logger.info(f"loaded following from \"{file_location}\"\n{self.frames.pprint()}")
         except mutagen.MutagenError:
             logger.warning(f"couldn't find any metadata at: \"{self.file_location}\"")
         self._file_location = file_location

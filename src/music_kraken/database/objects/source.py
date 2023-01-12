@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .id3_mapping import Mapping
+from .metadata import Mapping
 from .parents import (
     DatabaseObject,
     SongAttribute,
