@@ -112,6 +112,7 @@ class Song(DatabaseObject):
         self._isrc = None
         self._length = None
         self._sources: List[Source] = []
+        self._album = None
 
         self.metadata = Metadata()
 
@@ -124,8 +125,8 @@ class Song(DatabaseObject):
         self.artist_names = artist_names
         self.tracksort: int | None = tracksort
 
-        if sources is not None:
-            self.set_sources(source_list=sources)
+        self.sources = sources
+        self.album = album
 
         if target is None:
             target = Target()
@@ -138,7 +139,7 @@ class Song(DatabaseObject):
         for lyrics_ in self.lyrics:
             lyrics_.add_song(self)
 
-        self.album: Album = album
+        self.album = album
 
         self.main_artist_list = main_artist_list
         self.feature_artist_list = feature_artist_list
@@ -198,6 +199,8 @@ class Song(DatabaseObject):
         self.metadata[attribute_map[name].value] = [id3_value]
 
     def add_source(self, source_obj: Source):
+        if source_obj is None:
+            return
         source_obj.add_song(self)
 
         print(source_obj)
@@ -211,6 +214,13 @@ class Song(DatabaseObject):
 
         # self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
         self.metadata.add_many_id3_metadata_obj(self._sources)
+
+    def set_album(self, album):
+        if album is None:
+            return
+
+        self.metadata.add_many_id3_metadata_obj()
+        self._album = album
 
     def get_metadata(self):
         return self.metadata.get_all_metadata()
@@ -242,6 +252,7 @@ class Song(DatabaseObject):
     album_id: str = property(fget=get_album_id)
 
     sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
+    album = property(fget=lambda self: self._album, fset=set_album)
 
 
 """
@@ -249,7 +260,7 @@ All objects dependent on Album
 """
 
 
-class Album(DatabaseObject):
+class Album(DatabaseObject, ID3Metadata):
     """
     -------DB-FIELDS-------
     title           TEXT, 
