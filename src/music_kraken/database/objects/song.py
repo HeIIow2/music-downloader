@@ -7,33 +7,19 @@ from ...utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as logger
 )
-from .database_object import (
+from .parents import (
     DatabaseObject,
-    Reference
+    Reference,
+    SongAttribute
 )
+from .source import Source
 
 """
 All Objects dependent 
 """
 
 
-class SongAttribute:
-    def __init__(self, song=None):
-        # the reference to the song the lyrics belong to
-        self.song = song
 
-    def add_song(self, song):
-        self.song = song
-
-    def get_ref_song_id(self):
-        if self.song is None:
-            return None
-        return self.song.reference.id
-
-    def set_ref_song_id(self, song_id):
-        self.song_ref = Reference(song_id)
-
-    song_ref_id = property(fget=get_ref_song_id, fset=set_ref_song_id)
 
 
 class Metadata:
@@ -58,7 +44,9 @@ class Metadata:
             return
         if type(value) != list:
             raise ValueError(f"can only set attribute to list, not {type(value)}")
-        self.id3_attributes[key] = value
+
+        # self.id3_attributes[key] = [value[0], "HHHHSSSS"]
+        self.id3_attributes[key] = value[0]
 
     def __getitem__(self, key):
         if key not in self.id3_attributes:
@@ -96,24 +84,7 @@ class Metadata:
         return "\n".join(rows)
 
 
-class Source(DatabaseObject, SongAttribute):
-    """
-    create somehow like that
-    ```python
-    # url won't be a valid one due to it being just an example
-    Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
-    ```
-    """
 
-    def __init__(self, id_: str = None, src: str = None, url: str = None) -> None:
-        DatabaseObject.__init__(self, id_=id_)
-        SongAttribute.__init__(self)
-
-        self.src = src
-        self.url = url
-
-    def __str__(self):
-        return f"{self.src}: {self.url}"
 
 
 class Target(DatabaseObject, SongAttribute):

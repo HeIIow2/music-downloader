@@ -45,3 +45,22 @@ class DatabaseObject:
 
     id = property(fget=get_id)
     reference = property(fget=get_reference)
+
+
+class SongAttribute:
+    def __init__(self, song=None):
+        # the reference to the song the lyrics belong to
+        self.song = song
+
+    def add_song(self, song):
+        self.song = song
+
+    def get_ref_song_id(self):
+        if self.song is None:
+            return None
+        return self.song.reference.id
+
+    def set_ref_song_id(self, song_id):
+        self.song_ref = Reference(song_id)
+
+    song_ref_id = property(fget=get_ref_song_id, fset=set_ref_song_id)

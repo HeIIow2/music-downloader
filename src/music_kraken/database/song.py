@@ -7,7 +7,7 @@ from ..utils.shared import (
     MUSIC_DIR,
     SONG_LOGGER as logger
 )
-from .objects.database_object import DatabaseObject
+from .objects.parents import DatabaseObject
 
 class Metadata:
     def __init__(self) -> None:

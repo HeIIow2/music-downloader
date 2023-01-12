@@ -4,16 +4,17 @@ import logging
 from typing import List, Tuple
 from pkg_resources import resource_string
 
-from .objects.database_object import Reference
+from .objects.parents import Reference
+from .objects.source import Source
 from .objects import (
     Song,
     Lyrics,
     Metadata,
     Target,
     Artist,
-    Source,
     Album
 )
+
 
 logger = logging.getLogger("database")
 

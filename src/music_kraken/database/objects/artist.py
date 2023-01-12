@@ -1,7 +1,7 @@
 from ...utils.shared import (
     DATABASE_LOGGER as logger
 )
-from .database_object import (
+from .parents import (
     DatabaseObject,
     Reference
 )
