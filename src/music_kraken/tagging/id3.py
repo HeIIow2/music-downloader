@@ -1,4 +1,4 @@
-import mutagen 
+import mutagen
 from mutagen.id3 import ID3, Frame
 
 from typing import List
@@ -21,14 +21,12 @@ class AudioMetadata:
         if file_location is not None:
             self.file_location = file_location
 
-
     def add_song_metadata(self, song: Song):
         print("adding")
         for key, value in song.metadata:
             """
             https://www.programcreek.com/python/example/84797/mutagen.id3.ID3
             """
-            print(key, value)
             self.frames.add(mutagen.id3.Frames[key](encoding=3, text=value))
 
     def save(self, file_location: str = None):
@@ -43,18 +41,19 @@ class AudioMetadata:
         # try loading the data from the given file. if it doesn't succeed the frame remains empty
         try:
             self.frames.load(file_location, v2_version=4)
-            self._file_location = file_location
         except mutagen.MutagenError:
             logger.warning(f"couldn't find any metadata at: \"{self.file_location}\"")
+        self._file_location = file_location
 
     file_location = property(fget=lambda self: self._file_location, fset=set_file_location)
 
 
-def write_metadata(song: Song):
+def write_metadata(song: Song, ignore_file_not_found: bool = False):
     if not song.target.exists_on_disc:
-        print(song.target.file)
-        return
-    
+        if ignore_file_not_found:
+            return
+        raise ValueError(f"{song.target.file} not found")
+
     id3_object = AudioMetadata(file_location=song.target.file)
     id3_object.add_song_metadata(song=song)
     id3_object.save()
@@ -62,7 +61,7 @@ def write_metadata(song: Song):
 
 def write_many_metadata(song_list: List[Song]):
     for song in song_list:
-        write_metadata(song=song)
+        write_metadata(song=song, ignore_file_not_found=True)
 
 
 if __name__ == "__main__":

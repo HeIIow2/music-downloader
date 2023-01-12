@@ -51,7 +51,7 @@ song_input = Song(
     length=666,
     isrc="US-S1Z-99-00001",
     tracksort=2,
-    target=Target(file="test/Linkin Park/Hybrid Theory/out.mp3", path="~/Music/test/Linkin Park/Hybrid Theory/"),
+    target=Target(file="song.mp3", path="~/Music"),
     lyrics=[
         Lyrics(text="these are some depressive lyrics", language="en"),
         Lyrics(text="test", language="en")
@@ -101,6 +101,7 @@ for source in song.sources:
 write_metadata(song)
 
 exit()
+
 # getting song  by album ref
 div()
 song_output_list = cache.pull_songs(album_ref=album_input.reference)
