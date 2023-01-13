@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Dict, Tuple
 from mutagen import id3
 
 from .parents import (
@@ -98,11 +98,20 @@ class Metadata:
     Shall only be read or edited via the Song object.
     call it like a dict to read/write values
     """
+    class FrameValue:
+        def __init__(self, values: list, modified_by: str) -> None:
+            """
+            Parameters:
+                values (list): the values.
+            """
+            pass
 
     def __init__(self, data: dict = {}) -> None:
         # this is pretty self-explanatory
         # the key is a 4 letter key from the id3 standards like TITL
+
         self.id3_attributes: Dict[str, list] = {}
+        self.
 
         # its a null byte for the later concatenation of text frames
         self.null_byte = "\x00"

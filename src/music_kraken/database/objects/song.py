@@ -208,18 +208,20 @@ class Song(DatabaseObject):
         self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = source_obj.url
 
     def set_sources(self, source_list):
+        if source_list is None:
+            return
+
         self._sources = source_list
         for source in self._sources:
             source.add_song(self)
 
-        # self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = [s.url for s in self._sources]
         self.metadata.add_many_id3_metadata_obj(self._sources)
 
     def set_album(self, album):
         if album is None:
             return
 
-        self.metadata.add_many_id3_metadata_obj()
+        self.metadata.add_id3_metadata_obj(album)
         self._album = album
 
     def get_metadata(self):
@@ -227,9 +229,6 @@ class Song(DatabaseObject):
 
     def has_isrc(self) -> bool:
         return self._isrc is not None
-
-    def add_source(self, source: Source):
-        pass
 
     def get_artist_names(self) -> List[str]:
         return self.artist_names
