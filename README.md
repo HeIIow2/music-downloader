@@ -58,6 +58,9 @@ After you chose either an artist, a release group, a release, or a track by its 
 
 ## Programming Interface / Use as Library
 
+> IF U USE THIS NOW YOU ARE DUMB. IT ISN'T FINISHED AND THE STUFF YOU CODE NOW WILL BE BROKEN TOMORROW
+> SOON YOU CAN THOUGH
+
 If you want to use this project, or parts from it in your own projects from it, 
 make sure to be familiar with [Python Modules](https://docs.python.org/3/tutorial/modules.html).
 Further and better documentation including code examples are yet to come, so here is the rough
