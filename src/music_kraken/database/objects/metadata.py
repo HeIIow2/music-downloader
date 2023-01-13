@@ -27,7 +27,6 @@ class Mapping(Enum):
     PUBLISHER_URL = "WPUB"
     PUBLISHER = "TPUB"
     RATING = "POPM"
-    PAYMEMT_URL = "WPAY"
     DISCNUMBER = "TPOS"
     MOVEMENT_COUNT = "MVIN"
     TOTALDISCS = "TPOS"
@@ -66,6 +65,7 @@ class Mapping(Enum):
     ARTIST_WEBPAGE_URL = "WOAR"
     COPYRIGHT_URL = "WCOP"
     COMMERCIAL_INFORMATION_URL = "WCOM"
+    PAYMEMT_URL = "WPAY"
 
     MOVEMENT_INDEX = "MVIN"
     MOVEMENT_NAME = "MVNM"
@@ -111,7 +111,6 @@ class Metadata:
         # the key is a 4 letter key from the id3 standards like TITL
 
         self.id3_attributes: Dict[str, list] = {}
-        self.
 
         # its a null byte for the later concatenation of text frames
         self.null_byte = "\x00"
@@ -126,7 +125,12 @@ class Metadata:
             raise ValueError(f"can only set attribute to list, not {type(value)}")
 
         if override_existing:
-            self.id3_attributes[key] = value
+            new_val = []
+            for elem in value:
+                if elem is not None:
+                    new_val.append(elem)
+            if len(new_val) > 0:
+                self.id3_attributes[key] = new_val
         else:
             if key not in self.id3_attributes:
                 self.id3_attributes[key] = value

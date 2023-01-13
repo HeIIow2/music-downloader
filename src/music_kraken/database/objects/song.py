@@ -293,10 +293,23 @@ class Album(DatabaseObject, ID3Metadata):
         self.title: str = title
         self.copyright: str = copyright_
         self.album_status: str = album_status
+        """
+        TODO
+        MAKE SURE THIS IS IN THE CORRECT FORMAT
+        """
         self.language: str = language
+        """
+        TODO
+        only store the date in a python date object and derive the
+        year from it
+        """
         self.year: str = year
         self.date: str = date
         self.country: str = country
+        """
+        TODO
+        find out the id3 tag for barcode and implement it
+        """
         self.barcode: str = barcode
         self.is_split: bool = is_split
         self.albumsort: int | None = albumsort
@@ -326,6 +339,15 @@ class Album(DatabaseObject, ID3Metadata):
 
         song.tracksort = len(self.tracklist)
         self.tracklist.append(song)
+
+    def get_id3_dict(self) -> dict:
+        return {
+            ID3_MAPPING.ALBUM: [self.title],
+            ID3_MAPPING.COPYRIGHT: [self.copyright],
+            ID3_MAPPING.LANGUAGE: [self.language],
+            ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists]
+        }
+
 
 
 """
