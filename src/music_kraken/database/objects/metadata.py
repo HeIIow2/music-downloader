@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Dict, Tuple
 from mutagen import id3
+import datetime
 
 from .parents import (
     ID3Metadata
@@ -10,6 +11,9 @@ from .parents import (
 class Mapping(Enum):
     """
     These frames belong to the id3 standart
+    https://web.archive.org/web/20220830091059/https://id3.org/id3v2.4.0-frames
+    https://id3lib.sourceforge.net/id3/id3v2com-00.html
+    https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.4.0-frames.html
     """
     # Textframes
     TITLE = "TIT2"
@@ -37,7 +41,7 @@ class Mapping(Enum):
     LYRICIST = "TEXT"
     WRITER = "TEXT"
     ARTIST = "TPE1"
-    LANGUAGE = "TLAN"
+    LANGUAGE = "TLAN" # https://en.wikipedia.org/wiki/ISO_639-2
     ITUNESCOMPILATION = "TCMP"
     REMIXED_BY = "TPE4"
     RADIO_STATION_OWNER = "TRSO"
@@ -58,6 +62,7 @@ class Mapping(Enum):
     ALBUM = "TALB"
     ALBUMSORTORDER = "TSOA"
     ALBUMARTISTSORTORDER = "TSO2"
+    TAGGING_TIME = "TDTG"
 
     SOURCE_WEBPAGE_URL = "WOAS"
     FILE_WEBPAGE_URL = "WOAF"
@@ -91,6 +96,91 @@ class Mapping(Enum):
         if key[0] == "W":
             # an url field
             return cls.get_url_instance(key, value)
+
+
+class ID3Timestamp(datetime.datetime):
+    def __init__(
+            self,
+            year: int = None,
+            month: int = None,
+            day: int = None,
+            hour: int = None,
+            minute: int = None,
+            second: int = None,
+            microsecond=0,
+            tzinfo=None,
+            *,
+            fold=0
+    ):
+        self.has_year = year is not None
+        self.has_month = month is not None
+        self.has_day = day is not None
+        self.has_hour = hour is not None
+        self.has_minute = minute is not None
+        self.has_second = second is not None
+        self.has_microsecond = microsecond is not None
+
+        if not self.has_year:
+            year = 1
+        if not self.has_month:
+            month = 1
+        if not self.has_day:
+            day = 1
+        super().__init__(
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            second=second,
+            microsecond=microsecond,
+            tzinfo=tzinfo,
+            fold=fold
+        )
+
+    def get_timestamp(self) -> str:
+        """
+        https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.4.0-structure.html
+
+        The timestamp fields are based on a subset of ISO 8601. When being as precise as possible the format of a
+        time string is
+         - yyyy-MM-ddTHH:mm:ss
+         - (year[%Y], “-”, month[%m], “-”, day[%d], “T”, hour (out of 24)[%H], ”:”, minutes[%M], ”:”, seconds[%S])
+         - %Y-%m-%dT%H:%M:%S
+        but the precision may be reduced by removing as many time indicators as wanted. Hence valid timestamps are
+         - yyyy
+         - yyyy-MM
+         - yyyy-MM-dd
+         - yyyy-MM-ddTHH
+         - yyyy-MM-ddTHH:mm
+         - yyyy-MM-ddTHH:mm:ss
+        All time stamps are UTC. For durations, use the slash character as described in 8601,
+        and for multiple non-contiguous dates, use multiple strings, if allowed by the frame definition.
+
+        :return timestamp: as timestamp in the format of the id3 time as above described
+        """
+
+        if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute and self.has_second:
+            return self.strftime("%Y-%m-%dT%H:%M:%S")
+        if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute:
+            return self.strftime("%Y-%m-%dT%H:%M")
+        if self.has_year and self.has_month and self.has_day and self.has_hour:
+            return self.strftime("%Y-%m-%dT%H")
+        if self.has_year and self.has_month and self.has_day:
+            return self.strftime("%Y-%m-%d")
+        if self.has_year and self.has_month:
+            return self.strftime("%Y-%m")
+        if self.has_year:
+            return self.strftime("%Y")
+        return ""
+
+    def __str__(self) -> str:
+        return self.timestamp
+
+    def __repr__(self) -> str:
+        return self.timestamp
+
+    timestamp: str = property(fget=get_timestamp)
 
 
 class Metadata:

@@ -26,10 +26,9 @@ CREATE TABLE Album
 (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     title           TEXT, 
-    copyright       TEXT,
+    label           TEXT,
     album_status    TEXT,
     language        TEXT,
-    year            TEXT,
     date            TEXT,
     country         TEXT,
     barcode         TEXT,

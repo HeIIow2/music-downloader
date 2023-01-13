@@ -24,6 +24,11 @@ pip install music-kraken
 music-kraken
 ```
 
+### Notes for Python 3.9
+
+Unfortunately I use features that newly git introduced in [Python 3.10](https://docs.python.org/3/library/types.html#types.UnionType).
+So unfortunately you **CAN'T** run this programm with python 3.9. [#10][i10] 
+
 ### Notes for WSL
 
 If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PATH` [#2][i2]
@@ -331,5 +336,6 @@ To get the Lyrics, I scrape them, and put those in the USLT ID3 Tags of for exam
 For the lyrics source the page [https://genius.com/](https://genius.com/) is easily sufficient. It has most songs. Some songs are not present though, but that is fine, because the lyrics are optional anyways.
 
 
+[i10]: https://github.com/HeIIow2/music-downloader/issues/10
 [i2]: https://github.com/HeIIow2/music-downloader/issues/2
 [mb]: https://musicbrainz.org/

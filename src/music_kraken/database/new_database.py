@@ -3,6 +3,8 @@ import os
 import logging
 from typing import List, Tuple
 from pkg_resources import resource_string
+import datetime
+import pycountry
 
 from .objects.parents import Reference
 from .objects.source import Source
@@ -40,12 +42,12 @@ FROM Lyrics
 WHERE {where};
 """
 ALBUM_QUERY_UNJOINED = """
-SELECT Album.id AS album_id, title, copyright, album_status, language, year, date, country, barcode, albumsort, is_split
+SELECT Album.id AS album_id, title, label, album_status, language, date, country, barcode, albumsort, is_split
 FROM Album
 WHERE {where};
 """
 ALBUM_QUERY_JOINED = """
-SELECT a.id AS album_id, a.title, a.copyright, a.album_status, a.language, a.year, a.date, a.country, a.barcode, a.albumsort, a.is_split
+SELECT a.id AS album_id, a.title, a.label, a.album_status, a.language, a.date, a.country, a.barcode, a.albumsort, a.is_split
 FROM Song
 INNER JOIN Album a ON Song.album_id=a.id
 WHERE {where};
@@ -131,16 +133,15 @@ class Database:
 
     def push_album(self, album: Album):
         table = "Album"
-        query = f"INSERT OR REPLACE INTO {table} (id, title, copyright, album_status, language, year, date, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, title, label, album_status, language, date, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
 
         values = (
             album.id,
             album.title,
-            album.copyright,
+            album.label,
             album.album_status,
-            album.language,
-            album.year,
-            album.date,
+            album.iso_639_2_language,
+            album.date.strftime("%Y-%m-%d"),
             album.country,
             album.barcode,
             album.albumsort,
@@ -541,11 +542,10 @@ class Database:
         album_obj = Album(
             id_=album_id,
             title=album_result['title'],
-            copyright_=album_result['copyright'],
+            label=album_result['label'],
             album_status=album_result['album_status'],
-            language=album_result['language'],
-            year=album_result['year'],
-            date=album_result['date'],
+            language=pycountry.languages.get(alpha_3=album_result['language']),
+            date=datetime.datetime.strptime(album_result['date'], "%Y-%m-%d").date(),
             country=album_result['country'],
             barcode=album_result['barcode'],
             is_split=album_result['is_split'],

@@ -16,6 +16,9 @@ from music_kraken.tagging import (
 
 import music_kraken.database.new_database as db
 
+import datetime
+import pycountry
+
 
 def div(msg: str = ""):
     print("-" * 50 + msg + "-" * 50)
@@ -39,7 +42,10 @@ feature_artist = Artist(
 )
 
 album_input = Album(
-    title="One Final Action"
+    title="One Final Action",
+    date=datetime.date(1986, 3, 1),
+    language=pycountry.languages.get(alpha_2="en"),
+    label="cum productions"
 )
 album_input.artists = [
     main_artist,
@@ -62,7 +68,7 @@ song_input = Song(
     ],
     album=album_input,
     main_artist_list=[main_artist],
-    feature_artist_list=[feature_artist]
+    feature_artist_list=[feature_artist],
 )
 
 other_song = Song(

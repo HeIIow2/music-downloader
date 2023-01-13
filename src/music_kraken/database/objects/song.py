@@ -1,6 +1,7 @@
 import os
 from typing import List, Tuple, Dict
-from mutagen.easyid3 import EasyID3
+import datetime
+import pycountry
 
 from .metadata import (
     Mapping as ID3_MAPPING,
@@ -278,11 +279,10 @@ class Album(DatabaseObject, ID3Metadata):
             self,
             id_: str = None,
             title: str = None,
-            copyright_: str = None,
+            label: str = None,
             album_status: str = None,
-            language: str = None,
-            year: str = None,
-            date: str = None,
+            language: pycountry.Languages = None,
+            date: datetime.date = None,
             country: str = None,
             barcode: str = None,
             is_split: bool = False,
@@ -291,20 +291,10 @@ class Album(DatabaseObject, ID3Metadata):
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
         self.title: str = title
-        self.copyright: str = copyright_
         self.album_status: str = album_status
-        """
-        TODO
-        MAKE SURE THIS IS IN THE CORRECT FORMAT
-        """
-        self.language: str = language
-        """
-        TODO
-        only store the date in a python date object and derive the
-        year from it
-        """
-        self.year: str = year
-        self.date: str = date
+        self.label = label
+        self.language: pycountry.Languages = language
+        self.date: datetime.date = date
         self.country: str = country
         """
         TODO
@@ -344,9 +334,24 @@ class Album(DatabaseObject, ID3Metadata):
         return {
             ID3_MAPPING.ALBUM: [self.title],
             ID3_MAPPING.COPYRIGHT: [self.copyright],
-            ID3_MAPPING.LANGUAGE: [self.language],
+            ID3_MAPPING.LANGUAGE: [self.iso_639_2_language],
             ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists]
         }
+
+    def get_copyright(self) -> str:
+        if self.date.year == 1 or self.label is None:
+            return None
+
+        return f"{self.date.year} {self.label}"
+
+    def get_iso_639_2_lang(self) -> str:
+        if self.language is None:
+            return None
+
+        return self.language.alpha_3
+
+    copyright = property(fget=get_copyright)
+    iso_639_2_language = property(fget=get_iso_639_2_lang)
 
 
 
