@@ -44,6 +44,7 @@ Source = database.Source
 Target = database.Target
 Lyrics = database.Lyrics
 Album = database.Album
+ID3Timestamp = database.ID3Timestamp
 MetadataSearch = metadata.MetadataSearch
 MetadataDownload = metadata.MetadataDownload
 

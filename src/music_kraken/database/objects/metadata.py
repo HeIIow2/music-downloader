@@ -1,5 +1,7 @@
 from enum import Enum
 from typing import List, Dict, Tuple
+
+import dateutil.tz
 from mutagen import id3
 import datetime
 
@@ -98,7 +100,7 @@ class Mapping(Enum):
             return cls.get_url_instance(key, value)
 
 
-class ID3Timestamp(datetime.datetime):
+class ID3Timestamp():
     def __init__(
             self,
             year: int = None,
@@ -109,7 +111,6 @@ class ID3Timestamp(datetime.datetime):
             second: int = None,
             microsecond=0,
             tzinfo=None,
-            *,
             fold=0
     ):
         self.has_year = year is not None
@@ -126,7 +127,10 @@ class ID3Timestamp(datetime.datetime):
             month = 1
         if not self.has_day:
             day = 1
-        super().__init__(
+
+        # https://stackoverflow.com/questions/399022/why-cant-i-subclass-datetime-date
+        super().__new__(
+            cls=type(self),
             year=year,
             month=month,
             day=day,
@@ -188,15 +192,8 @@ class Metadata:
     Shall only be read or edited via the Song object.
     call it like a dict to read/write values
     """
-    class FrameValue:
-        def __init__(self, values: list, modified_by: str) -> None:
-            """
-            Parameters:
-                values (list): the values.
-            """
-            pass
 
-    def __init__(self, data: dict = {}) -> None:
+    def __init__(self) -> None:
         # this is pretty self-explanatory
         # the key is a 4 letter key from the id3 standards like TITL
 
@@ -251,6 +248,16 @@ class Metadata:
 
         list_data = self.id3_attributes[key]
 
+        # convert for example the time objects to timestamps
+        for i, element in enumerate(list_data):
+            # for performance’s sake I don't do other checks if it is already the right type
+            if type(element) == str:
+                continue
+
+            if type(element) == ID3Timestamp:
+                list_data[i] = element.timestamp
+                continue
+
         """
         Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. 
         Thus if above conditions are met, I concatenate the list,
@@ -265,6 +272,9 @@ class Metadata:
         return Mapping.get_mutagen_instance(Mapping(key), self.get_id3_value(key))
 
     def __iter__(self):
+        # set the tagging timestamp to the current time
+        self.__setitem__(Mapping.TAGGING_TIME.value, [ID3Timestamp.now()])
+
         for key in self.id3_attributes:
             yield key, self.get_mutagen_object(key)
 

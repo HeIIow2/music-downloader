@@ -5,7 +5,8 @@ import pycountry
 
 from .metadata import (
     Mapping as ID3_MAPPING,
-    Metadata
+    Metadata,
+    ID3Timestamp
 )
 from ...utils.shared import (
     MUSIC_DIR,
@@ -282,7 +283,7 @@ class Album(DatabaseObject, ID3Metadata):
             label: str = None,
             album_status: str = None,
             language: pycountry.Languages = None,
-            date: datetime.date = None,
+            date: ID3Timestamp = None,
             country: str = None,
             barcode: str = None,
             is_split: bool = False,
@@ -294,11 +295,12 @@ class Album(DatabaseObject, ID3Metadata):
         self.album_status: str = album_status
         self.label = label
         self.language: pycountry.Languages = language
-        self.date: datetime.date = date
+        self.date: ID3Timestamp = date
         self.country: str = country
         """
         TODO
         find out the id3 tag for barcode and implement it
+        maybee look at how mutagen does it with easy_id3
         """
         self.barcode: str = barcode
         self.is_split: bool = is_split
@@ -335,7 +337,8 @@ class Album(DatabaseObject, ID3Metadata):
             ID3_MAPPING.ALBUM: [self.title],
             ID3_MAPPING.COPYRIGHT: [self.copyright],
             ID3_MAPPING.LANGUAGE: [self.iso_639_2_language],
-            ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists]
+            ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists],
+            ID3_MAPPING.DATE: [self.date.timestamp]
         }
 
     def get_copyright(self) -> str:

@@ -5,6 +5,7 @@ from . import (
 )
 
 ID3_MAPPING = metadata.Mapping
+ID3Timestamp = metadata.ID3Timestamp
 
 Song = song.Song
 Artist = song.Artist

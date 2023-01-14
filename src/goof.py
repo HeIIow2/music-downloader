@@ -5,7 +5,8 @@ from music_kraken import (
     Target,
     Source,
     Album,
-    Artist
+    Artist,
+    ID3Timestamp
 )
 
 from music_kraken.tagging import (
@@ -16,7 +17,6 @@ from music_kraken.tagging import (
 
 import music_kraken.database.new_database as db
 
-import datetime
 import pycountry
 
 
@@ -43,7 +43,7 @@ feature_artist = Artist(
 
 album_input = Album(
     title="One Final Action",
-    date=datetime.date(1986, 3, 1),
+    date=ID3Timestamp(year=1986, month=3, day=1),
     language=pycountry.languages.get(alpha_2="en"),
     label="cum productions"
 )
