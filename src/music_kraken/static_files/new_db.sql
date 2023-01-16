@@ -14,6 +14,7 @@ CREATE TABLE Song
 CREATE TABLE Source
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type        TEXT NOT NULL
     src         TEXT NOT NULL,
     url         TEXT NOT NULL,
     certainty   INT NOT NULL DEFAULT 0,   -- certainty=0 -> it is definitely a valid source

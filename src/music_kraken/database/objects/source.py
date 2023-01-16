@@ -42,11 +42,13 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
     ```
     """
 
-    def __init__(self,type_str: str, id_: str = None, src: str = None, url: str = None) -> None:
+    def __init__(self, id_: str = None, src: str = None, url: str = None, type_str: str = None) -> None:
         DatabaseObject.__init__(self, id_=id_)
         SongAttribute.__init__(self)
 
-        self.type_enum = source_types(type_str)
+        self.type_enum = None
+        if type_str is not None:
+            self.type_enum = source_types(type_str)
         self.src = sources(src)
         self.url = url
 
