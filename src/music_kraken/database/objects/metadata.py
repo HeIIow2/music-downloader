@@ -253,11 +253,13 @@ class Metadata:
     call it like a dict to read/write values
     """
 
-    def __init__(self) -> None:
+    def __init__(self, id3_dict: dict = None) -> None:
         # this is pretty self-explanatory
         # the key is a 4 letter key from the id3 standards like TITL
 
         self.id3_attributes: Dict[str, list] = {}
+        if id3_dict is not None:
+            self.add_metadata_dict(id3_dict)
 
         # its a null byte for the later concatenation of text frames
         self.null_byte = "\x00"
@@ -289,14 +291,13 @@ class Metadata:
             return None
         return self.id3_attributes[key]
 
-    def add_id3_metadata_obj(self, id3_metadata: ID3Metadata, override_existing: bool = True):
-        metadata_dict = id3_metadata.get_id3_dict()
+    def add_metadata_dict(self, metadata_dict: dict, override_existing: bool = True):
         for field_enum, value in metadata_dict.items():
             self.__setitem__(field_enum.value, value, override_existing=override_existing)
 
-    def add_many_id3_metadata_obj(self, id3_metadata_list: List[ID3Metadata], override_existing: bool = False):
-        for id3_metadata in id3_metadata_list:
-            self.add_id3_metadata_obj(id3_metadata, override_existing=override_existing)
+    def add_many_metadata_dict(self, id3_metadata_list: List[dict], override_existing: bool = False):
+        for metadata_dict in id3_metadata_list:
+            self.add_metadata_dict(metadata_dict, override_existing=override_existing)
 
     def delete_item(self, key: str):
         if key in self.id3_attributes:

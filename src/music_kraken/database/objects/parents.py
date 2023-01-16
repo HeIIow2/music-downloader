@@ -67,6 +67,9 @@ class SongAttribute:
 
 
 class ID3Metadata:
+    def get_metadata(self):
+        pass
+
     def get_id3_dict(self) -> dict:
         return {}
 

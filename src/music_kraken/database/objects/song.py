@@ -83,14 +83,13 @@ class Lyrics(DatabaseObject, SongAttribute):
         self.language = language
 
 
-class Song(DatabaseObject):
+class Song(DatabaseObject, ID3Metadata):
     def __init__(
             self,
             id_: str = None,
             mb_id: str = None,
             title: str = None,
             album_name: str = None,
-            artist_names: List[str] = [],
             isrc: str = None,
             length: int = None,
             tracksort: int = None,
@@ -98,8 +97,8 @@ class Song(DatabaseObject):
             target: Target = None,
             lyrics: List[Lyrics] = None,
             album=None,
-            main_artist_list: list = [],
-            feature_artist_list: list = []
+            main_artist_list: list = None,
+            feature_artist_list: list = None
     ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
@@ -110,41 +109,37 @@ class Song(DatabaseObject):
         super().__init__(id_=id_)
         # attributes
         # *private* attributes
-        self._title = None
-        self._isrc = None
-        self._length = None
-        self._sources: List[Source] = []
-        self._album = None
-
-        self.metadata = Metadata()
-
-        self.title = title
-        self.isrc = isrc
-        self.length = length
-
+        self.title: str = title
+        self.isrc: str = isrc
+        self.length: int = length
         self.mb_id: str | None = mb_id
         self.album_name: str | None = album_name
-        self.artist_names = artist_names
         self.tracksort: int | None = tracksort
+        
+        self.sources: List[Source] = []
+        if sources is not None:
+            self.sources = sources
 
-        self.sources = sources
         self.album = album
 
-        if target is None:
-            target = Target()
-        self.target: Target = target
+        self.target = Target()
+        if target is not None:
+            self.target = target
         self.target.add_song(self)
 
-        if lyrics is None:
-            lyrics = []
-        self.lyrics: List[Lyrics] = lyrics
-        for lyrics_ in self.lyrics:
-            lyrics_.add_song(self)
+        self.lyrics = []
+        if lyrics is not None:
+            self.lyrics = lyrics
 
         self.album = album
 
-        self.main_artist_list = main_artist_list
-        self.feature_artist_list = feature_artist_list
+        self.main_artist_list = []
+        if main_artist_list is not None:
+            self.main_artist_list = main_artist_list
+
+        self.feature_artist_list = []
+        if feature_artist_list is not None:
+            self.feature_artist_list = feature_artist_list
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -168,92 +163,33 @@ class Song(DatabaseObject):
     def __repr__(self) -> str:
         return self.__str__()
 
-    def set_simple_metadata(self, name: str, value):
-        """
-        this method is for setting values of attributes,
-        that directly map to an ID3 value.
-        A good example is the title or the isrc.
-
-        for more complex data I will use seperate functions
-
-        the naming convention for the name I follow is, to name
-        the attribute the same as the defined property, but with one underscore infront:
-        title -> _title
-        """
-        if value is None:
-            return
-
-        attribute_map = {
-            "_title": ID3_MAPPING.TITLE,
-            "_isrc": ID3_MAPPING.ISRC,
-            "_length": ID3_MAPPING.LENGTH
-        }
-
-        # if this crashes/raises an error the function is
-        # called wrongly. I DO NOT CATCH ERRORS DUE TO PERFORMANCE AND DEBUGGING
-        self.__setattr__(name, value)
-
-        # convert value to id3 value if necessary
-        id3_value = value
-        if type(value) == int:
-            id3_value = str(value)
-
-        self.metadata[attribute_map[name].value] = [id3_value]
-
-    def add_source(self, source_obj: Source):
-        if source_obj is None:
-            return
-        source_obj.add_song(self)
-
-        print(source_obj)
-        self._sources.append(source_obj)
-        self.metadata[ID3_MAPPING.FILE_WEBPAGE_URL.value] = source_obj.url
-
-    def set_sources(self, source_list):
-        if source_list is None:
-            return
-
-        self._sources = source_list
-        for source in self._sources:
-            source.add_song(self)
-
-        self.metadata.add_many_id3_metadata_obj(self._sources)
-
-    def set_album(self, album):
-        if album is None:
-            return
-
-        self.metadata.add_id3_metadata_obj(album)
-        self._album = album
-
-    def get_metadata(self):
-        return self.metadata.get_all_metadata()
-
     def has_isrc(self) -> bool:
-        return self._isrc is not None
-
-    def get_artist_names(self) -> List[str]:
-        return self.artist_names
-
-    def get_length(self):
-        if self._length is None:
-            return None
-        return int(self._length)
+        return self.isrc is not None
 
     def get_album_id(self):
         if self.album is None:
             return None
         return self.album.id
 
-    title: str = property(fget=lambda self: self._title,
-                          fset=lambda self, value: self.set_simple_metadata("_title", value))
-    isrc: str = property(fget=lambda self: self._isrc,
-                         fset=lambda self, value: self.set_simple_metadata("_isrc", value))
-    length: int = property(fget=get_length, fset=lambda self, value: self.set_simple_metadata("_length", value))
-    album_id: str = property(fget=get_album_id)
+    def get_id3_dict(self) -> dict:
+        return {
+            ID3_MAPPING.TITLE: [self.title],
+            ID3_MAPPING.ISRC: [self.isrc],
+            ID3_MAPPING.LENGTH: [str(self.length)]
+        }
+    
+    def get_metadata(self) -> Metadata:
+        metadata = Metadata(self.get_id3_dict())
 
-    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
-    album = property(fget=lambda self: self._album, fset=set_album)
+        metadata.add_many_metadata_dict([source.get_id3_dict() for source in self.sources])
+        if self.album is not None:
+            metadata.add_metadata_dict(self.album.get_id3_dict())
+        metadata.add_many_metadata_dict([artist.get_id3_dict() for artist in self.main_artist_list])
+        metadata.add_many_metadata_dict([artist.get_id3_dict() for artist in self.feature_artist_list])
+
+        return metadata
+
+    metadata = property(fget=get_metadata)
 
 
 """
@@ -363,7 +299,7 @@ All objects dependent on Artist
 """
 
 
-class Artist(DatabaseObject):
+class Artist(DatabaseObject, ID3Metadata):
     """
     main_songs
     feature_song
@@ -435,6 +371,11 @@ class Artist(DatabaseObject):
         flat_copy_discography.append(self.get_features())
 
         return flat_copy_discography
+
+    def get_id3_dict(self) -> dict:
+        return {
+            ID3_MAPPING.ARTIST: [self.name]
+        }
 
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)

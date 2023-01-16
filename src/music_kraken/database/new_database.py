@@ -182,13 +182,16 @@ class Database:
 
         # add sources
         for source in song.sources:
+            source.add_song(song)
             self.push_source(source=source)
 
         # add lyrics
         for single_lyrics in song.lyrics:
+            single_lyrics.add_song(song)
             self.push_lyrics(lyrics=single_lyrics)
 
         # add target
+        song.target.add_song(song)
         self.push_target(target=song.target)
 
         for main_artist in song.main_artist_list:
