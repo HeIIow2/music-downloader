@@ -100,7 +100,7 @@ class Mapping(Enum):
             return cls.get_url_instance(key, value)
 
 
-class ID3Timestamp():
+class ID3Timestamp:
     def __init__(
             self,
             year: int = None,
@@ -108,18 +108,21 @@ class ID3Timestamp():
             day: int = None,
             hour: int = None,
             minute: int = None,
-            second: int = None,
-            microsecond=0,
-            tzinfo=None,
-            fold=0
+            second: int = None
     ):
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+
         self.has_year = year is not None
         self.has_month = month is not None
         self.has_day = day is not None
         self.has_hour = hour is not None
         self.has_minute = minute is not None
         self.has_second = second is not None
-        self.has_microsecond = microsecond is not None
 
         if not self.has_year:
             year = 1
@@ -127,19 +130,20 @@ class ID3Timestamp():
             month = 1
         if not self.has_day:
             day = 1
+        if not self.has_hour:
+            hour = 1
+        if not self.has_minute:
+            minute = 1
+        if not self.has_second:
+            second = 1
 
-        # https://stackoverflow.com/questions/399022/why-cant-i-subclass-datetime-date
-        super().__new__(
-            cls=type(self),
+        self.date_obj = datetime.datetime(
             year=year,
             month=month,
             day=day,
             hour=hour,
             minute=minute,
-            second=second,
-            microsecond=microsecond,
-            tzinfo=tzinfo,
-            fold=fold
+            second=second
         )
 
     def get_timestamp(self) -> str:
@@ -165,18 +169,47 @@ class ID3Timestamp():
         """
 
         if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute and self.has_second:
-            return self.strftime("%Y-%m-%dT%H:%M:%S")
+            return self.date_obj.strftime("%Y-%m-%dT%H:%M:%S")
         if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute:
-            return self.strftime("%Y-%m-%dT%H:%M")
+            return self.date_obj.strftime("%Y-%m-%dT%H:%M")
         if self.has_year and self.has_month and self.has_day and self.has_hour:
-            return self.strftime("%Y-%m-%dT%H")
+            return self.date_obj.strftime("%Y-%m-%dT%H")
         if self.has_year and self.has_month and self.has_day:
-            return self.strftime("%Y-%m-%d")
+            return self.date_obj.strftime("%Y-%m-%d")
         if self.has_year and self.has_month:
-            return self.strftime("%Y-%m")
+            return self.date_obj.strftime("%Y-%m")
         if self.has_year:
-            return self.strftime("%Y")
+            return self.date_obj.strftime("%Y")
         return ""
+
+    @classmethod
+    def strptime(cls, time_stamp: str, format: str):
+        date_obj = datetime.datetime.strftime(time_stamp, format)
+
+        return cls(
+            year=date_obj.year,
+            month=date_obj.month,
+            day=date_obj.day,
+            hour=date_obj.hour,
+            minute=date_obj.minute,
+            second=date_obj.second
+        )
+
+    @classmethod
+    def now(cls):
+        date_obj = datetime.datetime.now()
+
+        return cls(
+            year=date_obj.year,
+            month=date_obj.month,
+            day=date_obj.day,
+            hour=date_obj.hour,
+            minute=date_obj.minute,
+            second=date_obj.second
+        )
+
+    def strftime(self, format: str) -> str:
+        return self.date_obj.strftime(format)
 
     def __str__(self) -> str:
         return self.timestamp

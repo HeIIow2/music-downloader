@@ -14,7 +14,8 @@ from .objects import (
     Metadata,
     Target,
     Artist,
-    Album
+    Album,
+    ID3Timestamp
 )
 
 
