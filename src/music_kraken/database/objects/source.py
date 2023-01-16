@@ -7,15 +7,27 @@ from .parents import (
     ID3Metadata
 )
 
+class source_types(Enum):
+    SONG = "song"
+    ALBUM = "album"
+    ARTIST = "artist"
+    LYRICS = "lyrics"
+
 class sources(Enum):
     YOUTUBE = "youtube"
     MUSIFY  = "musify"
+    GENIUS = "genius"
+    MUSICBRAINZ = "musicbrainz"
+    ENCYCLOPAEDIA_METALLUM = "encyclopaedia metallum"
 
     @classmethod
     def get_homepage(cls, attribute) -> str:
         homepage_map = {
             cls.YOUTUBE:    "https://www.youtube.com/",
-            cls.MUSIFY:     "https://musify.club/"
+            cls.MUSIFY:     "https://musify.club/",
+            cls.MUSICBRAINZ:"https://musicbrainz.org/",
+            cls.ENCYCLOPAEDIA_METALLUM: "https://www.metal-archives.com/",
+            cls.GENIUS:     "https://genius.com/"
         }
         return homepage_map[attribute]
 
@@ -30,10 +42,11 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
     ```
     """
 
-    def __init__(self, id_: str = None, src: str = None, url: str = None) -> None:
+    def __init__(self,type_str: str, id_: str = None, src: str = None, url: str = None) -> None:
         DatabaseObject.__init__(self, id_=id_)
         SongAttribute.__init__(self)
 
+        self.type_enum = source_types(type_str)
         self.src = sources(src)
         self.url = url
 
@@ -46,5 +59,5 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
     def __str__(self):
         return f"{self.src}: {self.url}"
 
-    type_str = property(fget=lambda self: self.src.value)
+    site_str = property(fget=lambda self: self.src.value)
     homepage = property(fget=lambda self: sources.get_homepage(self.src))
