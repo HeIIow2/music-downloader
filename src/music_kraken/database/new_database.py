@@ -27,7 +27,7 @@ logger = logging.getLogger("database")
 SONG_QUERY = """
 SELECT 
 Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id, Song.tracksort,
-Target.id AS target_id, Target.file AS file, Target.path AS path
+Target.id AS target_id, Target.file AS file, Target.path AS path, Song.genre AS genre
 FROM Song
 LEFT JOIN Target ON Song.id=Target.song_id 
 WHERE {where};
@@ -173,9 +173,10 @@ class Database:
             song.isrc,
             song.length,
             song.get_album_id(),
-            song.tracksort
+            song.tracksort,
+            song.genre
         )
-        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length, album_id, tracksort) VALUES (?, ?, ?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, name, isrc, length, album_id, tracksort, genre) VALUES (?, ?, ?, ?, ?, ?, ?);"
 
         self.cursor.execute(query, values)
         self.connection.commit()
@@ -475,6 +476,7 @@ class Database:
             isrc=song_result['isrc'],
             length=song_result['length'],
             tracksort=song_result['tracksort'],
+            genre=song_result['genre'],
             target=Target(
                 id_=song_result['target_id'],
                 file=song_result['file'],

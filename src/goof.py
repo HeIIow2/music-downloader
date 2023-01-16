@@ -53,6 +53,7 @@ album_input.artists = [
 ]
 
 song_input = Song(
+    genre="HS Core",
     title="Vein Deep in the Solution",
     length=666,
     isrc="US-S1Z-99-00001",

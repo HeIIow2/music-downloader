@@ -93,6 +93,7 @@ class Song(DatabaseObject, ID3Metadata):
             isrc: str = None,
             length: int = None,
             tracksort: int = None,
+            genre: str = None,
             sources: List[Source] = None,
             target: Target = None,
             lyrics: List[Lyrics] = None,
@@ -115,6 +116,7 @@ class Song(DatabaseObject, ID3Metadata):
         self.mb_id: str | None = mb_id
         self.album_name: str | None = album_name
         self.tracksort: int | None = tracksort
+        self.genre: str = genre
         
         self.sources: List[Source] = []
         if sources is not None:
@@ -175,7 +177,8 @@ class Song(DatabaseObject, ID3Metadata):
         return {
             ID3_MAPPING.TITLE: [self.title],
             ID3_MAPPING.ISRC: [self.isrc],
-            ID3_MAPPING.LENGTH: [str(self.length)]
+            ID3_MAPPING.LENGTH: [str(self.length)],
+            ID3_MAPPING.GENRE: [self.genre]
         }
     
     def get_metadata(self) -> Metadata:
