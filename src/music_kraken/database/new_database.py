@@ -546,7 +546,7 @@ class Database:
             label=album_result['label'],
             album_status=album_result['album_status'],
             language=pycountry.languages.get(alpha_3=album_result['language']),
-            date=datetime.datetime.strptime(album_result['date'], "%Y-%m-%d").date(),
+            date=ID3Timestamp.strptime(album_result['date'], "%Y-%m-%d"),
             country=album_result['country'],
             barcode=album_result['barcode'],
             is_split=album_result['is_split'],

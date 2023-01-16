@@ -184,15 +184,42 @@ class ID3Timestamp:
 
     @classmethod
     def strptime(cls, time_stamp: str, format: str):
-        date_obj = datetime.datetime.strftime(time_stamp, format)
+        """
+        day: "%d" 
+        month: "%b", "%B", "%m"
+        year: "%y", "%Y"
+        hour: "%H", "%I"
+        minute: "%M"
+        second: "%S"
+        """
+        date_obj = datetime.datetime.strptime(time_stamp, format)
+
+        day = None
+        if "%d" in format:
+            day = date_obj.day
+        month = None
+        if any([i in format for i in ("%b", "%B", "%m")]):
+            month = date_obj.month
+        year = None
+        if any([i in format for i in ("%y", "%Y")]):
+            year = date_obj.year
+        hour = None
+        if any([i in format for i in ("%H", "%I")]):
+            hour = date_obj.hour
+        minute = None
+        if "%M" in format:
+            minute = date_obj.minute
+        second = None
+        if "%S" in format:
+            second = date_obj.second
 
         return cls(
-            year=date_obj.year,
-            month=date_obj.month,
-            day=date_obj.day,
-            hour=date_obj.hour,
-            minute=date_obj.minute,
-            second=date_obj.second
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            second=second
         )
 
     @classmethod
