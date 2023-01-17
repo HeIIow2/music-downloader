@@ -15,7 +15,8 @@ from .objects import (
     Target,
     Artist,
     Album,
-    ID3Timestamp
+    ID3Timestamp,
+    source_types
 )
 
 
@@ -33,7 +34,7 @@ LEFT JOIN Target ON Song.id=Target.song_id
 WHERE {where};
 """
 SOURCE_QUERY = """
-SELECT id, src, url, song_id 
+SELECT id, type, src, url, song_id 
 FROM Source
 WHERE {where};
 """
@@ -224,9 +225,10 @@ class Database:
             logger.warning("the Source don't refer to a song")
 
         table = "Source"
-        query = f"INSERT OR REPLACE INTO {table} (id, song_id, src, url) VALUES (?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, type, song_id, src, url) VALUES (?, ?, ?, ?, ?);"
         values = (
             source.id,
+            source.type,
             source.song_ref_id,
             source.site_str,
             source.url
@@ -336,13 +338,14 @@ class Database:
             language=lyrics_row['language']
         ) for lyrics_row in lyrics_rows]
 
-    def pull_sources(self, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
+    def pull_sources(self, type_enum, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
         """
         Gets a list of sources. if source_ref is passed in the List will most likely only
         contain one Element if everything goes accordingly.
         **If neither song_ref nor source_ref are passed in it will return ALL sources**
         :param song_ref:
         :param source_ref:
+        :param type_str: the thing the source belongs to like eg. "song" or "album"
         :return:
         """
 
@@ -359,7 +362,8 @@ class Database:
         return [Source(
             id_=source_row['id'],
             src=source_row['src'],
-            url=source_row['url']
+            url=source_row['url'],
+            type_str=type_enum.value
         ) for source_row in source_rows]
 
     def pull_artist_song(self, song_ref: Reference = None, artist_ref: Reference = None) -> List[tuple]:
@@ -482,7 +486,7 @@ class Database:
                 file=song_result['file'],
                 path=song_result['path']
             ),
-            sources=self.pull_sources(song_ref=Reference(id_=song_id)),
+            sources=self.pull_sources(type_enum=source_types.SONG, song_ref=Reference(id_=song_id)),
             lyrics=self.pull_lyrics(song_ref=Reference(id_=song_id)),
         )
 
