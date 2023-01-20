@@ -51,10 +51,18 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
         self.url = url
 
     def get_id3_dict(self) -> dict:
-        return {
-            Mapping.FILE_WEBPAGE_URL: [self.url],
-            Mapping.SOURCE_WEBPAGE_URL: [self.homepage]
-        }
+        if self.type_enum == source_types.SONG:
+            return {
+                Mapping.FILE_WEBPAGE_URL: [self.url],
+                Mapping.SOURCE_WEBPAGE_URL: [self.homepage]
+            }
+        
+        if self.type_enum == source_types.ARTIST:
+            return {
+                Mapping.ARTIST_WEBPAGE_URL: [self.url]
+            }
+
+        return {}
 
     def __str__(self):
         return f"{self.src}: {self.url}"
