@@ -314,6 +314,7 @@ class Artist(DatabaseObject, ID3Metadata):
             self,
             id_: str = None,
             name: str = None,
+            sources: List[Source] = None,
             main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None
@@ -333,6 +334,10 @@ class Artist(DatabaseObject, ID3Metadata):
         self.feature_songs = feature_songs
 
         self.main_albums = main_albums
+
+        self.sources = []
+        if sources is not None:
+            self.sources = sources
 
     def __str__(self):
         return self.name or ""
@@ -376,9 +381,12 @@ class Artist(DatabaseObject, ID3Metadata):
         return flat_copy_discography
 
     def get_id3_dict(self) -> dict:
-        return {
+        id3_dict = {
             ID3_MAPPING.ARTIST: [self.name]
         }
+        id3_dict.update(self.sources[0].get_id3_dict())
+
+        return id3_dict
 
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)
