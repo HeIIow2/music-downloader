@@ -41,6 +41,7 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 Song = database.Song
 Artist = database.Artist
 Source = database.Source
+source_types = database.source_types
 Target = database.Target
 Lyrics = database.Lyrics
 Album = database.Album

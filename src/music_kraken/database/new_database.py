@@ -113,6 +113,7 @@ class Database:
             return self.push_artist(artist=db_object)
 
         if type(db_object) == Source:
+            # needs to have the property type_enum or type_str set
             return self.push_source(source=db_object)
 
         if type(db_object) == Album:
@@ -185,6 +186,7 @@ class Database:
         # add sources
         for source in song.sources:
             source.add_song(song)
+            source.type_enum = source_types.SONG
             self.push_source(source=source)
 
         # add lyrics
@@ -221,6 +223,8 @@ class Database:
         self.connection.commit()
 
     def push_source(self, source: Source):
+
+
         if source.song_ref_id is None:
             logger.warning("the Source don't refer to a song")
 
@@ -228,7 +232,7 @@ class Database:
         query = f"INSERT OR REPLACE INTO {table} (id, type, song_id, src, url) VALUES (?, ?, ?, ?, ?);"
         values = (
             source.id,
-            source.type,
+            source.type_str,
             source.song_ref_id,
             source.site_str,
             source.url
@@ -359,11 +363,12 @@ class Database:
         self.cursor.execute(query)
 
         source_rows = self.cursor.fetchall()
+        
         return [Source(
+            source_types(source_row['type']),
             id_=source_row['id'],
             src=source_row['src'],
-            url=source_row['url'],
-            type_str=type_enum.value
+            url=source_row['url']
         ) for source_row in source_rows]
 
     def pull_artist_song(self, song_ref: Reference = None, artist_ref: Reference = None) -> List[tuple]:

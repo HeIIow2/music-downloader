@@ -6,7 +6,8 @@ from music_kraken import (
     Source,
     Album,
     Artist,
-    ID3Timestamp
+    ID3Timestamp,
+    source_types
 )
 
 from music_kraken.tagging import (
@@ -64,8 +65,8 @@ song_input = Song(
         Lyrics(text="test", language="en")
     ],
     sources=[
-        Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd"),
-        Source(src="musify", url="https://ln.topdf.de/Music-Kraken/")
+        Source(source_types.SONG, src="youtube", url="https://youtu.be/dfnsdajlhkjhsd"),
+        Source(source_types.SONG, src="musify", url="https://ln.topdf.de/Music-Kraken/")
     ],
     album=album_input,
     main_artist_list=[main_artist],
