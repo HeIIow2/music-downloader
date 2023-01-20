@@ -7,7 +7,8 @@ from music_kraken import (
     Album,
     Artist,
     ID3Timestamp,
-    source_types
+    SourcePages,
+    SourceTypes
 )
 
 from music_kraken.tagging import (
@@ -28,8 +29,12 @@ def div(msg: str = ""):
 cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
 
+
 main_artist = Artist(
-    name="I'm in a coffin"
+    name="I'm in a coffin",
+    sources=[
+        Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727")
+    ]
 )
 
 artist_ref = main_artist.reference
@@ -65,8 +70,8 @@ song_input = Song(
         Lyrics(text="test", language="en")
     ],
     sources=[
-        Source(source_types.SONG, src="youtube", url="https://youtu.be/dfnsdajlhkjhsd"),
-        Source(source_types.SONG, src="musify", url="https://ln.topdf.de/Music-Kraken/")
+        Source(SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
+        Source(SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
     ],
     album=album_input,
     main_artist_list=[main_artist],

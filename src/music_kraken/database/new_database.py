@@ -16,9 +16,9 @@ from .objects import (
     Artist,
     Album,
     ID3Timestamp,
-    source_types
+    SourceTypes,
+    SourcePages
 )
-
 
 logger = logging.getLogger("database")
 
@@ -186,7 +186,7 @@ class Database:
         # add sources
         for source in song.sources:
             source.add_song(song)
-            source.type_enum = source_types.SONG
+            source.type_enum = SourceTypes.SONG
             self.push_source(source=source)
 
         # add lyrics
@@ -223,8 +223,6 @@ class Database:
         self.connection.commit()
 
     def push_source(self, source: Source):
-
-
         if source.song_ref_id is None:
             logger.warning("the Source don't refer to a song")
 
@@ -234,7 +232,7 @@ class Database:
             source.id,
             source.type_str,
             source.song_ref_id,
-            source.site_str,
+            source.page_str,
             source.url
         )
 
@@ -316,6 +314,10 @@ class Database:
         for album in artist.main_albums:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
 
+        for source in artist.sources:
+            source.add_song(artist)
+            self.push_source(source)
+
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
         """
         Gets a list of sources. if lyrics_ref is passed in the List will most likely only
@@ -342,7 +344,7 @@ class Database:
             language=lyrics_row['language']
         ) for lyrics_row in lyrics_rows]
 
-    def pull_sources(self, type_enum, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
+    def pull_sources(self, artist_ref: Reference = None, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
         """
         Gets a list of sources. if source_ref is passed in the List will most likely only
         contain one Element if everything goes accordingly.
@@ -357,19 +359,23 @@ class Database:
         if song_ref is not None:
             where = f"song_id=\"{song_ref.id}\""
         elif source_ref is not None:
-            where = f"id=\"{source_ref.id}\""
+            where = f"id=\"{source_ref.id}\" AND type=\"{SourceTypes.SONG.value}\""
+        elif artist_ref is not None:
+            where = f"song_id=\"{artist_ref.id}\" AND type=\"{SourceTypes.ARTIST.value}\""
 
         query = SOURCE_QUERY.format(where=where)
         self.cursor.execute(query)
 
         source_rows = self.cursor.fetchall()
-        
-        return [Source(
-            source_types(source_row['type']),
-            id_=source_row['id'],
-            src=source_row['src'],
-            url=source_row['url']
-        ) for source_row in source_rows]
+
+        return [
+            Source(
+                page_enum=SourcePages(source_row['src']),
+                type_enum=SourceTypes(source_row['type']),
+                url=source_row['url'],
+                id_=source_row['id']
+            ) for source_row in source_rows
+        ]
 
     def pull_artist_song(self, song_ref: Reference = None, artist_ref: Reference = None) -> List[tuple]:
         table = "SongArtist"
@@ -422,7 +428,8 @@ class Database:
 
         artist_obj = Artist(
             id_=artist_id,
-            name=artist_row['artist_name']
+            name=artist_row['artist_name'],
+            sources=self.pull_sources(artist_ref=Reference(id_=artist_id))
         )
         if flat:
             return artist_obj
@@ -491,7 +498,7 @@ class Database:
                 file=song_result['file'],
                 path=song_result['path']
             ),
-            sources=self.pull_sources(type_enum=source_types.SONG, song_ref=Reference(id_=song_id)),
+            sources=self.pull_sources(song_ref=Reference(id_=song_id)),
             lyrics=self.pull_lyrics(song_ref=Reference(id_=song_id)),
         )
 
@@ -585,7 +592,7 @@ class Database:
         return album_obj
 
     def pull_albums(self, album_ref: Reference = None, song_ref: Reference = None, exclude_relations: set = None) -> \
-    List[Album]:
+            List[Album]:
         """
         This function is used to get matching albums/releses 
         from one song id (a reference object)

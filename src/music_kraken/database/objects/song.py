@@ -18,7 +18,11 @@ from .parents import (
     SongAttribute,
     ID3Metadata
 )
-from .source import Source
+from .source import (
+    Source,
+    SourceTypes,
+    SourcePages
+)
 
 """
 All Objects dependent 
@@ -118,9 +122,8 @@ class Song(DatabaseObject, ID3Metadata):
         self.tracksort: int | None = tracksort
         self.genre: str = genre
         
-        self.sources: List[Source] = []
-        if sources is not None:
-            self.sources = sources
+        self._sources: List[Source] = []
+        self.sources = sources
 
         self.album = album
 
@@ -192,6 +195,15 @@ class Song(DatabaseObject, ID3Metadata):
 
         return metadata
 
+    def set_sources(self, source_list: List[Source]):
+        if source_list is None:
+            return
+
+        self._sources = source_list
+        for source in self._sources:
+            source.type_enum = SourceTypes.SONG
+
+    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     metadata = property(fget=get_metadata)
 
 
@@ -335,9 +347,9 @@ class Artist(DatabaseObject, ID3Metadata):
 
         self.main_albums = main_albums
 
-        self.sources = []
-        if sources is not None:
-            self.sources = sources
+        self._sources = []
+        self.sources = sources
+
 
     def __str__(self):
         return self.name or ""
@@ -381,13 +393,28 @@ class Artist(DatabaseObject, ID3Metadata):
         return flat_copy_discography
 
     def get_id3_dict(self) -> dict:
+        """
+        TODO refactor
+        :return:
+        """
         id3_dict = {
             ID3_MAPPING.ARTIST: [self.name]
         }
+        if len(self.sources) <= 0:
+            return id3_dict
         id3_dict.update(self.sources[0].get_id3_dict())
 
         return id3_dict
 
+    def set_sources(self, source_list: List[Source]):
+        if source_list is None:
+            return
+
+        self._sources = source_list
+        for source in self._sources:
+            source.type_enum = SourceTypes.ARTIST
+
+    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)
     songs: Album = property(fget=get_songs)

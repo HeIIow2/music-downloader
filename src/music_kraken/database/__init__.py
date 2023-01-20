@@ -4,7 +4,8 @@ from . import (
 )
 
 ID3Timestamp = objects.ID3Timestamp
-source_types = objects.source_types
+SourceTypes = objects.SourceTypes
+SourcePages = objects.SourcePages
 Song = objects.Song
 Source = objects.Source
 Target = objects.Target

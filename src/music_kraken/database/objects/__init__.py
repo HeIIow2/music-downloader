@@ -7,7 +7,8 @@ from . import (
 ID3_MAPPING = metadata.Mapping
 ID3Timestamp = metadata.ID3Timestamp
 
-source_types = source.source_types
+SourceTypes = source.SourceTypes
+SourcePages = source.SourcePages
 
 Song = song.Song
 Artist = song.Artist
