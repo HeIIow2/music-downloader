@@ -20,6 +20,46 @@ class Page:
     functionality for every other class fetching something
     """
 
+    class Query:
+        def __init__(self, query: str):
+            self.query = query
+            self.is_raw = False
+
+            self.artist = None
+            self.album = None
+            self.song = None
+
+            self.parse_query(query=query)
+
+        def __str__(self):
+            if self.is_raw:
+                return self.query
+            return f"{self.artist}; {self.album}; {self.song}"
+
+        def parse_query(self, query: str):
+            if not '#' in query:
+                self.is_raw = True
+                return
+
+            query = query.strip()
+            parameters = query.split('#')
+            parameters.remove('')
+
+            for parameter in parameters:
+                splitted = parameter.split(" ")
+                type_ = splitted[0]
+                input_ = " ".join(splitted[1:]).strip()
+
+                if type_ == "a":
+                    self.artist = input_
+                    continue
+                if type_ == "r":
+                    self.album = input_
+                    continue
+                if type_ == "t":
+                    self.song = type_
+                    continue
+
     @classmethod
     def search_by_query(cls, query: str) -> List[MusicObject]:        
         """

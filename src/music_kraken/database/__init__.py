@@ -3,6 +3,8 @@ from . import (
     objects
 )
 
+MusicObject = objects.MusicObject
+
 ID3Timestamp = objects.ID3Timestamp
 SourceTypes = objects.SourceTypes
 SourcePages = objects.SourcePages
