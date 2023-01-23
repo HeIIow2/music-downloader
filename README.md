@@ -58,6 +58,110 @@ After you chose either an artist, a release group, a release, or a track by its 
 
 ## Programming Interface / Use as Library
 
+This application is $100\%$ centered around Data. Thus the most important thing for working with musik kraken is, to understand how I structured the data.  
+Without long expllanations I will just show you, how to import the data classes and create them.
+
+### DataClasses
+
+```python
+# importing the libraries I build on 
+import pycountry
+
+# importing the custom dataclasses
+from music_kraken import (
+    Song,
+    Lyrics,
+    Target,
+    Source,
+    Album,
+    Artist,
+
+    # the custom date class
+    ID3Timestamp,
+
+    # the enums (I will elaborate on later)
+    SourcePages,
+    SourceTypes
+)
+
+
+song_object = Song(
+    genre="HS Core",
+    title="Vein Deep in the Solution",
+    length=666,
+    isrc="US-S1Z-99-00001",
+    tracksort=2,
+    target=Target(file="song.mp3", path="~/Music"),
+    lyrics=[
+        Lyrics(text="these are some depressive lyrics", language="en"),
+        Lyrics(text="test", language="en")
+    ],
+    sources=[
+        Source(SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
+        Source(SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
+    ],
+    album=Album(
+        title="One Final Action",
+        date=ID3Timestamp(year=1986, month=3, day=1),
+        language=pycountry.languages.get(alpha_2="en"),
+        label="cum productions",
+        sources=[
+            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
+        ]
+    ),
+    main_artist_list=[
+        Artist(
+            name="I'm in a coffin",
+            sources=[
+                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727")
+            ]
+        )
+    ],
+    feature_artist_list=[Artist(name="Rick Astley")],
+)
+```
+
+If you just wanna start implementing, then just use the code example, I dont care.  
+For those who don't want any bugs and use it as intended *(which is reccomended, cuz I am only one person so there are defs bugs)* continue reading.
+
+### music_kraken.Song
+
+So as you can see, the probaply most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
+
+It has handfull attributes, where half of em are self explanatory, like `title` or `genre`. The ones like `isrc` are only relevant to you, if you know what it is, so I won't elaborate on it.
+
+Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
+
+### music_kraken.ID3Timestamp
+
+For multiple Reasons I don't use the default `datetime.datetime` class.
+
+The most important reason is, that you need to pass in at least year, month and day. For every other values there are default values, that are indistinguishable from values that are directly passed in. But I need optional values. The ID3 standart allows default values. Additionally `datetime.datetime` is immutable, thus I can't inherint all the methods. Sorry.
+
+Anyways you can create those custom objects easily.
+
+```python
+from music_kraken import ID3Timestamp
+
+# returns an instance of ID3Timestamp with the current time
+ID3Timestamp.now()
+
+# yea
+ID3Timestamp(year=1986, month=3, day=1)
+```
+
+you can pass in the Arguments:
+ - year
+ - month
+ - day
+ - hour
+ - minute
+ - second
+
+:)
+
+## Old implementation
+
 > IF U USE THIS NOW YOU ARE DUMB. IT ISN'T FINISHED AND THE STUFF YOU CODE NOW WILL BE BROKEN TOMORROW
 > SOON YOU CAN THOUGH
 

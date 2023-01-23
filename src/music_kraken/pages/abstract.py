@@ -13,9 +13,6 @@ from ..database import (
     MusicObject
 )
 
-class Query:
-    def __init__(self) -> None:
-        pass
 
 class Page:
     """
