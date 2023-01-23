@@ -159,6 +159,9 @@ class Database:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
             self.push_artist(artist)
 
+        for source in album.sources:
+            self.push_source(source=source)
+
     def push_song(self, song: Song):
         # ADDING THE DATA FOR THE SONG OBJECT
         """
@@ -224,7 +227,7 @@ class Database:
 
     def push_source(self, source: Source):
         if source.song_ref_id is None:
-            logger.warning("the Source don't refer to a song")
+            logger.warning(f"the Source {source} don't refer to a song")
 
         table = "Source"
         query = f"INSERT OR REPLACE INTO {table} (id, type, song_id, src, url) VALUES (?, ?, ?, ?, ?);"
@@ -315,7 +318,6 @@ class Database:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
 
         for source in artist.sources:
-            source.add_song(artist)
             self.push_source(source)
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
@@ -344,7 +346,7 @@ class Database:
             language=lyrics_row['language']
         ) for lyrics_row in lyrics_rows]
 
-    def pull_sources(self, artist_ref: Reference = None, song_ref: Reference = None, source_ref: Reference = None) -> List[Source]:
+    def pull_sources(self, artist_ref: Reference = None, song_ref: Reference = None, source_ref: Reference = None, album_ref: Reference = None) -> List[Source]:
         """
         Gets a list of sources. if source_ref is passed in the List will most likely only
         contain one Element if everything goes accordingly.
@@ -362,6 +364,8 @@ class Database:
             where = f"id=\"{source_ref.id}\" AND type=\"{SourceTypes.SONG.value}\""
         elif artist_ref is not None:
             where = f"song_id=\"{artist_ref.id}\" AND type=\"{SourceTypes.ARTIST.value}\""
+        elif album_ref is not None:
+            where = f"song_id=\"{album_ref.id}\" AND type=\"{SourceTypes.ALBUM.value}\""
 
         query = SOURCE_QUERY.format(where=where)
         self.cursor.execute(query)
@@ -571,7 +575,8 @@ class Database:
             country=album_result['country'],
             barcode=album_result['barcode'],
             is_split=album_result['is_split'],
-            albumsort=album_result['albumsort']
+            albumsort=album_result['albumsort'],
+            sources=self.pull_sources(album_ref=Reference(id_=album_id))
         )
 
         if Song not in exclude_relations:

@@ -51,7 +51,10 @@ album_input = Album(
     title="One Final Action",
     date=ID3Timestamp(year=1986, month=3, day=1),
     language=pycountry.languages.get(alpha_2="en"),
-    label="cum productions"
+    label="cum productions",
+    sources=[
+        Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
+    ]
 )
 album_input.artists = [
     main_artist,
@@ -109,6 +112,8 @@ print(str(song_output_list[0].metadata))
 print("--src--")
 for source in song.sources:
     print(source)
+
+print("album", song.album.sources)
 
 # try writing metadata
 write_metadata(song)

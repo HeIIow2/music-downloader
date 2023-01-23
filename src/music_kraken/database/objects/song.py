@@ -239,7 +239,8 @@ class Album(DatabaseObject, ID3Metadata):
             barcode: str = None,
             is_split: bool = False,
             albumsort: int = None,
-            dynamic: bool = False
+            dynamic: bool = False,
+            sources: List[Source] = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
         self.title: str = title
@@ -259,6 +260,9 @@ class Album(DatabaseObject, ID3Metadata):
 
         self.tracklist: List[Song] = []
         self.artists: List[Artist] = []
+
+        self._sources = []
+        self.sources = sources
 
     def __str__(self) -> str:
         return f"Album: \"{self.title}\""
@@ -304,6 +308,16 @@ class Album(DatabaseObject, ID3Metadata):
 
         return self.language.alpha_3
 
+    def set_sources(self, source_list: List[Source]):
+        if source_list is None:
+            return
+
+        self._sources = source_list
+        for source in self._sources:
+            source.add_song(self)
+            source.type_enum = SourceTypes.ALBUM
+
+    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
 
@@ -412,6 +426,7 @@ class Artist(DatabaseObject, ID3Metadata):
 
         self._sources = source_list
         for source in self._sources:
+            source.add_song(self)
             source.type_enum = SourceTypes.ARTIST
 
     sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
