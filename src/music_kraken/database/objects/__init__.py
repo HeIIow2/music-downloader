@@ -1,8 +1,11 @@
 from . import (
     song,
     metadata,
-    source
+    source,
+    parents
 )
+
+MusicObject = parents.DatabaseObject
 
 ID3_MAPPING = metadata.Mapping
 ID3Timestamp = metadata.ID3Timestamp
