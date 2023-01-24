@@ -343,9 +343,12 @@ class Artist(DatabaseObject, ID3Metadata):
             sources: List[Source] = None,
             main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
-            main_albums: List[Album] = None
+            main_albums: List[Album] = None,
+            notes: str = None
     ):
         DatabaseObject.__init__(self, id_=id_)
+
+        self.notes = notes
 
         if main_albums is None:
             main_albums = []

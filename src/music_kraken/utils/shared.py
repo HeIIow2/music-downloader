@@ -41,6 +41,8 @@ LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
 TAGGING_LOGGER = logging.getLogger("tagging")
 
+ENCYCLOPAEDIA_METALLUM_LOGGER = logging.getLogger("ma")
+
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = os.path.join(os.path.expanduser("~"), "Music")
 
