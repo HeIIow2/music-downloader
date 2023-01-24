@@ -12,7 +12,8 @@ from ..database import (
     Artist,
     Source,
     SourcePages,
-    Song
+    Song,
+    Album
 )
 
 
@@ -48,7 +49,12 @@ class EncyclopaediaMetallum(Page):
             return []
 
         print(r.json()['aaData'])
-        return []
+        return [cls.get_song_from_json(
+            artist_html=raw_song[0],
+            album_html=raw_song[1],
+            release_type=raw_song[2],
+            title=raw_song[3]
+        ) for raw_song in r.json()['aaData']]
 
     @classmethod
     def simple_search(cls, query: Page.Query) -> List[Artist]:
@@ -65,12 +71,12 @@ class EncyclopaediaMetallum(Page):
 
         print(r.json())
         return [
-            cls.get_artist_from_json(raw_artist[0], raw_artist[1], raw_artist[2]) 
+            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2]) 
             for raw_artist in r.json()['aaData']
         ]
 
     @classmethod
-    def get_artist_from_json(cls, html, genre, country) -> Artist:
+    def get_artist_from_json(cls, html=None, genre=None, country=None) -> Artist:
         """
         TODO parse the country to a standart
         """
@@ -99,4 +105,36 @@ class EncyclopaediaMetallum(Page):
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
             ],
             notes = notes
+        )
+
+    @classmethod
+    def get_album_from_json(cls, album_html=None, release_type=None) -> Album:
+        # parse the html
+        # <a href="https://www.metal-archives.com/albums/Ghost_Bath/Self_Loather/970834">Self Loather</a>'
+        soup = BeautifulSoup(album_html, 'html.parser')
+        anchor = soup.find('a')
+        album_name = anchor.text
+        album_url = anchor.get('href')
+        album_id = int(album_url.split("/")[-1])
+
+        """
+        TODO implement release type
+        TODO add artist argument to 
+        """
+        return Album(
+            id_=album_id,
+            title=album_name,
+            sources=[
+                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
+            ]
+        )
+
+    @classmethod
+    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None) -> Song:
+        return Song(
+            title=title,
+            main_artist_list=[
+                cls.get_artist_from_json(html=artist_html)
+            ],
+            album=cls.get_album_from_json(album_html=album_html, release_type=release_type)
         )

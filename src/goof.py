@@ -3,4 +3,4 @@ from music_kraken.pages import (
 )
 
 # print(EncyclopaediaMetallum.search_by_query("Death"))
-EncyclopaediaMetallum.search_by_query("#a Ghost Bath #r Self Loather #t hide from the sun")
+print(EncyclopaediaMetallum.search_by_query("#a Ghost Bath #r Self Loather #t hide from the sun"))
