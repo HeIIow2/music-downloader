@@ -57,8 +57,17 @@ class Page:
                     self.album = input_
                     continue
                 if type_ == "t":
-                    self.song = type_
+                    self.song = input_
                     continue
+
+        def get_str(self, string):
+            if string is None:
+                return ""
+            return string
+
+        artist_str = property(fget=lambda self: self.get_str(self.artist))
+        album_str = property(fget=lambda self: self.get_str(self.album))
+        song_str = property(fget=lambda self: self.get_str(self.song))
 
     @classmethod
     def search_by_query(cls, query: str) -> List[MusicObject]:        

@@ -11,7 +11,8 @@ from ..database import (
     MusicObject,
     Artist,
     Source,
-    SourcePages
+    SourcePages,
+    Song
 )
 
 
@@ -29,10 +30,28 @@ class EncyclopaediaMetallum(Page):
 
         if query_obj.is_raw:
             return cls.simple_search(query_obj)
-        print(query_obj)
+        return cls.advanced_search(query_obj)
 
     @classmethod
-    def simple_search(cls, query: Page.Query):
+    def advanced_search(cls, query: Page.Query) -> List[MusicObject]:
+        if query.song is not None:
+            return cls.search_for_song(query=query)
+        return []
+
+    @classmethod
+    def search_for_song(cls, query: Page.Query) -> List[Song]:
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_=1674550595663"
+        
+        r = cls.API_SESSION.get(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+            return []
+
+        print(r.json()['aaData'])
+        return []
+
+    @classmethod
+    def simple_search(cls, query: Page.Query) -> List[Artist]:
         """
         Searches the default endpoint from metal archives, which intern searches only
         for bands, but it is the default, thus I am rolling with it
@@ -45,7 +64,10 @@ class EncyclopaediaMetallum(Page):
             return []
 
         print(r.json())
-        return cls.get_many_artists_from_json(r.json()['aaData'])
+        return [
+            cls.get_artist_from_json(raw_artist[0], raw_artist[1], raw_artist[2]) 
+            for raw_artist in r.json()['aaData']
+        ]
 
     @classmethod
     def get_artist_from_json(cls, html, genre, country) -> Artist:
@@ -78,7 +100,3 @@ class EncyclopaediaMetallum(Page):
             ],
             notes = notes
         )
-
-    @classmethod
-    def get_many_artists_from_json(cls, raw_artist_list: list) -> List[Artist]:
-        return [cls.get_artist_from_json(raw_artist) for raw_artist in raw_artist_list]
