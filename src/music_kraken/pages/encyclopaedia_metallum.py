@@ -24,6 +24,8 @@ class EncyclopaediaMetallum(Page):
         "Connection": "keep-alive"
     }
 
+    SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
+
 
     @classmethod
     def search_by_query(cls, query: str) -> List[MusicObject]:
@@ -56,7 +58,8 @@ class EncyclopaediaMetallum(Page):
             artist_html=raw_song[0],
             album_html=raw_song[1],
             release_type=raw_song[2],
-            title=raw_song[3]
+            title=raw_song[3],
+            lyrics_html=raw_song[4]
         ) for raw_song in r.json()['aaData']]
 
     @classmethod
@@ -161,11 +164,33 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
-    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None) -> Song:
+    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None, lyrics_html=None) -> Song:
+        song_id = None
+        if lyrics_html is not None:
+            # <a href="javascript:;" id="lyricsLink_5948443" title="Toggle lyrics display" class="viewLyrics iconContainer ui-state-default"><span class="ui-icon ui-icon-script">Edit song lyrics</span></a>
+            soup = BeautifulSoup(lyrics_html, 'html.parser')
+            anchor = soup.find('a')
+            raw_song_id = anchor.get('id')
+            song_id = raw_song_id.replace("lyricsLink_", "")
+        
         return Song(
+            id_=song_id,
             title=title,
             main_artist_list=[
                 cls.get_artist_from_json(html=artist_html)
             ],
             album=cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
         )
+
+    @classmethod
+    def fetch_artist_details(cls, artist: Artist) -> Artist:
+        relevant_source = None
+        for source in artist.sources:
+            if source.page_enum == cls.SOURCE_TYPE:
+                relevant_source = source
+                break
+        if relevant_source is None:
+            return artist
+        
+        print(relevant_source.url)
+        return artist
