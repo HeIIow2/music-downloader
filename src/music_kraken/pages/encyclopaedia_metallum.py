@@ -37,6 +37,10 @@ class EncyclopaediaMetallum(Page):
     def advanced_search(cls, query: Page.Query) -> List[MusicObject]:
         if query.song is not None:
             return cls.search_for_song(query=query)
+        if query.album is not None:
+            return cls.search_for_album(query=query)
+        if query.artist is not None:
+            return cls.search_for_artist(query=query)
         return []
 
     @classmethod
@@ -48,13 +52,41 @@ class EncyclopaediaMetallum(Page):
             LOGGER.warning(f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
             return []
 
-        print(r.json()['aaData'])
         return [cls.get_song_from_json(
             artist_html=raw_song[0],
             album_html=raw_song[1],
             release_type=raw_song[2],
             title=raw_song[3]
         ) for raw_song in r.json()['aaData']]
+
+    @classmethod
+    def search_for_album(cls, query: Page.Query) -> List[Album]:
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
+        
+        r = cls.API_SESSION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+            return []
+
+        return [cls.get_album_from_json(
+            artist_html=raw_album[0],
+            album_html=raw_album[1],
+            release_type=[2]
+        ) for raw_album in r.json()['aaData']]
+
+    @classmethod
+    def search_for_artist(cls, query: Page.Query) -> List[Artist]:
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
+        
+        r = cls.API_SESSION.get(endpoint.format(artist=query.artist))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {endpoint.format(artist=query.artist)}")
+            return []
+
+        return [
+            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2]) 
+            for raw_artist in r.json()['aaData']
+        ]
 
     @classmethod
     def simple_search(cls, query: Page.Query) -> List[Artist]:
@@ -69,7 +101,6 @@ class EncyclopaediaMetallum(Page):
             LOGGER.warning(f"code {r.status_code} at {endpoint.format(query=query.query)}")
             return []
 
-        print(r.json())
         return [
             cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2]) 
             for raw_artist in r.json()['aaData']
@@ -108,7 +139,7 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
-    def get_album_from_json(cls, album_html=None, release_type=None) -> Album:
+    def get_album_from_json(cls, album_html=None, release_type=None, artist_html=None) -> Album:
         # parse the html
         # <a href="https://www.metal-archives.com/albums/Ghost_Bath/Self_Loather/970834">Self Loather</a>'
         soup = BeautifulSoup(album_html, 'html.parser')
@@ -136,5 +167,5 @@ class EncyclopaediaMetallum(Page):
             main_artist_list=[
                 cls.get_artist_from_json(html=artist_html)
             ],
-            album=cls.get_album_from_json(album_html=album_html, release_type=release_type)
+            album=cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
         )

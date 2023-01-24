@@ -240,7 +240,8 @@ class Album(DatabaseObject, ID3Metadata):
             is_split: bool = False,
             albumsort: int = None,
             dynamic: bool = False,
-            sources: List[Source] = None
+            sources: List[Source] = None,
+            artists: list = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
         self.title: str = title
@@ -259,10 +260,13 @@ class Album(DatabaseObject, ID3Metadata):
         self.albumsort: int | None = albumsort
 
         self.tracklist: List[Song] = []
-        self.artists: List[Artist] = []
 
         self._sources = []
         self.sources = sources
+
+        self.artists = []
+        if artists is not None:
+            self.artists = artists
 
     def __str__(self) -> str:
         return f"Album: \"{self.title}\""
