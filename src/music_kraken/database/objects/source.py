@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List, Dict
 
 from .metadata import Mapping
 from .parents import (
@@ -72,3 +73,41 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
     page_str = property(fget=lambda self: self.page_enum.value)
     type_str = property(fget=lambda self: self.type_enum.value)
     homepage = property(fget=lambda self: SourcePages.get_homepage(self.page_enum))
+
+
+class SourceAttribute:
+    """
+    This is a class that is meant to be inherited from.
+    it adds the source_list attribute to a class
+    """
+    _source_dict: Dict[any: List[Source]] = {page_enum: list() for page_enum in SourcePages}
+
+    def add_source(self, source: Source):
+        """
+        adds a new Source to the sources
+        """
+        pass
+
+    def get_sources_from_page(self, page_enum) -> List[Source]:
+        """
+        getting the sources for a specific page like
+        youtube or musify
+        """
+        return self._source_dict[page_enum]
+
+    def get_source_list(self) -> List[Source]:
+        """
+        gets all sources
+        """
+        return []
+
+    def get_source_dict(self) -> Dict[any: List[Source]]:
+        """
+        gets a dictionary of all Sources,
+        where the key is a page enum, 
+        and the value is a List with all sources of according page
+        """
+        return self._source_dict
+
+    source_list: List[Source] = property(fget=get_source_list)
+    source_dict: Dict[any: List[Source]] = property(fget=get_source_dict)
