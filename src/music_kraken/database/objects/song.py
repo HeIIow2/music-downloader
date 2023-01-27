@@ -21,7 +21,8 @@ from .parents import (
 from .source import (
     Source,
     SourceTypes,
-    SourcePages
+    SourcePages,
+    SourceAttribute
 )
 
 """
@@ -79,15 +80,24 @@ class Target(DatabaseObject, SongAttribute):
     exists_on_disc = property(fget=get_exists_on_disc)
 
 
-class Lyrics(DatabaseObject, SongAttribute):
-    def __init__(self, text: str, language: str, id_: str = None) -> None:
+class Lyrics(DatabaseObject, SongAttribute, SourceAttribute):
+    def __init__(
+            self,
+            text: str, 
+            language: str, 
+            id_: str = None,
+            source_list: List[Source] = None
+        ) -> None:
         DatabaseObject.__init__(self, id_=id_)
         SongAttribute.__init__(self)
         self.text = text
         self.language = language
 
+        if source_list is not None:
+            self.source_list = source_list
 
-class Song(DatabaseObject, ID3Metadata):
+
+class Song(DatabaseObject, ID3Metadata, SourceAttribute):
     def __init__(
             self,
             id_: str = None,
@@ -98,7 +108,7 @@ class Song(DatabaseObject, ID3Metadata):
             length: int = None,
             tracksort: int = None,
             genre: str = None,
-            sources: List[Source] = None,
+            source_list: List[Source] = None,
             target: Target = None,
             lyrics: List[Lyrics] = None,
             album=None,
@@ -122,8 +132,8 @@ class Song(DatabaseObject, ID3Metadata):
         self.tracksort: int | None = tracksort
         self.genre: str = genre
         
-        self._sources: List[Source] = []
-        self.sources = sources
+        if source_list:
+            self.source_list = source_list
 
         self.album = album
 
@@ -187,7 +197,7 @@ class Song(DatabaseObject, ID3Metadata):
     def get_metadata(self) -> Metadata:
         metadata = Metadata(self.get_id3_dict())
 
-        metadata.add_many_metadata_dict([source.get_id3_dict() for source in self.sources])
+        metadata.add_many_metadata_dict([source.get_id3_dict() for source in self.source_list])
         if self.album is not None:
             metadata.add_metadata_dict(self.album.get_id3_dict())
         metadata.add_many_metadata_dict([artist.get_id3_dict() for artist in self.main_artist_list])
@@ -195,15 +205,6 @@ class Song(DatabaseObject, ID3Metadata):
 
         return metadata
 
-    def set_sources(self, source_list: List[Source]):
-        if source_list is None:
-            return
-
-        self._sources = source_list
-        for source in self._sources:
-            source.type_enum = SourceTypes.SONG
-
-    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     metadata = property(fget=get_metadata)
 
 
@@ -212,7 +213,7 @@ All objects dependent on Album
 """
 
 
-class Album(DatabaseObject, ID3Metadata):
+class Album(DatabaseObject, ID3Metadata, SourceAttribute):
     """
     -------DB-FIELDS-------
     title           TEXT, 
@@ -240,7 +241,7 @@ class Album(DatabaseObject, ID3Metadata):
             is_split: bool = False,
             albumsort: int = None,
             dynamic: bool = False,
-            sources: List[Source] = None,
+            source_list: List[Source] = None,
             artists: list = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
@@ -261,8 +262,8 @@ class Album(DatabaseObject, ID3Metadata):
 
         self.tracklist: List[Song] = []
 
-        self._sources = []
-        self.sources = sources
+        if source_list is not None:
+            self.source_list = source_list
 
         self.artists = []
         if artists is not None:
@@ -312,16 +313,6 @@ class Album(DatabaseObject, ID3Metadata):
 
         return self.language.alpha_3
 
-    def set_sources(self, source_list: List[Source]):
-        if source_list is None:
-            return
-
-        self._sources = source_list
-        for source in self._sources:
-            source.add_song(self)
-            source.type_enum = SourceTypes.ALBUM
-
-    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
 
@@ -332,7 +323,7 @@ All objects dependent on Artist
 """
 
 
-class Artist(DatabaseObject, ID3Metadata):
+class Artist(DatabaseObject, ID3Metadata, SourceAttribute):
     """
     main_songs
     feature_song
@@ -344,7 +335,7 @@ class Artist(DatabaseObject, ID3Metadata):
             self,
             id_: str = None,
             name: str = None,
-            sources: List[Source] = None,
+            source_list: List[Source] = None,
             main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None,
@@ -368,9 +359,8 @@ class Artist(DatabaseObject, ID3Metadata):
 
         self.main_albums = main_albums
 
-        self._sources = []
-        self.sources = sources
-
+        if source_list is not None:
+            self.source_list = source_list
 
     def __str__(self):
         return self.name or ""
@@ -427,16 +417,7 @@ class Artist(DatabaseObject, ID3Metadata):
 
         return id3_dict
 
-    def set_sources(self, source_list: List[Source]):
-        if source_list is None:
-            return
 
-        self._sources = source_list
-        for source in self._sources:
-            source.add_song(self)
-            source.type_enum = SourceTypes.ARTIST
-
-    sources: List[Source] = property(fget=lambda self: self._sources, fset=set_sources)
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)
     songs: Album = property(fget=get_songs)

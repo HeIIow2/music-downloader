@@ -86,7 +86,7 @@ class SourceAttribute:
         """
         adds a new Source to the sources
         """
-        pass
+        self._source_dict[source.page_enum].append(source)
 
     def get_sources_from_page(self, page_enum) -> List[Source]:
         """
@@ -99,7 +99,13 @@ class SourceAttribute:
         """
         gets all sources
         """
-        return []
+        return [item for _, item in self._source_dict.items()]
+
+    def set_source_list(self, source_list: List[Source]):
+        self._source_dict = {page_enum: list() for page_enum in SourcePages}
+
+        for source in source_list:
+            self.add_source(source)
 
     def get_source_dict(self) -> Dict[any: List[Source]]:
         """
@@ -109,5 +115,5 @@ class SourceAttribute:
         """
         return self._source_dict
 
-    source_list: List[Source] = property(fget=get_source_list)
+    source_list: List[Source] = property(fget=get_source_list, fset=set_source_list)
     source_dict: Dict[any: List[Source]] = property(fget=get_source_dict)

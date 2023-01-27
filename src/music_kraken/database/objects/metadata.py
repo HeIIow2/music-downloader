@@ -247,100 +247,123 @@ class ID3Timestamp:
     timestamp: str = property(fget=get_timestamp)
 
 
-class Metadata:
+class MetadataAttribute:
     """
-    Shall only be read or edited via the Song object.
-    call it like a dict to read/write values
+    This class shall be added to any object, which can return data for tagging
     """
 
-    def __init__(self, id3_dict: dict = None) -> None:
-        # this is pretty self-explanatory
-        # the key is a 4 letter key from the id3 standards like TITL
-
-        self.id3_attributes: Dict[str, list] = {}
-        if id3_dict is not None:
-            self.add_metadata_dict(id3_dict)
-
+    class Metadata:
         # its a null byte for the later concatenation of text frames
-        self.null_byte = "\x00"
+        NULL_BYTE: str = "\x00"
+        # this is pretty self-explanatory
+        # the key is an enum from Mapping
+        # the value is a list with each value
+        # the mutagen object for each frame will be generated dynamically
+        id3_dict: Dict[any, list] = dict()
 
-    def get_all_metadata(self):
-        return list(self.id3_attributes.items())
 
-    def __setitem__(self, key: str, value: list, override_existing: bool = True):
-        if len(value) == 0:
-            return
-        if type(value) != list:
-            raise ValueError(f"can only set attribute to list, not {type(value)}")
+        def __init__(self, id3_dict: Dict[any, list] = None) -> None:
+            if id3_dict is not None:
+                self.add_metadata_dict(id3_dict)
 
-        if override_existing:
-            new_val = []
-            for elem in value:
-                if elem is not None:
-                    new_val.append(elem)
-            if len(new_val) > 0:
-                self.id3_attributes[key] = new_val
-        else:
-            if key not in self.id3_attributes:
-                self.id3_attributes[key] = value
+        def __setitem__(self, frame, value_list: list, override_existing: bool = True):
+            if len(value_list) == 0:
                 return
-            self.id3_attributes[key].extend(value)
+            if type(value_list) != list:
+                raise ValueError(f"can only set attribute to list, not {type(value_list)}")
+            
+            new_val = [i for i in value_list if i is not None]
+                        
+            if len(new_val) == 0:
+                return
+ 
+            if override_existing:
+                self.id3_dict[frame] = new_val
+            else:
+                if frame not in self.id3_dict:
+                    self.id3_dict[frame] = new_val
+                    return
 
-    def __getitem__(self, key):
-        if key not in self.id3_attributes:
-            return None
-        return self.id3_attributes[key]
+                self.id3_attributes[frame].extend(new_val)
 
-    def add_metadata_dict(self, metadata_dict: dict, override_existing: bool = True):
-        for field_enum, value in metadata_dict.items():
-            self.__setitem__(field_enum.value, value, override_existing=override_existing)
+        def __getitem__(self, key):
+            if key not in self.id3_dict:
+                return None
+            return self.id3_dict[key]
 
-    def add_many_metadata_dict(self, id3_metadata_list: List[dict], override_existing: bool = False):
-        for metadata_dict in id3_metadata_list:
-            self.add_metadata_dict(metadata_dict, override_existing=override_existing)
 
-    def delete_item(self, key: str):
-        if key in self.id3_attributes:
-            return self.id3_attributes.pop(key)
+        def delete_field(self, key: str):
+            if key in self.id3_attributes:
+                return self.id3_attributes.pop(key)
 
-    def get_id3_value(self, key: str):
-        if key not in self.id3_attributes:
-            return None
+        def add_metadata_dict(self, metadata_dict: dict, override_existing: bool = True):
+            for field_enum, value in metadata_dict.items():
+                self.__setitem__(field_enum.value, value, override_existing=override_existing)
 
-        list_data = self.id3_attributes[key]
+        def merge(self, other, override_existing: bool = False):
+            """
+            adds the values of another metadata obj to this one
+            """
+            self.add_metadata_dict(other.id3_dict, override_existing=override_existing)
+        
+        def merge_many(self, many_other):
+            """
+            adds the values of many other metadata objects to this one
+            """
+            for other in many_other:
+                self.merge(other)
 
-        # convert for example the time objects to timestamps
-        for i, element in enumerate(list_data):
-            # for performance’s sake I don't do other checks if it is already the right type
-            if type(element) == str:
-                continue
+        def get_id3_value(self, field):
+            if field not in self.id3_attributes:
+                return None
 
-            if type(element) == ID3Timestamp:
-                list_data[i] = element.timestamp
-                continue
+            list_data = self.id3_dict[field]
 
+            # convert for example the time objects to timestamps
+            for i, element in enumerate(list_data):
+                # for performance’s sake I don't do other checks if it is already the right type
+                if type(element) == str:
+                    continue
+
+                if type(element) == ID3Timestamp:
+                    list_data[i] = element.timestamp
+                    continue
+
+            """
+            Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. 
+            Thus if above conditions are met, I concatenate the list,
+            else I take the first element
+            """
+            if field.value[0].upper() == "T" and field.value.upper() != "TXXX":
+                return self.null_byte.join(list_data)
+
+            return list_data[0]
+
+        def get_mutagen_object(self, field):
+            return Mapping.get_mutagen_instance(field, self.get_id3_value(field))
+
+        def __str__(self) -> str:
+            rows = []
+            for key, value in self.id3_attributes.items():
+                rows.append(f"{key} - {str(value)}")
+            return "\n".join(rows)
+
+
+        def __iter__(self):
+            """
+            returns a generator, you can iterate through,
+            to directly tagg a file with id3 container.
+            """
+            # set the tagging timestamp to the current time
+            self.__setitem__(Mapping.TAGGING_TIME.value, [ID3Timestamp.now()])
+
+            for field in self.id3_attributes:
+                yield self.get_mutagen_object(field)
+
+    def get_metadata(self) -> Metadata:
         """
-        Version 2.4 of the specification prescribes that all text fields (the fields that start with a T, except for TXXX) can contain multiple values separated by a null character. 
-        Thus if above conditions are met, I concatenate the list,
-        else I take the first element
+        this is intendet to be overwritten by the child class
         """
-        if key[0].upper() == "T" and key.upper() != "TXXX":
-            return self.null_byte.join(list_data)
+        return self.Metadata()
 
-        return list_data[0]
-
-    def get_mutagen_object(self, key: str):
-        return Mapping.get_mutagen_instance(Mapping(key), self.get_id3_value(key))
-
-    def __iter__(self):
-        # set the tagging timestamp to the current time
-        self.__setitem__(Mapping.TAGGING_TIME.value, [ID3Timestamp.now()])
-
-        for key in self.id3_attributes:
-            yield key, self.get_mutagen_object(key)
-
-    def __str__(self) -> str:
-        rows = []
-        for key, value in self.id3_attributes.items():
-            rows.append(f"{key} - {str(value)}")
-        return "\n".join(rows)
+    metadata = property(fget=get_metadata)
