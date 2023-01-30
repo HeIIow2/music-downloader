@@ -1,4 +1,4 @@
-from .new_database import Database
+from .database import Database
 
 from ..utils.shared import (
     TEMP_DATABASE_PATH,

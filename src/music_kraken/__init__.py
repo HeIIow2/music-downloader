@@ -46,12 +46,14 @@ SourcePages = database.SourcePages
 Target = database.Target
 Lyrics = database.Lyrics
 Album = database.Album
+
 ID3Timestamp = database.ID3Timestamp
+
 MetadataSearch = metadata.MetadataSearch
 MetadataDownload = metadata.MetadataDownload
 
-# cache = database.cache
-
+cache = database.cache
+Database = database.Database
 
 def fetch_metadata(type_: str, id_: str):
     metadata_downloader = MetadataDownload()

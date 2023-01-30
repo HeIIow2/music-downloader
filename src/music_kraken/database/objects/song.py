@@ -200,7 +200,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         metadata = MetadataAttribute.Metadata({
             id3Mapping.TITLE: [self.title],
             id3Mapping.ISRC: [self.isrc],
-            id3Mapping.LENGTH: [str(self.length)],
+            id3Mapping.LENGTH: [self.length],
             id3Mapping.GENRE: [self.genre],
             id3Mapping.TRACKNUMBER: [self.tracksort_str]
         })
@@ -321,6 +321,8 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         })
 
     def get_copyright(self) -> str:
+        if self.date is None:
+            return None
         if self.date.year == 1 or self.label is None:
             return None
 

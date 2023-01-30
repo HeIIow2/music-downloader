@@ -39,7 +39,7 @@ class Mapping(Enum):
     LYRICIST = "TEXT"
     WRITER = "TEXT"
     ARTIST = "TPE1"
-    LANGUAGE = "TLAN" # https://en.wikipedia.org/wiki/ISO_639-2
+    LANGUAGE = "TLAN"  # https://en.wikipedia.org/wiki/ISO_639-2
     ITUNESCOMPILATION = "TCMP"
     REMIXED_BY = "TPE4"
     RADIO_STATION_OWNER = "TRSO"
@@ -257,23 +257,20 @@ class MetadataAttribute:
         # the mutagen object for each frame will be generated dynamically
         id3_dict: Dict[any, list]
 
-
         def __init__(self, id3_dict: Dict[any, list] = None) -> None:
             self.id3_dict = dict()
             if id3_dict is not None:
                 self.add_metadata_dict(id3_dict)
 
         def __setitem__(self, frame, value_list: list, override_existing: bool = True):
-            if len(value_list) == 0:
-                return
             if type(value_list) != list:
                 raise ValueError(f"can only set attribute to list, not {type(value_list)}")
-            
-            new_val = [i for i in value_list if i is not None]
-                        
+
+            new_val = [i for i in value_list if i not in {None, ''}]
+
             if len(new_val) == 0:
                 return
- 
+
             if override_existing:
                 self.id3_dict[frame] = new_val
             else:
@@ -288,10 +285,9 @@ class MetadataAttribute:
                 return None
             return self.id3_dict[key]
 
-
         def delete_field(self, key: str):
-            if key in self.id3_attributes:
-                return self.id3_attributes.pop(key)
+            if key in self.id3_dict:
+                return self.id3_dict.pop(key)
 
         def add_metadata_dict(self, metadata_dict: dict, override_existing: bool = True):
             for field_enum, value in metadata_dict.items():
@@ -305,15 +301,14 @@ class MetadataAttribute:
             """
 
             self.add_metadata_dict(other.id3_dict, override_existing=override_existing)
-        
+
         def merge_many(self, many_other):
             """
             adds the values of many other metadata objects to this one
             """
-            
+
             for other in many_other:
                 self.merge(other)
-
 
         def get_id3_value(self, field):
             if field not in self.id3_dict:
@@ -326,6 +321,9 @@ class MetadataAttribute:
                 # for performance’s sake I don't do other checks if it is already the right type
                 if type(element) == str:
                     continue
+
+                if type(element) in {int}:
+                    list_data[i] = str(element)
 
                 if type(element) == ID3Timestamp:
                     list_data[i] = element.timestamp
@@ -349,7 +347,6 @@ class MetadataAttribute:
             for key, value in self.id3_dict.items():
                 rows.append(f"{key} - {str(value)}")
             return "\n".join(rows)
-
 
         def __iter__(self):
             """

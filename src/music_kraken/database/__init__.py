@@ -1,6 +1,7 @@
 from . import (
     temp_database,
-    objects
+    objects,
+    database
 )
 
 MusicObject = objects.MusicObject
@@ -12,8 +13,8 @@ Song = objects.Song
 Source = objects.Source
 Target = objects.Target
 Lyrics = objects.Lyrics
-
 Album = objects.Album
-
 Artist = objects.Artist
-# cache = temp_database.TempDatabase()
+
+Database = database.Database
+cache = temp_database.TempDatabase()

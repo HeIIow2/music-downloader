@@ -6,7 +6,6 @@ from ..database import (
     Song,
     Source,
     Album,
-    Metadata,
     Artist,
     Lyrics,
     Target,

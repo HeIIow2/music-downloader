@@ -8,7 +8,7 @@ from music_kraken import (
     Artist,
     ID3Timestamp,
     SourcePages,
-    SourceTypes
+    cache
 )
 
 from music_kraken.tagging import (
@@ -17,7 +17,7 @@ from music_kraken.tagging import (
     write_many_metadata
 )
 
-import music_kraken.database.new_database as db
+import music_kraken.database.database as db
 
 import pycountry
 import logging
@@ -29,7 +29,6 @@ def div(msg: str = ""):
     print("-" * 50 + msg + "-" * 50)
 
 
-cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
 
 

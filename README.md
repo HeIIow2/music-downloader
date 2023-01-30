@@ -281,7 +281,7 @@ All the data, the functions that download stuff use, can be gotten from the temp
 The cache can be simply used like this:
 
 ```python
-music_kraken.cache
+music_kraken.test_db
 ```
 
 When fetching any song data from the cache, you will get it as Song

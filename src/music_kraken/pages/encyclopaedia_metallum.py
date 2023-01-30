@@ -46,7 +46,10 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def search_for_song(cls, query: Page.Query) -> List[Song]:
-        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_=1674550595663"
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={" \
+                   "artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0" \
+                   "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
+                   "=1674550595663"
 
         r = cls.API_SESSION.get(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
@@ -64,7 +67,11 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def search_for_album(cls, query: Page.Query) -> List[Album]:
-        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={" \
+                   "artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo" \
+                   "=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers" \
+                   "=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns" \
+                   "=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
 
         r = cls.API_SESSION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
@@ -88,7 +95,7 @@ class EncyclopaediaMetallum(Page):
             return []
 
         return [
-            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
+            cls.get_artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
         ]
 
@@ -106,22 +113,22 @@ class EncyclopaediaMetallum(Page):
             return []
 
         return [
-            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
+            cls.get_artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
         ]
 
     @classmethod
-    def get_artist_from_json(cls, html=None, genre=None, country=None) -> Artist:
+    def get_artist_from_json(cls, artist_html=None, genre=None, country=None) -> Artist:
         """
         TODO parse the country to a standart
         """
         # parse the html
         # parse the html for the band name and link on metal-archives
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(artist_html, 'html.parser')
         anchor = soup.find('a')
         artist_name = anchor.text
         artist_url = anchor.get('href')
-        artist_id = int(artist_url.split("/")[-1])
+        artist_id = artist_url.split("/")[-1]
 
         notes = f"{artist_name} is a {genre} band from {country}"
 
@@ -136,7 +143,7 @@ class EncyclopaediaMetallum(Page):
         return Artist(
             id_=artist_id,
             name=artist_name,
-            sources=[
+            source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
             ],
             notes=notes
@@ -150,17 +157,19 @@ class EncyclopaediaMetallum(Page):
         anchor = soup.find('a')
         album_name = anchor.text
         album_url = anchor.get('href')
-        album_id = int(album_url.split("/")[-1])
+        album_id = album_url.split("/")[-1]
 
         """
         TODO implement release type
-        TODO add artist argument to 
         """
         return Album(
             id_=album_id,
             title=album_name,
-            sources=[
+            source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
+            ],
+            artists=[
+                cls.get_artist_from_json(artist_html=artist_html)
             ]
         )
 
@@ -169,7 +178,6 @@ class EncyclopaediaMetallum(Page):
                            lyrics_html=None) -> Song:
         song_id = None
         if lyrics_html is not None:
-            # <a href="javascript:;" id="lyricsLink_5948443" title="Toggle lyrics display" class="viewLyrics iconContainer ui-state-default"><span class="ui-icon ui-icon-script">Edit song lyrics</span></a>
             soup = BeautifulSoup(lyrics_html, 'html.parser')
             anchor = soup.find('a')
             raw_song_id = anchor.get('id')
@@ -179,20 +187,22 @@ class EncyclopaediaMetallum(Page):
             id_=song_id,
             title=title,
             main_artist_list=[
-                cls.get_artist_from_json(html=artist_html)
+                cls.get_artist_from_json(artist_html=artist_html)
             ],
-            album=cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
+            album=cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html),
+            source_list=[
+                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, song_id)
+            ]
         )
 
     @classmethod
     def fetch_artist_details(cls, artist: Artist) -> Artist:
-        relevant_source = None
-        for source in artist.sources:
-            if source.page_enum == cls.SOURCE_TYPE:
-                relevant_source = source
-                break
-        if relevant_source is None:
+        source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
+        if len(source_list) == 0:
             return artist
 
-        print(relevant_source.url)
+        # taking the fist source, cuz I only need one and multiple sources don't make that much sense
+        source = source_list[0]
+        print(source)
+
         return artist

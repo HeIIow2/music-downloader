@@ -14,7 +14,7 @@ Total : 16 files,  516 codes, 69 comments, 119 blanks, all 704 lines
 | [src/goof.py](/src/goof.py) | Python | 42 | 2 | 10 | 54 |
 | [src/music_kraken/__init__.py](/src/music_kraken/__init__.py) | Python | 1 | 0 | 0 | 1 |
 | [src/music_kraken/database/__init__.py](/src/music_kraken/database/__init__.py) | Python | 1 | 0 | 0 | 1 |
-| [src/music_kraken/database/new_database.py](/src/music_kraken/database/new_database.py) | Python | 74 | 11 | 18 | 103 |
+| [src/music_kraken/database/new_database.py](/src/music_kraken/database/database.py) | Python | 74 | 11 | 18 | 103 |
 | [src/music_kraken/database/objects/__init__.py](/src/music_kraken/database/objects/__init__.py) | Python | 4 | 0 | 1 | 5 |
 | [src/music_kraken/database/objects/database_object.py](/src/music_kraken/database/objects/database_object.py) | Python | -28 | -7 | -13 | -48 |
 | [src/music_kraken/database/objects/metadata.py](/src/music_kraken/database/objects/metadata.py) | Python | 245 | 52 | 50 | 347 |

@@ -26,7 +26,7 @@ Total : 49 files,  3404 codes, 664 comments, 974 blanks, all 5042 lines
 | [src/music_kraken/database/__init__.py](/src/music_kraken/database/__init__.py) | Python | 12 | 1 | 4 | 17 |
 | [src/music_kraken/database/database.py](/src/music_kraken/database/database.py) | Python | 191 | 102 | 45 | 338 |
 | [src/music_kraken/database/get_song.py](/src/music_kraken/database/get_song.py) | Python | 40 | 5 | 11 | 56 |
-| [src/music_kraken/database/new_database.py](/src/music_kraken/database/new_database.py) | Python | 402 | 110 | 107 | 619 |
+| [src/music_kraken/database/new_database.py](/src/music_kraken/database/database.py) | Python | 402 | 110 | 107 | 619 |
 | [src/music_kraken/database/objects/__init__.py](/src/music_kraken/database/objects/__init__.py) | Python | 15 | 0 | 5 | 20 |
 | [src/music_kraken/database/objects/artist.py](/src/music_kraken/database/objects/artist.py) | Python | 18 | 0 | 5 | 23 |
 | [src/music_kraken/database/objects/metadata.py](/src/music_kraken/database/objects/metadata.py) | Python | 245 | 52 | 50 | 347 |
