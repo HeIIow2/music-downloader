@@ -138,8 +138,6 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         if source_list:
             self.source_list = source_list
 
-        self.album = album
-
         self.target = Target()
         if target is not None:
             self.target = target

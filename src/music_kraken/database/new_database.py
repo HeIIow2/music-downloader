@@ -27,7 +27,7 @@ logger = logging.getLogger("database")
 # use complicated query builder
 SONG_QUERY = """
 SELECT 
-Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id, Song.tracksort,
+Song.id AS song_id, Song.name AS title, Song.isrc AS isrc, Song.length AS length, Song.album_id as album_id, Song.tracksort,
 Target.id AS target_id, Target.file AS file, Target.path AS path, Song.genre AS genre
 FROM Song
 LEFT JOIN Target ON Song.id=Target.song_id 
@@ -119,10 +119,6 @@ class Database:
         if type(db_object) == Album:
             return self.push_album(album=db_object)
 
-        if issubclass(type(db_object), SourceAttribute):
-            for source in db_object.source_list:
-                self.push_source(source=source)
-
         logger.warning(f"type {type(db_object)} isn't yet supported by the db")
 
     def push(self, db_object_list: List[Song | Lyrics | Target | Artist | Source | Album]):
@@ -163,7 +159,8 @@ class Database:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
             self.push_artist(artist)
 
-        for source in album.sources:
+        for source in album.source_list:
+            source.type_enum = SourceTypes.ALBUM
             self.push_source(source=source)
 
     def push_song(self, song: Song):
@@ -212,6 +209,9 @@ class Database:
         for feature_artist in song.feature_artist_list:
             self.push_artist_song(artist_ref=Reference(feature_artist.id), song_ref=Reference(song.id), is_feature=True)
             self.push_artist(artist=feature_artist)
+
+        if song.album is not None:
+            self.push_album(song.album)
 
     def push_lyrics(self, lyrics: Lyrics, ):
         if lyrics.song_ref_id is None:
@@ -321,7 +321,8 @@ class Database:
         for album in artist.main_albums:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
 
-        for source in artist.sources:
+        for source in artist.source_list:
+            source.type_enum = SourceTypes.ARTIST
             self.push_source(source)
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:
@@ -437,7 +438,7 @@ class Database:
         artist_obj = Artist(
             id_=artist_id,
             name=artist_row['artist_name'],
-            sources=self.pull_sources(artist_ref=Reference(id_=artist_id))
+            source_list=self.pull_sources(artist_ref=Reference(id_=artist_id))
         )
         if flat:
             return artist_obj
@@ -506,11 +507,12 @@ class Database:
                 file=song_result['file'],
                 path=song_result['path']
             ),
-            sources=self.pull_sources(song_ref=Reference(id_=song_id)),
+            source_list=self.pull_sources(song_ref=Reference(id_=song_id)),
             lyrics=self.pull_lyrics(song_ref=Reference(id_=song_id)),
         )
 
         if Album not in exclude_relations and song_result['album_id'] is not None:
+            print(dict(song_result))
             album_obj = self.pull_albums(album_ref=Reference(song_result['album_id']),
                                          exclude_relations=new_exclude_relations)
             if len(album_obj) > 0:
@@ -580,7 +582,7 @@ class Database:
             barcode=album_result['barcode'],
             is_split=album_result['is_split'],
             albumsort=album_result['albumsort'],
-            sources=self.pull_sources(album_ref=Reference(id_=album_id))
+            source_list=self.pull_sources(album_ref=Reference(id_=album_id))
         )
 
         if Song not in exclude_relations:

@@ -20,6 +20,9 @@ from music_kraken.tagging import (
 import music_kraken.database.new_database as db
 
 import pycountry
+import logging
+
+logging.disable()
 
 
 def div(msg: str = ""):
@@ -31,6 +34,8 @@ cache.reset()
 
 def print_song(song_: Song):
     print(str(song_.metadata))
+    print("----album--")
+    print(song_.album)
     print("----src----")
     print("song:")
     print(song_.source_list)
@@ -79,18 +84,15 @@ print_song(song)
 
 
 
+div()
 song_ref = song.reference
-
 cache.push([song])
-exit()
-
-
 
 # getting song by song ref
-div()
 song_list = cache.pull_songs(song_ref=song_ref)
 song_from_db = song_list[0]
 
+print_song(song_from_db)
 
 # try writing metadata
 write_metadata(song)

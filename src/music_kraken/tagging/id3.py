@@ -22,7 +22,7 @@ class AudioMetadata:
             self.file_location = file_location
 
     def add_song_metadata(self, song: Song):
-        for key, value in song.metadata:
+        for value in song.metadata:
             """
             https://www.programcreek.com/python/example/84797/mutagen.id3.ID3
             """
