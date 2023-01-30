@@ -5,10 +5,6 @@ import dateutil.tz
 from mutagen import id3
 import datetime
 
-from .parents import (
-    ID3Metadata
-)
-
 
 class Mapping(Enum):
     """
@@ -253,7 +249,7 @@ class MetadataAttribute:
     """
 
     class Metadata:
-        # its a null byte for the later concatenation of text frames
+        # it's a null byte for the later concatenation of text frames
         NULL_BYTE: str = "\x00"
         # this is pretty self-explanatory
         # the key is an enum from Mapping

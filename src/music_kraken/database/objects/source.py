@@ -5,7 +5,6 @@ from .metadata import Mapping, MetadataAttribute
 from .parents import (
     DatabaseObject,
     SongAttribute,
-    ID3Metadata
 )
 
 

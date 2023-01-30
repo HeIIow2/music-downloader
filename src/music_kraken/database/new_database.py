@@ -161,9 +161,12 @@ class Database:
 
         for source in album.source_list:
             source.type_enum = SourceTypes.ALBUM
+            source.add_song(album)
             self.push_source(source=source)
 
     def push_song(self, song: Song):
+        if song.dynamic:
+            return
         # ADDING THE DATA FOR THE SONG OBJECT
         """
         db_field    - object attribute
@@ -356,6 +359,7 @@ class Database:
         Gets a list of sources. if source_ref is passed in the List will most likely only
         contain one Element if everything goes accordingly.
         **If neither song_ref nor source_ref are passed in it will return ALL sources**
+        :param artist_ref:
         :param song_ref:
         :param source_ref:
         :param type_str: the thing the source belongs to like eg. "song" or "album"
@@ -512,7 +516,6 @@ class Database:
         )
 
         if Album not in exclude_relations and song_result['album_id'] is not None:
-            print(dict(song_result))
             album_obj = self.pull_albums(album_ref=Reference(song_result['album_id']),
                                          exclude_relations=new_exclude_relations)
             if len(album_obj) > 0:

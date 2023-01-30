@@ -1,10 +1,10 @@
 import os
-from typing import List, Tuple, Dict
-import datetime
+from typing import List
 import pycountry
+import copy
 
 from .metadata import (
-    Mapping as ID3_MAPPING,
+    Mapping as id3Mapping,
     ID3Timestamp,
     MetadataAttribute
 )
@@ -15,8 +15,7 @@ from ...utils.shared import (
 from .parents import (
     DatabaseObject,
     Reference,
-    SongAttribute,
-    ID3Metadata
+    SongAttribute
 )
 from .source import (
     Source,
@@ -83,11 +82,11 @@ class Target(DatabaseObject, SongAttribute):
 class Lyrics(DatabaseObject, SongAttribute, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
-            text: str, 
-            language: str, 
+            text: str,
+            language: str,
             id_: str = None,
             source_list: List[Source] = None
-        ) -> None:
+    ) -> None:
         DatabaseObject.__init__(self, id_=id_)
         SongAttribute.__init__(self)
         self.text = text
@@ -134,7 +133,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.album_name: str | None = album_name
         self.tracksort: int | None = tracksort
         self.genre: str = genre
-        
+
         if source_list:
             self.source_list = source_list
 
@@ -196,15 +195,14 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             return str(self.tracksort)
 
         return f"{self.tracksort}/{len(self.album.tracklist)}"
-            
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
-            ID3_MAPPING.TITLE: [self.title],
-            ID3_MAPPING.ISRC: [self.isrc],
-            ID3_MAPPING.LENGTH: [str(self.length)],
-            ID3_MAPPING.GENRE: [self.genre],
-            ID3_MAPPING.TRACKNUMBER: [self.tracksort_str]
+            id3Mapping.TITLE: [self.title],
+            id3Mapping.ISRC: [self.isrc],
+            id3Mapping.LENGTH: [str(self.length)],
+            id3Mapping.GENRE: [self.genre],
+            id3Mapping.TRACKNUMBER: [self.tracksort_str]
         })
 
         metadata.merge_many([s.get_song_metadata() for s in self.source_list])
@@ -216,15 +214,17 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         return metadata
 
     def set_album(self, album):
+        if album is None:
+            return
+
         self._album = album
         if self not in self._album.tracklist:
-            self._album.tracklist.append(self)
-        
+            flat_copy = copy.copy(self)
+            flat_copy.dynamic = True
+            self._album.tracklist.append(flat_copy)
 
     tracksort_str = property(fget=get_tracksort_str)
     album = property(fget=lambda self: self._album, fset=set_album)
-    
-
 
 
 """
@@ -313,11 +313,11 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         return MetadataAttribute.Metadata({
-            ID3_MAPPING.ALBUM: [self.title],
-            ID3_MAPPING.COPYRIGHT: [self.copyright],
-            ID3_MAPPING.LANGUAGE: [self.iso_639_2_language],
-            ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists],
-            ID3_MAPPING.DATE: [self.date.timestamp]
+            id3Mapping.ALBUM: [self.title],
+            id3Mapping.COPYRIGHT: [self.copyright],
+            id3Mapping.LANGUAGE: [self.iso_639_2_language],
+            id3Mapping.ALBUM_ARTIST: [a.name for a in self.artists],
+            id3Mapping.DATE: [self.date.timestamp]
         })
 
     def get_copyright(self) -> str:
@@ -335,7 +335,6 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
     tracklist = property(fget=lambda self: self._tracklist, fset=set_tracklist)
-
 
 
 """
@@ -391,7 +390,6 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
     def get_features(self) -> Album:
         feature_release = Album(
             title="features",
-            copyright_=self.name,
             album_status="dynamic",
             is_split=True,
             albumsort=666,
@@ -405,7 +403,6 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
     def get_songs(self) -> Album:
         song_release = Album(
             title="song collection",
-            copyright_=self.name,
             album_status="dynamic",
             is_split=False,
             albumsort=666,
@@ -429,12 +426,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         :return:
         """
         metadata = MetadataAttribute.Metadata({
-            ID3_MAPPING.ARTIST: [self.name]
+            id3Mapping.ARTIST: [self.name]
         })
         metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
 
         return metadata
-
 
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)

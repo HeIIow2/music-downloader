@@ -26,7 +26,6 @@ class EncyclopaediaMetallum(Page):
 
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
 
-
     @classmethod
     def search_by_query(cls, query: str) -> List[MusicObject]:
         query_obj = cls.Query(query)
@@ -48,10 +47,11 @@ class EncyclopaediaMetallum(Page):
     @classmethod
     def search_for_song(cls, query: Page.Query) -> List[Song]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_=1674550595663"
-        
+
         r = cls.API_SESSION.get(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
-            LOGGER.warning(f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+            LOGGER.warning(
+                f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
             return []
 
         return [cls.get_song_from_json(
@@ -65,10 +65,11 @@ class EncyclopaediaMetallum(Page):
     @classmethod
     def search_for_album(cls, query: Page.Query) -> List[Album]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
-        
+
         r = cls.API_SESSION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
-            LOGGER.warning(f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+            LOGGER.warning(
+                f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
             return []
 
         return [cls.get_album_from_json(
@@ -80,14 +81,14 @@ class EncyclopaediaMetallum(Page):
     @classmethod
     def search_for_artist(cls, query: Page.Query) -> List[Artist]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
-        
+
         r = cls.API_SESSION.get(endpoint.format(artist=query.artist))
         if r.status_code != 200:
             LOGGER.warning(f"code {r.status_code} at {endpoint.format(artist=query.artist)}")
             return []
 
         return [
-            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2]) 
+            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
         ]
 
@@ -105,7 +106,7 @@ class EncyclopaediaMetallum(Page):
             return []
 
         return [
-            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2]) 
+            cls.get_artist_from_json(html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
         ]
 
@@ -138,7 +139,7 @@ class EncyclopaediaMetallum(Page):
             sources=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
             ],
-            notes = notes
+            notes=notes
         )
 
     @classmethod
@@ -164,7 +165,8 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
-    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None, lyrics_html=None) -> Song:
+    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None,
+                           lyrics_html=None) -> Song:
         song_id = None
         if lyrics_html is not None:
             # <a href="javascript:;" id="lyricsLink_5948443" title="Toggle lyrics display" class="viewLyrics iconContainer ui-state-default"><span class="ui-icon ui-icon-script">Edit song lyrics</span></a>
@@ -172,7 +174,7 @@ class EncyclopaediaMetallum(Page):
             anchor = soup.find('a')
             raw_song_id = anchor.get('id')
             song_id = raw_song_id.replace("lyricsLink_", "")
-        
+
         return Song(
             id_=song_id,
             title=title,
@@ -191,6 +193,6 @@ class EncyclopaediaMetallum(Page):
                 break
         if relevant_source is None:
             return artist
-        
+
         print(relevant_source.url)
         return artist
