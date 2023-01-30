@@ -30,10 +30,6 @@ cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
 
 def print_song(song_: Song):
-
-
-    print("tracksort", song_.tracksort, sep=": ")
-    # print("ID3", song_.metadata)
     print(str(song_.metadata))
     print("----src----")
     print("song:")
@@ -81,11 +77,12 @@ song = Song(
 
 print_song(song)
 
-exit()
+
 
 song_ref = song.reference
 
 cache.push([song])
+exit()
 
 
 

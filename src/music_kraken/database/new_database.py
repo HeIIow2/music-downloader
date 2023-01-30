@@ -16,7 +16,8 @@ from .objects import (
     Album,
     ID3Timestamp,
     SourceTypes,
-    SourcePages
+    SourcePages,
+    SourceAttribute
 )
 
 logger = logging.getLogger("database")
@@ -117,6 +118,10 @@ class Database:
 
         if type(db_object) == Album:
             return self.push_album(album=db_object)
+
+        if issubclass(type(db_object), SourceAttribute):
+            for source in db_object.source_list:
+                self.push_source(source=source)
 
         logger.warning(f"type {type(db_object)} isn't yet supported by the db")
 
