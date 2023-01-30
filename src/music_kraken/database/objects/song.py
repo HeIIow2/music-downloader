@@ -147,6 +147,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         if lyrics is not None:
             self.lyrics = lyrics
 
+        self._album = None
         self.album = album
 
         self.main_artist_list = []
@@ -214,7 +215,14 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         metadata.merge_many([l.metadata for l in self.lyrics])
         return metadata
 
+    def set_album(self, album):
+        self._album = album
+        if self not in self._album.tracklist:
+            self._album.tracklist.append(self)
+        
+
     tracksort_str = property(fget=get_tracksort_str)
+    album = property(fget=lambda self: self._album, fset=set_album)
     
 
 
