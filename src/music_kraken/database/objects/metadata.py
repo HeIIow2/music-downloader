@@ -259,10 +259,11 @@ class MetadataAttribute:
         # the key is an enum from Mapping
         # the value is a list with each value
         # the mutagen object for each frame will be generated dynamically
-        id3_dict: Dict[any, list] = dict()
+        id3_dict: Dict[any, list]
 
 
         def __init__(self, id3_dict: Dict[any, list] = None) -> None:
+            self.id3_dict = dict()
             if id3_dict is not None:
                 self.add_metadata_dict(id3_dict)
 
@@ -284,7 +285,7 @@ class MetadataAttribute:
                     self.id3_dict[frame] = new_val
                     return
 
-                self.id3_attributes[frame].extend(new_val)
+                self.id3_dict[frame].extend(new_val)
 
         def __getitem__(self, key):
             if key not in self.id3_dict:
@@ -298,23 +299,28 @@ class MetadataAttribute:
 
         def add_metadata_dict(self, metadata_dict: dict, override_existing: bool = True):
             for field_enum, value in metadata_dict.items():
-                self.__setitem__(field_enum.value, value, override_existing=override_existing)
+                self.__setitem__(field_enum, value, override_existing=override_existing)
 
         def merge(self, other, override_existing: bool = False):
             """
             adds the values of another metadata obj to this one
+
+            other is a value of the type MetadataAttribute.Metadata
             """
+
             self.add_metadata_dict(other.id3_dict, override_existing=override_existing)
         
         def merge_many(self, many_other):
             """
             adds the values of many other metadata objects to this one
             """
+            
             for other in many_other:
                 self.merge(other)
 
+
         def get_id3_value(self, field):
-            if field not in self.id3_attributes:
+            if field not in self.id3_dict:
                 return None
 
             list_data = self.id3_dict[field]
@@ -335,7 +341,7 @@ class MetadataAttribute:
             else I take the first element
             """
             if field.value[0].upper() == "T" and field.value.upper() != "TXXX":
-                return self.null_byte.join(list_data)
+                return self.NULL_BYTE.join(list_data)
 
             return list_data[0]
 
@@ -344,7 +350,7 @@ class MetadataAttribute:
 
         def __str__(self) -> str:
             rows = []
-            for key, value in self.id3_attributes.items():
+            for key, value in self.id3_dict.items():
                 rows.append(f"{key} - {str(value)}")
             return "\n".join(rows)
 
@@ -355,15 +361,15 @@ class MetadataAttribute:
             to directly tagg a file with id3 container.
             """
             # set the tagging timestamp to the current time
-            self.__setitem__(Mapping.TAGGING_TIME.value, [ID3Timestamp.now()])
+            self.__setitem__(Mapping.TAGGING_TIME, [ID3Timestamp.now()])
 
-            for field in self.id3_attributes:
+            for field in self.id3_dict:
                 yield self.get_mutagen_object(field)
 
     def get_metadata(self) -> Metadata:
         """
         this is intendet to be overwritten by the child class
         """
-        return self.Metadata()
+        return MetadataAttribute.Metadata()
 
-    metadata = property(fget=get_metadata)
+    metadata = property(fget=lambda self: self.get_metadata())

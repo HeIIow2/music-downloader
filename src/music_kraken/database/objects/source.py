@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Dict
 
-from .metadata import Mapping
+from .metadata import Mapping, MetadataAttribute
 from .parents import (
     DatabaseObject,
     SongAttribute,
@@ -35,7 +35,7 @@ class SourcePages(Enum):
         return homepage_map[attribute]
 
 
-class Source(DatabaseObject, SongAttribute, ID3Metadata):
+class Source(DatabaseObject, SongAttribute, MetadataAttribute):
     """
     create somehow like that
     ```python
@@ -53,22 +53,31 @@ class Source(DatabaseObject, SongAttribute, ID3Metadata):
 
         self.url = url
 
-    def get_id3_dict(self) -> dict:
+    def get_song_metadata(self) -> MetadataAttribute.Metadata:
+        return MetadataAttribute.Metadata({
+            Mapping.FILE_WEBPAGE_URL: [self.url],
+            Mapping.SOURCE_WEBPAGE_URL: [self.homepage]
+        })
+
+    def get_artist_metadata(self) -> MetadataAttribute.Metadata:
+        return MetadataAttribute.Metadata({
+            Mapping.ARTIST_WEBPAGE_URL: [self.url]
+        })
+
+    def get_metadata(self) -> MetadataAttribute.Metadata:
         if self.type_enum == SourceTypes.SONG:
-            return {
-                Mapping.FILE_WEBPAGE_URL: [self.url],
-                Mapping.SOURCE_WEBPAGE_URL: [self.homepage]
-            }
+            return self.get_song_metadata()
 
         if self.type_enum == SourceTypes.ARTIST:
-            return {
-                Mapping.ARTIST_WEBPAGE_URL: [self.url]
-            }
+            return self.get_artist_metadata()
 
-        return {}
+        return super().get_metadata()
 
     def __str__(self):
         return f"{self.page_enum}: {self.url}"
+
+    def __repr__(self) -> str:
+        return f"Src({self.page_enum.value}: {self.url})"
 
     page_str = property(fget=lambda self: self.page_enum.value)
     type_str = property(fget=lambda self: self.type_enum.value)
@@ -80,7 +89,7 @@ class SourceAttribute:
     This is a class that is meant to be inherited from.
     it adds the source_list attribute to a class
     """
-    _source_dict: Dict[any: List[Source]] = {page_enum: list() for page_enum in SourcePages}
+    _source_dict: Dict[object, List[Source]] = {page_enum: list() for page_enum in SourcePages}
 
     def add_source(self, source: Source):
         """
@@ -99,7 +108,7 @@ class SourceAttribute:
         """
         gets all sources
         """
-        return [item for _, item in self._source_dict.items()]
+        return [item for _, page_list in self._source_dict.items() for item in page_list]
 
     def set_source_list(self, source_list: List[Source]):
         self._source_dict = {page_enum: list() for page_enum in SourcePages}
@@ -107,7 +116,7 @@ class SourceAttribute:
         for source in source_list:
             self.add_source(source)
 
-    def get_source_dict(self) -> Dict[any: List[Source]]:
+    def get_source_dict(self) -> Dict[object, List[Source]]:
         """
         gets a dictionary of all Sources,
         where the key is a page enum, 
@@ -116,4 +125,4 @@ class SourceAttribute:
         return self._source_dict
 
     source_list: List[Source] = property(fget=get_source_list, fset=set_source_list)
-    source_dict: Dict[any: List[Source]] = property(fget=get_source_dict)
+    source_dict: Dict[object, List[Source]] = property(fget=get_source_dict)

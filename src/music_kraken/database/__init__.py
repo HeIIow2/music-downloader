@@ -11,7 +11,6 @@ SourcePages = objects.SourcePages
 Song = objects.Song
 Source = objects.Source
 Target = objects.Target
-Metadata = objects.Metadata
 Lyrics = objects.Lyrics
 
 Album = objects.Album

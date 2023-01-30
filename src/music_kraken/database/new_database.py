@@ -11,7 +11,6 @@ from .objects.source import Source
 from .objects import (
     Song,
     Lyrics,
-    Metadata,
     Target,
     Artist,
     Album,
@@ -187,7 +186,7 @@ class Database:
         self.connection.commit()
 
         # add sources
-        for source in song.sources:
+        for source in song.source_list:
             source.add_song(song)
             source.type_enum = SourceTypes.SONG
             self.push_source(source=source)

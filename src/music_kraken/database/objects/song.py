@@ -5,8 +5,8 @@ import pycountry
 
 from .metadata import (
     Mapping as ID3_MAPPING,
-    Metadata,
-    ID3Timestamp
+    ID3Timestamp,
+    MetadataAttribute
 )
 from ...utils.shared import (
     MUSIC_DIR,
@@ -80,7 +80,7 @@ class Target(DatabaseObject, SongAttribute):
     exists_on_disc = property(fget=get_exists_on_disc)
 
 
-class Lyrics(DatabaseObject, SongAttribute, SourceAttribute):
+class Lyrics(DatabaseObject, SongAttribute, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
             text: str, 
@@ -96,8 +96,11 @@ class Lyrics(DatabaseObject, SongAttribute, SourceAttribute):
         if source_list is not None:
             self.source_list = source_list
 
+    def get_metadata(self) -> MetadataAttribute.Metadata:
+        return super().get_metadata()
 
-class Song(DatabaseObject, ID3Metadata, SourceAttribute):
+
+class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
             id_: str = None,
@@ -186,26 +189,23 @@ class Song(DatabaseObject, ID3Metadata, SourceAttribute):
             return None
         return self.album.id
 
-    def get_id3_dict(self) -> dict:
-        return {
+    def get_metadata(self) -> MetadataAttribute.Metadata:
+        metadata = MetadataAttribute.Metadata({
             ID3_MAPPING.TITLE: [self.title],
             ID3_MAPPING.ISRC: [self.isrc],
             ID3_MAPPING.LENGTH: [str(self.length)],
             ID3_MAPPING.GENRE: [self.genre]
-        }
-    
-    def get_metadata(self) -> Metadata:
-        metadata = Metadata(self.get_id3_dict())
+        })
 
-        metadata.add_many_metadata_dict([source.get_id3_dict() for source in self.source_list])
+        metadata.merge_many([s.get_song_metadata() for s in self.source_list])
         if self.album is not None:
-            metadata.add_metadata_dict(self.album.get_id3_dict())
-        metadata.add_many_metadata_dict([artist.get_id3_dict() for artist in self.main_artist_list])
-        metadata.add_many_metadata_dict([artist.get_id3_dict() for artist in self.feature_artist_list])
-
+            metadata.merge(self.album.metadata)
+        metadata.merge_many([a.metadata for a in self.main_artist_list])
+        metadata.merge_many([a.metadata for a in self.feature_artist_list])
+        metadata.merge_many([l.metadata for l in self.lyrics])
         return metadata
+    
 
-    metadata = property(fget=get_metadata)
 
 
 """
@@ -213,7 +213,7 @@ All objects dependent on Album
 """
 
 
-class Album(DatabaseObject, ID3Metadata, SourceAttribute):
+class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
     """
     -------DB-FIELDS-------
     title           TEXT, 
@@ -292,14 +292,14 @@ class Album(DatabaseObject, ID3Metadata, SourceAttribute):
         song.tracksort = len(self.tracklist)
         self.tracklist.append(song)
 
-    def get_id3_dict(self) -> dict:
-        return {
+    def get_metadata(self) -> MetadataAttribute.Metadata:
+        return MetadataAttribute.Metadata({
             ID3_MAPPING.ALBUM: [self.title],
             ID3_MAPPING.COPYRIGHT: [self.copyright],
             ID3_MAPPING.LANGUAGE: [self.iso_639_2_language],
             ID3_MAPPING.ALBUM_ARTIST: [a.name for a in self.artists],
             ID3_MAPPING.DATE: [self.date.timestamp]
-        }
+        })
 
     def get_copyright(self) -> str:
         if self.date.year == 1 or self.label is None:
@@ -323,7 +323,7 @@ All objects dependent on Artist
 """
 
 
-class Artist(DatabaseObject, ID3Metadata, SourceAttribute):
+class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
     """
     main_songs
     feature_song
@@ -403,19 +403,17 @@ class Artist(DatabaseObject, ID3Metadata, SourceAttribute):
 
         return flat_copy_discography
 
-    def get_id3_dict(self) -> dict:
+    def get_metadata(self) -> MetadataAttribute.Metadata:
         """
         TODO refactor
         :return:
         """
-        id3_dict = {
+        metadata = MetadataAttribute.Metadata({
             ID3_MAPPING.ARTIST: [self.name]
-        }
-        if len(self.sources) <= 0:
-            return id3_dict
-        id3_dict.update(self.sources[0].get_id3_dict())
+        })
+        metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
 
-        return id3_dict
+        return metadata
 
 
     discography: List[Album] = property(fget=get_discography)

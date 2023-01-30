@@ -29,39 +29,21 @@ def div(msg: str = ""):
 cache = music_kraken.database.new_database.Database("test.db")
 cache.reset()
 
+def print_song(song_: Song):
 
-main_artist = Artist(
-    name="I'm in a coffin",
-    sources=[
-        Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727")
-    ]
-)
 
-artist_ref = main_artist.reference
+    print("tracksort", song_.tracksort, sep=": ")
+    # print("ID3", song_.metadata)
+    print(str(song_.metadata))
+    print("----src----")
+    print("song:")
+    print(song_.source_list)
+    print("album:")
+    print(song_.album.source_list)
+    print("\n")
 
-split_artist = Artist(
-    name="split"
-)
 
-feature_artist = Artist(
-    name="Ghost"
-)
-
-album_input = Album(
-    title="One Final Action",
-    date=ID3Timestamp(year=1986, month=3, day=1),
-    language=pycountry.languages.get(alpha_2="en"),
-    label="cum productions",
-    sources=[
-        Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
-    ]
-)
-album_input.artists = [
-    main_artist,
-    split_artist
-]
-
-song_input = Song(
+song = Song(
     genre="HS Core",
     title="Vein Deep in the Solution",
     length=666,
@@ -70,50 +52,48 @@ song_input = Song(
     target=Target(file="song.mp3", path="~/Music"),
     lyrics=[
         Lyrics(text="these are some depressive lyrics", language="en"),
-        Lyrics(text="test", language="en")
+        Lyrics(text="Dies sind depressive Lyrics", language="de")
     ],
-    sources=[
+    source_list=[
         Source(SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
         Source(SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
     ],
-    album=album_input,
-    main_artist_list=[main_artist],
-    feature_artist_list=[feature_artist],
+    album=Album(
+        title="One Final Action",
+        date=ID3Timestamp(year=1986, month=3, day=1),
+        language=pycountry.languages.get(alpha_2="en"),
+        label="cum productions",
+        source_list=[
+            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
+        ]
+    ),
+    main_artist_list=[
+        Artist(
+            name="I'm in a coffin",
+            source_list=[
+                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727")
+            ]
+        ),
+        Artist(name="some_split_artist")
+    ],
+    feature_artist_list=[Artist(name="Ruffiction")],
 )
 
-other_song = Song(
-    title="this is just another song",
-    main_artist_list=[feature_artist],
-    feature_artist_list=[main_artist]
-)
+print_song(song)
 
-print(song_input)
+exit()
 
-additional_song = Song(
-    title="A fcking Song",
-    album=album_input
-)
+song_ref = song.reference
 
-song_ref = song_input.reference
-print(song_ref)
+cache.push([song])
 
-lyrics = Lyrics(text="these are some Lyrics that don't belong to any Song", language="en")
 
-cache.push([album_input, song_input, lyrics, additional_song, other_song])
 
 # getting song by song ref
 div()
-song_output_list = cache.pull_songs(song_ref=song_ref)
-print(len(song_output_list), song_output_list, song_output_list[0].album, sep=" | ")
-song = song_output_list[0]
-print("tracksort", song_output_list[0].tracksort, sep=": ")
-print("ID3", dict(song.metadata))
-print(str(song_output_list[0].metadata))
-print("--src--")
-for source in song.sources:
-    print(source)
+song_list = cache.pull_songs(song_ref=song_ref)
+song_from_db = song_list[0]
 
-print("album", song.album.sources)
 
 # try writing metadata
 write_metadata(song)
