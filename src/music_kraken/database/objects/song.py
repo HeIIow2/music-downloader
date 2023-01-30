@@ -189,12 +189,23 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             return None
         return self.album.id
 
+    def get_tracksort_str(self):
+        if self.tracksort is None:
+            return None
+
+        if self.album is None:
+            return str(self.tracksort)
+
+        return f"{self.tracksort}/{len(self.album.tracklist)}"
+            
+
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
             ID3_MAPPING.TITLE: [self.title],
             ID3_MAPPING.ISRC: [self.isrc],
             ID3_MAPPING.LENGTH: [str(self.length)],
-            ID3_MAPPING.GENRE: [self.genre]
+            ID3_MAPPING.GENRE: [self.genre],
+            ID3_MAPPING.TRACKNUMBER: [self.tracksort_str]
         })
 
         metadata.merge_many([s.get_song_metadata() for s in self.source_list])
@@ -204,6 +215,8 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         metadata.merge_many([a.metadata for a in self.feature_artist_list])
         metadata.merge_many([l.metadata for l in self.lyrics])
         return metadata
+
+    tracksort_str = property(fget=get_tracksort_str)
     
 
 
@@ -260,7 +273,7 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.is_split: bool = is_split
         self.albumsort: int | None = albumsort
 
-        self.tracklist: List[Song] = []
+        self._tracklist: List[Song] = list()
 
         if source_list is not None:
             self.source_list = source_list
@@ -279,13 +292,13 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         return len(self.tracklist)
 
     def set_tracklist(self, tracklist: List[Song]):
-        self.tracklist = tracklist
+        self._tracklist = tracklist
 
-        for i, track in enumerate(self.tracklist):
+        for i, track in enumerate(self._tracklist):
             track.tracksort = i + 1
 
     def add_song(self, song: Song):
-        for existing_song in self.tracklist:
+        for existing_song in self._tracklist:
             if existing_song == song:
                 return
 
@@ -315,6 +328,7 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
+    tracklist = property(fget=lambda self: self._tracklist, fset=set_tracklist)
 
 
 
