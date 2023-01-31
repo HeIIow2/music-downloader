@@ -142,7 +142,7 @@ class ID3Timestamp:
             second=second
         )
 
-    def get_timestamp(self) -> str:
+    def get_time_format(self) -> str:
         """
         https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.4.0-structure.html
 
@@ -165,18 +165,29 @@ class ID3Timestamp:
         """
 
         if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute and self.has_second:
-            return self.date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+            return "%Y-%m-%dT%H:%M:%S"
         if self.has_year and self.has_month and self.has_day and self.has_hour and self.has_minute:
-            return self.date_obj.strftime("%Y-%m-%dT%H:%M")
+            return "%Y-%m-%dT%H:%M"
         if self.has_year and self.has_month and self.has_day and self.has_hour:
-            return self.date_obj.strftime("%Y-%m-%dT%H")
+            return "%Y-%m-%dT%H"
         if self.has_year and self.has_month and self.has_day:
-            return self.date_obj.strftime("%Y-%m-%d")
+            return "%Y-%m-%d"
         if self.has_year and self.has_month:
-            return self.date_obj.strftime("%Y-%m")
+            return "%Y-%m"
         if self.has_year:
-            return self.date_obj.strftime("%Y")
+            return "%Y"
         return ""
+
+
+    def get_timestamp(self) -> str:
+        time_format = self.get_time_format()
+        return self.date_obj.strftime(time_format)
+    
+    
+    def get_timestamp_w_format(self) -> Tuple[str, str]:
+        time_format = self.get_time_format()
+        return time_format, self.date_obj.strftime(time_format)
+
 
     @classmethod
     def strptime(cls, time_stamp: str, format: str):

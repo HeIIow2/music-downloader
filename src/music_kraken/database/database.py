@@ -44,12 +44,12 @@ FROM Lyrics
 WHERE {where};
 """
 ALBUM_QUERY_UNJOINED = """
-SELECT Album.id AS album_id, title, label, album_status, language, date, country, barcode, albumsort, is_split
+SELECT Album.id AS album_id, title, label, album_status, language, date, date_format, country, barcode, albumsort, is_split
 FROM Album
 WHERE {where};
 """
 ALBUM_QUERY_JOINED = """
-SELECT a.id AS album_id, a.title, a.label, a.album_status, a.language, a.date, a.country, a.barcode, a.albumsort, a.is_split
+SELECT a.id AS album_id, a.title, a.label, a.album_status, a.language, a.date, a.date_format, a.country, a.barcode, a.albumsort, a.is_split
 FROM Song
 INNER JOIN Album a ON Song.album_id=a.id
 WHERE {where};
@@ -136,7 +136,9 @@ class Database:
 
     def push_album(self, album: Album):
         table = "Album"
-        query = f"INSERT OR REPLACE INTO {table} (id, title, label, album_status, language, date, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        query = f"INSERT OR REPLACE INTO {table} (id, title, label, album_status, language, date, date_format, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+
+        date_format, date = album.date.get_timestamp_w_format()
 
         values = (
             album.id,
@@ -144,7 +146,8 @@ class Database:
             album.label,
             album.album_status,
             album.iso_639_2_language,
-            album.date.strftime("%Y-%m-%d"),
+            date,
+            date_format,
             album.country,
             album.barcode,
             album.albumsort,
@@ -583,7 +586,7 @@ class Database:
             label=album_result['label'],
             album_status=album_result['album_status'],
             language=language,
-            date=ID3Timestamp.strptime(album_result['date'], "%Y-%m-%d"),
+            date=ID3Timestamp.strptime(album_result['date'], album_result['date_format']),
             country=album_result['country'],
             barcode=album_result['barcode'],
             is_split=album_result['is_split'],

@@ -269,6 +269,8 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.label = label
         self.language: pycountry.Languages = language
         self.date: ID3Timestamp = date
+        if date is None:
+            self.date = ID3Timestamp()
         self.country: str = country
         """
         TODO

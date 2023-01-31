@@ -32,6 +32,7 @@ CREATE TABLE Album
     album_status    TEXT,
     language        TEXT,
     date            TEXT,
+    date_format     TEXT,
     country         TEXT,
     barcode         TEXT,
     albumsort      INT,
