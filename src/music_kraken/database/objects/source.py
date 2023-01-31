@@ -90,7 +90,7 @@ class SourceAttribute:
     """
     _source_dict: Dict[object, List[Source]]
 
-    def __new__(cls, **_):
+    def __new__(cls, **kwargs):
         new = object.__new__(cls)
         new._source_dict = {page_enum: list() for page_enum in SourcePages}
         return new
