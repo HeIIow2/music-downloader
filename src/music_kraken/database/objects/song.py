@@ -362,10 +362,15 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None,
+            album_type: str = None,
             notes: str = None
     ):
         DatabaseObject.__init__(self, id_=id_)
 
+        """
+        TODO implement album type and notes
+        """
+        self.album_type = album_type
         self.notes = notes
 
         if main_albums is None:
@@ -390,6 +395,9 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, __o: object) -> bool:
+        return self.id_ == __o.id_
 
     def get_features(self) -> Album:
         feature_release = Album(

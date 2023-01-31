@@ -88,7 +88,12 @@ class SourceAttribute:
     This is a class that is meant to be inherited from.
     it adds the source_list attribute to a class
     """
-    _source_dict: Dict[object, List[Source]] = {page_enum: list() for page_enum in SourcePages}
+    _source_dict: Dict[object, List[Source]]
+
+    def __new__(cls, **_):
+        new = object.__new__(cls)
+        new._source_dict = {page_enum: list() for page_enum in SourcePages}
+        return new
 
     def add_source(self, source: Source):
         """

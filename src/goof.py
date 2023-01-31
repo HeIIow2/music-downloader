@@ -1,6 +1,7 @@
 from music_kraken import (
     Song,
-    Database
+    Database,
+    Artist
 )
 
 from music_kraken.pages import (
@@ -20,7 +21,16 @@ def print_song(song_: Song):
     print(song_.source_list)
     print("album:")
     print(song_.album.source_list)
+    print("artist:")
+    print([a.source_list for a in song_.main_artist_list])
+    print([a.source_list for a in song_.feature_artist_list])
     print("\n")
+
+def print_artist(artist: Artist):
+    print(artist)
+    print("---discography---")
+    for album in artist.discography:
+        print(album)
 
 
 # only_smile = EncyclopaediaMetallum.search_by_query("only smile")
@@ -42,5 +52,7 @@ print_song(song)
 
 artist = song.main_artist_list[0]
 artist = EncyclopaediaMetallum.fetch_artist_details(artist)
+
+print_artist(artist)
 
 # print(only_smile)

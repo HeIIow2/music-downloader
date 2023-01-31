@@ -329,6 +329,7 @@ class Database:
 
         for source in artist.source_list:
             source.type_enum = SourceTypes.ARTIST
+            source.add_song(artist)
             self.push_source(source)
 
     def pull_lyrics(self, song_ref: Reference = None, lyrics_ref: Reference = None) -> List[Lyrics]:

@@ -13,7 +13,11 @@ from ..database import (
     Source,
     SourcePages,
     Song,
-    Album
+    Album,
+    ID3Timestamp
+)
+from ..utils import (
+    string_processing
 )
 
 
@@ -196,6 +200,71 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
+    def add_dicography(cls, artist: Artist, ma_artist_id: str) -> Artist:
+        discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
+        
+        # prepare tracklist
+        album_by_url = dict()
+        album_by_name = dict()
+        for album in artist.main_albums:
+            album_by_name[string_processing.unify(album.title)] = album
+            for source in album.get_sources_from_page(cls.SOURCE_TYPE):
+                album_by_url[source.url] = Album
+        old_discography = artist.main_albums.copy()
+        # save the ids of the albums, that are added to this set, so I can
+        # efficiently add all leftover albums from the discograpy to the new one
+        used_ids = set()
+
+        new_discography: List[Album] = []
+        
+        r = cls.API_SESSION.get(discography_url.format(ma_artist_id))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {discography_url.format(ma_artist_id)}")
+            return artist
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        tbody_soup = soup.find('tbody')
+        for tr_soup in tbody_soup.find_all('tr'):
+            td_list = tr_soup.findChildren(recursive=False)
+
+            album_soup = td_list[0]
+            album_name = album_soup.text
+            album_url = album_soup.find('a').get('href')
+            album_id = album_url.split('/')[-1]
+            album_type = td_list[1].text
+            album_year = td_list[2].text
+            
+            unified_name = string_processing.unify(album_name)
+
+            album_obj: Album = Album(id_=album_id)
+            if album_url in album_by_url:
+                album_obj = album_by_url[album_url]
+                used_ids.add(album_obj.id)
+            elif unified_name in album_by_name:
+                album_obj = album_by_name[unified_name]
+                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
+                used_ids.add(album_obj.id)
+            else:
+                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
+
+            album_obj.title = album_name
+            album_obj.album_type = album_type
+            try:
+                album_obj.date = ID3Timestamp(year=int(album_year))
+            except ValueError():
+                pass
+            
+            new_discography.append(album_obj)
+
+        for old_object in old_discography:
+            if old_object.id not in used_ids:
+                new_discography.append(old_object)
+
+        artist.main_albums = new_discography
+        return artist
+
+    @classmethod
     def fetch_artist_details(cls, artist: Artist) -> Artist:
         source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
@@ -203,6 +272,24 @@ class EncyclopaediaMetallum(Page):
 
         # taking the fist source, cuz I only need one and multiple sources don't make that much sense
         source = source_list[0]
+        artist_id = source.url.split("/")[-1]
         print(source)
+        print("id", artist_id)
+
+        """
+        https://www.metal-archives.com/bands/Ghost_Bath/3540372489
+        https://www.metal-archives.com/band/discography/id/3540372489/tab/all
+        ---review---
+        https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
+        ---simmilar-bands---
+        https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
+        ---external-sources---
+        https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
+        """
+
+        # SIMPLE METADATA
+
+        # DISCOGRAPHY
+        artist = cls.add_dicography(artist, artist_id)
 
         return artist
