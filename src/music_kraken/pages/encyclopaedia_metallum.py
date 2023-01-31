@@ -201,6 +201,11 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def add_dicography(cls, artist: Artist, ma_artist_id: str) -> Artist:
+        """
+        TODO
+        I'd guess this funktion has quite some posibility for otimizations
+        in form of performance and clean code
+        """
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
         
         # prepare tracklist
@@ -209,7 +214,7 @@ class EncyclopaediaMetallum(Page):
         for album in artist.main_albums:
             album_by_name[string_processing.unify(album.title)] = album
             for source in album.get_sources_from_page(cls.SOURCE_TYPE):
-                album_by_url[source.url] = Album
+                album_by_url[source.url] = album
         old_discography = artist.main_albums.copy()
         # save the ids of the albums, that are added to this set, so I can
         # efficiently add all leftover albums from the discograpy to the new one
@@ -238,9 +243,11 @@ class EncyclopaediaMetallum(Page):
             unified_name = string_processing.unify(album_name)
 
             album_obj: Album = Album(id_=album_id)
+
             if album_url in album_by_url:
                 album_obj = album_by_url[album_url]
                 used_ids.add(album_obj.id)
+
             elif unified_name in album_by_name:
                 album_obj = album_by_name[unified_name]
                 album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
