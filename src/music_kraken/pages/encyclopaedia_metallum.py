@@ -200,10 +200,10 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
-    def add_dicography(cls, artist: Artist, ma_artist_id: str) -> Artist:
+    def fetch_artist_discography(cls, artist: Artist, ma_artist_id: str) -> Artist:
         """
         TODO
-        I'd guess this funktion has quite some posibility for otimizations
+        I'd guess this funktion has quite some possibility for optimizations
         in form of performance and clean code
         """
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
@@ -217,16 +217,18 @@ class EncyclopaediaMetallum(Page):
                 album_by_url[source.url] = album
         old_discography = artist.main_albums.copy()
         # save the ids of the albums, that are added to this set, so I can
-        # efficiently add all leftover albums from the discograpy to the new one
+        # efficiently add all leftover albums from the discography to the new one
         used_ids = set()
 
         new_discography: List[Album] = []
-        
+
+        # make the request
         r = cls.API_SESSION.get(discography_url.format(ma_artist_id))
         if r.status_code != 200:
             LOGGER.warning(f"code {r.status_code} at {discography_url.format(ma_artist_id)}")
             return artist
 
+        # parse the html
         soup = BeautifulSoup(r.text, 'html.parser')
 
         tbody_soup = soup.find('tbody')
@@ -264,11 +266,27 @@ class EncyclopaediaMetallum(Page):
             
             new_discography.append(album_obj)
 
+        # add the albums back, which weren't on this page
         for old_object in old_discography:
             if old_object.id not in used_ids:
                 new_discography.append(old_object)
 
         artist.main_albums = new_discography
+
+        return artist
+
+    @classmethod
+    def fetch_artist_sources(cls, artist: Artist, ma_artist_id: str) -> Artist:
+        sources_url = "https://www.metal-archives.com/link/ajax-list/type/band/id/{}"
+
+        # make the request
+        r = cls.API_SESSION.get(sources_url.format(ma_artist_id))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {sources_url.format(ma_artist_id)}")
+            return artist
+
+        print(r.text)
+
         return artist
 
     @classmethod
@@ -297,6 +315,9 @@ class EncyclopaediaMetallum(Page):
         # SIMPLE METADATA
 
         # DISCOGRAPHY
-        artist = cls.add_dicography(artist, artist_id)
+        artist = cls.fetch_artist_discography(artist, artist_id)
+
+        # External Sources
+        artist = cls.fetch_artist_sources(artist, artist_id)
 
         return artist

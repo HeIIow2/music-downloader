@@ -21,6 +21,14 @@ class SourcePages(Enum):
     GENIUS = "genius"
     MUSICBRAINZ = "musicbrainz"
     ENCYCLOPAEDIA_METALLUM = "encyclopaedia metallum"
+    BANDCAMP = "bandcamp"
+    DEEZER = "deezer"
+    SPOTIFY = "spotify"
+
+    # This has nothing to do with audio, but bands can be here
+    INSTAGRAM = "instagram"
+    FACEBOOK = "facebook"
+    TWITTER = "twitter" # I will use nitter though lol
 
     @classmethod
     def get_homepage(cls, attribute) -> str:
@@ -29,7 +37,13 @@ class SourcePages(Enum):
             cls.MUSIFY: "https://musify.club/",
             cls.MUSICBRAINZ: "https://musicbrainz.org/",
             cls.ENCYCLOPAEDIA_METALLUM: "https://www.metal-archives.com/",
-            cls.GENIUS: "https://genius.com/"
+            cls.GENIUS: "https://genius.com/",
+            cls.BANDCAMP: "https://bandcamp.com/",
+            cls.DEEZER: "https://www.deezer.com/",
+            cls.INSTAGRAM: "https://www.instagram.com/",
+            cls.FACEBOOK: "https://www.facebook.com/",
+            cls.SPOTIFY: "https://open.spotify.com/",
+            cls.TWITTER: "https://twitter.com/"
         }
         return homepage_map[attribute]
 
@@ -89,16 +103,33 @@ class SourceAttribute:
     it adds the source_list attribute to a class
     """
     _source_dict: Dict[object, List[Source]]
+    source_url_map: Dict[str, Source]
 
     def __new__(cls, **kwargs):
         new = object.__new__(cls)
         new._source_dict = {page_enum: list() for page_enum in SourcePages}
+        new.source_url_map = dict()
         return new
+
+    def match_source_with_url(self, url: str) -> bool:
+        """
+        this function returns true, if a source with this url exists,
+        else it returns false
+        :param url:
+        :return source_with_url_exists:
+        """
+        return url in self.source_url_map
+
+    def match_source(self, source: Source) -> bool:
+        return self.match_source_with_url(source.url)
 
     def add_source(self, source: Source):
         """
         adds a new Source to the sources
         """
+        if self.match_source(source):
+            return
+        self.source_url_map[source.url] = source
         self._source_dict[source.page_enum].append(source)
 
     def get_sources_from_page(self, page_enum) -> List[Source]:
