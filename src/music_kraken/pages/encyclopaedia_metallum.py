@@ -311,6 +311,11 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def fetch_artist_attributes(cls, artist: Artist, url: str) -> Artist:
+        r = cls.API_SESSION.get(url)
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {url}")
+            return artist
+        
         return artist
 
     @classmethod
@@ -342,7 +347,7 @@ class EncyclopaediaMetallum(Page):
         # DISCOGRAPHY
         artist = cls.fetch_artist_discography(artist, artist_id)
 
-        # External Sources
+        # EXTERNAL SOURCES
         artist = cls.fetch_artist_sources(artist, artist_id)
 
         return artist
