@@ -1,14 +1,15 @@
 from typing import List
 import musicbrainzngs
 
-from ...database import (
+from src.music_kraken.database import (
     Artist,
     Album,
     Song
 )
-from ...utils.object_handeling import (
+from src.music_kraken.utils.object_handeling import (
     get_elem_from_obj
 )
+
 
 def get_artist(flat: bool = False) -> Artist:
     # getting the flat artist
@@ -18,6 +19,7 @@ def get_artist(flat: bool = False) -> Artist:
     # get additional stuff like discography
     return artist_object
 
+
 def get_album(flat: bool = False) -> Album:
     # getting the flat album object
     album_object = Album()
@@ -26,12 +28,13 @@ def get_album(flat: bool = False) -> Album:
     # get additional stuff like tracklist
     return album_object
 
+
 def get_song(mb_id: str, flat: bool = False) -> Song:
     # getting the flat song object
     try:
         result = musicbrainzngs.get_recording_by_id(mb_id,
-                                                includes=["artists", "releases", "recording-rels", "isrcs",
-                                                            "work-level-rels"])
+                                                    includes=["artists", "releases", "recording-rels", "isrcs",
+                                                              "work-level-rels"])
     except musicbrainzngs.musicbrainz.NetworkError:
         return
 

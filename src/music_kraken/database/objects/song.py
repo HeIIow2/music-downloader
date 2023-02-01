@@ -366,7 +366,7 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             notes: str = None,
             lyrical_themes: List[str] = None,
             general_genre: str = "",
-            country: pycountry.Country = None,
+            country=None,
             formed_in: ID3Timestamp = None
     ):
         DatabaseObject.__init__(self, id_=id_)
@@ -376,6 +376,7 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         self.album_type = album_type
         self.country: pycountry.Country = country
+        self.formed_in: ID3Timestamp = formed_in
         """
         notes, generall genre, lyrics themes are attributes
         which are meant to only use in outputs to describe the object

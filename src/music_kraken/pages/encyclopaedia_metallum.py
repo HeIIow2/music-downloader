@@ -208,7 +208,7 @@ class EncyclopaediaMetallum(Page):
         in form of performance and clean code
         """
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
-        
+
         # prepare tracklist
         album_by_url = dict()
         album_by_name = dict()
@@ -242,7 +242,7 @@ class EncyclopaediaMetallum(Page):
             album_id = album_url.split('/')[-1]
             album_type = td_list[1].text
             album_year = td_list[2].text
-            
+
             unified_name = string_processing.unify(album_name)
 
             album_obj: Album = Album(id_=album_id)
@@ -264,7 +264,7 @@ class EncyclopaediaMetallum(Page):
                 album_obj.date = ID3Timestamp(year=int(album_year))
             except ValueError():
                 pass
-            
+
             new_discography.append(album_obj)
 
         # add the albums back, which weren't on this page
@@ -336,7 +336,7 @@ class EncyclopaediaMetallum(Page):
                     country = pycountry.countries.get(alpha_2=href.split("/")[-1])
                     artist.country = country
                     continue
-                
+
                 # not needed: Location: Minot, North Dakota
 
                 """
@@ -347,6 +347,7 @@ class EncyclopaediaMetallum(Page):
 
                 if "Formed in:" == title_text:
                     formed_in_year = int(data.text)
+                    artist.formed_in = ID3Timestamp(year=formed_in_year)
                     continue
                 if "Genre:" == title_text:
                     genre = data.text
@@ -373,14 +374,12 @@ class EncyclopaediaMetallum(Page):
                 # print(title_text, data.text)
                 # print(data)
         # print(band_stat_soup)
-        
+
         print("country", country)
         print("formed in", formed_in_year)
         print("genre", genre)
         print("lyrical themes", lyrical_themes)
         print("label", label_name, label_url)
-
-
 
         return artist
 

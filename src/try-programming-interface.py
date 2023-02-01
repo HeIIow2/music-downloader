@@ -15,7 +15,7 @@ musicbrainz id and the type the id corresponds to (artist/release group/release/
 To get this you first have to initialize a search object (music_kraken.metadata.metadata_search.Search).
 """
 
-search_object = mk.metadata.metadata_search.Search()
+search_object = src.music_kraken.audio_source_not_used_anymore.metadata.metadata_search.Search()
 
 """
 Then you need an initial "text search" to get some options you can choose from. For
@@ -101,7 +101,7 @@ forward so I just show the code.
 """
 
 # I am aware of abstrackt classes
-metadata_downloader = mk.metadata.metadata_fetch.MetadataDownloader()
+metadata_downloader = src.music_kraken.audio_source_not_used_anymore.metadata.metadata_fetch.MetadataDownloader()
 metadata_downloader.download({'type': option_to_download.type, 'id': option_to_download.id})
 
 """

@@ -6,12 +6,9 @@ from music_kraken.utils.shared import (
     MUSIC_DIR,
     NOT_A_GENRE
 )
-from music_kraken.metadata import (
-    metadata_search,
-    metadata_fetch
-)
+from src.music_kraken.not_used_anymore.metadata import metadata_search, metadata_fetch
 from music_kraken.target import set_target
-from music_kraken.audio_source import (
+from music_kraken.not_used_anymore import (
     fetch_source,
     fetch_audio
 )

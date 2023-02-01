@@ -7,10 +7,10 @@ import os
 
 from . import (
     database,
-    audio_source,
-    target,
-    metadata
+    not_used_anymore,
+    target
 )
+from .not_used_anymore import metadata
 
 from .utils.shared import (
     MUSIC_DIR,
@@ -70,11 +70,11 @@ def set_targets(genre: str):
 
 
 def fetch_sources(songs: List[Song], skip_existing_files: bool = True):
-    audio_source.fetch_sources(songs=songs, skip_existing_files=skip_existing_files)
+    not_used_anymore.fetch_sources(songs=songs, skip_existing_files=skip_existing_files)
 
 
 def fetch_audios(songs: List[Song], override_existing: bool = False):
-    audio_source.fetch_audios(songs=songs, override_existing=override_existing)
+    not_used_anymore.fetch_audios(songs=songs, override_existing=override_existing)
 
 
 def clear_cache():

@@ -13,7 +13,7 @@ Total : 20 files,  700 codes, 165 comments, 162 blanks, all 1027 lines
 | :--- | :--- | ---: | ---: | ---: | ---: |
 | [src/goof.py](/src/goof.py) | Python | 30 | 5 | 8 | 43 |
 | [src/music_kraken/__init__.py](/src/music_kraken/__init__.py) | Python | 3 | 2 | 0 | 5 |
-| [src/music_kraken/audio_source/fetch_source.py](/src/music_kraken/audio_source/fetch_source.py) | Python | 0 | 0 | -1 | -1 |
+| [src/music_kraken/audio_source/fetch_source.py](/src/music_kraken/not_used_anymore/fetch_source.py) | Python | 0 | 0 | -1 | -1 |
 | [src/music_kraken/database/__init__.py](/src/music_kraken/database/__init__.py) | Python | -4 | 1 | 1 | -2 |
 | [src/music_kraken/database/artist.py](/src/music_kraken/database/artist.py) | Python | -11 | 0 | -5 | -16 |
 | [src/music_kraken/database/database.py](/src/music_kraken/database/database.py) | Python | 25 | 22 | 4 | 51 |

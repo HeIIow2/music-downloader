@@ -1,8 +1,8 @@
 from typing import List
 import musicbrainzngs
 
-from ..utils.shared import *
-from ..utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
+from src.music_kraken.utils.shared import *
+from src.music_kraken.utils.object_handeling import get_elem_from_obj, parse_music_brainz_date
 
 logger = SEARCH_LOGGER
 

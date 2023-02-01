@@ -8,7 +8,7 @@ except ImportError:
 #     packages=['music_kraken'],
 
 #packages = find_packages(where="src")
-packages = ['music_kraken', 'music_kraken.lyrics', 'music_kraken.audio_source', 'music_kraken.target', 'music_kraken.metadata', 'music_kraken.tagging', 'music_kraken.utils', 'music_kraken.audio_source.sources', 'music_kraken.database', 'music_kraken.static_files']
+packages = ['music_kraken', 'music_kraken.lyrics', 'music_kraken.not_used_anymore', 'music_kraken.target', 'music_kraken.metadata', 'music_kraken.tagging', 'music_kraken.utils', 'music_kraken.not_used_anymore.sources', 'music_kraken.database', 'music_kraken.static_files']
 
 print("packages")
 print(packages)

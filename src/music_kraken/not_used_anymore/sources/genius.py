@@ -3,14 +3,14 @@ from typing import List
 from bs4 import BeautifulSoup
 import pycountry
 
-from ..database import (
+from src.music_kraken.database import (
     Lyrics,
     Song,
     Artist
 )
-from ..utils.shared import *
-from ..utils import phonetic_compares
-from ..utils.object_handeling import get_elem_from_obj
+from src.music_kraken.utils.shared import *
+from src.music_kraken.utils import phonetic_compares
+from src.music_kraken.utils.object_handeling import get_elem_from_obj
 
 TIMEOUT = 10
 
