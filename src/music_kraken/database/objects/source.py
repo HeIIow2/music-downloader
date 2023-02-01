@@ -66,6 +66,37 @@ class Source(DatabaseObject, SongAttribute, MetadataAttribute):
 
         self.url = url
 
+    @classmethod
+    def match_url(cls, url: str):
+        """
+        this shouldn't be used, unlesse you are not certain what the source is for
+        the reason is that it is more inefficient
+        """
+        if url.startswith("https://www.youtube"):
+            return cls(SourcePages.YOUTUBE, url)
+
+        if url.startswith("https://www.deezer"):
+            return cls(SourcePages.DEEZER, url)
+        
+        if url.startswith("https://open.spotify.com"):
+            return cls(SourcePages.SPOTIFY, url)
+
+        if "bandcamp" in url:
+            return cls(SourcePages.BANDCAMP, url)
+
+        if url.startswith("https://www.metal-archives.com/"):
+            return cls(SourcePages.ENCYCLOPAEDIA_METALLUM, url)
+
+        # the less important once
+        if url.startswith("https://www.facebook"):
+            return cls(SourcePages.FACEBOOK, url)
+
+        if url.startswith("https://www.instagram"):
+            return cls(SourcePages.INSTAGRAM, url)
+
+        if url.startswith("https://twitter"):
+            return cls(SourcePages.TWITTER, url)
+
     def get_song_metadata(self) -> MetadataAttribute.Metadata:
         return MetadataAttribute.Metadata({
             Mapping.FILE_WEBPAGE_URL: [self.url],
@@ -87,7 +118,7 @@ class Source(DatabaseObject, SongAttribute, MetadataAttribute):
         return super().get_metadata()
 
     def __str__(self):
-        return f"{self.page_enum}: {self.url}"
+        return self.__repr__()
 
     def __repr__(self) -> str:
         return f"Src({self.page_enum.value}: {self.url})"

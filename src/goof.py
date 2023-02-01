@@ -12,6 +12,11 @@ from music_kraken.pages import (
 test_db = Database("test.db")
 # test_db.reset()
 
+def print_source(source_obj):
+    print("---source---")
+    for source in source_obj.source_list:
+        print(source)
+
 def print_song(song_: Song):
     print(str(song_.metadata))
     print("----album--")
@@ -31,6 +36,7 @@ def print_artist(artist: Artist):
     print("---discography---")
     for album in artist.discography:
         print(album)
+    print_source(artist)
 
 
 # only_smile = EncyclopaediaMetallum.search_by_query("only smile")

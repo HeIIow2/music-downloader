@@ -285,7 +285,21 @@ class EncyclopaediaMetallum(Page):
             LOGGER.warning(f"code {r.status_code} at {sources_url.format(ma_artist_id)}")
             return artist
 
-        print(r.text)
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        artist_source = soup.find("div", {"id": "band_links_Official"})
+        merchandice_source = soup.find("div", {"id": "band_links_Official_merchandise"})
+        label_source = soup.find("div", {"id": "band_links_Labels"})
+
+        for tr in artist_source.find_all("td"):
+            a = tr.find("a")
+            url = a.get("href")
+
+            source = Source.match_url(url)
+            if source is None:
+                continue
+
+            artist.add_source(source)
 
         return artist
 
