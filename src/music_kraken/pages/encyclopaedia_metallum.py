@@ -288,6 +288,12 @@ class EncyclopaediaMetallum(Page):
         soup = BeautifulSoup(r.text, 'html.parser')
 
         artist_source = soup.find("div", {"id": "band_links_Official"})
+        """
+        TODO
+        add a Label object to add the label sources from
+        TODO
+        maybe do merchandice stuff
+        """
         merchandice_source = soup.find("div", {"id": "band_links_Official_merchandise"})
         label_source = soup.find("div", {"id": "band_links_Labels"})
 
