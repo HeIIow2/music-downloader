@@ -363,7 +363,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None,
             album_type: str = None,
-            notes: str = None
+            notes: str = None,
+            lyrical_themes: List[str] = None,
+            general_genre: str = "",
+            country: pycountry.Country = None,
+            formed_in: ID3Timestamp = None
     ):
         DatabaseObject.__init__(self, id_=id_)
 
@@ -371,7 +375,17 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         TODO implement album type and notes
         """
         self.album_type = album_type
+        self.country: pycountry.Country = country
+        """
+        notes, generall genre, lyrics themes are attributes
+        which are meant to only use in outputs to describe the object
+        i mean do as you want but there aint no strict rule about em so good luck
+        """
         self.notes = notes
+        self.lyrical_themes: List[str] = lyrical_themes
+        if self.lyrical_themes is None:
+            self.lyrical_themes = []
+        self.general_genre = general_genre
 
         if main_albums is None:
             main_albums = []

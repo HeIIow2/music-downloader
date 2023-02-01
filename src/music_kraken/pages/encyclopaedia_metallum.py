@@ -334,6 +334,7 @@ class EncyclopaediaMetallum(Page):
                 if "Country of origin:" == title_text:
                     href = data.find('a').get('href')
                     country = pycountry.countries.get(alpha_2=href.split("/")[-1])
+                    artist.country = country
                     continue
                 
                 # not needed: Location: Minot, North Dakota
@@ -349,13 +350,20 @@ class EncyclopaediaMetallum(Page):
                     continue
                 if "Genre:" == title_text:
                     genre = data.text
+                    artist.general_genre = genre
                     continue
                 if "Lyrical themes:" == title_text:
                     lyrical_themes = data.text.split(", ")
+                    artist.lyrical_themes = lyrical_themes
                     continue
                 if "Current label:" == title_text:
                     label_name = data.text
                     label_url = data.find("a").get("href")
+
+                    for album in artist.main_albums:
+                        if album.label is not None:
+                            continue
+                        album.label = label_name
                     continue
 
                 """
@@ -371,6 +379,8 @@ class EncyclopaediaMetallum(Page):
         print("genre", genre)
         print("lyrical themes", lyrical_themes)
         print("label", label_name, label_url)
+
+
 
         return artist
 
