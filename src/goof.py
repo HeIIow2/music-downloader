@@ -62,6 +62,6 @@ print_artist(artist)
 
 artist = EncyclopaediaMetallum.fetch_artist_details(artist)
 
-print_artist(artist)
+# print_artist(artist)
 
 # print(only_smile)

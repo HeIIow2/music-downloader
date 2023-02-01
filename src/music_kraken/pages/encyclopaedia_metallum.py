@@ -1,6 +1,7 @@
 from typing import List
 import requests
 from bs4 import BeautifulSoup
+import pycountry
 
 from ..utils.shared import (
     ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
@@ -315,7 +316,62 @@ class EncyclopaediaMetallum(Page):
         if r.status_code != 200:
             LOGGER.warning(f"code {r.status_code} at {url}")
             return artist
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        country: pycountry.Countrie = None
+        formed_in_year: int = None
+        genre: str = None
+        lyrical_themes: List[str] = []
+        label_name: str = None
+        label_url: str = None
+
+        band_stat_soup = soup.find("div", {"id": "band_stats"})
+        for dl_soup in band_stat_soup.find_all("dl"):
+            for title, data in zip(dl_soup.find_all("dt"), dl_soup.find_all("dd")):
+                title_text = title.text
+
+                if "Country of origin:" == title_text:
+                    href = data.find('a').get('href')
+                    country = pycountry.countries.get(alpha_2=href.split("/")[-1])
+                    continue
+                
+                # not needed: Location: Minot, North Dakota
+
+                """
+                TODO
+                status: active
+                need to do enums for that and add it to object
+                """
+
+                if "Formed in:" == title_text:
+                    formed_in_year = int(data.text)
+                    continue
+                if "Genre:" == title_text:
+                    genre = data.text
+                    continue
+                if "Lyrical themes:" == title_text:
+                    lyrical_themes = data.text.split(", ")
+                    continue
+                if "Current label:" == title_text:
+                    label_name = data.text
+                    label_url = data.find("a").get("href")
+                    continue
+
+                """
+                years active: 2012-present
+                process this and add field to class
+                """
+                # print(title_text, data.text)
+                # print(data)
+        # print(band_stat_soup)
         
+        print("country", country)
+        print("formed in", formed_in_year)
+        print("genre", genre)
+        print("lyrical themes", lyrical_themes)
+        print("label", label_name, label_url)
+
         return artist
 
     @classmethod
@@ -331,14 +387,13 @@ class EncyclopaediaMetallum(Page):
         print("id", artist_id)
 
         """
+        TODO
         [] https://www.metal-archives.com/bands/Ghost_Bath/3540372489
         [x] https://www.metal-archives.com/band/discography/id/3540372489/tab/all
-        ---review---
-        [] https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
-        ---simmilar-bands---
-        [] https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
-        ---external-sources---
-        [x] https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
+        [] reviews: https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
+        [] simmilar: https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
+        [x] sources: https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
+        [] band notes: https://www.metal-archives.com/band/read-more/id/3540372489
         """
 
         # SIMPLE METADATA
