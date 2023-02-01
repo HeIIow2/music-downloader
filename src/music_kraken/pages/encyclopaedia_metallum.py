@@ -310,6 +310,10 @@ class EncyclopaediaMetallum(Page):
         return artist
 
     @classmethod
+    def fetch_artist_attributes(cls, artist: Artist, url: str) -> Artist:
+        return artist
+
+    @classmethod
     def fetch_artist_details(cls, artist: Artist) -> Artist:
         source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
@@ -322,17 +326,18 @@ class EncyclopaediaMetallum(Page):
         print("id", artist_id)
 
         """
-        https://www.metal-archives.com/bands/Ghost_Bath/3540372489
-        https://www.metal-archives.com/band/discography/id/3540372489/tab/all
+        [] https://www.metal-archives.com/bands/Ghost_Bath/3540372489
+        [x] https://www.metal-archives.com/band/discography/id/3540372489/tab/all
         ---review---
-        https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
+        [] https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
         ---simmilar-bands---
-        https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
+        [] https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
         ---external-sources---
-        https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
+        [x] https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
         """
 
         # SIMPLE METADATA
+        artist = cls.fetch_artist_attributes(artist, source.url)
 
         # DISCOGRAPHY
         artist = cls.fetch_artist_discography(artist, artist_id)
