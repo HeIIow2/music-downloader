@@ -51,6 +51,10 @@ class FormattedText:
             return None
         return pandoc.write(self.doc, format="plain").strip()
 
+    plaintext = property(fget=get_plaintext, fset=set_plaintext)
+    markdown = property(fget=get_markdown, fset=set_markdown)
+    html = property(fget=get_html, fset=set_html)
+
 
 class NotesAttributes:
     def __init__(self) -> None:

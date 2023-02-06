@@ -2,7 +2,8 @@ from . import (
     song,
     metadata,
     source,
-    parents
+    parents,
+    formatted_text
 )
 
 MusicObject = parents.DatabaseObject
@@ -21,3 +22,5 @@ Target = song.Target
 Lyrics = song.Lyrics
 
 Album = song.Album
+
+FormattedText = formatted_text.FormattedText

@@ -15,7 +15,8 @@ from ..database import (
     SourcePages,
     Song,
     Album,
-    ID3Timestamp
+    ID3Timestamp,
+    FormattedText
 )
 from ..utils import (
     string_processing
@@ -384,6 +385,19 @@ class EncyclopaediaMetallum(Page):
         return artist
 
     @classmethod
+    def fetch_band_notes(cls, artist: Artist, ma_artist_id: str) -> Artist:
+        endpoint = "https://www.metal-archives.com/band/read-more/id/{}"
+
+        # make the request
+        r = cls.API_SESSION.get(endpoint.format(ma_artist_id))
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {endpoint.format(ma_artist_id)}")
+            return artist
+
+        artist.notes.html = r.text
+        return artist
+
+    @classmethod
     def fetch_artist_details(cls, artist: Artist) -> Artist:
         source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
@@ -397,12 +411,12 @@ class EncyclopaediaMetallum(Page):
 
         """
         TODO
-        [] https://www.metal-archives.com/bands/Ghost_Bath/3540372489
+        [x] https://www.metal-archives.com/bands/Ghost_Bath/3540372489
         [x] https://www.metal-archives.com/band/discography/id/3540372489/tab/all
         [] reviews: https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
         [] simmilar: https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
         [x] sources: https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
-        [] band notes: https://www.metal-archives.com/band/read-more/id/3540372489
+        [x] band notes: https://www.metal-archives.com/band/read-more/id/3540372489
         """
 
         # SIMPLE METADATA
@@ -413,5 +427,8 @@ class EncyclopaediaMetallum(Page):
 
         # EXTERNAL SOURCES
         artist = cls.fetch_artist_sources(artist, artist_id)
+
+        # ARTIST NOTES
+        artist = cls.fetch_band_notes(artist, artist_id)
 
         return artist

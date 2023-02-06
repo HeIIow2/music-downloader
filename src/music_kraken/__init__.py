@@ -10,7 +10,7 @@ from . import (
     not_used_anymore,
     target
 )
-from .not_used_anymore import metadata
+
 
 from .utils.shared import (
     MUSIC_DIR,
@@ -49,20 +49,9 @@ Album = database.Album
 
 ID3Timestamp = database.ID3Timestamp
 
-MetadataSearch = metadata.MetadataSearch
-MetadataDownload = metadata.MetadataDownload
-
 cache = database.cache
 Database = database.Database
 
-def fetch_metadata(type_: str, id_: str):
-    metadata_downloader = MetadataDownload()
-    metadata_downloader.download({'type': type_, 'id': id_})
-
-
-def fetch_metadata_from_search(search_instance: MetadataSearch):
-    current_option = search_instance.current_option
-    fetch_metadata(type_=current_option.type, id_=current_option.id)
 
 
 def set_targets(genre: str):
@@ -112,42 +101,6 @@ searches for the track <any track> from the release <any relaese>
     print(msg)
 
 
-def execute_input(_input: str, search: MetadataSearch) -> bool:
-    """
-    :returns: True if it should break out of the loop else False
-    """
-    query_input = _input.strip()
-    _input = _input.strip().lower()
-    if _input in ("d", "ok", "dl", "download"):
-        return True
-    if _input in ("q", "quit", "exit"):
-        exit()
-    if _input in ("h", "help"):
-        help_search_metadata()
-        return False
-    if _input.isdigit():
-        print()
-        print(search.choose(int(_input)))
-        return False
-    if _input == "..":
-        print()
-        print(search.get_previous_options())
-        return False
-
-    print()
-    print(search.search_from_query(query_input))
-
-
-def search_for_metadata():
-    search = MetadataSearch()
-
-    while True:
-        _input = input("\"help\" for an overview of commands: ")
-        if execute_input(_input=_input, search=search):
-            break
-
-    print(f"downloading: {search.current_option}")
-    return search
 
 
 def get_genre():
@@ -166,36 +119,3 @@ def get_genre():
         return existing_genres[genre_id]
 
     return genre
-
-
-def cli(start_at: int = 0, only_lyrics: bool = False):
-    if start_at <= 2 and not only_lyrics:
-        genre = get_genre()
-        logging.info(f"{genre} has been set as genre.")
-
-    if start_at <= 0:
-        search = search_for_metadata()
-        logging.info("Starting Downloading of metadata")
-        fetch_metadata_from_search(search)
-
-    if start_at <= 1 and not only_lyrics:
-        logging.info("creating Paths")
-        set_targets(genre=genre)
-
-    if start_at <= 2 and not only_lyrics:
-        logging.info("Fetching Download Links")
-        fetch_sources(cache.get_tracks_without_src())
-
-    if start_at <= 3 and not only_lyrics:
-        logging.info("starting to download the mp3's")
-        fetch_audios(cache.get_tracks_to_download())
-
-    if start_at <= 4:
-        logging.info("starting to fetch the lyrics")
-        lyrics.fetch_lyrics(cache.get_tracks_for_lyrics())
-
-
-def gtk_gui():
-    # please maximaly a minimal gui, the fully fleshed out gui should be made externally
-    # to avoid ending up with a huge monolyth
-    pass

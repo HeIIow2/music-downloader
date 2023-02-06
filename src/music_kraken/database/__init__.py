@@ -16,5 +16,7 @@ Lyrics = objects.Lyrics
 Album = objects.Album
 Artist = objects.Artist
 
+FormattedText = objects.FormattedText
+
 Database = database.Database
 cache = temp_database.TempDatabase()

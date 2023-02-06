@@ -23,6 +23,7 @@ from .source import (
     SourcePages,
     SourceAttribute
 )
+from .formatted_text import FormattedText
 
 """
 All Objects dependent 
@@ -363,7 +364,7 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None,
             album_type: str = None,
-            notes: str = None,
+            notes: FormattedText = None,
             lyrical_themes: List[str] = None,
             general_genre: str = "",
             country=None,
@@ -382,7 +383,9 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         which are meant to only use in outputs to describe the object
         i mean do as you want but there aint no strict rule about em so good luck
         """
-        self.notes = notes
+        self.notes: FormattedText = notes
+        if self.notes is None:
+            self.notes = FormattedText()
         self.lyrical_themes: List[str] = lyrical_themes
         if self.lyrical_themes is None:
             self.lyrical_themes = []
@@ -406,7 +409,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             self.source_list = source_list
 
     def __str__(self):
-        return self.name or ""
+        string = self.name or ""
+        plaintext_notes = self.notes.get_plaintext()
+        if plaintext_notes is not None:
+            string += "\n" + plaintext_notes
+        return string
 
     def __repr__(self):
         return self.__str__()
