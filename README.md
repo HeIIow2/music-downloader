@@ -7,6 +7,8 @@
 5. [About the Audio](#download)
 6. [About the Lyrics](#lyrics)
 
+I am happy about every pull request. To contribute look [here](contribute.md).
+
 ![](https://github.com/HeIIow2/music-downloader/blob/master/assets/logo_cropped.jpg?raw=true)
 
 ## Installation
