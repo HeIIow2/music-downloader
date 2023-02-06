@@ -60,8 +60,10 @@ artist = song.main_artist_list[0]
 
 # print_artist(artist)
 
-artist = EncyclopaediaMetallum.fetch_artist_details(artist)
+# artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
 
-print_artist(artist)
+album = EncyclopaediaMetallum.fetch_album_details(song.album, flat=False)
+
+# print_artist(artist)
 
 # print(only_smile)

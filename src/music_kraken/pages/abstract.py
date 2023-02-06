@@ -84,17 +84,17 @@ class Page:
         :return possible_music_objects:
         """
 
-        raise NotImplementedError()
+        return []
 
     @classmethod
-    def fetch_details(cls, music_object: MusicObject, simple: bool = False) -> MusicObject:
+    def fetch_details(cls, music_object: MusicObject, flat: bool = False) -> MusicObject:
         """
         when a music object with laccing data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
         If you for example put in an album, it fetches the tracklist
 
         :param music_object:
-        :param simple: 
+        :param flat: 
         if it is true it fetches only the most important information (only one level)
         if an Artist is passed in, it fetches only the discography of the artist, and not the
         tracklist of every album of the artist.
@@ -102,22 +102,23 @@ class Page:
         """
 
         if type(music_object) == Song:
-            return cls.fetch_song_details(music_object, simple=simple)
+            return cls.fetch_song_details(music_object, flat=flat)
         
         if type(music_object) == Album:
-            return cls.fetch_album_details(music_object, simple=simple)
+            return cls.fetch_album_details(music_object, flat=flat)
 
         if type(music_object) == Artist:
-            return cls.fetch_artist_details(music_object, simple=simple)
+            return cls.fetch_artist_details(music_object, flat=flat)
 
         raise NotImplementedError(f"MusicObject {type(music_object)} has not been implemented yet")
 
-    def fetch_song_details(cls, song: Song, simple: bool = False) -> Song:
+    @classmethod
+    def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
         """
         for a general description check cls.fetch_details
 
         :param song: song without much data
-        :param simple: 
+        :param flat: 
         when True it only fetches the artist and the album, and the attributes of those,
         who can be gotten with one api request
         when False it fetches everything including, but not limited to:
@@ -127,14 +128,15 @@ class Page:
         :return detailed_song: it modifies the input song
         """
 
-        raise NotImplementedError()
+        return song
 
-    def fetch_album_details(cls, album: Album, simple: bool = False) -> Album:
+    @classmethod
+    def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
         """
         for a general description check cls.fetch_details
 
         :param album: album without much data
-        :param simple: 
+        :param flat: 
         when True it only fetches the artist and the tracklist, and the attributes of those,
         which can be gotten with one api request
         when False it fetches everything including, but not limited to:
@@ -145,14 +147,15 @@ class Page:
         :return detailed_artist: it modifies the input artist
         """
 
-        raise NotImplementedError()
+        return album
 
-    def fetch_artist_details(cls, artist: Artist, simple: bool = False) -> Artist:
+    @classmethod
+    def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
         """
         for a general description check cls.fetch_details
 
         :param artist: artist without much data
-        :param simple: 
+        :param flat: 
         when True it only fetches the discographie, meaning every album, but not every tracklist
         when False it fetches everything including, but not limited to:
          - the whole discography
@@ -161,4 +164,4 @@ class Page:
         :return detailed_artist: it modifies the input artist
         """
 
-        raise NotImplementedError()
+        return artist

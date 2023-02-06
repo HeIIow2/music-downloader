@@ -202,7 +202,7 @@ class EncyclopaediaMetallum(Page):
         )
 
     @classmethod
-    def fetch_artist_discography(cls, artist: Artist, ma_artist_id: str) -> Artist:
+    def fetch_artist_discography(cls, artist: Artist, ma_artist_id: str, flat: bool = False) -> Artist:
         """
         TODO
         I'd guess this funktion has quite some possibility for optimizations
@@ -274,6 +274,10 @@ class EncyclopaediaMetallum(Page):
                 new_discography.append(old_object)
 
         artist.main_albums = new_discography
+
+        if not flat:
+            for album in artist.main_albums:
+                cls.fetch_album_details(album, flat=flat)
 
         return artist
 
@@ -376,12 +380,6 @@ class EncyclopaediaMetallum(Page):
                 # print(data)
         # print(band_stat_soup)
 
-        print("country", country)
-        print("formed in", formed_in_year)
-        print("genre", genre)
-        print("lyrical themes", lyrical_themes)
-        print("label", label_name, label_url)
-
         return artist
 
     @classmethod
@@ -398,7 +396,7 @@ class EncyclopaediaMetallum(Page):
         return artist
 
     @classmethod
-    def fetch_artist_details(cls, artist: Artist) -> Artist:
+    def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
         source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
             return artist
@@ -406,8 +404,6 @@ class EncyclopaediaMetallum(Page):
         # taking the fist source, cuz I only need one and multiple sources don't make that much sense
         source = source_list[0]
         artist_id = source.url.split("/")[-1]
-        print(source)
-        print("id", artist_id)
 
         """
         TODO
@@ -423,7 +419,7 @@ class EncyclopaediaMetallum(Page):
         artist = cls.fetch_artist_attributes(artist, source.url)
 
         # DISCOGRAPHY
-        artist = cls.fetch_artist_discography(artist, artist_id)
+        artist = cls.fetch_artist_discography(artist, artist_id, flat=flat)
 
         # EXTERNAL SOURCES
         artist = cls.fetch_artist_sources(artist, artist_id)
@@ -432,3 +428,35 @@ class EncyclopaediaMetallum(Page):
         artist = cls.fetch_band_notes(artist, artist_id)
 
         return artist
+
+    @classmethod
+    def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
+        source_list = album.get_sources_from_page(cls.SOURCE_TYPE)
+        if len(source_list) == 0:
+            return album
+        
+        source = source_list[0]
+        album_id = source.url.split("/")[-1]
+
+        print(source)
+        # <table class="display table_lyrics
+
+        r = cls.API_SESSION.get(source.url)
+        if r.status_code != 200:
+            LOGGER.warning(f"code {r.status_code} at {source.url}")
+            return album
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        tracklist_soup = soup.find("table", {"class": "table_lyrics"})
+        print(tracklist_soup.prettify)
+
+        return album
+
+    @classmethod
+    def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
+        source_list = song.get_sources_from_page(cls.SOURCE_TYPE)
+        if len(source_list) == 0:
+            return song
+
+        return song
