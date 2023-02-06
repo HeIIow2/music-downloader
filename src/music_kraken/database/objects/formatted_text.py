@@ -8,15 +8,16 @@ https://pandoc.org/installing.html
 !!!!!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!!!!!!!!!
 """
 
+
 class FormattedText:
     doc = None
 
     def __init__(
-        self,
-        plaintext: str = None,
-        markdown: str = None,
-        html: str = None
-        ) -> None:
+            self,
+            plaintext: str = None,
+            markdown: str = None,
+            html: str = None
+    ) -> None:
         self.set_plaintext(plaintext)
         self.set_markdown(markdown)
         self.set_html(html)
@@ -46,7 +47,7 @@ class FormattedText:
             return None
         return pandoc.write(self.doc, format="html").strip()
 
-    def get_plaintext(self)-> str:
+    def get_plaintext(self) -> str:
         if self.doc is None:
             return None
         return pandoc.write(self.doc, format="plain").strip()
@@ -59,6 +60,7 @@ class FormattedText:
 class NotesAttributes:
     def __init__(self) -> None:
         pass
+
 
 if __name__ == "__main__":
     _plaintext = """

@@ -448,8 +448,37 @@ class EncyclopaediaMetallum(Page):
 
         soup = BeautifulSoup(r.text, 'html.parser')
 
-        tracklist_soup = soup.find("table", {"class": "table_lyrics"})
-        print(tracklist_soup.prettify)
+        tracklist_soup = soup.find("table", {"class": "table_lyrics"}).find("tbody")
+
+        for row in tracklist_soup.find_all("tr", {"class": ["even", "odd"]}):
+            """
+            example of row:
+                        
+            <tr class="even">
+                <td width="20"><a class="anchor" name="5948442"> </a>1.</td>        # id and tracksort
+                <td class="wrapWords">Convince Me to Bleed</td>                     # name
+                <td align="right">03:40</td>                                        # length
+                <td nowrap="nowrap"> 
+                <a href="#5948442" id="lyricsButton5948442" onclick="toggleLyrics('5948442'); return false;">Show lyrics</a>
+                </td>
+            </tr>
+            """
+            row_list = row.find_all(recursive=False)
+
+            track_sort_soup = row_list[0]
+            track_sort = int(track_sort_soup.text[:-1])
+            track_id = track_sort_soup.find("a").get("name")
+
+            title = row_list[1].text.strip()
+
+            duration_stamp = row_list[2].text
+            minutes, seconds = duration_stamp.split(":")
+            duration_in_seconds = int(minutes) * 60 + int(seconds)
+            print(track_sort, track_id)
+            print(title)
+            print(duration_in_seconds)
+            print("-"*20)
+            # print(row)
 
         return album
 
