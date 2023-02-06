@@ -1,6 +1,9 @@
 # How to contribute
 
 I am always happy about pull requests.  
+
+If something is missing, like attributes for an object feel free to either add it youreself or open an issue :3
+
 If you wanna contribute, this is for you. Some options will follow:
 
 ## Add an audio/metadata source
