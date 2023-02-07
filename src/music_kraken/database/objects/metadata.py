@@ -16,7 +16,7 @@ class Mapping(Enum):
     # Textframes
     TITLE = "TIT2"
     ISRC = "TSRC"
-    LENGTH = "TLEN"
+    LENGTH = "TLEN" # in milliseconds
     DATE = "TYER"
     TRACKNUMBER = "TRCK"
     TOTALTRACKS = "TRCK"  # Stored in the same frame with TRACKNUMBER, separated by '/': e.g. '4/9'.

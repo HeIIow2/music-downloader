@@ -446,6 +446,19 @@ class EncyclopaediaMetallum(Page):
             LOGGER.warning(f"code {r.status_code} at {source.url}")
             return album
 
+        # prepare tracklist
+        track_by_url = dict()
+        track_by_name = dict()
+        for track in album._tracklist:
+            track_by_name[string_processing.unify(track.title)] = track
+            for source in track.get_sources_from_page(cls.SOURCE_TYPE):
+                track_by_url[source.url] = album
+        old_tracklist = album._tracklist.copy()
+        # save the ids of the albums, that are added to this set, so I can
+        # efficiently add all leftover albums from the discography to the new one
+        used_ids = set()
+        new_tracklist = []
+
         soup = BeautifulSoup(r.text, 'html.parser')
 
         tracklist_soup = soup.find("table", {"class": "table_lyrics"}).find("tbody")
@@ -473,12 +486,36 @@ class EncyclopaediaMetallum(Page):
 
             duration_stamp = row_list[2].text
             minutes, seconds = duration_stamp.split(":")
-            duration_in_seconds = int(minutes) * 60 + int(seconds)
-            print(track_sort, track_id)
-            print(title)
-            print(duration_in_seconds)
+            length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
+
+            track: Song
+            if track_id in track_by_url:
+                track = track_by_url[track_id]
+                used_ids.add(track.id)
+            elif title in track_by_name:
+                track = track_by_name[title]
+                used_ids.add(track.id)
+            else:
+                track = Song(
+                    id_=track_id,
+                    title=title,
+                    length=length,
+                    tracksort=track_sort
+                )
+            track.add_source(Source(cls.SOURCE_TYPE, track_id))
+            
+            new_tracklist.append(track)
+
+            print(track)
             print("-"*20)
             # print(row)
+
+        for old_track in old_tracklist:
+            if old_track.dynamic:
+                continue
+            if old_track.id not in used_ids:
+                new_tracklist.append(old_track)
+        album.tracklist = new_tracklist
 
         return album
 
