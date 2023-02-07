@@ -58,12 +58,27 @@ After you chose either an artist, a release group, a release, or a track by its 
 
 ---
 
-## Programming Interface / Use as Library
+# Programming Interface / Use as Library
 
 This application is $100\%$ centered around Data. Thus the most important thing for working with musik kraken is, to understand how I structured the data.  
 Without long expllanations I will just show you, how to import the data classes and create them.
 
-### DataClasses
+```mermaid
+sequenceDiagram
+
+participant pg as Page (eg. YouTube, MB, Musify, ...)
+participant obj as DataObjects (eg. Song, Artist, ...)
+participant db as DataBase
+
+obj ->> db: write
+db ->> obj: read
+
+pg -> obj: find a source for any page, for object.
+obj -> pg: add more detailed data from according page.
+obj -> pg: if available download audio to target.
+```
+
+## DataClasses
 
 ```python
 # importing the libraries I build on 
@@ -126,7 +141,7 @@ song_object = Song(
 If you just wanna start implementing, then just use the code example, I dont care.  
 For those who don't want any bugs and use it as intended *(which is reccomended, cuz I am only one person so there are defs bugs)* continue reading.
 
-### music_kraken.Song
+## music_kraken.Song
 
 So as you can see, the probaply most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
 
@@ -134,7 +149,7 @@ It has handfull attributes, where half of em are self explanatory, like `title` 
 
 Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
 
-### music_kraken.ID3Timestamp
+## music_kraken.ID3Timestamp
 
 For multiple Reasons I don't use the default `datetime.datetime` class.
 
@@ -162,7 +177,7 @@ you can pass in the Arguments:
 
 :)
 
-## Old implementation
+# Old implementation
 
 > IF U USE THIS NOW YOU ARE DUMB. IT ISN'T FINISHED AND THE STUFF YOU CODE NOW WILL BE BROKEN TOMORROW
 > SOON YOU CAN THOUGH
