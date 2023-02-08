@@ -210,19 +210,6 @@ class EncyclopaediaMetallum(Page):
         """
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
 
-        # prepare tracklist
-        album_by_url = dict()
-        album_by_name = dict()
-        for album in artist.main_albums:
-            album_by_name[string_processing.unify(album.title)] = album
-            for source in album.get_sources_from_page(cls.SOURCE_TYPE):
-                album_by_url[source.url] = album
-        old_discography = artist.main_albums.copy()
-        # save the ids of the albums, that are added to this set, so I can
-        # efficiently add all leftover albums from the discography to the new one
-        used_ids = set()
-
-        new_discography: List[Album] = []
 
         # make the request
         r = cls.API_SESSION.get(discography_url.format(ma_artist_id))
@@ -243,37 +230,32 @@ class EncyclopaediaMetallum(Page):
             album_id = album_url.split('/')[-1]
             album_type = td_list[1].text
             album_year = td_list[2].text
-
-            unified_name = string_processing.unify(album_name)
-
-            album_obj: Album = Album(id_=album_id)
-
-            if album_url in album_by_url:
-                album_obj = album_by_url[album_url]
-                used_ids.add(album_obj.id)
-
-            elif unified_name in album_by_name:
-                album_obj = album_by_name[unified_name]
-                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
-                used_ids.add(album_obj.id)
-            else:
-                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
-
-            album_obj.title = album_name
-            album_obj.album_type = album_type
+            date_obj = None
             try:
-                album_obj.date = ID3Timestamp(year=int(album_year))
+                date_obj = ID3Timestamp(year=int(album_year))
             except ValueError():
                 pass
 
-            new_discography.append(album_obj)
 
-        # add the albums back, which weren't on this page
-        for old_object in old_discography:
-            if old_object.id not in used_ids:
-                new_discography.append(old_object)
+            album_obj: Album = artist.main_albums.get_object_with_source(album_url) or artist.main_albums.get_object_with_attribute("title", album_name)
 
-        artist.main_albums = new_discography
+            if album_obj is not None:
+                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
+                album_obj.title = album_name
+                album_obj.album_type = album_type
+                if date_obj is not None:
+                    album_obj.date = date_obj
+                continue
+                
+            artist.main_albums.append(Album(
+                id_=album_id,
+                title=album_name,
+                album_type=album_type,
+                date=date_obj,
+                source_list=[
+                    Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
+                ]
+            ))
 
         if not flat:
             for album in artist.main_albums:

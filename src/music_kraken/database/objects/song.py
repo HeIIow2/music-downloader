@@ -264,9 +264,17 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             dynamic: bool = False,
             source_list: List[Source] = None,
             artists: list = None,
-            tracklist: List[Song] = None
+            tracklist: List[Song] = None,
+            album_type: str = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
+
+        """
+        TODO
+        add to db
+        """
+        self.album_type = album_type
+
         self.title: str = title
         self.album_status: str = album_status
         self.label = label
@@ -413,9 +421,18 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.name: str | None = name
 
         self.main_songs = main_songs
-        self.feature_songs = feature_songs
 
-        self.main_albums = main_albums
+        self.feature_songs = Collection(
+            data=feature_songs,
+            map_attributes=["title"],
+            element_type=Song
+        )
+
+        self.main_albums = Collection(
+            data=main_albums,
+            map_attributes=["title"],
+            element_type=Album
+        )
 
         if source_list is not None:
             self.source_list = source_list
@@ -467,10 +484,6 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         return flat_copy_discography
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
-        """
-        TODO refactor
-        :return:
-        """
         metadata = MetadataAttribute.Metadata({
             id3Mapping.ARTIST: [self.name]
         })

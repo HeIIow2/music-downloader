@@ -73,3 +73,12 @@ class Collection:
 
     def __str__(self) -> str:
         return "\n".join([f"{str(j).zfill(2)}: {i}" for j, i in enumerate(self._data)])
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def copy(self) -> List:
+        """
+        returns a shallow copy of the data list
+        """
+        return self._data.copy()
