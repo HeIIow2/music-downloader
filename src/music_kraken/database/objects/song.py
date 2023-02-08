@@ -24,6 +24,7 @@ from .source import (
     SourceAttribute
 )
 from .formatted_text import FormattedText
+from .collection import Collection
 
 """
 All Objects dependent 
@@ -262,7 +263,8 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             albumsort: int = None,
             dynamic: bool = False,
             source_list: List[Source] = None,
-            artists: list = None
+            artists: list = None,
+            tracklist: List[Song] = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
         self.title: str = title
@@ -282,14 +284,15 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.is_split: bool = is_split
         self.albumsort: int | None = albumsort
 
-        self._tracklist: List[Song] = list()
 
-        if source_list is not None:
-            self.source_list = source_list
+        self._tracklist = Collection(
+            data=tracklist or [],
+            map_attributes=["title"],
+            element_type=Song
+        )
+        self.source_list = source_list or []
+        self.artists = artists or []
 
-        self.artists = []
-        if artists is not None:
-            self.artists = artists
 
     def __str__(self) -> str:
         return f"Album: \"{self.title}\""
@@ -300,11 +303,19 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
     def __len__(self) -> int:
         return len(self.tracklist)
 
-    def set_tracklist(self, tracklist: List[Song]):
-        self._tracklist = tracklist
+    def set_tracklist(self, tracklist):
+        tracklist_list = []
+        if type(tracklist) == Collection:
+            tracklist_list = tracklist_list
+        elif type(tracklist) == list:
+            tracklist_list = tracklist
 
-        for i, track in enumerate(self._tracklist):
-            track.tracksort = i + 1
+        self._tracklist = Collection(
+            data=tracklist_list,
+            map_attributes=["title"],
+            element_type=Song
+        )
+        
 
     def add_song(self, song: Song):
         for existing_song in self._tracklist:
@@ -337,9 +348,10 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
 
         return self.language.alpha_3
 
+
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
-    tracklist = property(fget=lambda self: self._tracklist, fset=set_tracklist)
+    tracklist: Collection = property(fget=lambda self: self._tracklist, fset=set_tracklist)
 
 
 """

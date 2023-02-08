@@ -63,6 +63,7 @@ artist = song.main_artist_list[0]
 # artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
 
 album = EncyclopaediaMetallum.fetch_album_details(song.album, flat=False)
+print(album.tracklist)
 
 # print_artist(artist)
 
