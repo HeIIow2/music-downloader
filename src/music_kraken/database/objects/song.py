@@ -295,10 +295,10 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
 
 
     def __str__(self) -> str:
-        return f"Album: \"{self.title}\""
+        return f"-----{self.title}-----\n{self.tracklist}"
 
     def __repr__(self):
-        return self.__str__()
+        return f"Album(\"{self.title}\")"
 
     def __len__(self) -> int:
         return len(self.tracklist)
