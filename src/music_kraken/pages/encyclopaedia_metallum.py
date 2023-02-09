@@ -275,6 +275,9 @@ class EncyclopaediaMetallum(Page):
 
         soup = BeautifulSoup(r.text, 'html.parser')
 
+        if soup.find("span",{"id": "noLinks"}) is not None:
+            return artist
+
         artist_source = soup.find("div", {"id": "band_links_Official"})
         """
         TODO
@@ -333,6 +336,8 @@ class EncyclopaediaMetallum(Page):
                 """
 
                 if "Formed in:" == title_text:
+                    if not data.text.isnumeric():
+                        continue
                     formed_in_year = int(data.text)
                     artist.formed_in = ID3Timestamp(year=formed_in_year)
                     continue
@@ -346,7 +351,10 @@ class EncyclopaediaMetallum(Page):
                     continue
                 if "Current label:" == title_text:
                     label_name = data.text
-                    label_url = data.find("a").get("href")
+                    label_anchor = data.find("a")
+                    label_url = None
+                    if label_anchor is not None:
+                        label_url = label_anchor.get("href")
 
                     for album in artist.main_albums:
                         if album.label is not None:
@@ -448,16 +456,20 @@ class EncyclopaediaMetallum(Page):
             track_id = track_sort_soup.find("a").get("name")
 
             title = row_list[1].text.strip()
+            
+            length = None
 
             duration_stamp = row_list[2].text
-            minutes, seconds = duration_stamp.split(":")
-            length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
+            if ":" in duration_stamp:
+                minutes, seconds = duration_stamp.split(":")
+                length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
 
             track: Song = album.tracklist.get_object_with_source(track_id) or album.tracklist.get_object_with_attribute("title", title)
             
             if track is not None:
                 track.add_source(Source(cls.SOURCE_TYPE, track_id))
-                track.length = length
+                if length is not None:
+                    track.length = length
                 track.tracksort = track_sort
                 continue
 
@@ -472,7 +484,6 @@ class EncyclopaediaMetallum(Page):
                 ]
             )
             
-            print(track)
             album.tracklist.append(track)
 
         return album

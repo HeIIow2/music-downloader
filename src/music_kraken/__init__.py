@@ -59,7 +59,6 @@ def get_options_from_query(query: str) -> List[MusicObject]:
     return options
 
 def get_options_from_option(option: MusicObject) -> List[MusicObject]:
-    print("fetching", option)
     for MetadataPage in pages.MetadataPages:
         option = MetadataPage.fetch_details(option, flat=False)
     return option.get_options()
@@ -71,7 +70,7 @@ def cli():
     options = []
 
     while True:
-        command: str = input(">> ")
+        command: str = input(">> ").strip()
 
         if command.isdigit():
             option_index = int(command)
