@@ -225,6 +225,17 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             flat_copy.dynamic = True
             self._album.tracklist.append(flat_copy)
 
+    def get_options(self) -> list:
+        options = self.main_artist_list.copy()
+        options.extend(self.feature_artist_list.copy())
+        if self.album is not None:
+            options.append(self.album)
+        options.append(self)
+        return options
+
+    def get_option_string(self) -> str:
+        return f"Song: {self.title}; Album: {self.album.title}; Artists: {self.get_artist_credits()}"
+
     tracksort_str = property(fget=get_tracksort_str)
     album = property(fget=lambda self: self._album, fset=set_album)
 
@@ -323,15 +334,6 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             map_attributes=["title"],
             element_type=Song
         )
-        
-
-    def add_song(self, song: Song):
-        for existing_song in self._tracklist:
-            if existing_song == song:
-                return
-
-        song.tracksort = len(self.tracklist)
-        self.tracklist.append(song)
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         return MetadataAttribute.Metadata({
@@ -355,6 +357,19 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             return None
 
         return self.language.alpha_3
+
+    def get_options(self) -> list:
+        options = self.artists.copy()
+        options.append(self)
+        for track in self.tracklist:
+            new_track: Song = copy.copy(track)
+            new_track.album = self
+            options.append(new_track)
+
+        return options
+    
+    def get_option_string(self) -> str:
+        return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artists])}"
 
 
     copyright = property(fget=get_copyright)
@@ -490,6 +505,17 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
 
         return metadata
+
+    def get_options(self) -> list:
+        options = [self]
+        for album in self.main_albums:
+            new_album: Album = copy.copy(album)
+            new_album.artists.append(self)
+            options.append(new_album)
+        return options
+
+    def get_option_string(self) -> str:
+        return f"Artist: {self.name}"
 
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)

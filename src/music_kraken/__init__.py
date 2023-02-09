@@ -7,8 +7,7 @@ import os
 
 from . import (
     database,
-    not_used_anymore,
-    target
+    pages
 )
 
 
@@ -46,76 +45,46 @@ SourcePages = database.SourcePages
 Target = database.Target
 Lyrics = database.Lyrics
 Album = database.Album
+MusicObject = database.MusicObject
 
 ID3Timestamp = database.ID3Timestamp
 
 cache = database.cache
 Database = database.Database
 
+def get_options_from_query(query: str) -> List[MusicObject]:
+    options = []
+    for MetadataPage in pages.MetadataPages:
+        options.extend(MetadataPage.search_by_query(query=query))
+    return options
+
+def get_options_from_option(option: MusicObject) -> List[MusicObject]:
+    print("fetching", option)
+    for MetadataPage in pages.MetadataPages:
+        option = MetadataPage.fetch_details(option, flat=False)
+    return option.get_options()
+
+def print_options(options: List[MusicObject]):
+    print("\n".join([f"{str(j).zfill(2)}: {i.get_option_string()}" for j, i in enumerate(options)]))
+
+def cli():
+    options = []
+
+    while True:
+        command: str = input(">> ")
+
+        if command.isdigit():
+            option_index = int(command)
+
+            if option_index >= len(options):
+                print(f"option {option_index} doesn't exist")
+                continue
+
+            options = get_options_from_option(options[option_index])
+
+        else:
+            options = get_options_from_query(command)
+
+        print_options(options)
 
 
-def set_targets(genre: str):
-    target.set_target.UrlPath(genre=genre)
-
-
-def fetch_sources(songs: List[Song], skip_existing_files: bool = True):
-    not_used_anymore.fetch_sources(songs=songs, skip_existing_files=skip_existing_files)
-
-
-def fetch_audios(songs: List[Song], override_existing: bool = False):
-    not_used_anymore.fetch_audios(songs=songs, override_existing=override_existing)
-
-
-def clear_cache():
-    cache.init_db(reset_anyways=True)
-
-def get_existing_genre():
-    valid_directories = []
-    for elem in os.listdir(MUSIC_DIR):
-        if elem not in NOT_A_GENRE:
-            valid_directories.append(elem)
-
-    return valid_directories
-
-
-def help_search_metadata():
-    msg = """
-- - - Available Options - - -
-.. - Previous Options
-(query_string) - Search for songs, albums, bands...
-(int) - Select an item from the search results
-d - Start the download
-h - Help
-q - Quit / Exit
-
-- - - How the Query works (examples) - - -
-> #a <any artist>
-searches for the artist <any artist>
-
-> #a <any artist> #r <any releas>
-searches for the release (album) <any release> by the artist <any artist>
-
-> #r <any release> Me #t <any track>
-searches for the track <any track> from the release <any relaese>
-"""
-    print(msg)
-
-
-
-
-def get_genre():
-    existing_genres = get_existing_genre()
-    print("printing available genres:")
-    for i, genre_option in enumerate(existing_genres):
-        print(f"{i}: {genre_option}")
-
-    genre = input("Input the ID for an existing genre or text for a new one: ")
-
-    if genre.isdigit():
-        genre_id = int(genre)
-        if genre_id >= len(existing_genres):
-            logging.warning("An invalid genre id has been given")
-            return get_genre()
-        return existing_genres[genre_id]
-
-    return genre

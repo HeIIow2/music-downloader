@@ -152,7 +152,7 @@ class EncyclopaediaMetallum(Page):
             source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
             ],
-            notes=notes
+            notes=FormattedText(plaintext=notes)
         )
 
     @classmethod
@@ -358,9 +358,6 @@ class EncyclopaediaMetallum(Page):
                 years active: 2012-present
                 process this and add field to class
                 """
-                # print(title_text, data.text)
-                # print(data)
-        # print(band_stat_soup)
 
         return artist
 
@@ -420,7 +417,6 @@ class EncyclopaediaMetallum(Page):
         source = source_list[0]
         album_id = source.url.split("/")[-1]
 
-        print(source)
         # <table class="display table_lyrics
 
         r = cls.API_SESSION.get(source.url)
@@ -458,7 +454,7 @@ class EncyclopaediaMetallum(Page):
             length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
 
             track: Song = album.tracklist.get_object_with_source(track_id) or album.tracklist.get_object_with_attribute("title", title)
-
+            
             if track is not None:
                 track.add_source(Source(cls.SOURCE_TYPE, track_id))
                 track.length = length
@@ -476,6 +472,7 @@ class EncyclopaediaMetallum(Page):
                 ]
             )
             
+            print(track)
             album.tracklist.append(track)
 
         return album

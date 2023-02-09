@@ -43,6 +43,24 @@ class DatabaseObject:
     def get_reference(self) -> Reference:
         return Reference(self.id)
 
+    def get_options(self) -> list:
+        """
+        makes only sense in
+         - artist
+         - song
+         - album
+        """
+        return []
+
+    def get_option_string(self) -> str:
+        """
+        makes only sense in
+         - artist
+         - song
+         - album
+        """
+        return ""
+
     id = property(fget=get_id)
     reference = property(fget=get_reference)
 
