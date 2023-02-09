@@ -101,23 +101,27 @@ class Database:
             return
 
         if type(db_object) == Song:
-            return self.push_song(song=db_object)
+            return self.push_song(song=db_object, pushed=set())
 
+        """
         if type(db_object) == Lyrics:
             return self.push_lyrics(lyrics=db_object)
 
         if type(db_object) == Target:
             return self.push_target(target=db_object)
+        """
 
         if type(db_object) == Artist:
-            return self.push_artist(artist=db_object)
+            return self.push_artist(artist=db_object, pushed=set())
 
+        """
         if type(db_object) == Source:
             # needs to have the property type_enum or type_str set
             return self.push_source(source=db_object)
+        """
 
         if type(db_object) == Album:
-            return self.push_album(album=db_object)
+            return self.push_album(album=db_object, pushed=set())
 
         logger.warning(f"type {type(db_object)} isn't yet supported by the db")
 
@@ -134,9 +138,13 @@ class Database:
         for db_object in db_object_list:
             self.push_one(db_object)
 
-    def push_album(self, album: Album):
+    def push_album(self, album: Album, pushed: set):
         table = "Album"
         query = f"INSERT OR REPLACE INTO {table} (id, title, label, album_status, language, date, date_format, country, barcode, albumsort, is_split) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+
+        if album.id in pushed:
+            return
+        pushed.add(album.id)
 
         date_format, date = album.date.get_timestamp_w_format()
 
@@ -157,19 +165,24 @@ class Database:
         self.connection.commit()
 
         for song in album.tracklist:
-            self.push_song(song)
+            self.push_song(song, pushed=pushed)
         for artist in album.artists:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
-            self.push_artist(artist)
+            self.push_artist(artist, pushed=pushed)
 
         for source in album.source_list:
             source.type_enum = SourceTypes.ALBUM
             source.add_song(album)
             self.push_source(source=source)
 
-    def push_song(self, song: Song):
+    def push_song(self, song: Song, pushed: set):
         if song.dynamic:
             return
+
+        if song.id in pushed:
+            return
+        pushed.add(song.id)
+
         # ADDING THE DATA FOR THE SONG OBJECT
         """
         db_field    - object attribute
@@ -210,18 +223,18 @@ class Database:
 
         for main_artist in song.main_artist_list:
             self.push_artist_song(artist_ref=Reference(main_artist.id), song_ref=Reference(song.id), is_feature=False)
-            self.push_artist(artist=main_artist)
+            self.push_artist(artist=main_artist, pushed=pushed)
 
         for feature_artist in song.feature_artist_list:
             self.push_artist_song(artist_ref=Reference(feature_artist.id), song_ref=Reference(song.id), is_feature=True)
-            self.push_artist(artist=feature_artist)
+            self.push_artist(artist=feature_artist, pushed=pushed)
 
         if song.album is not None:
-            self.push_album(song.album)
+            self.push_album(song.album, pushed=pushed)
 
-    def push_lyrics(self, lyrics: Lyrics, ):
-        if lyrics.song_ref_id is None:
-            logger.warning("the Lyrics don't refer to a song")
+    def push_lyrics(self, lyrics: Lyrics):
+        if lyrics.dynamic:
+            return
 
         table = "Lyrics"
         query = f"INSERT OR REPLACE INTO {table} (id, song_id, text, language) VALUES (?, ?, ?, ?);"
@@ -236,8 +249,8 @@ class Database:
         self.connection.commit()
 
     def push_source(self, source: Source):
-        if source.song_ref_id is None:
-            logger.warning(f"the Source {source} don't refer to a song")
+        if source.dynamic:
+            return
 
         table = "Source"
         query = f"INSERT OR REPLACE INTO {table} (id, type, song_id, src, url) VALUES (?, ?, ?, ?, ?);"
@@ -253,9 +266,9 @@ class Database:
         self.connection.commit()
 
     def push_target(self, target: Target):
-        if target.song_ref_id is None:
-            logger.warning("the Target doesn't refer to a song")
-
+        if target.dynamic:
+            return
+            
         table = "Target"
         query = f"INSERT OR REPLACE INTO {table} (id, song_id, file, path) VALUES (?, ?, ?, ?);"
         values = (
@@ -305,7 +318,13 @@ class Database:
         self.cursor.execute(query, values)
         self.connection.commit()
 
-    def push_artist(self, artist: Artist):
+    def push_artist(self, artist: Artist, pushed: set):
+        if artist.dynamic:
+            return
+        if artist.id in pushed:
+            return
+        pushed.add(artist.id)
+
         table = "Artist"
         query = f"INSERT OR REPLACE INTO {table} (id, name) VALUES (?, ?);"
         values = (
@@ -318,11 +337,11 @@ class Database:
 
         for song in artist.feature_songs:
             self.push_artist_song(artist_ref=artist.reference, song_ref=song.reference, is_feature=True)
-            self.push_song(song=song)
+            self.push_song(song=song, pushed=pushed)
 
         for song in artist.main_songs:
             self.push_artist_song(artist_ref=artist.reference, song_ref=song.reference, is_feature=False)
-            self.push_song(song=song)
+            self.push_song(song=song, pushed=pushed)
 
         for album in artist.main_albums:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)

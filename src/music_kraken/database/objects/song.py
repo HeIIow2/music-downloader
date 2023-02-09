@@ -395,10 +395,8 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             id_: str = None,
             name: str = None,
             source_list: List[Source] = None,
-            main_songs: List[Song] = None,
             feature_songs: List[Song] = None,
             main_albums: List[Album] = None,
-            album_type: str = None,
             notes: FormattedText = None,
             lyrical_themes: List[str] = None,
             general_genre: str = "",
@@ -410,7 +408,6 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         TODO implement album type and notes
         """
-        self.album_type = album_type
         self.country: pycountry.Country = country
         self.formed_in: ID3Timestamp = formed_in
         """
@@ -418,24 +415,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         which are meant to only use in outputs to describe the object
         i mean do as you want but there aint no strict rule about em so good luck
         """
-        self.notes: FormattedText = notes
-        if self.notes is None:
-            self.notes = FormattedText()
-        self.lyrical_themes: List[str] = lyrical_themes
-        if self.lyrical_themes is None:
-            self.lyrical_themes = []
+        self.notes: FormattedText = notes or FormattedText()
+        self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
 
-        if main_albums is None:
-            main_albums = []
-        if feature_songs is None:
-            feature_songs = []
-        if main_songs is None:
-            main_songs = []
-
-        self.name: str | None = name
-
-        self.main_songs = main_songs
+        self.name: str = name
 
         self.feature_songs = Collection(
             data=feature_songs,
@@ -478,19 +462,16 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
         return feature_release
 
-    def get_songs(self) -> Album:
-        song_release = Album(
-            title="song collection",
-            album_status="dynamic",
-            is_split=False,
-            albumsort=666,
-            dynamic=True
-        )
-        for song in self.main_songs:
-            song_release.add_song(song)
-        for song in self.feature_songs:
-            song_release.add_song(song)
-        return song_release
+    def get_all_songs(self) -> List[Song]:
+        """
+        returns a list of all Songs.
+        probaply not that usefull, because it is unsorted
+        """
+        collection = []
+        for album in self.discography:
+            collection.extend(album)
+
+        return collection
 
     def get_discography(self) -> List[Album]:
         flat_copy_discography = self.main_albums.copy()
@@ -508,10 +489,8 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     def get_options(self) -> list:
         options = [self]
-        for album in self.main_albums:
-            new_album: Album = copy.copy(album)
-            new_album.artists.append(self)
-            options.append(new_album)
+        options.extend(self.main_albums)
+        options.extend(self.feature_songs)
         return options
 
     def get_option_string(self) -> str:
@@ -519,4 +498,4 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     discography: List[Album] = property(fget=get_discography)
     features: Album = property(fget=get_features)
-    songs: Album = property(fget=get_songs)
+    all_songs: Album = property(fget=get_all_songs)
