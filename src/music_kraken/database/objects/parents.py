@@ -19,9 +19,16 @@ class Reference:
 
 
 class DatabaseObject:
-    def __init__(self, id_: str = None, dynamic: bool = False) -> None:
+    empty: bool
+
+    def __init__(self, id_: str = None, dynamic: bool = False, empty: bool = False, **kwargs) -> None:
+        """
+        empty means it is an placeholder.
+        it makes the object perform the same, it is just the same
+        """
         self.id_: str | None = id_
         self.dynamic = dynamic
+        self.empty = empty
 
     def get_id(self) -> str:
         """
@@ -29,8 +36,11 @@ class DatabaseObject:
         it returns a randomly generated UUID
         https://docs.python.org/3/library/uuid.html
 
+        if the object is empty, it returns None
         if the object is dynamic, it raises an error
         """
+        if self.empty:
+            return None
         if self.dynamic:
             raise ValueError("Dynamic objects have no idea, because they are not in the database")
 
@@ -63,6 +73,8 @@ class DatabaseObject:
 
     id = property(fget=get_id)
     reference = property(fget=get_reference)
+    options = property(fget=get_options)
+    options_str = property(fget=get_option_string)
 
 
 class SongAttribute:

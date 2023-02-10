@@ -114,10 +114,11 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             genre: str = None,
             source_list: List[Source] = None,
             target: Target = None,
-            lyrics: List[Lyrics] = None,
+            lyrics_list: List[Lyrics] = None,
             album=None,
             main_artist_list: list = None,
-            feature_artist_list: list = None
+            feature_artist_list: list = None,
+            **kwargs
     ) -> None:
         """
         id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
@@ -125,39 +126,36 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         target: Each Song can have exactly one target which can be either full or empty
         lyrics: There can be multiple lyrics. Each Lyrics object can me added to multiple lyrics
         """
-        super().__init__(id_=id_)
+        super().__init__(id_=id_, **kwargs)
         # attributes
         # *private* attributes
         self.title: str = title
         self.isrc: str = isrc
         self.length: int = length
         self.mb_id: str | None = mb_id
-        self.album_name: str | None = album_name
-        self.tracksort: int | None = tracksort
+        self.tracksort: int = tracksort or 0
         self.genre: str = genre
 
-        if source_list:
-            self.source_list = source_list
+        self.source_list = source_list or []
 
-        self.target = Target()
-        if target is not None:
-            self.target = target
-        self.target.add_song(self)
+        self.target = target or Target()
+        self.lyrics_list = lyrics_list or []
 
-        self.lyrics = []
-        if lyrics is not None:
-            self.lyrics = lyrics
-
-        self._album = None
+        # initialize with either a passed in album, or an empty one,
+        # so it can at least properly generate dynamic attributes
+        self._album = album or Album(empty=True)
         self.album = album
 
-        self.main_artist_list = []
-        if main_artist_list is not None:
-            self.main_artist_list = main_artist_list
-
-        self.feature_artist_list = []
-        if feature_artist_list is not None:
-            self.feature_artist_list = feature_artist_list
+        self.main_artist_collection = Collection(
+            data=main_artist_list or [],
+            map_attributes=["title"],
+            element_type=Artist
+        )
+        self.feature_artist_collection = Collection(
+            data=feature_artist_list or [],
+            map_attributes=["title"],
+            element_type=Artist
+        )
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -165,10 +163,12 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         return self.id == other.id
 
     def get_artist_credits(self) -> str:
-        feature_str = ""
-        if len(self.feature_artist_list) > 0:
-            feature_str = " feat. " + ", ".join([artist.name for artist in self.feature_artist_list])
-        return ", ".join([artist.name for artist in self.main_artist_list]) + feature_str
+        main_artists = ", ".join([artist.name for artist in self.main_artist_collection])
+        feature_artists = ", ".join([artist.name for artist in self.feature_artist_collection])
+        
+        if len(feature_artists) == 0:
+            return main_artists
+        return f"{main_artists} feat. {feature_artists}"
 
     def __str__(self) -> str:
         artist_credit_str = ""
@@ -179,24 +179,14 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         return f"\"{self.title}\"{artist_credit_str}"
 
     def __repr__(self) -> str:
-        return self.__str__()
-
-    def has_isrc(self) -> bool:
-        return self.isrc is not None
-
-    def get_album_id(self):
-        if self.album is None:
-            return None
-        return self.album.id
+        return f"Song(\"{self.title}\")"
 
     def get_tracksort_str(self):
-        if self.tracksort is None:
-            return None
-
-        if self.album is None:
-            return str(self.tracksort)
-
-        return f"{self.tracksort}/{len(self.album.tracklist)}"
+        """
+        if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
+        :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
+        """
+        return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
@@ -208,36 +198,27 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         })
 
         metadata.merge_many([s.get_song_metadata() for s in self.source_list])
-        if self.album is not None:
+        if not self.album.empty:
             metadata.merge(self.album.metadata)
         metadata.merge_many([a.metadata for a in self.main_artist_list])
         metadata.merge_many([a.metadata for a in self.feature_artist_list])
         metadata.merge_many([l.metadata for l in self.lyrics])
         return metadata
 
-    def set_album(self, album):
-        if album is None:
-            return
-
-        self._album = album
-        if self not in self._album.tracklist:
-            flat_copy = copy.copy(self)
-            flat_copy.dynamic = True
-            self._album.tracklist.append(flat_copy)
-
     def get_options(self) -> list:
         options = self.main_artist_list.copy()
         options.extend(self.feature_artist_list.copy())
-        if self.album is not None:
+        if not self.album.empty:
             options.append(self.album)
         options.append(self)
         return options
 
     def get_option_string(self) -> str:
-        return f"Song: {self.title}; Album: {self.album.title}; Artists: {self.get_artist_credits()}"
+        return f"Song({self.title}) of Album({self.album.title}) from Artists({self.get_artist_credits()})"
 
     tracksort_str = property(fget=get_tracksort_str)
-    album = property(fget=lambda self: self._album, fset=set_album)
+    main_artist_list: list = property(fget=lambda self: self.main_artist_collection.copy())
+    feature_artist_list: list = property(fget=lambda self: self.feature_artist_collection.copy())
 
 
 """
@@ -246,20 +227,6 @@ All objects dependent on Album
 
 
 class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
-    """
-    -------DB-FIELDS-------
-    title           TEXT, 
-    copyright       TEXT,
-    album_status    TEXT,
-    language        TEXT,
-    year            TEXT,
-    date            TEXT,
-    country         TEXT,
-    barcode         TEXT,
-    song_id         BIGINT,
-    is_split        BOOLEAN NOT NULL DEFAULT 0
-    """
-
     def __init__(
             self,
             id_: str = None,
@@ -274,11 +241,12 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             albumsort: int = None,
             dynamic: bool = False,
             source_list: List[Source] = None,
-            artists: list = None,
+            artist_list: list = None,
             tracklist: List[Song] = None,
-            album_type: str = None
+            album_type: str = None,
+            **kwargs
     ) -> None:
-        DatabaseObject.__init__(self, id_=id_, dynamic=dynamic)
+        DatabaseObject.__init__(self, id_=id_, dynamic=dynamic, **kwargs)
 
         """
         TODO
@@ -290,9 +258,7 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.album_status: str = album_status
         self.label = label
         self.language: pycountry.Languages = language
-        self.date: ID3Timestamp = date
-        if date is None:
-            self.date = ID3Timestamp()
+        self.date: ID3Timestamp = date or ID3Timestamp()
         self.country: str = country
         """
         TODO
@@ -301,6 +267,11 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         self.barcode: str = barcode
         self.is_split: bool = is_split
+        """
+        TODO
+        implement a function in the Artist class,
+        to set albumsort with help of the release year
+        """
         self.albumsort: int | None = albumsort
 
 
@@ -310,7 +281,11 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             element_type=Song
         )
         self.source_list = source_list or []
-        self.artists = artists or []
+        self.artists = Collection(
+            data=artist_list or [],
+            map_attributes=["name"],
+            element_type=Artist
+        )
 
 
     def __str__(self) -> str:
