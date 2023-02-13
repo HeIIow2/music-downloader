@@ -102,12 +102,18 @@ class Lyrics(DatabaseObject, SongAttribute, SourceAttribute, MetadataAttribute):
 
 
 class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
+    """
+    Class representing a song object, with attributes id, mb_id, title, album_name, isrc, length,
+    tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
+
+    Inherits from DatabaseObject, SourceAttribute, and MetadataAttribute classes.
+    """
+
     def __init__(
             self,
             id_: str = None,
             mb_id: str = None,
             title: str = None,
-            album_name: str = None,
             isrc: str = None,
             length: int = None,
             tracksort: int = None,
@@ -121,10 +127,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             **kwargs
     ) -> None:
         """
-        id: is not NECESARRILY the musicbrainz id, but is DISTINCT for every song
-        mb_id: is the musicbrainz_id
-        target: Each Song can have exactly one target which can be either full or empty
-        lyrics: There can be multiple lyrics. Each Lyrics object can me added to multiple lyrics
+        Initializes the Song object with the following attributes:
         """
         super().__init__(id_=id_, **kwargs)
         # attributes
@@ -206,6 +209,11 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         return metadata
 
     def get_options(self) -> list:
+        """
+        Return a list of related objects including the song object, album object, main artist objects, and feature artist objects.
+
+        :return: a list of objects that are related to the Song object
+        """
         options = self.main_artist_list.copy()
         options.extend(self.feature_artist_list.copy())
         if not self.album.empty:
