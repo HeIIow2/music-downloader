@@ -20,6 +20,38 @@ from .objects import (
     SourceAttribute
 )
 
+"""
+import peewee
+
+db = peewee.SqliteDatabase('music.db')
+
+class BaseModel(peewee.Model):
+    class Meta:
+        database = db
+
+class Artist(BaseModel):
+    name = peewee.CharField()
+
+class Song(BaseModel):
+    title = peewee.CharField()
+    artist = peewee.ManyToManyField(Artist, backref='songs')
+
+db.connect()
+db.create_tables([Artist, Song, Song.artist.get_through_model()], safe=True)
+
+# Adding a song and its artists
+beatles = Artist.create(name='The Beatles')
+rolling_stones = Artist.create(name='The Rolling Stones')
+song = Song.create(title='Hey Jude')
+song.artist.add(beatles, rolling_stones)
+
+# Querying songs by artist
+songs = Song.select().join(Song.artist).where(Artist.name == 'The Beatles')
+for song in songs:
+    print(song.title)
+
+"""
+
 logger = logging.getLogger("database")
 
 # Due to this not being deployed on a Server **HOPEFULLY**
