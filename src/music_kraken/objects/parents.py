@@ -1,6 +1,6 @@
 import uuid
 
-from ...utils.shared import (
+from src.music_kraken.utils.shared import (
     SONG_LOGGER as logger
 )
 

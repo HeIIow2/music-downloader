@@ -8,7 +8,7 @@ from .metadata import (
     ID3Timestamp,
     MetadataAttribute
 )
-from ...utils.shared import (
+from src.music_kraken.utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as logger
 )

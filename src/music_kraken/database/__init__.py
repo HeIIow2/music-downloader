@@ -1,8 +1,8 @@
 from . import (
     temp_database,
-    objects,
-    database
+    old_database
 )
+from .. import objects
 
 MusicObject = objects.MusicObject
 

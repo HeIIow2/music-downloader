@@ -1,4 +1,4 @@
-from ...utils.shared import (
+from src.music_kraken.utils.shared import (
     DATABASE_LOGGER as logger
 )
 from .parents import (

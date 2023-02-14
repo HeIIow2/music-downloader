@@ -1,7 +1,7 @@
 from typing import List
 
 from .source import SourceAttribute
-from ...utils import string_processing
+from src.music_kraken.utils import string_processing
 
 class Collection:
     """

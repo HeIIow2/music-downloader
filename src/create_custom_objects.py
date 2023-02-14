@@ -17,7 +17,7 @@ from music_kraken.tagging import (
     write_many_metadata
 )
 
-import music_kraken.database.database as db
+import music_kraken.database.old_database as db
 
 import pycountry
 import logging

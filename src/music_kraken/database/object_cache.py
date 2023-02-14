@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 import weakref
 
-from .objects import MusicObject
+from src.music_kraken.objects import MusicObject
 
 """
 This is a cache for the objects, that et pulled out of the database.
