@@ -12,39 +12,54 @@ from peewee import (
 )
 
 
-class Album(Model):
+class BaseModel(Model):
+    class Meta:
+        database = None
+
+    @classmethod
+    def Use(cls, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]) -> Model:
+        cls._meta.database = database
+        return cls
+    
+    def use(self, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]) -> Model:
+        self._meta.database = database
+        return self
+        
+
+
+class Album(BaseModel):
     """A class representing an album in the music database."""
 
-    title: str = CharField()
-    label: str = CharField()
-    album_status: str = CharField()
-    language: str = CharField()
-    date: str = CharField()
-    date_format: str = CharField()
-    country: str = CharField()
-    barcode: str = CharField()
-    albumsort: int = IntegerField()
+    title: str = CharField(null=True)
+    label: str = CharField(null=True)
+    album_status: str = CharField(null=True)
+    language: str = CharField(null=True)
+    date: str = CharField(null=True)
+    date_format: str = CharField(null=True)
+    country: str = CharField(null=True)
+    barcode: str = CharField(null=True)
+    albumsort: int = IntegerField(null=True)
     is_split: bool = BooleanField(default=False)
 
 
-class Artist(Model):
+class Artist(BaseModel):
     """A class representing an artist in the music database."""
 
     name: str = CharField()
 
 
-class Song(Model):
+class Song(BaseModel):
     """A class representing a song in the music database."""
 
-    name: str = CharField()
-    isrc: str = CharField()
-    length: int = IntegerField()
-    tracksort: int = IntegerField()
-    genre: str = CharField()
-    album: ForeignKeyField = ForeignKeyField(Album, backref='songs')
+    name: str = CharField(null=True)
+    isrc: str = CharField(null=True)
+    length: int = IntegerField(null=True)
+    tracksort: int = IntegerField(null=True)
+    genre: str = CharField(null=True)
+    # album: ForeignKeyField = ForeignKeyField(Album, backref='songs')
 
 
-class Source(Model):
+class Source(BaseModel):
     """A class representing a source of a song in the music database."""
 
     type: str = CharField()
@@ -74,7 +89,7 @@ class Source(Model):
         self.content_id = value.id
 
 
-class Target(Model):
+class Target(BaseModel):
     """A class representing a target of a song in the music database."""
 
     file: str = CharField()
@@ -82,7 +97,7 @@ class Target(Model):
     song = ForeignKeyField(Song, backref='targets')
 
 
-class Lyrics(Model):
+class Lyrics(BaseModel):
     """A class representing lyrics of a song in the music database."""
 
     text: str = TextField()
@@ -90,7 +105,7 @@ class Lyrics(Model):
     song = ForeignKeyField(Song, backref='lyrics')
 
 
-class SongArtist(Model):
+class SongArtist(BaseModel):
     """A class representing the relationship between a song and an artist."""
 
     song: ForeignKeyField = ForeignKeyField(Song, backref='song_artists')
@@ -98,16 +113,32 @@ class SongArtist(Model):
     is_feature: bool = BooleanField(default=False)
 
 
-class AlbumArtist(Model):
+class AlbumArtist(BaseModel):
     """A class representing the relationship between an album and an artist."""
 
     album: ForeignKeyField = ForeignKeyField(Album, backref='album_artists')
     artist: ForeignKeyField = ForeignKeyField(Artist, backref='album_artists')
 
 
-class Models:
-    def __init__(self, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]):
-        self.database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase] = database
 
-    def get_obj(self, _model: Model):
-        _model._meta.database = self.database
+
+database_1 = SqliteDatabase(":memory:")
+database_1.create_tables([Song.Use(database_1)])
+database_2 = SqliteDatabase(":memory:")
+database_2.create_tables([Song.Use(database_2)])
+
+# creating songs, adding it to db_2 if i is even, else to db_1
+for i in range(100):
+    song = Song(name=str(i) + "hs")
+
+    db_to_use = database_2 if i % 2 == 0 else database_1
+    song.use(db_to_use).save()
+
+print("database 1")
+for song in Song.Use(database_1).select():
+    print(song.name)
+
+print("database 2")
+for song in Song.Use(database_1).select():
+    print(song.name)
+
