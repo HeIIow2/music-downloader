@@ -75,5 +75,22 @@ class Database:
         create tables if they don't exist.
         """
         self.database = self.create_database()
-
         self.database.connect()
+
+        self.database.create_tables(data_models.ALL_MODELS, safe=True)
+
+        """
+        upgrade old databases. 
+        If a collumn has been added in a new version this adds it to old Tables, 
+        without deleting the data in legacy databases
+        """
+        for model in data_models.ALL_MODELS:
+            for field_name, field_obj in model._meta.fields.items():
+                # check if the field exists in the database
+                if not self.database.table_column_exists(model._meta.db_table, field_name):
+                    # add the missing column to the table
+                    self.database.add_column(model._meta.db_table, field_name, field_obj)
+
+
+    def __del__(self):
+        self.database.close()

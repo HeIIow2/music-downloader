@@ -1,4 +1,4 @@
-from typing import List, Union, Type
+from typing import List, Union, Type, Optional
 from peewee import (
     SqliteDatabase,
     PostgresqlDatabase,
@@ -10,6 +10,18 @@ from peewee import (
     ForeignKeyField,
     TextField
 )
+
+"""
+**IMPORTANT**:
+
+never delete, modify the datatype or add constrains to ANY existing collumns,
+between the versions, that gets pushed out to the users.
+Else my function can't update legacy databases, to new databases, 
+while keeping the data of the old ones.
+
+EVEN if that means to for example keep decimal values stored in strings.
+(not in my codebase though.)
+"""
 
 
 class BaseModel(Model):
@@ -24,7 +36,6 @@ class BaseModel(Model):
     def use(self, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]) -> Model:
         self._meta.database = database
         return self
-        
 
 
 class Album(BaseModel):
@@ -120,25 +131,35 @@ class AlbumArtist(BaseModel):
     artist: ForeignKeyField = ForeignKeyField(Artist, backref='album_artists')
 
 
+ALL_MODELS = [
+    Song, 
+    Album, 
+    Artist,
+    Source,
+    Lyrics,
+    AlbumArtist,
+    Target,
+    SongArtist
+]
 
 
-database_1 = SqliteDatabase(":memory:")
-database_1.create_tables([Song.Use(database_1)])
-database_2 = SqliteDatabase(":memory:")
-database_2.create_tables([Song.Use(database_2)])
+if __name__ == "__main__":
+    database_1 = SqliteDatabase(":memory:")
+    database_1.create_tables([Song.Use(database_1)])
+    database_2 = SqliteDatabase(":memory:")
+    database_2.create_tables([Song.Use(database_2)])
 
-# creating songs, adding it to db_2 if i is even, else to db_1
-for i in range(100):
-    song = Song(name=str(i) + "hs")
+    # creating songs, adding it to db_2 if i is even, else to db_1
+    for i in range(100):
+        song = Song(name=str(i) + "hs")
 
-    db_to_use = database_2 if i % 2 == 0 else database_1
-    song.use(db_to_use).save()
+        db_to_use = database_2 if i % 2 == 0 else database_1
+        song.use(db_to_use).save()
 
-print("database 1")
-for song in Song.Use(database_1).select():
-    print(song.name)
+    print("database 1")
+    for song in Song.Use(database_1).select():
+        print(song.name)
 
-print("database 2")
-for song in Song.Use(database_1).select():
-    print(song.name)
-
+    print("database 2")
+    for song in Song.Use(database_1).select():
+        print(song.name)
