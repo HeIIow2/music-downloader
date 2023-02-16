@@ -72,9 +72,9 @@ class Song(BaseModel):
 
 class Source(BaseModel):
     """A class representing a source of a song in the music database."""
+    ContentTypes = Union[Song, Album, Artist]
 
-    type: str = CharField()
-    src: str = CharField()
+    page: str = CharField()
     url: str = CharField()
 
     content_type: str = CharField()
@@ -82,7 +82,7 @@ class Source(BaseModel):
     content: ForeignKeyField = ForeignKeyField('self', backref='content_items', null=True)
 
     @property
-    def content_object(self) -> Union[Song, Album, Artist, None]:
+    def content_object(self) -> Union[Song, Album, Artist]:
         """Get the content associated with the source as an object."""
         if self.content_type == 'Song':
             return Song.get(Song.id == self.content_id)
