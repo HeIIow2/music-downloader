@@ -32,7 +32,7 @@ class BaseModel(Model):
     def Use(cls, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]) -> Model:
         cls._meta.database = database
         return cls
-    
+
     def use(self, database: Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]) -> Model:
         self._meta.database = database
         return self
@@ -67,37 +67,6 @@ class Song(BaseModel):
     length: int = IntegerField(null=True)
     tracksort: int = IntegerField(null=True)
     genre: str = CharField(null=True)
-    # album: ForeignKeyField = ForeignKeyField(Album, backref='songs')
-
-
-class Source(BaseModel):
-    """A class representing a source of a song in the music database."""
-    ContentTypes = Union[Song, Album, Artist]
-
-    page: str = CharField()
-    url: str = CharField()
-
-    content_type: str = CharField()
-    content_id: int = IntegerField()
-    content: ForeignKeyField = ForeignKeyField('self', backref='content_items', null=True)
-
-    @property
-    def content_object(self) -> Union[Song, Album, Artist]:
-        """Get the content associated with the source as an object."""
-        if self.content_type == 'Song':
-            return Song.get(Song.id == self.content_id)
-        elif self.content_type == 'Album':
-            return Album.get(Album.id == self.content_id)
-        elif self.content_type == 'Artist':
-            return Artist.get(Artist.id == self.content_id)
-        else:
-            return None
-
-    @content_object.setter
-    def content_object(self, value: Union[Song, Album, Artist]) -> None:
-        """Set the content associated with the source as an object."""
-        self.content_type = value.__class__.__name__
-        self.content_id = value.id
 
 
 class Target(BaseModel):
@@ -131,9 +100,45 @@ class AlbumArtist(BaseModel):
     artist: ForeignKeyField = ForeignKeyField(Artist, backref='album_artists')
 
 
+class AlbumSong(BaseModel):
+    """A class representing the relationship between an album and an song."""
+    album: ForeignKeyField = ForeignKeyField(Album, backref='album_artists')
+    song: ForeignKeyField = ForeignKeyField(Song, backref='album_artists')
+
+
+class Source(BaseModel):
+    """A class representing a source of a song in the music database."""
+    ContentTypes = Union[Song, Album, Artist, Lyrics]
+
+    page: str = CharField()
+    url: str = CharField()
+
+    content_type: str = CharField()
+    content_id: int = IntegerField()
+    content: ForeignKeyField = ForeignKeyField('self', backref='content_items', null=True)
+
+    @property
+    def content_object(self) -> Union[Song, Album, Artist]:
+        """Get the content associated with the source as an object."""
+        if self.content_type == 'Song':
+            return Song.get(Song.id == self.content_id)
+        elif self.content_type == 'Album':
+            return Album.get(Album.id == self.content_id)
+        elif self.content_type == 'Artist':
+            return Artist.get(Artist.id == self.content_id)
+        else:
+            return None
+
+    @content_object.setter
+    def content_object(self, value: Union[Song, Album, Artist]) -> None:
+        """Set the content associated with the source as an object."""
+        self.content_type = value.__class__.__name__
+        self.content_id = value.id
+
+
 ALL_MODELS = [
-    Song, 
-    Album, 
+    Song,
+    Album,
     Artist,
     Source,
     Lyrics,
@@ -141,7 +146,6 @@ ALL_MODELS = [
     Target,
     SongArtist
 ]
-
 
 if __name__ == "__main__":
     database_1 = SqliteDatabase(":memory:")
