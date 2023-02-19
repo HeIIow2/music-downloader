@@ -111,7 +111,7 @@ class Database:
         Returns:
             The newly added music object.
         """
-        
+
         with write.WritingSession(self.database) as writing_session:
             if isinstance(database_object, objects.Song):
                 return writing_session.add_song(database_object)
@@ -121,7 +121,6 @@ class Database:
             
             if isinstance(database_object, objects.Artist):
                 return writing_session.add_artist(database_object)
-
 
     def push_many(self, database_objects: List[objects.MusicObject]) -> None:
         """
