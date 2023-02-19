@@ -1,12 +1,20 @@
-from typing import Optional, Union
+# Standard library
+from typing import Optional, Union, List
 from enum import Enum
+
+# third party modules
 from peewee import (
     SqliteDatabase,
     MySQLDatabase,
     PostgresqlDatabase,
 )
 
-from . import data_models
+# own modules
+from . import (
+    data_models,
+    write, 
+    objects,
+)
 
 
 class DatabaseType(Enum):
@@ -66,7 +74,7 @@ class Database:
                 port=self.db_port,
             )
 
-        raise ValueError("define a Valid database type")
+        raise ValueError("Invalid database type specified.")
 
     def initialize_database(self):
         """
@@ -90,6 +98,60 @@ class Database:
                 if not self.database.table_column_exists(model._meta.db_table, field_name):
                     # add the missing column to the table
                     self.database.add_column(model._meta.db_table, field_name, field_obj)
+
+    def push(self, database_object: objects.MusicObject):
+        """
+        Adds a new music object to the database using the corresponding method from the `write` session.
+        When possible, rather use the `push_many` function.
+        This gets even more important, when using a remote database server.
+
+        Args:
+            database_object (objects.MusicObject): The music object to add to the database.
+
+        Returns:
+            The newly added music object.
+        """
+        
+        with write.WritingSession(self.database) as writing_session:
+            if isinstance(database_object, objects.Song):
+                return writing_session.add_song(database_object)
+            
+            if isinstance(database_object, objects.Album):
+                return writing_session.add_album(database_object)
+            
+            if isinstance(database_object, objects.Artist):
+                return writing_session.add_artist(database_object)
+
+
+    def push_many(self, database_objects: List[objects.MusicObject]) -> None:
+        """
+        Adds a list of MusicObject instances to the database.
+        This function sends only needs one querry for each type of table added.
+        Beware that if you have for example an object like this:
+        - Album
+        - Song
+        - Song
+        you already have 3 different Tables.
+    
+        Unlike the function `push`, this function doesn't return the added database objects.
+
+        Args:
+            database_objects: List of MusicObject instances to be added to the database.
+        """
+
+        with write.WritingSession(self.database) as writing_session:
+            for obj in database_objects:
+                if isinstance(obj, objects.Song):
+                    writing_session.add_song(obj)
+                    continue
+                
+                if isinstance(obj, objects.Album):
+                    writing_session.add_album(obj)
+                    continue
+                
+                if isinstance(obj, objects.Artist):
+                    writing_session.add_artist(obj)
+                    continue
 
 
     def __del__(self):

@@ -51,6 +51,12 @@ class FormattedText:
         if self.doc is None:
             return None
         return pandoc.write(self.doc, format="plain").strip()
+    
+    @property
+    def json(self) -> str:
+        if self.doc is None:
+            return None
+        return pandoc.write(self.doc, format="json")
 
     plaintext = property(fget=get_plaintext, fset=set_plaintext)
     markdown = property(fget=get_markdown, fset=set_markdown)

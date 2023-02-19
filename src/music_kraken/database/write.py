@@ -1,4 +1,4 @@
-from typing import Union, Set, Optional, Dict, DefaultDict
+from typing import Union, Optional, Dict, DefaultDict, Type, List
 from collections import defaultdict
 import traceback
 from peewee import (
@@ -15,7 +15,7 @@ from . import data_models
 Database = Union[SqliteDatabase, PostgresqlDatabase, MySQLDatabase]
 
 
-class Session:
+class WritingSession:
     """
     Context manager for a database session
 
@@ -43,9 +43,9 @@ class Session:
         self.added_album_ids: Dict[str] = dict()
         self.added_artist_ids: Dict[str] = dict()
 
-        self.db_objects: DefaultDict[data_models.BaseModel, list] = defaultdict(list)
+        self.db_objects: DefaultDict[data_models.BaseModel, List[data_models.BaseModel]] = defaultdict(list)
 
-    def __enter__(self, database: Database):
+    def __enter__(self) -> Type['WritingSession']:
         """
         Enter the context of the database session
 
@@ -55,7 +55,7 @@ class Session:
         Returns:
         self: The instance of the session object
         """
-        self.__init__(database=database)
+        # self.__init__(database=database)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -138,7 +138,7 @@ class Session:
         ).use(self.database)
 
         self.db_objects[data_models.Song].append(db_song)
-        self.added_song_ids[song.id] = db_song
+        self.added_song_ids[song.id].append(db_song)
 
         for source in song.source_list:
             self.add_source(source=source, connected_to=db_song)
@@ -152,6 +152,8 @@ class Session:
                 artist=self.add_artist(main_artist),
                 is_feature=False
             )
+            
+            self.db_objects[data_models.SongArtist].append(db_song_artist)
 
         for feature_artist in song.feature_artist_collection:
             db_song_artist = data_models.SongArtist(
@@ -159,12 +161,16 @@ class Session:
                 artist=self.add_artist(feature_artist),
                 is_feature=True
             )
+            
+            self.db_objects[data_models.SongArtist].append(db_song_artist)
 
         for album in [song.album]:
             db_album_song = data_models.AlbumSong(
                 song=db_song,
                 album=self.add_album(album)
             )
+            
+            self.db_objects[data_models.AlbumSong] = db_album_song
 
         return db_song
 
@@ -180,10 +186,42 @@ class Session:
         if album.id in self.added_album_ids:
             return self.added_album_ids[album.id]
 
-        db_album = data_models.Album().use(self.database)
+        db_album = data_models.Album(
+            title = album.title,
+            label = album.label,
+            album_status = album.album_status,
+            album_type = album.album_type,
+            language = album.iso_639_2_language,
+            date = album.date.timestamp,
+            date_format = album.date.timeformat,
+            country = album.country,
+            barcode = album.barcode,
+            albumsort = album.albumsort,
+            is_split = album.is_split
+        ).use(self.database)
 
         self.db_objects[data_models.Album].append(db_album)
         self.added_album_ids.add(album.id)
+        
+        for source in album.source_list:
+            self.add_source(source, db_album)
+
+        for song in album.tracklist:
+            db_song_album = data_models.AlbumSong(
+                id = album.id,
+                album = album,
+                song = self.add_song(song)
+            )
+            
+            self.db_objects[data_models.AlbumSong].append(db_song_album)
+
+        for artist in album.artists:
+            db_album_artist = data_models.AlbumArtist(
+                album = album,
+                artist = self.add_artist(artist)
+            )
+            
+            self.db_objects[data_models.Artist].append(db_album_artist)
 
         return db_album
 
@@ -199,10 +237,34 @@ class Session:
         if artist.id in self.added_artist_ids:
             return self.added_artist_ids[artist.id]
 
-        db_artist = data_models.Artist()
+        db_artist = data_models.Artist(
+            id = artist.id,
+            name = artist.name,
+            notes = artist.notes.json
+        )
 
         self.db_objects[data_models.Artist].append(db_artist)
         self.added_artist_ids[artist.id] = db_artist
+        
+        for source in artist.source_list:
+            self.add_source(source, db_artist)
+        
+        for album in artist.main_albums:
+            db_album_artist = data_models.AlbumArtist(
+                artist = artist,
+                album = self.add_album(album)
+            )
+            
+            self.db_objects[data_models.AlbumArtist].append(db_album_artist)
+            
+        for song in artist.feature_songs:
+            db_artist_song = data_models.SongArtist(
+                artist = artist,
+                song = self.add_song(song),
+                is_feature = True
+            )
+            
+            self.db_objects[data_models.SongArtist].append(db_artist_song)
 
         return db_artist
 
@@ -219,5 +281,5 @@ class Session:
 
 
 if __name__ == "__main__":
-    with Session(SqliteDatabase(":memory:")) as session:
+    with WritingSession(SqliteDatabase(":memory:")) as session:
         session.add_song(objects.Song(title="Hs"))

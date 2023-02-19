@@ -252,6 +252,7 @@ class ID3Timestamp:
         return self.timestamp
 
     timestamp: str = property(fget=get_timestamp)
+    timeformat: str = property(fget=get_time_format)
 
 
 class MetadataAttribute:

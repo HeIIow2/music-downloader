@@ -44,6 +44,7 @@ class Album(BaseModel):
     title: str = CharField(null=True)
     label: str = CharField(null=True)
     album_status: str = CharField(null=True)
+    album_type: str = CharField(null=True)
     language: str = CharField(null=True)
     date: str = CharField(null=True)
     date_format: str = CharField(null=True)
@@ -57,6 +58,7 @@ class Artist(BaseModel):
     """A class representing an artist in the music database."""
 
     name: str = CharField()
+    notes: str = CharField()
 
 
 class Song(BaseModel):
