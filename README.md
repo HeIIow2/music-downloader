@@ -1,15 +1,18 @@
-# Music Kraken
+# Music Kraken 
+
+<img align="right" src="assets/logo.jpg" width=300>
 
 1. [Installlation](#installation)
 2. [Command Line Usage](#quick-guide)
-3. [Library Usage / Python Interface](#programming-interface--use-as-library)
-4. [About Metadata](#metadata)
-5. [About the Audio](#download)
-6. [About the Lyrics](#lyrics)
+3. [Contribute](#contribute)
+4. [Matrix Space](#matrix-space), if you don't wanna read: **[Invite](https://matrix.to/#/#music-kraken:matrix.org)**
 
-I am happy about every pull request. To contribute look [here](contribute.md).
+5. [Library Usage / Python Interface](#programming-interface--use-as-library)
+6. [About Metadata](#metadata)
+7. [About the Audio](#download)
+8. [About the Lyrics](#lyrics)
 
-![](https://github.com/HeIIow2/music-downloader/blob/master/assets/logo_cropped.jpg?raw=true)
+---
 
 ## Installation
 
@@ -55,6 +58,20 @@ searches for the track <any track> from the release <any relaese>
 After searching with this syntax, it prompts you with multiple results. You can either choose one of those by inputing its id `int`, or you can search for a new query.
 
 After you chose either an artist, a release group, a release, or a track by its id, download it by inputting the string `ok`. My downloader will download it automatically for you.
+
+---
+
+## CONTRIBUTE
+
+I am happy about every pull request. To contribute look [here](contribute.md).
+
+## Matrix Space 
+
+<img align="right" src="assets/element_logo.png" width=100>
+
+I decided against creating a discord server, due to piracy communities get often banned from discord. A good and free Alternative are Matrix Spaces. I reccomend the use of the Client [Element](https://element.io/download). It is completely open source.
+
+**Click [this link](https://matrix.to/#/#music-kraken:matrix.org) _([https://matrix.to/#/#music-kraken:matrix.org](https://matrix.to/#/#music-kraken:matrix.org))_ to join.**
 
 ---
 
