@@ -1,6 +1,6 @@
 # Music Kraken 
 
-<img align="right" src="assets/logo.jpg" width=300>
+<img align="right" src="assets/logo.svg" width=300>
 
 1. [Installlation](#installation)
 2. [Command Line Usage](#quick-guide)
