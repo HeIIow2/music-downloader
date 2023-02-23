@@ -3,23 +3,22 @@ from typing import List
 from .source import SourceAttribute
 from src.music_kraken.utils import string_processing
 
+
 class Collection:
     """
     This an class for the iterables
     like tracklist or discography
     """
     _data: List[SourceAttribute]
-    
+
     _by_url: dict
     _by_attribute: dict
-
 
     def __init__(self, data: list = None, map_attributes: list = None, element_type=None) -> None:
         """
         Attribute needs to point to
         """
         self._by_url = dict()
-        
 
         self.map_attributes = map_attributes or []
         self.element_type = element_type
@@ -29,6 +28,9 @@ class Collection:
 
         for element in self._data:
             self.map_element(element=element)
+
+    def sort(self, reverse: bool = False, **kwargs):
+        self._data.sort(reverse=reverse, **kwargs)
 
     def map_element(self, element: SourceAttribute):
         for source_url in element.source_url_map:
@@ -42,7 +44,6 @@ class Collection:
 
             self._by_attribute[attr][string_processing.unify(value)] = element
 
-            
     def get_object_with_source(self, url: str) -> any:
         """
         Returns either None, or the object, that has a source
@@ -61,7 +62,6 @@ class Collection:
 
     def append(self, element: SourceAttribute):
         if type(element) is not self.element_type and self.element_type is not None:
-            
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
         self._data.append(element)
@@ -76,6 +76,12 @@ class Collection:
 
     def __len__(self) -> int:
         return len(self._data)
+
+    def __getitem__(self, item):
+        if type(item) != int:
+            return ValueError("key needs to be an integer")
+
+        return self._data[item]
 
     def copy(self) -> List:
         """

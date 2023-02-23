@@ -196,7 +196,7 @@ class Database:
 
         for song in album.tracklist:
             self.push_song(song, pushed=pushed)
-        for artist in album.artists:
+        for artist in album.artist_collection:
             self.push_artist_album(artist_ref=artist.reference, album_ref=album.reference)
             self.push_artist(artist, pushed=pushed)
 
@@ -657,7 +657,7 @@ class Database:
             artists = self.pull_artists(artist_ref, flat=flat_artist, exclude_relations=new_exclude_relations)
             if len(artists) < 1:
                 continue
-            album_obj.artists.append(artists[0])
+            album_obj.artist_collection.append(artists[0])
 
         return album_obj
 

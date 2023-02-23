@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Dict
 import pycountry
 import copy
 
@@ -121,7 +121,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
             tracksort: int = None,
             genre: str = None,
             source_list: List[Source] = None,
-            target: Target = None,
+            target_list: Target = None,
             lyrics_list: List[Lyrics] = None,
             album_list: Type['Album'] = None,
             main_artist_list: List[Type['Artist']] = None,
@@ -133,7 +133,6 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         super().__init__(id_=id_, **kwargs)
         # attributes
-        # *private* attributes
         self.title: str = title
         self.isrc: str = isrc
         self.length: int = length
@@ -142,18 +141,19 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
 
         self.source_list = source_list or []
 
-        self.target = target or Target()
-        self.lyrics_list = lyrics_list or []
+        self.target_list = target_list or []
 
-        # initialize with either a passed in album, or an empty one,
-        # so it can at least properly generate dynamic attributes
+        self.lyrics_collection: Collection = Collection(
+            data=lyrics_list or [],
+            map_attributes=[],
+            element_type=Lyrics
+        )
 
-        """
-        TODO
-        put in collection
-        """
-        self._album: List[Type['Album']] = album_list or []
-        self.album = album
+        self.album_collection: Collection = Collection(
+            data=album_list or [],
+            map_attributes=["title"],
+            element_type=Album
+        )
 
         self.main_artist_collection = Collection(
             data=main_artist_list or [],
@@ -207,11 +207,11 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         })
 
         metadata.merge_many([s.get_song_metadata() for s in self.source_list])
-        if not self.album.empty:
-            metadata.merge(self.album.metadata)
-        metadata.merge_many([a.metadata for a in self.main_artist_list])
-        metadata.merge_many([a.metadata for a in self.feature_artist_list])
-        metadata.merge_many([l.metadata for l in self.lyrics])
+        metadata.merge_many([a.metadata for a in self.album_collection])
+        metadata.merge_many([a.metadata for a in self.main_artist_collection])
+        metadata.merge_many([a.metadata for a in self.feature_artist_collection])
+        metadata.merge_many([lyrics.metadata for lyrics in self.lyrics_collection])
+
         return metadata
 
     def get_options(self) -> list:
@@ -221,9 +221,8 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         :return: a list of objects that are related to the Song object
         """
         options = self.main_artist_list.copy()
-        options.extend(self.feature_artist_list.copy())
-        if not self.album.empty:
-            options.append(self.album)
+        options.extend(self.feature_artist_collection)
+        options.extend(self.album_collection)
         options.append(self)
         return options
 
@@ -233,6 +232,9 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
     tracksort_str: List[Type['Album']] = property(fget=get_tracksort_str)
     main_artist_list: List[Type['Artist']] = property(fget=lambda self: self.main_artist_collection.copy())
     feature_artist_list: List[Type['Artist']] = property(fget=lambda self: self.feature_artist_collection.copy())
+
+    album_list: List[Type['Album']] = property(fget=lambda self: self.album_collection.copy())
+    lyrics_list: List[Type[Lyrics]] = property(fget=lambda self: self.lyrics_collection.copy())
 
 
 """
@@ -245,7 +247,6 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             self,
             id_: str = None,
             title: str = None,
-            label: str = None,
             language: pycountry.Languages = None,
             date: ID3Timestamp = None,
             barcode: str = None,
@@ -254,24 +255,20 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             dynamic: bool = False,
             source_list: List[Source] = None,
             artist_list: list = None,
-            tracklist: List[Song] = None,
+            song_list: List[Song] = None,
             album_status: AlbumStatus = None,
             album_type: AlbumType = None,
+            label_list: List[Type['Label']] = None,
             **kwargs
     ) -> None:
         DatabaseObject.__init__(self, id_=id_, dynamic=dynamic, **kwargs)
 
-        """
-        TODO
-        add to db
-        """
-        self.album_type: AlbumType = album_type
-
         self.title: str = title
         self.album_status: AlbumStatus = album_status
-        self.label = label
+        self.album_type: AlbumType = album_type
         self.language: pycountry.Languages = language
         self.date: ID3Timestamp = date or ID3Timestamp()
+
         """
         TODO
         find out the id3 tag for barcode and implement it
@@ -286,56 +283,76 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         self.albumsort: Optional[int] = albumsort
 
-        self._tracklist = Collection(
-            data=tracklist or [],
+        self.song_collection: Collection = Collection(
+            data=song_list or [],
             map_attributes=["title"],
             element_type=Song
         )
-        self.source_list = source_list or []
-        self.artists = Collection(
+
+        self.artist_collection: Collection = Collection(
             data=artist_list or [],
             map_attributes=["name"],
             element_type=Artist
         )
 
-    def __str__(self) -> str:
-        return f"-----{self.title}-----\n{self.tracklist}"
+        self.label_collection: Collection = Collection(
+            data=label_list,
+            map_attributes=["name"],
+            element_type=Label
+        )
+
+        self.source_list = source_list or []
 
     def __repr__(self):
         return f"Album(\"{self.title}\")"
 
-    def __len__(self) -> int:
-        return len(self.tracklist)
+    def update_tracksort(self):
+        """
+        This updates the tracksort attributes, of the songs in
+        `self.song_collection`, and sorts the songs, if possible.
 
-    def set_tracklist(self, tracklist):
-        tracklist_list = []
-        if type(tracklist) == Collection:
-            tracklist_list = tracklist_list
-        elif type(tracklist) == list:
-            tracklist_list = tracklist
+        It is advised to only call this function, once all the tracks are
+        added to the songs.
 
-        self._tracklist = Collection(
-            data=tracklist_list,
-            map_attributes=["title"],
-            element_type=Song
-        )
+        :return:
+        """
+
+        tracksort_map: Dict[int, Song] = {song.tracksort: song for song in self.song_collection if
+                                          song.tracksort is not None}
+
+        # place the songs, with set tracksort attribute according to it
+        for tracksort, song in tracksort_map.items():
+            index = tracksort - 1
+
+            """
+            I ONLY modify the `Collection._data` attribute directly, 
+            to bypass the mapping of the attributes, because I will add the item in the next step
+            """
+            self.song_collection._data.remove(song)
+            self.song_collection._data.insert(index, song)
+
+        # fill in the empty tracksort attributes
+        for i, song in enumerate(self.song_collection):
+            if song.tracksort is not None:
+                continue
+            song.tracksort = i + 1
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         return MetadataAttribute.Metadata({
             id3Mapping.ALBUM: [self.title],
             id3Mapping.COPYRIGHT: [self.copyright],
             id3Mapping.LANGUAGE: [self.iso_639_2_language],
-            id3Mapping.ALBUM_ARTIST: [a.name for a in self.artists],
+            id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
             id3Mapping.DATE: [self.date.timestamp]
         })
 
     def get_copyright(self) -> str:
         if self.date is None:
             return ""
-        if self.date.year == 1 or self.label is None:
+        if self.date.has_year or len(self.label_collection) == 0:
             return ""
 
-        return f"{self.date.year} {self.label}"
+        return f"{self.date.year} {self.label_collection[0].name}"
 
     def get_iso_639_2_lang(self) -> Optional[str]:
         if self.language is None:
@@ -344,21 +361,22 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
         return self.language.alpha_3
 
     def get_options(self) -> list:
-        options = self.artists.copy()
+        options = self.artist_collection.copy()
         options.append(self)
-        for track in self.tracklist:
-            new_track: Song = copy.copy(track)
-            new_track.album = self
-            options.append(new_track)
+        options.extend(self.song_collection)
 
         return options
 
     def get_option_string(self) -> str:
-        return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artists])}"
+        return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artist_collection])}"
+
+    label_list: List[Type['Label']] = property(fget=lambda self: self.label_collection.copy())
+    artist_list: List[Type['Artist']] = property(fget=lambda self: self.artist_collection.copy())
+    song_list: List[Song] = property(fget=lambda self: self.song_collection.copy())
+    tracklist: List[Song] = property(fget=lambda self: self.song_collection.copy())
 
     copyright = property(fget=get_copyright)
     iso_639_2_language = property(fget=get_iso_639_2_lang)
-    tracklist: Collection = property(fget=lambda self: self._tracklist, fset=set_tracklist)
 
 
 """
@@ -367,25 +385,19 @@ All objects dependent on Artist
 
 
 class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
-    """
-    main_songs
-    feature_song
-
-    albums
-    """
-
     def __init__(
             self,
             id_: str = None,
             name: str = None,
             source_list: List[Source] = None,
-            feature_songs: List[Song] = None,
-            main_albums: List[Album] = None,
+            feature_song_list: List[Song] = None,
+            main_album_list: List[Album] = None,
             notes: FormattedText = None,
             lyrical_themes: List[str] = None,
             general_genre: str = "",
             country: CountryTyping = None,
-            formed_in: ID3Timestamp = None
+            formed_in: ID3Timestamp = None,
+            label_list: List[Type['Label']] = None,
     ):
         DatabaseObject.__init__(self, id_=id_)
 
@@ -405,20 +417,25 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
         self.name: str = name
 
-        self.feature_songs = Collection(
-            data=feature_songs,
+        self.feature_song_collection: Collection = Collection(
+            data=feature_song_list,
             map_attributes=["title"],
             element_type=Song
         )
 
-        self.main_albums = Collection(
-            data=main_albums,
+        self.main_album_collection: Collection = Collection(
+            data=main_album_list,
             map_attributes=["title"],
             element_type=Album
         )
 
-        if source_list is not None:
-            self.source_list = source_list
+        self.label_collection: Collection = Collection(
+            data=label_list,
+            map_attributes=["name"],
+            element_type=Label
+        )
+
+        self.source_list = source_list or []
 
     def __str__(self):
         string = self.name or ""
@@ -428,10 +445,24 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         return string
 
     def __repr__(self):
-        return self.__str__()
+        return f"Artist(\"{self.name}\")"
 
-    def __eq__(self, __o: DatabaseObject) -> bool:
-        return self.id_ == __o.id_
+    def update_albumsort(self):
+        """
+        This updates the albumsort attributes, of the albums in
+        `self.main_album_collection`, and sorts the albums, if possible.
+
+        It is advised to only call this function, once all the albums are
+        added to the artist.
+
+        :return:
+        """
+        self.main_album_collection.sort(key=lambda _album: _album.date)
+
+        for i, album in enumerate(self.main_album_collection):
+            if album.albumsort is None:
+                continue
+            album.albumsort = i + 1
 
     def get_features(self) -> Album:
         feature_release = Album(
@@ -440,27 +471,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             album_type=AlbumType.COMPILATION_ALBUM,
             is_split=True,
             albumsort=666,
-            dynamic=True
+            dynamic=True,
+            song_list=self.feature_song_collection.copy()
         )
 
         return feature_release
-
-    def get_all_songs(self) -> List[Song]:
-        """
-        returns a list of all Songs.
-        probably not that useful, because it is unsorted
-        """
-        collection = []
-        for album in self.discography:
-            collection.extend(album.tracklist)
-
-        return collection
-
-    def get_discography(self) -> List[Album]:
-        flat_copy_discography = self.main_albums.copy()
-        flat_copy_discography.append(self.get_features())
-
-        return flat_copy_discography
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
@@ -472,13 +487,73 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     def get_options(self) -> list:
         options = [self]
-        options.extend(self.main_albums)
-        options.extend(self.feature_songs)
+        options.extend(self.main_album_collection)
+        options.extend(self.feature_song_collection)
         return options
 
     def get_option_string(self) -> str:
         return f"Artist: {self.name}"
 
+    def get_all_songs(self) -> List[Song]:
+        """
+        returns a list of all Songs.
+        probably not that useful, because it is unsorted
+        """
+        collection = self.feature_song_collection.copy()
+        for album in self.discography:
+            collection.extend(album.song_collection)
+
+        return collection
+
+    def get_discography(self) -> List[Album]:
+        flat_copy_discography = self.main_album_collection.copy()
+        flat_copy_discography.append(self.get_features())
+
+        return flat_copy_discography
+
+    album_list: List[Album] = property(fget=lambda self: self.album_collection.copy())
+
+    complete_album_list: List[Album] = property(fget=get_discography)
     discography: List[Album] = property(fget=get_discography)
-    features: Album = property(fget=get_features)
-    all_songs: Album = property(fget=get_all_songs)
+
+    feature_album: Album = property(fget=get_features)
+    song_list: List[Song] = property(fget=get_all_songs)
+    label_list: List[Type['Label']] = property(fget=lambda self: self.label_collection.copy())
+
+
+"""
+Label
+"""
+
+
+class Label(DatabaseObject, SourceAttribute, MetadataAttribute):
+    def __init__(
+            self,
+            id_: str = None,
+            name: str = None,
+            album_list: List[Album] = None,
+            current_artist_list: List[Artist] = None,
+            source_list: List[Source] = None,
+            **kwargs
+    ):
+        DatabaseObject.__init__(self, id_=id_)
+
+        self.name: str = name
+
+        self.album_collection: Collection = Collection(
+            data=album_list,
+            map_attributes=["title"],
+            element_type=Album
+        )
+
+        self.current_artist_collection: Collection = Collection(
+            data=current_artist_list,
+            map_attributes=["name"],
+            element_type=Artist
+        )
+
+        self.source_list = source_list or []
+        self.additional_attributes = kwargs
+
+    album_list = property(fget=lambda self: self.album_collection.copy())
+    current_artist_list = property(fget=lambda self: self.current_artist_collection.copy())

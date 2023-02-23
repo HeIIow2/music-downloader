@@ -142,6 +142,21 @@ class ID3Timestamp:
             second=second
         )
 
+    def __lt__(self, other):
+        return self.date_obj < other.date_obj
+
+    def __le__(self, other):
+        return self.date_obj <= other.date_obj
+
+    def __gt__(self, other):
+        return self.date_obj > other.date_obj
+
+    def __ge__(self, other):
+        return self.date_obj >= other.date_obj
+
+    def __eq__(self, other):
+        return self.date_obj == other.date_obj
+
     def get_time_format(self) -> str:
         """
         https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.4.0-structure.html

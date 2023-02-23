@@ -215,7 +215,7 @@ class WritingSession:
             
             self.db_objects[data_models.AlbumSong].append(db_song_album)
 
-        for artist in album.artists:
+        for artist in album.artist_collection:
             db_album_artist = data_models.AlbumArtist(
                 album = album,
                 artist = self.add_artist(artist)
