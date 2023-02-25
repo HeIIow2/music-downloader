@@ -25,6 +25,8 @@ EVEN if that means to for example keep decimal values stored in strings.
 
 
 class BaseModel(Model):
+    notes: str = CharField(null=True)
+
     class Meta:
         database = None
 
@@ -38,33 +40,41 @@ class BaseModel(Model):
         return self
 
 
-class Album(BaseModel):
+class ObjectModel(BaseModel):
+    additional_arguments: str = CharField(null=True)
+    notes: str = CharField(null=True)
+
+
+class Album(ObjectModel):
     """A class representing an album in the music database."""
 
     title: str = CharField(null=True)
-    label: str = CharField(null=True)
     album_status: str = CharField(null=True)
     album_type: str = CharField(null=True)
     language: str = CharField(null=True)
     date: str = CharField(null=True)
     date_format: str = CharField(null=True)
-    country: str = CharField(null=True)
+
     barcode: str = CharField(null=True)
-    albumsort: int = IntegerField(null=True)
     is_split: bool = BooleanField(default=False)
+
+    albumsort: int = IntegerField(null=True)
 
 
 class Artist(BaseModel):
     """A class representing an artist in the music database."""
 
-    name: str = CharField()
-    notes: str = CharField()
+    name: str = CharField(null=True)
+    country: str = CharField(null=True)
+    formed_in_date: str = CharField(null=True)
+    formed_in_date_format: str = CharField(null=True)
+    general_genre: str = CharField(null=True)
 
 
 class Song(BaseModel):
     """A class representing a song in the music database."""
 
-    name: str = CharField(null=True)
+    title: str = CharField(null=True)
     isrc: str = CharField(null=True)
     length: int = IntegerField(null=True)
     tracksort: int = IntegerField(null=True)
@@ -85,6 +95,12 @@ class Lyrics(BaseModel):
     text: str = TextField()
     language: str = CharField()
     song = ForeignKeyField(Song, backref='lyrics')
+
+
+class SongTarget(BaseModel):
+    song: ForeignKeyField = ForeignKeyField(Song, backref='song_target')
+    artist: ForeignKeyField = ForeignKeyField(Target, backref='song_target')
+    is_feature: bool = BooleanField(default=False)
 
 
 class SongArtist(BaseModel):

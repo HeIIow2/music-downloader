@@ -1,7 +1,6 @@
 import os
 from typing import List, Optional, Type, Dict
 import pycountry
-import copy
 
 from .metadata import (
     Mapping as id3Mapping,
@@ -10,12 +9,11 @@ from .metadata import (
 )
 from src.music_kraken.utils.shared import (
     MUSIC_DIR,
-    DATABASE_LOGGER as logger
+    DATABASE_LOGGER as LOGGER
 )
 from .parents import (
     DatabaseObject,
-    Reference,
-    SongAttribute
+    MainObject
 )
 from .source import (
     Source,
@@ -26,6 +24,8 @@ from .source import (
 from .formatted_text import FormattedText
 from .collection import Collection
 from .album import AlbumType, AlbumStatus
+from .lyrics import Lyrics
+from .target import Target
 
 """
 All Objects dependent 
@@ -34,77 +34,7 @@ All Objects dependent
 CountryTyping = type(list(pycountry.countries)[0])
 
 
-class Target(DatabaseObject, SongAttribute):
-    """
-    create somehow like that
-    ```python
-    # I know path is pointless, and I will change that (don't worry about backwards compatibility there)
-    Target(file="~/Music/genre/artist/album/song.mp3", path="~/Music/genre/artist/album")
-    ```
-    """
-
-    def __init__(self, id_: str = None, file: str = None, path: str = None) -> None:
-        DatabaseObject.__init__(self, id_=id_)
-        SongAttribute.__init__(self)
-        self._file = file
-        self._path = path
-
-    def set_file(self, _file: str):
-        self._file = _file
-
-    def get_file(self) -> Optional[str]:
-        if self._file is None:
-            return None
-        return os.path.join(MUSIC_DIR, self._file)
-
-    def set_path(self, _path: str):
-        self._path = _path
-
-    def get_path(self) -> Optional[str]:
-        if self._path is None:
-            return None
-        return os.path.join(MUSIC_DIR, self._path)
-
-    def get_exists_on_disc(self) -> bool:
-        """
-        returns True when file can be found on disc
-        returns False when file can't be found on disc or no filepath is set
-        """
-        if not self.is_set():
-            return False
-
-        return os.path.exists(self.file)
-
-    def is_set(self) -> bool:
-        return not (self._file is None or self._path is None)
-
-    file = property(fget=get_file, fset=set_file)
-    path = property(fget=get_path, fset=set_path)
-
-    exists_on_disc = property(fget=get_exists_on_disc)
-
-
-class Lyrics(DatabaseObject, SongAttribute, SourceAttribute, MetadataAttribute):
-    def __init__(
-            self,
-            text: str,
-            language: pycountry.Languages,
-            id_: str = None,
-            source_list: List[Source] = None
-    ) -> None:
-        DatabaseObject.__init__(self, id_=id_)
-        SongAttribute.__init__(self)
-        self.text = text
-        self.language = language
-
-        if source_list is not None:
-            self.source_list = source_list
-
-    def get_metadata(self) -> MetadataAttribute.Metadata:
-        return super().get_metadata()
-
-
-class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
+class Song(MainObject, SourceAttribute, MetadataAttribute):
     """
     Class representing a song object, with attributes id, mb_id, title, album_name, isrc, length,
     tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
@@ -114,14 +44,15 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
 
     def __init__(
             self,
-            id_: str = None,
+            _id: str = None,
+            dynamic: bool = False,
             title: str = None,
             isrc: str = None,
             length: int = None,
             tracksort: int = None,
             genre: str = None,
             source_list: List[Source] = None,
-            target_list: Target = None,
+            target_list: List[Target] = None,
             lyrics_list: List[Lyrics] = None,
             album_list: Type['Album'] = None,
             main_artist_list: List[Type['Artist']] = None,
@@ -131,7 +62,7 @@ class Song(DatabaseObject, SourceAttribute, MetadataAttribute):
         """
         Initializes the Song object with the following attributes:
         """
-        super().__init__(id_=id_, **kwargs)
+        MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
         # attributes
         self.title: str = title
         self.isrc: str = isrc
@@ -242,10 +173,10 @@ All objects dependent on Album
 """
 
 
-class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
+class Album(MainObject, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
-            id_: str = None,
+            _id: str = None,
             title: str = None,
             language: pycountry.Languages = None,
             date: ID3Timestamp = None,
@@ -261,7 +192,7 @@ class Album(DatabaseObject, SourceAttribute, MetadataAttribute):
             label_list: List[Type['Label']] = None,
             **kwargs
     ) -> None:
-        DatabaseObject.__init__(self, id_=id_, dynamic=dynamic, **kwargs)
+        MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.title: str = title
         self.album_status: AlbumStatus = album_status
@@ -384,10 +315,11 @@ All objects dependent on Artist
 """
 
 
-class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
+class Artist(MainObject, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
-            id_: str = None,
+            _id: str = None,
+            dynamic: bool = False,
             name: str = None,
             source_list: List[Source] = None,
             feature_song_list: List[Song] = None,
@@ -398,8 +330,11 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
             country: CountryTyping = None,
             formed_in: ID3Timestamp = None,
             label_list: List[Type['Label']] = None,
+            **kwargs
     ):
-        DatabaseObject.__init__(self, id_=id_)
+        MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
+
+        self.name: str = name
 
         """
         TODO implement album type and notes
@@ -412,10 +347,12 @@ class Artist(DatabaseObject, SourceAttribute, MetadataAttribute):
         i mean do as you want but there aint no strict rule about em so good luck
         """
         self.notes: FormattedText = notes or FormattedText()
+        """
+        TODO
+        implement in db
+        """
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
-
-        self.name: str = name
 
         self.feature_song_collection: Collection = Collection(
             data=feature_song_list,
@@ -526,17 +463,18 @@ Label
 """
 
 
-class Label(DatabaseObject, SourceAttribute, MetadataAttribute):
+class Label(MainObject, SourceAttribute, MetadataAttribute):
     def __init__(
             self,
-            id_: str = None,
+            _id: str = None,
+            dynamic: bool = False,
             name: str = None,
             album_list: List[Album] = None,
             current_artist_list: List[Artist] = None,
             source_list: List[Source] = None,
             **kwargs
     ):
-        DatabaseObject.__init__(self, id_=id_)
+        MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.name: str = name
 
@@ -553,7 +491,11 @@ class Label(DatabaseObject, SourceAttribute, MetadataAttribute):
         )
 
         self.source_list = source_list or []
-        self.additional_attributes = kwargs
 
-    album_list = property(fget=lambda self: self.album_collection.copy())
-    current_artist_list = property(fget=lambda self: self.current_artist_collection.copy())
+    @property
+    def album_list(self) -> List[Album]:
+        return self.album_collection.copy()
+
+    @property
+    def current_artist_list(self) -> List[Artist]:
+        self.current_artist_collection.copy()

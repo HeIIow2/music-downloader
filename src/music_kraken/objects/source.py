@@ -133,7 +133,7 @@ class SourceAttribute:
     This is a class that is meant to be inherited from.
     it adds the source_list attribute to a class
     """
-    _source_dict: Dict[object, List[Source]]
+    _source_dict: Dict[SourcePages, List[Source]]
     source_url_map: Dict[str, Source]
 
     def __new__(cls, **kwargs):

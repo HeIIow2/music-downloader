@@ -16,7 +16,7 @@ class Mapping(Enum):
     # Textframes
     TITLE = "TIT2"
     ISRC = "TSRC"
-    LENGTH = "TLEN" # in milliseconds
+    LENGTH = "TLEN"  # in milliseconds
     DATE = "TYER"
     TRACKNUMBER = "TRCK"
     TOTALTRACKS = "TRCK"  # Stored in the same frame with TRACKNUMBER, separated by '/': e.g. '4/9'.
@@ -193,16 +193,13 @@ class ID3Timestamp:
             return "%Y"
         return ""
 
-
     def get_timestamp(self) -> str:
         time_format = self.get_time_format()
         return self.date_obj.strftime(time_format)
-    
-    
+
     def get_timestamp_w_format(self) -> Tuple[str, str]:
         time_format = self.get_time_format()
         return time_format, self.date_obj.strftime(time_format)
-
 
     @classmethod
     def strptime(cls, time_stamp: str, format: str):
