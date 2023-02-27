@@ -95,6 +95,114 @@ obj -> pg: add more detailed data from according page.
 obj -> pg: if available download audio to target.
 ```
 
+## Data Structure
+
+The Data Structure, that the whole programm is built on looks as follows:
+
+```mermaid
+---
+title: Music Data
+---
+erDiagram
+
+Song {
+
+}
+
+Album {
+
+}
+
+Artist {
+
+}
+
+Label {
+
+}
+
+Source {
+
+}
+
+Target {
+
+}
+
+Lyrics {
+
+}
+
+Song ||--o{ Lyrics : contains
+Song ||--o{ Target : points
+
+Song }o--o{ Album : tracklist
+Album }o--o{ Artist : discography
+
+Label }o--o{ Album : released
+Label }o--o{ Artist : contracted
+
+Source }o--|| Song : from
+Source }o--|| Lyrics : from
+Source }o--|| Album : from
+Source }o--|| Artist : from
+Source }o--|| Label : from
+```
+
+Ok now this **WILL** look intimidating, thus I break it down quickly.  
+*That is also the reason I didn't add all Attributes here.*
+
+The most important Entities are:
+
+- Song
+- Album
+- Artist
+- Label
+
+All of them *(and Lyrics)* can have multiple Sources, and every Source can only Point to one of those Element.
+
+The `Target` Entity represents the location on the hard drive a Song has. One Song can have multiple download Locations.
+
+The `Lyrics` Entity simply represents the Lyrics of each Song. One Song can have multiple Lyrics, e.g. Translations.
+
+Here is the simplified Diagramm without only the main Entities.
+
+
+```mermaid
+---
+title: simplified Music Data
+---
+erDiagram
+
+Song {
+
+}
+
+Album {
+
+}
+
+Artist {
+
+}
+
+Label {
+
+}
+
+Song }o--o{ Album : tracklist
+Album }o--o{ Artist : discography
+
+Label }o--o{ Album : released
+Label }o--o{ Artist : contracted
+
+```
+
+Looks way more managebal, doesn't it? 
+
+The reason every relation here is a `n:m` *(many to many)* relation is not, that it makes sense in the aspekt of modeling reality, but to be able to put data from many Sources in the same Data Model.  
+Every Service models Data a bit different, and projecting a one to many relationship to a many to many relationship without data loss is easy. The other way around it is basically impossible
+
 ## DataClasses
 
 ```python
