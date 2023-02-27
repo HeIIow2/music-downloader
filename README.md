@@ -105,6 +105,16 @@ title: Music Data
 ---
 erDiagram
 
+
+
+Target {
+
+}
+
+Lyrics {
+
+}
+
 Song {
 
 }
@@ -125,13 +135,9 @@ Source {
 
 }
 
-Target {
 
-}
 
-Lyrics {
 
-}
 
 Song ||--o{ Lyrics : contains
 Song ||--o{ Target : points
