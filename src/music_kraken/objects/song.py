@@ -206,7 +206,6 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
         maybe look at how mutagen does it with easy_id3
         """
         self.barcode: str = barcode
-        self.is_split: bool = is_split
         """
         TODO
         implement a function in the Artist class,
@@ -277,6 +276,10 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
             id3Mapping.DATE: [self.date.timestamp]
         })
 
+    @property
+    def is_split(self) -> bool:
+        return len(self.artist_collection) > 1
+
     def get_copyright(self) -> str:
         if self.date is None:
             return ""
@@ -285,7 +288,8 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
 
         return f"{self.date.year} {self.label_collection[0].name}"
 
-    def get_iso_639_2_lang(self) -> Optional[str]:
+    @property
+    def iso_639_2_lang(self) -> Optional[str]:
         if self.language is None:
             return None
 
@@ -307,8 +311,6 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
     tracklist: List[Song] = property(fget=lambda self: self.song_collection.copy())
 
     copyright = property(fget=get_copyright)
-    iso_639_2_language = property(fget=get_iso_639_2_lang)
-
 
 """
 All objects dependent on Artist
@@ -383,6 +385,10 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
 
     def __repr__(self):
         return f"Artist(\"{self.name}\")"
+
+    @property
+    def country_string(self):
+        return self.country.alpha_3
 
     def update_albumsort(self):
         """

@@ -1,5 +1,6 @@
 from typing import Union, Optional, Dict, DefaultDict, Type, List
 from collections import defaultdict
+import json
 import traceback
 from peewee import (
     SqliteDatabase,
@@ -42,6 +43,7 @@ class WritingSession:
         self.added_song_ids: Dict[str] = dict()
         self.added_album_ids: Dict[str] = dict()
         self.added_artist_ids: Dict[str] = dict()
+        self.added_label_ids: Dict[str] = dict()
 
         self.db_objects: DefaultDict[data_models.BaseModel, List[data_models.BaseModel]] = defaultdict(list)
 
@@ -130,7 +132,7 @@ class WritingSession:
 
         db_song: data_models.Song = data_models.Song(
             id=song.id,
-            name=song.title,
+            title=song.title,
             isrc=song.isrc,
             length=song.length,
             tracksort=song.tracksort,
@@ -187,17 +189,15 @@ class WritingSession:
             return self.added_album_ids[album.id]
 
         db_album = data_models.Album(
+            id = album.id,
             title = album.title,
-            label = album.label,
-            album_status = album.album_status,
-            album_type = album.album_type,
+            album_status = album.album_status.value,
+            album_type = album.album_type.value,
             language = album.iso_639_2_language,
-            date = album.date.timestamp,
+            date_string = album.date.timestamp,
             date_format = album.date.timeformat,
-            country = album.country,
             barcode = album.barcode,
-            albumsort = album.albumsort,
-            is_split = album.is_split
+            albumsort = album.albumsort
         ).use(self.database)
 
         self.db_objects[data_models.Album].append(db_album)
@@ -216,12 +216,20 @@ class WritingSession:
             self.db_objects[data_models.AlbumSong].append(db_song_album)
 
         for artist in album.artist_collection:
-            db_album_artist = data_models.AlbumArtist(
+            db_album_artist = data_models.ArtistAlbum(
                 album = album,
                 artist = self.add_artist(artist)
             )
             
             self.db_objects[data_models.Artist].append(db_album_artist)
+
+        for label in album.label_collection:
+            self.db_objects[data_models.LabelAlbum].append(
+                data_models.LabelAlbum(
+                    label = self.add_label(label=label),
+                    album = db_album
+                )
+            )
 
         return db_album
 
@@ -240,7 +248,10 @@ class WritingSession:
         db_artist = data_models.Artist(
             id = artist.id,
             name = artist.name,
-            notes = artist.notes.json
+            country = artist.country_string,
+            formed_in_date = artist.formed_in.timestamp,
+            formed_in_format = artist.formed_in.timestamp,
+            general_genre = artist.general_genre
         )
 
         self.db_objects[data_models.Artist].append(db_artist)
@@ -250,12 +261,12 @@ class WritingSession:
             self.add_source(source, db_artist)
         
         for album in artist.main_albums:
-            db_album_artist = data_models.AlbumArtist(
+            db_album_artist = data_models.ArtistAlbum(
                 artist = artist,
                 album = self.add_album(album)
             )
             
-            self.db_objects[data_models.AlbumArtist].append(db_album_artist)
+            self.db_objects[data_models.ArtistAlbum].append(db_album_artist)
             
         for song in artist.feature_songs:
             db_artist_song = data_models.SongArtist(
@@ -266,7 +277,46 @@ class WritingSession:
             
             self.db_objects[data_models.SongArtist].append(db_artist_song)
 
+        for label in artist.label_collection:
+            self.db_objects[data_models.LabelArtist].append(
+                data_models.LabelArtist(
+                    artist = db_artist,
+                    label = self.add_label(label=label)
+                )
+            )
+
         return db_artist
+
+    def add_label(self, label: objects.Label) -> Optional[data_models.Label]:
+        if label.dynamic:
+            return
+        if label.id in self.added_label_ids:
+            return self.added_label_ids[label.id]
+        
+        db_label = data_models.Label(
+            id = label.id,
+            name = label.name,
+            additional_arguments = json.dumps(label.additional_arguments)
+        )
+        
+        self.db_objects[data_models.Label]
+        self.add_label[label.id] = db_label
+        
+        for album in label.album_collection:
+            self.db_objects[data_models.LabelAlbum].append(
+                data_models.LabelAlbum(
+                    album = self.add_album(album=album),
+                    label = db_label
+                )
+            )
+            
+        for artist in label.current_artist_collection:
+            self.db_objects[data_models.LabelArtist].append(
+                artist = self.add_artist(artist=artist),
+                label = db_label
+            )
+        
+        return db_label
 
     def commit(self, reset: bool = True):
         """

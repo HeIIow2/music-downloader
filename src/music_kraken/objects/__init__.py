@@ -21,6 +21,7 @@ Artist = song.Artist
 Source = source.Source
 Target = song.Target
 Lyrics = song.Lyrics
+Label = song.Label
 
 AlbumType = album.AlbumType
 AlbumStatus = album.AlbumStatus
