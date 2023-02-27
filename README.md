@@ -78,9 +78,16 @@ I decided against creating a discord server, due to piracy communities get often
 # Programming Interface / Use as Library
 
 This application is $100\%$ centered around Data. Thus the most important thing for working with musik kraken is, to understand how I structured the data.  
-Without long expllanations I will just show you, how to import the data classes and create them.
+
+## qick Overview
+
+- explanation of the [Data Model](#data-model)
+- how to use the [Data Objects](#data-objects)
 
 ```mermaid
+---
+title: Quick Overview
+---
 sequenceDiagram
 
 participant pg as Page (eg. YouTube, MB, Musify, ...)
@@ -95,7 +102,7 @@ obj -> pg: add more detailed data from according page.
 obj -> pg: if available download audio to target.
 ```
 
-## Data Structure
+## Data Model
 
 The Data Structure, that the whole programm is built on looks as follows:
 
@@ -134,10 +141,6 @@ Label {
 Source {
 
 }
-
-
-
-
 
 Song ||--o{ Lyrics : contains
 Song ||--o{ Target : points
@@ -209,7 +212,9 @@ Looks way more managebal, doesn't it?
 The reason every relation here is a `n:m` *(many to many)* relation is not, that it makes sense in the aspekt of modeling reality, but to be able to put data from many Sources in the same Data Model.  
 Every Service models Data a bit different, and projecting a one to many relationship to a many to many relationship without data loss is easy. The other way around it is basically impossible
 
-## DataClasses
+## Data Objects
+
+> Not 100% accurate yet and *might* change slightly
 
 ```python
 # importing the libraries I build on 
