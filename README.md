@@ -142,20 +142,21 @@ Source {
 
 }
 
-Song ||--o{ Lyrics : contains
-Song ||--o{ Target : points
-
-Song }o--o{ Album : tracklist
-Album }o--o{ Artist : discography
-
-Label }o--o{ Album : released
-Label }o--o{ Artist : contracted
-
 Source }o--|| Song : from
 Source }o--|| Lyrics : from
 Source }o--|| Album : from
 Source }o--|| Artist : from
 Source }o--|| Label : from
+
+Song }o--o{ Album : AlbumSong
+Album }o--o{ Artist : ArtistAlbum
+Song }o--o{ Artist : features
+
+Label }o--o{ Album : LabelAlbum
+Label }o--o{ Artist : LabelSong
+
+Song ||--o{ Lyrics : contains
+Song ||--o{ Target : points
 ```
 
 Ok now this **WILL** look intimidating, thus I break it down quickly.  
@@ -199,11 +200,12 @@ Label {
 
 }
 
-Song }o--o{ Album : tracklist
-Album }o--o{ Artist : discography
+Song }o--o{ Album : AlbumSong
+Album }o--o{ Artist : ArtistAlbum
+Song }o--o{ Artist : features
 
-Label }o--o{ Album : released
-Label }o--o{ Artist : contracted
+Label }o--o{ Album : LabelAlbum
+Label }o--o{ Artist : LabelSong
 
 ```
 
