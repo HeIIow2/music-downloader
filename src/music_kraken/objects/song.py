@@ -276,10 +276,6 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
             id3Mapping.DATE: [self.date.timestamp]
         })
 
-    @property
-    def is_split(self) -> bool:
-        return len(self.artist_collection) > 1
-
     def get_copyright(self) -> str:
         if self.date is None:
             return ""
@@ -294,6 +290,16 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
             return None
 
         return self.language.alpha_3
+
+    @property
+    def is_split(self) -> bool:
+        """
+        A split Album is an Album from more than one Artists
+        usually half the songs are made by one Artist, the other half by the other one.
+        In this case split means either that or one artist featured by all songs.
+        :return:
+        """
+        return len(self.artist_collection) > 1
 
     def get_options(self) -> list:
         options = self.artist_collection.copy()
