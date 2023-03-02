@@ -9,7 +9,7 @@ from peewee import (
     Model
 )
 
-from . import objects
+from .. import objects
 from . import data_models
 
 # just a Type for type hintung. You can't do anything with it.

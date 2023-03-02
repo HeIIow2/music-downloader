@@ -3,8 +3,7 @@ from typing import List, Dict
 
 from .metadata import Mapping, MetadataAttribute
 from .parents import (
-    DatabaseObject,
-    SongAttribute,
+    DatabaseObject
 )
 
 
@@ -48,7 +47,7 @@ class SourcePages(Enum):
         return homepage_map[attribute]
 
 
-class Source(DatabaseObject, SongAttribute, MetadataAttribute):
+class Source(DatabaseObject, MetadataAttribute):
     """
     create somehow like that
     ```python

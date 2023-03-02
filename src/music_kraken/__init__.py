@@ -6,6 +6,7 @@ import logging
 import os
 
 from . import (
+    objects,
     database,
     pages
 )
@@ -37,33 +38,21 @@ logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 # define the most important values and function for import in the __init__ file
-Song = database.Song
-Artist = database.Artist
-Source = database.Source
-SourceTypes = database.SourceTypes
-SourcePages = database.SourcePages
-Target = database.Target
-Lyrics = database.Lyrics
-Album = database.Album
-MusicObject = database.MusicObject
-
-ID3Timestamp = database.ID3Timestamp
-
 cache = database.cache
 Database = database.Database
 
-def get_options_from_query(query: str) -> List[MusicObject]:
+def get_options_from_query(query: str) -> List[objects.MusicObject]:
     options = []
     for MetadataPage in pages.MetadataPages:
         options.extend(MetadataPage.search_by_query(query=query))
     return options
 
-def get_options_from_option(option: MusicObject) -> List[MusicObject]:
+def get_options_from_option(option: objects.MusicObject) -> List[objects.MusicObject]:
     for MetadataPage in pages.MetadataPages:
         option = MetadataPage.fetch_details(option, flat=False)
     return option.get_options()
 
-def print_options(options: List[MusicObject]):
+def print_options(options: List[objects.MusicObject]):
     print("\n".join([f"{str(j).zfill(2)}: {i.get_option_string()}" for j, i in enumerate(options)]))
 
 def cli():

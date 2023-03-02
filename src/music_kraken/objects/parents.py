@@ -1,7 +1,7 @@
 from typing import Optional
 import uuid
 
-from src.music_kraken.utils.shared import (
+from ..utils.shared import (
     SONG_LOGGER as LOGGER
 )
 

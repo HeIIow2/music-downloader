@@ -1,6 +1,7 @@
 # Standard library
 from typing import Optional, Union, List
 from enum import Enum
+from playhouse.migrate import *
 
 # third party modules
 from peewee import (
@@ -12,9 +13,9 @@ from peewee import (
 # own modules
 from . import (
     data_models,
-    write, 
-    objects,
+    write
 )
+from .. import objects
 
 
 class DatabaseType(Enum):
@@ -76,6 +77,18 @@ class Database:
 
         raise ValueError("Invalid database type specified.")
 
+
+    @property
+    def migrator(self) -> SchemaMigrator:
+        if self.db_type == DatabaseType.SQLITE:
+            return SqliteMigrator(self.database)
+        
+        if self.db_type == DatabaseType.MYSQL:
+            return MySQLMigrator(self.database)
+    
+        if self.db_type == DatabaseType.POSTGRESQL:
+            return PostgresqlMigrator(self.database)
+
     def initialize_database(self):
         """
         Connect to the database
@@ -84,20 +97,38 @@ class Database:
         """
         self.database = self.create_database()
         self.database.connect()
+        
+        migrator = self.migrator
+        
+        for model in data_models.ALL_MODELS:
+            model = model.Use(self.database)
+            
+            if self.database.table_exists(model):
+                migration_operations = [
+                    migrator.add_column(
+                        "some field", field[0], field[1]
+                    )
+                    for field in model._meta.fields.items()
+                ]
+                
+                migrate(*migration_operations)
+            else:
+                self.database.create_tables([model], safe=True)
 
-        self.database.create_tables(data_models.ALL_MODELS, safe=True)
+        #self.database.create_tables([model.Use(self.database) for model in data_models.ALL_MODELS], safe=True)
 
         """
         upgrade old databases. 
         If a collumn has been added in a new version this adds it to old Tables, 
         without deleting the data in legacy databases
         """
+        
         for model in data_models.ALL_MODELS:
-            for field_name, field_obj in model._meta.fields.items():
-                # check if the field exists in the database
-                if not self.database.table_column_exists(model._meta.db_table, field_name):
-                    # add the missing column to the table
-                    self.database.add_column(model._meta.db_table, field_name, field_obj)
+            model = model.Use(self.database)
+            
+            
+            
+            print(model._meta.fields)
 
     def push(self, database_object: objects.MusicObject):
         """

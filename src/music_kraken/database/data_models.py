@@ -108,8 +108,8 @@ class Source(BaseModel):
     url: str = CharField()
 
     content_type: str = CharField()
-    content_id: int = IntegerField()
-    content: ForeignKeyField = ForeignKeyField('self', backref='content_items', null=True)
+    content_id: int = CharField()
+    # content: ForeignKeyField = ForeignKeyField('self', backref='content_items', null=True)
 
     @property
     def content_object(self) -> Union[Song, Album, Artist]:

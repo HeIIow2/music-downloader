@@ -1,15 +1,14 @@
-from music_kraken import (
+from music_kraken.objects import (
     Song,
-    Database,
-    Artist,
-    Album
+    
 )
+
 
 from music_kraken.pages import (
     EncyclopaediaMetallum
 )
 
-
+"""
 test_db = Database("test.db")
 # test_db.reset()
 
@@ -64,3 +63,7 @@ print_song(song)
 artist = song.main_artist_list[0]
 artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
 print_artist(artist)
+"""
+
+results = EncyclopaediaMetallum.search_by_query("#a only smile")
+print(results)
