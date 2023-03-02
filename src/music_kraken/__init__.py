@@ -37,9 +37,6 @@ gc.set_threshold(allocs, gen1, gen2)
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
-# define the most important values and function for import in the __init__ file
-cache = database.cache
-Database = database.Database
 
 def get_options_from_query(query: str) -> List[objects.MusicObject]:
     options = []

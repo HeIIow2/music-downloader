@@ -64,6 +64,15 @@ class Collection:
         if type(element) is not self.element_type and self.element_type is not None:
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
+        for source_url in element.source_url_map:
+            if source_url in self._by_url:
+                return
+
+        for attr in self.map_attributes:
+            value = element.__getattribute__(attr)
+            if value in self._by_attribute[attr]:
+                return
+
         self._data.append(element)
         self.map_element(element)
 
@@ -72,7 +81,7 @@ class Collection:
             yield element
 
     def __str__(self) -> str:
-        return "\n".join([f"{str(j).zfill(2)}: {i}" for j, i in enumerate(self._data)])
+        return "\n".join([f"{str(j).zfill(2)}: {i.__repr__()}" for j, i in enumerate(self._data)])
 
     def __len__(self) -> int:
         return len(self._data)

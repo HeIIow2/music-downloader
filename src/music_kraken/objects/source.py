@@ -58,7 +58,6 @@ class Source(DatabaseObject, MetadataAttribute):
 
     def __init__(self, page_enum, url: str, id_: str = None, type_enum=None) -> None:
         DatabaseObject.__init__(self, id_=id_)
-        SongAttribute.__init__(self)
 
         self.type_enum = type_enum
         self.page_enum = page_enum

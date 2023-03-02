@@ -14,7 +14,7 @@ class DatabaseObject:
             https://docs.python.org/3/library/uuid.html
             """
             _id = str(uuid.uuid4())
-            LOGGER.info(f"id for {self.__name__} isn't set. Setting to {_id}")
+            LOGGER.info(f"id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
         self.id: Optional[str] = _id

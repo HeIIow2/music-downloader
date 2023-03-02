@@ -13,4 +13,4 @@ class TempDatabase(Database):
         super().__init__(db_type=DatabaseType.SQLITE, db_name=TEMP_DATABASE_PATH)
 
 
-temp_database = TempDatabase()
+# temp_database = TempDatabase()

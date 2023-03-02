@@ -1,7 +1,4 @@
-from . import (
-    temp_database,
-    old_database
-)
+from . import database
 from .. import objects
 
 MusicObject = objects.MusicObject
@@ -19,4 +16,4 @@ Artist = objects.Artist
 FormattedText = objects.FormattedText
 
 Database = database.Database
-cache = temp_database.TempDatabase()
+# cache = temp_database.TempDatabase()

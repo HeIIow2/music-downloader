@@ -8,7 +8,7 @@ from ..utils.shared import (
 )
 
 from .abstract import Page
-from ..database import (
+from ..objects import (
     MusicObject,
     Artist,
     Source,
@@ -16,7 +16,8 @@ from ..database import (
     Song,
     Album,
     ID3Timestamp,
-    FormattedText
+    FormattedText,
+    Label
 )
 from ..utils import (
     string_processing
@@ -237,7 +238,7 @@ class EncyclopaediaMetallum(Page):
                 pass
 
 
-            album_obj: Album = artist.main_albums.get_object_with_source(album_url) or artist.main_albums.get_object_with_attribute("title", album_name)
+            album_obj: Album = artist.main_album_collection.get_object_with_source(album_url) or artist.main_album_collection.get_object_with_attribute("title", album_name)
 
             if album_obj is not None:
                 album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
@@ -247,7 +248,7 @@ class EncyclopaediaMetallum(Page):
                     album_obj.date = date_obj
                 continue
                 
-            artist.main_albums.append(Album(
+            artist.main_album_collection.append(Album(
                 id_=album_id,
                 title=album_name,
                 album_type=album_type,
@@ -258,7 +259,7 @@ class EncyclopaediaMetallum(Page):
             ))
 
         if not flat:
-            for album in artist.main_albums:
+            for album in artist.main_album_collection:
                 cls.fetch_album_details(album, flat=flat)
 
         return artist
@@ -288,15 +289,16 @@ class EncyclopaediaMetallum(Page):
         merchandice_source = soup.find("div", {"id": "band_links_Official_merchandise"})
         label_source = soup.find("div", {"id": "band_links_Labels"})
 
-        for tr in artist_source.find_all("td"):
-            a = tr.find("a")
-            url = a.get("href")
+        if artist_source is not None:
+            for tr in artist_source.find_all("td"):
+                a = tr.find("a")
+                url = a.get("href")
 
-            source = Source.match_url(url)
-            if source is None:
-                continue
+                source = Source.match_url(url)
+                if source is None:
+                    continue
 
-            artist.add_source(source)
+                artist.add_source(source)
 
         return artist
 
@@ -355,12 +357,15 @@ class EncyclopaediaMetallum(Page):
                     label_url = None
                     if label_anchor is not None:
                         label_url = label_anchor.get("href")
+                        print(label_url)
+                        
+                        artist.label_collection.append(                            Label(
+                                name=label_name,
+                                source_list=[
+                                    Source(cls.SOURCE_TYPE, label_url)
+                                ]
+                            ))
 
-                    for album in artist.main_albums:
-                        if album.label is not None:
-                            continue
-                        album.label = label_name
-                    continue
 
                 """
                 years active: 2012-present
@@ -464,7 +469,7 @@ class EncyclopaediaMetallum(Page):
                 minutes, seconds = duration_stamp.split(":")
                 length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
 
-            track: Song = album.tracklist.get_object_with_source(track_id) or album.tracklist.get_object_with_attribute("title", title)
+            track: Song = album.song_collection.get_object_with_source(track_id) or album.song_collection.get_object_with_attribute("title", title)
             
             if track is not None:
                 track.add_source(Source(cls.SOURCE_TYPE, track_id))
@@ -484,7 +489,7 @@ class EncyclopaediaMetallum(Page):
                 ]
             )
             
-            album.tracklist.append(track)
+            album.song_collection.append(track)
 
         return album
 
@@ -493,5 +498,10 @@ class EncyclopaediaMetallum(Page):
         source_list = song.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
             return song
+
+        """
+        TODO
+        lyrics
+        """
 
         return song

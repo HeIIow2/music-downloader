@@ -1,7 +1,4 @@
-from music_kraken.objects import (
-    Song,
-    
-)
+from music_kraken import objects
 
 
 from music_kraken.pages import (
@@ -66,4 +63,13 @@ print_artist(artist)
 """
 
 results = EncyclopaediaMetallum.search_by_query("#a only smile")
-print(results)
+artist = results[0]
+print(artist)
+
+artist: objects.Artist = EncyclopaediaMetallum.fetch_details(artist)
+
+for release in artist.main_album_collection:
+    print(release)
+    
+    print(release.song_collection)
+
