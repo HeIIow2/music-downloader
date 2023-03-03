@@ -60,7 +60,7 @@ class Collection:
         if unified in self._by_attribute[name]:
             return self._by_attribute[name][unified]
 
-    def append(self, element: SourceAttribute):
+    def append(self, element: SourceAttribute, merge_on_conflict: bool = True):
         if type(element) is not self.element_type and self.element_type is not None:
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 

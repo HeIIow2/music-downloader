@@ -7,6 +7,9 @@ from ..utils.shared import (
 
 
 class DatabaseObject:
+    COLLECTION_ATTRIBUTES: tuple = tuple()
+    SIMPLE_ATTRIBUTES: tuple = tuple()
+    
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs) -> None:
         if _id is None and not dynamic:
             """
@@ -20,6 +23,9 @@ class DatabaseObject:
         self.id: Optional[str] = _id
 
         self.dynamic = dynamic
+        
+    def merge(self, other, override: bool = False):
+        for collection in 
 
 
 class MainObject(DatabaseObject):
@@ -33,6 +39,7 @@ class MainObject(DatabaseObject):
     It has all the functionality of the "DatabaseObject" (it inherits from said class)
     but also some added functions as well.
     """
+    
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs):
         super().__init__(_id=_id, dynamic=dynamic, **kwargs)
 
