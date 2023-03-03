@@ -56,7 +56,7 @@ class Source(DatabaseObject, MetadataAttribute):
     ```
     """
 
-    def __init__(self, page_enum, url: str, id_: str = None, type_enum=None) -> None:
+    def __init__(self, page_enum: SourcePages, url: str, id_: str = None, type_enum=None) -> None:
         DatabaseObject.__init__(self, id_=id_)
 
         self.type_enum = type_enum
