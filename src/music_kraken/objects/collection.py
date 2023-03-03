@@ -66,11 +66,15 @@ class Collection:
 
         for source_url in element.source_url_map:
             if source_url in self._by_url:
+                if merge_on_conflict:
+                    self._by_url[source_url].merge(element)
                 return
 
         for attr in self.map_attributes:
             value = element.__getattribute__(attr)
             if value in self._by_attribute[attr]:
+                if merge_on_conflict:
+                    self._by_attribute[attr][value].merge(element)
                 return
 
         self._data.append(element)
