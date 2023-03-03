@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Iterable
 
 from .source import SourceAttribute
 from ..utils import string_processing
@@ -60,7 +60,7 @@ class Collection:
         if unified in self._by_attribute[name]:
             return self._by_attribute[name][unified]
 
-    def append(self, element: SourceAttribute, merge_on_conflict: bool = True):
+    def append(self, element, merge_on_conflict: bool = True):
         if type(element) is not self.element_type and self.element_type is not None:
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
@@ -75,6 +75,10 @@ class Collection:
 
         self._data.append(element)
         self.map_element(element)
+
+    def extend(self, element_list: Iterable, merge_on_conflict: bool = True):
+        for element in element_list:
+            self.append(element, merge_on_conflict=merge_on_conflict)
 
     def __iter__(self):
         for element in self._data:

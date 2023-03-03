@@ -25,7 +25,19 @@ class DatabaseObject:
         self.dynamic = dynamic
         
     def merge(self, other, override: bool = False):
-        for collection in 
+        if type(other) != type(self):
+            LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
+            return
+
+        for collection in type(self).COLLECTION_ATTRIBUTES:
+            getattr(self, collection).extend(collection)
+
+        for simple_attribute in type(self).SIMPLE_ATTRIBUTES:
+            if getattr(other, simple_attribute) is None:
+                continue
+
+            if override or getattr(self, simple_attribute) is None:
+                setattr(self, simple_attribute, getattr(other, simple_attribute))
 
 
 class MainObject(DatabaseObject):
