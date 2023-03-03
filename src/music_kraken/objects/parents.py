@@ -25,7 +25,7 @@ class DatabaseObject:
         self.dynamic = dynamic
         
     def merge(self, other, override: bool = False):
-        if type(other) != type(self):
+        if isinstance(other, type(self)):
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
             return
 
