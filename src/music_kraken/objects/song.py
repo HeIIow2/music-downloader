@@ -167,6 +167,9 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
     album_list: List[Type['Album']] = property(fget=lambda self: self.album_collection.copy())
     lyrics_list: List[Type[Lyrics]] = property(fget=lambda self: self.lyrics_collection.copy())
 
+    COLLECTION_ATTRIBUTES = ("lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection")
+    SIMPLE_ATTRIBUTES = ("title", "isrc", "length", "tracksort", "genre")
+
 
 """
 All objects dependent on Album
@@ -317,6 +320,10 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
     tracklist: List[Song] = property(fget=lambda self: self.song_collection.copy())
 
     copyright = property(fget=get_copyright)
+    
+    COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
+    SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
+    
 
 """
 All objects dependent on Artist
@@ -460,7 +467,7 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
 
         return flat_copy_discography
 
-    album_list: List[Album] = property(fget=lambda self: self.album_collection.copy())
+    album_list: List[Album] = property(fget=lambda self: self.main_album_collection.copy())
 
     complete_album_list: List[Album] = property(fget=get_discography)
     discography: List[Album] = property(fget=get_discography)
@@ -468,6 +475,9 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
     feature_album: Album = property(fget=get_features)
     song_list: List[Song] = property(fget=get_all_songs)
     label_list: List[Type['Label']] = property(fget=lambda self: self.label_collection.copy())
+    
+    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
+    SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
 
 
 """
@@ -511,3 +521,6 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
     @property
     def current_artist_list(self) -> List[Artist]:
         self.current_artist_collection.copy()
+        
+    COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
+    SIMPLE_ATTRIBUTES = ("name",)

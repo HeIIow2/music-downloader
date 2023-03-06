@@ -53,7 +53,7 @@ class MainObject(DatabaseObject):
     """
     
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs):
-        super().__init__(_id=_id, dynamic=dynamic, **kwargs)
+        DatabaseObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.additional_arguments: dict = kwargs
 

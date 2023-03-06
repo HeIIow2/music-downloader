@@ -237,17 +237,6 @@ class EncyclopaediaMetallum(Page):
             except ValueError():
                 pass
 
-
-            album_obj: Album = artist.main_album_collection.get_object_with_source(album_url) or artist.main_album_collection.get_object_with_attribute("title", album_name)
-
-            if album_obj is not None:
-                album_obj.add_source(Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url))
-                album_obj.title = album_name
-                album_obj.album_type = album_type
-                if date_obj is not None:
-                    album_obj.date = date_obj
-                continue
-                
             artist.main_album_collection.append(Album(
                 id_=album_id,
                 title=album_name,

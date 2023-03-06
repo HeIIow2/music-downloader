@@ -126,7 +126,7 @@ class Source(DatabaseObject, MetadataAttribute):
     homepage = property(fget=lambda self: SourcePages.get_homepage(self.page_enum))
 
 
-class SourceAttribute:
+class SourceAttribute(DatabaseObject):
     """
     This is a class that is meant to be inherited from.
     it adds the source_list attribute to a class
@@ -187,6 +187,12 @@ class SourceAttribute:
         and the value is a List with all sources of according page
         """
         return self._source_dict
+    
+    def merge(self, other, override: bool = False):
+        super().merge(other, override)
+        
+        for source in other.source_list:
+            self.add_source(source=source)
 
     source_list: List[Source] = property(fget=get_source_list, fset=set_source_list)
     source_dict: Dict[object, List[Source]] = property(fget=get_source_dict)
