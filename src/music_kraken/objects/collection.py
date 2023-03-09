@@ -1,4 +1,5 @@
-from typing import List, Iterable, Dict
+from typing import List, Iterable, Dict, DefaultDict
+from collections import defaultdict
 
 from .source import SourceAttribute
 from .parents import DatabaseObject
@@ -19,7 +20,7 @@ class Collection:
         # Attribute needs to point to
         self.element_type = element_type
         
-        self._data: list = list()
+        self._data: List[DatabaseObject] = list()
         
         """
         example of attribute_to_object_map
@@ -33,46 +34,33 @@ class Collection:
         }
         ```
         """
-        self.attribute_to_object_map: Dict[str, dict] = dict()
+        self._attribute_to_object_map: Dict[str, Dict[object, DatabaseObject]] = defaultdict(dict)
         
         self.extend(data, merge_on_conflict=True)
 
     def sort(self, reverse: bool = False, **kwargs):
         self._data.sort(reverse=reverse, **kwargs)
 
-    def map_element(self, element: SourceAttribute):
-        for source_url in element.source_url_map:
-            self._by_url[source_url] = element
-
-        for attr in self.map_attributes:
-            value = element.__getattribute__(attr)
-            if type(value) != str:
-                # this also throws out all none values
-                continue
-
-            self._by_attribute[attr][string_processing.unify(value)] = element
+    def map_element(self, element: DatabaseObject):
+        for name, value in element.indexing_values:
+            self._attribute_to_object_map[name][value] = element
 
     def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
+        # if the element type has ben defide in the initializer it checks if the type maches
         if self.element_type is not None and isinstance(element, self.element_type):
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
-        for source_url in element.source_url_map:
-            if source_url in self._by_url:
-                if merge_on_conflict:
-                    self._by_url[source_url].merge(element)
-                return
-
-        for attr in self.map_attributes:
-            value = element.__getattribute__(attr)
-            if value in self._by_attribute[attr]:
-                if merge_on_conflict:
-                    self._by_attribute[attr][value].merge(element)
+        for name, value in element.indexing_values:
+            if value in self._attribute_to_object_map[name]:
+                # if the object does already exist
+                # thus merging and don't add it afterwards
+                self._attribute_to_object_map[name][value].merge(element)
                 return
 
         self._data.append(element)
         self.map_element(element)
 
-    def extend(self, element_list: Iterable, merge_on_conflict: bool = True):
+    def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
         for element in element_list:
             self.append(element, merge_on_conflict=merge_on_conflict)
 

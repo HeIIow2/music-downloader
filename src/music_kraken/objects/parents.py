@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Type
+from typing import Optional, Dict, Type, Tuple, List
 import uuid
 
 from ..utils.shared import (
@@ -25,16 +25,16 @@ class DatabaseObject:
         self.dynamic = dynamic
         
     @property
-    def indexing_values(self) -> Dict[str, object]:
+    def indexing_values(self) -> List[Tuple[str, object]]:
         """
         returns a map of the name and values of the attributes.
         This helps in comparing classes for equal data (eg. being the same song but different attributes)
 
         Returns:
-            Dict[str, object]: the key is the name of the attribute, and the value its value
+            List[Tuple[str, object]]: the first element in the tuple is the name of the attribute, the second the value.
         """
         
-        return dict()
+        return list()
         
     def merge(self, other, override: bool = False):
         if isinstance(other, type(self)):
