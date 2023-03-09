@@ -218,6 +218,8 @@ Every Service models Data a bit different, and projecting a one to many relation
 
 > Not 100% accurate yet and *might* change slightly
 
+### Creation
+
 ```python
 # importing the libraries I build on 
 import pycountry
@@ -276,10 +278,48 @@ song_object = Song(
 )
 ```
 
+
+
 If you just wanna start implementing, then just use the code example, I dont care.  
 For those who don't want any bugs and use it as intended *(which is reccomended, cuz I am only one person so there are defs bugs)* continue reading.
 
-## music_kraken.Song
+## Appending and Merging data
+
+If you want to append for example a Song to an Album, you obviously need to check beforehand if the Song already exists in the Album, and if so, you need to merge their data in one Song object, to not loose any Information.
+
+Fortunately I implemented all of this functionality in [objects.Collection](#collection).append(music_object).  
+I made a flow chart showing how it works:
+
+```mermaid
+---
+title: "Collection.append(music_object: MusicObject)"
+---
+flowchart TD
+    exist("""
+<b>Check if music_object already exists.</b>
+<hr>
+Gets all indexing values with <code>music_object.indices</code>.
+If any returned value exists in <code>Collection.object_map</code>, 
+the music_object exists
+    """)
+
+    subgraph merge["Merge the object with the already existing one."]
+    end
+
+    subgraph add["Adding the object to the collection."]
+    end
+
+    exist-->|"if it doesn't exist"|add
+    exist-->|"if already exists"|merge
+```
+
+## Classes and Objects
+
+### music_kraken.objects
+
+#### Collection
+
+#### Song
 
 So as you can see, the probaply most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
 
@@ -287,7 +327,7 @@ It has handfull attributes, where half of em are self explanatory, like `title` 
 
 Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
 
-## music_kraken.ID3Timestamp
+#### ID3Timestamp
 
 For multiple Reasons I don't use the default `datetime.datetime` class.
 
