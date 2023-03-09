@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Type
 import uuid
 
 from ..utils.shared import (
@@ -23,6 +23,18 @@ class DatabaseObject:
         self.id: Optional[str] = _id
 
         self.dynamic = dynamic
+        
+    @property
+    def indexing_values(self) -> Dict[str, object]:
+        """
+        returns a map of the name and values of the attributes.
+        This helps in comparing classes for equal data (eg. being the same song but different attributes)
+
+        Returns:
+            Dict[str, object]: the key is the name of the attribute, and the value its value
+        """
+        
+        return dict()
         
     def merge(self, other, override: bool = False):
         if isinstance(other, type(self)):

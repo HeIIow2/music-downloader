@@ -1,6 +1,7 @@
-from typing import List, Iterable
+from typing import List, Iterable, Dict
 
 from .source import SourceAttribute
+from .parents import DatabaseObject
 from ..utils import string_processing
 
 
@@ -14,20 +15,27 @@ class Collection:
     _by_url: dict
     _by_attribute: dict
 
-    def __init__(self, data: list = None, map_attributes: list = None, element_type=None) -> None:
-        """
-        Attribute needs to point to
-        """
-        self._by_url = dict()
-
-        self.map_attributes = map_attributes or []
+    def __init__(self, data: List[DatabaseObject] = None, element_type = None, *args, **kwargs) -> None:
+        # Attribute needs to point to
         self.element_type = element_type
-        self._by_attribute = {attr: dict() for attr in map_attributes}
-
-        self._data = data or []
-
-        for element in self._data:
-            self.map_element(element=element)
+        
+        self._data: list = list()
+        
+        """
+        example of attribute_to_object_map
+        the song objects are references pointing to objects
+        in _data
+        
+        ```python
+        {
+            'id': {323: song_1, 563: song_2, 666: song_3},
+            'url': {'www.song_2.com': song_2}
+        }
+        ```
+        """
+        self.attribute_to_object_map: Dict[str, dict] = dict()
+        
+        self.extend(data, merge_on_conflict=True)
 
     def sort(self, reverse: bool = False, **kwargs):
         self._data.sort(reverse=reverse, **kwargs)
@@ -44,24 +52,8 @@ class Collection:
 
             self._by_attribute[attr][string_processing.unify(value)] = element
 
-    def get_object_with_source(self, url: str) -> any:
-        """
-        Returns either None, or the object, that has a source
-        matching the url.
-        """
-        if url in self._by_url:
-            return self._by_url[url]
-
-    def get_object_with_attribute(self, name: str, value: str):
-        if name not in self.map_attributes:
-            raise ValueError(f"didn't map the attribute {name}")
-
-        unified = string_processing.unify(value)
-        if unified in self._by_attribute[name]:
-            return self._by_attribute[name][unified]
-
-    def append(self, element, merge_on_conflict: bool = True):
-        if type(element) is not self.element_type and self.element_type is not None:
+    def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
+        if self.element_type is not None and isinstance(element, self.element_type):
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
         for source_url in element.source_url_map:
