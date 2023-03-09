@@ -43,6 +43,9 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
     Inherits from DatabaseObject, SourceAttribute, and MetadataAttribute classes.
     """
 
+    COLLECTION_ATTRIBUTES = ("lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection", "source_collection")
+    SIMPLE_ATTRIBUTES = ("title", "unified_title", "isrc", "length", "tracksort", "genre")
+
     def __init__(
             self,
             _id: str = None,
@@ -74,19 +77,18 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
         self.tracksort: int = tracksort or 0
         self.genre: str = genre
 
-        self.source_list = source_list or []
-
-        self.target_list = target_list or []
+        self.target_collection: Collection = Collection(
+            data=target_list,
+            element_type=Target
+        )
 
         self.lyrics_collection: Collection = Collection(
-            data=lyrics_list or [],
-            map_attributes=[],
+            data=lyrics_list,
             element_type=Lyrics
         )
 
         self.album_collection: Collection = Collection(
-            data=album_list or [],
-            map_attributes=["title"],
+            data=album_list,
             element_type=Album
         )
 
@@ -179,9 +181,6 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
 
     album_list: List[Type['Album']] = property(fget=lambda self: self.album_collection.copy())
     lyrics_list: List[Type[Lyrics]] = property(fget=lambda self: self.lyrics_collection.copy())
-
-    COLLECTION_ATTRIBUTES = ("lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection")
-    SIMPLE_ATTRIBUTES = ("title", "isrc", "length", "tracksort", "genre")
 
 
 """

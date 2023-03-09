@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Tuple
 from pathlib import Path
 
 from ..utils import shared
@@ -14,6 +14,8 @@ class Target(DatabaseObject):
     ```
     """
 
+    SIMPLE_ATTRIBUTES = ("_file", "_path")
+
     def __init__(
             self,
             file: str = None,
@@ -24,12 +26,14 @@ class Target(DatabaseObject):
     ) -> None:
         super().__init__(_id=_id, dynamic=dynamic)
         self._file: Path = Path(file)
-        self._path = path
+        self._path: Path = Path(path) if relative_to_music_dir else Path(path)
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
 
     @property
     def file_path(self) -> Path:
-        if self.is_relative_to_music_dir:
-            return Path(shared.MUSIC_DIR, self._path, self._file)
         return Path(self._path, self._file)
+
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [('filepath', self.file_path)]
