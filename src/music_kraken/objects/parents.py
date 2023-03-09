@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Optional, Dict, Type, Tuple, List
 import uuid
 
@@ -23,6 +24,23 @@ class DatabaseObject:
         self.id: Optional[str] = _id
 
         self.dynamic = dynamic
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+
+        temp_attribute_map: Dict[str, set] = defaultdict(set)
+
+        # building map with sets
+        for name, value in self.indexing_values:
+            temp_attribute_map[name].add(value)
+
+        # check against the attributes of the other object
+        for name, other_value in other.indexing_values:
+            if other_value in temp_attribute_map[name]:
+                return True
+
+        return False
         
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:

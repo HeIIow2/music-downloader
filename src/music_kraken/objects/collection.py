@@ -1,17 +1,15 @@
-from typing import List, Iterable, Dict, DefaultDict
+from typing import List, Iterable, Dict
 from collections import defaultdict
 
-from .source import SourceAttribute
 from .parents import DatabaseObject
-from ..utils import string_processing
 
 
 class Collection:
     """
-    This an class for the iterables
+    This a class for the iterables
     like tracklist or discography
     """
-    _data: List[SourceAttribute]
+    _data: List[DatabaseObject]
 
     _by_url: dict
     _by_attribute: dict
