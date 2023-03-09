@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from .metadata import Mapping, MetadataAttribute
 from .parents import (
@@ -114,6 +114,13 @@ class Source(DatabaseObject, MetadataAttribute):
             return self.get_artist_metadata()
 
         return super().get_metadata()
+
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('url', self.url)
+        ]
 
     def __str__(self):
         return self.__repr__()

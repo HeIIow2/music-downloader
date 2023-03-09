@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Type, Dict
+from typing import List, Optional, Type, Dict, Tuple
 import pycountry
 
 from .metadata import (
@@ -11,6 +11,7 @@ from ..utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as LOGGER
 )
+from  ..utils.string_processing import unify
 from .parents import (
     DatabaseObject,
     MainObject
@@ -47,6 +48,7 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
             _id: str = None,
             dynamic: bool = False,
             title: str = None,
+            unified_title: str = None,
             isrc: str = None,
             length: int = None,
             tracksort: int = None,
@@ -65,6 +67,8 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
         # attributes
         self.title: str = title
+        self.unified_title: str = unified_title or unify(title)
+
         self.isrc: str = isrc
         self.length: int = length
         self.tracksort: int = tracksort or 0
@@ -128,6 +132,15 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
         """
         return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
 
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('title', self.unified_title),
+            ('isrc', self.isrc.strip()),
+            *[('url', source.url) for source in self.source_list]
+        ]
+
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
             id3Mapping.TITLE: [self.title],
@@ -181,10 +194,10 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
             self,
             _id: str = None,
             title: str = None,
+            unified_title: str = None,
             language: pycountry.Languages = None,
             date: ID3Timestamp = None,
             barcode: str = None,
-            is_split: bool = False,
             albumsort: int = None,
             dynamic: bool = False,
             source_list: List[Source] = None,
@@ -198,6 +211,8 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.title: str = title
+        self.unified_title: str = unified_title or unify(self.title)
+
         self.album_status: AlbumStatus = album_status
         self.album_type: AlbumType = album_type
         self.language: pycountry.Languages = language
@@ -236,6 +251,15 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
 
         self.source_list = source_list or []
 
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('title', self.unified_title),
+            ('barcode', self.barcode),
+            *[('url', source.url) for source in self.source_list]
+        ]
+
     def __repr__(self):
         return f"Album(\"{self.title}\")"
 
@@ -250,8 +274,9 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
         :return:
         """
 
-        tracksort_map: Dict[int, Song] = {song.tracksort: song for song in self.song_collection if
-                                          song.tracksort is not None}
+        tracksort_map: Dict[int, Song] = {
+            song.tracksort: song for song in self.song_collection if song.tracksort is not None
+        }
 
         # place the songs, with set tracksort attribute according to it
         for tracksort, song in tracksort_map.items():
@@ -336,6 +361,7 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
             _id: str = None,
             dynamic: bool = False,
             name: str = None,
+            unified_name: str = None,
             source_list: List[Source] = None,
             feature_song_list: List[Song] = None,
             main_album_list: List[Album] = None,
@@ -350,6 +376,7 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.name: str = name
+        self.unified_name: str = unified_name or unify(self.name)
 
         """
         TODO implement album type and notes
@@ -359,7 +386,7 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
         """
         notes, generall genre, lyrics themes are attributes
         which are meant to only use in outputs to describe the object
-        i mean do as you want but there aint no strict rule about em so good luck
+        i mean do as you want but there is no strict rule about em so good luck
         """
         self.notes: FormattedText = notes or FormattedText()
         """
@@ -388,6 +415,14 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
         )
 
         self.source_list = source_list or []
+
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('name', self.unified_name),
+            *[('url', source.url) for source in self.source_list]
+        ]
 
     def __str__(self):
         string = self.name or ""
@@ -491,6 +526,7 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
             _id: str = None,
             dynamic: bool = False,
             name: str = None,
+            unified_name: str = None,
             album_list: List[Album] = None,
             current_artist_list: List[Artist] = None,
             source_list: List[Source] = None,
@@ -499,6 +535,7 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.name: str = name
+        self.unified_name: str = unified_name or unify(self.name)
 
         self.album_collection: Collection = Collection(
             data=album_list,
@@ -515,12 +552,20 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
         self.source_list = source_list or []
 
     @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('name', self.unified_name),
+            *[('url', source.url) for source in self.source_list]
+        ]
+
+    @property
     def album_list(self) -> List[Album]:
         return self.album_collection.copy()
 
     @property
     def current_artist_list(self) -> List[Artist]:
-        self.current_artist_collection.copy()
+        return self.current_artist_collection.copy()
         
     COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
     SIMPLE_ATTRIBUTES = ("name",)
