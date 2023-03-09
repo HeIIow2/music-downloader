@@ -20,7 +20,8 @@ from .source import (
     Source,
     SourceTypes,
     SourcePages,
-    SourceAttribute
+    SourceAttribute,
+    SourceCollection
 )
 from .formatted_text import FormattedText
 from .collection import Collection
@@ -35,7 +36,7 @@ All Objects dependent
 CountryTyping = type(list(pycountry.countries)[0])
 
 
-class Song(MainObject, SourceAttribute, MetadataAttribute):
+class Song(MainObject, MetadataAttribute):
     """
     Class representing a song object, with attributes id, mb_id, title, album_name, isrc, length,
     tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
@@ -77,31 +78,17 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
         self.tracksort: int = tracksort or 0
         self.genre: str = genre
 
-        self.target_collection: Collection = Collection(
-            data=target_list,
-            element_type=Target
-        )
+        self.source_collection: SourceCollection = SourceCollection(source_list)
 
-        self.lyrics_collection: Collection = Collection(
-            data=lyrics_list,
-            element_type=Lyrics
-        )
+        self.target_collection: Collection = Collection(data=target_list, element_type=Target)
 
-        self.album_collection: Collection = Collection(
-            data=album_list,
-            element_type=Album
-        )
+        self.lyrics_collection: Collection = Collection(data=lyrics_list, element_type=Lyrics)
 
-        self.main_artist_collection = Collection(
-            data=main_artist_list or [],
-            map_attributes=["title"],
-            element_type=Artist
-        )
-        self.feature_artist_collection = Collection(
-            data=feature_artist_list or [],
-            map_attributes=["title"],
-            element_type=Artist
-        )
+        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
+
+        self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
+
+        self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -176,11 +163,6 @@ class Song(MainObject, SourceAttribute, MetadataAttribute):
         return f"Song({self.title}) of Album({self.album.title}) from Artists({self.get_artist_credits()})"
 
     tracksort_str: List[Type['Album']] = property(fget=get_tracksort_str)
-    main_artist_list: List[Type['Artist']] = property(fget=lambda self: self.main_artist_collection.copy())
-    feature_artist_list: List[Type['Artist']] = property(fget=lambda self: self.feature_artist_collection.copy())
-
-    album_list: List[Type['Album']] = property(fget=lambda self: self.album_collection.copy())
-    lyrics_list: List[Type[Lyrics]] = property(fget=lambda self: self.lyrics_collection.copy())
 
 
 """
@@ -189,6 +171,9 @@ All objects dependent on Album
 
 
 class Album(MainObject, SourceAttribute, MetadataAttribute):
+    COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
+    SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
+
     def __init__(
             self,
             _id: str = None,
@@ -230,11 +215,9 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
         """
         self.albumsort: Optional[int] = albumsort
 
-        self.song_collection: Collection = Collection(
-            data=song_list or [],
-            map_attributes=["title"],
-            element_type=Song
-        )
+        self.source_collection: SourceCollection = SourceCollection(source_list)
+
+        self.song_collection: Collection = Collection(data=song_list, element_type=Song)
 
         self.artist_collection: Collection = Collection(
             data=artist_list or [],
@@ -338,15 +321,9 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
     def get_option_string(self) -> str:
         return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artist_collection])}"
 
-    label_list: List[Type['Label']] = property(fget=lambda self: self.label_collection.copy())
-    artist_list: List[Type['Artist']] = property(fget=lambda self: self.artist_collection.copy())
-    song_list: List[Song] = property(fget=lambda self: self.song_collection.copy())
     tracklist: List[Song] = property(fget=lambda self: self.song_collection.copy())
 
     copyright = property(fget=get_copyright)
-    
-    COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
-    SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
     
 
 """

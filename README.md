@@ -280,8 +280,8 @@ song_object = Song(
 
 
 
-If you just wanna start implementing, then just use the code example, I dont care.  
-For those who don't want any bugs and use it as intended *(which is reccomended, cuz I am only one person so there are defs bugs)* continue reading.
+If you just want to start implementing, then just use the code example, I don't care.  
+For those who don't want any bugs and use it as intended *(which is recommended, cuz I am only one person so there are defs bugs)* continue reading.
 
 ## Appending and Merging data
 

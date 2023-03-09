@@ -44,7 +44,13 @@ class Collection:
             self._attribute_to_object_map[name][value] = element
 
     def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
-        # if the element type has ben defide in the initializer it checks if the type maches
+        """
+        :param element:
+        :param merge_on_conflict:
+        :return:
+        """
+
+        # if the element type has been defined in the initializer it checks if the type matches
         if self.element_type is not None and isinstance(element, self.element_type):
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 

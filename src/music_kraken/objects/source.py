@@ -1,10 +1,10 @@
+from collections import defaultdict
 from enum import Enum
 from typing import List, Dict, Tuple
 
 from .metadata import Mapping, MetadataAttribute
-from .parents import (
-    DatabaseObject
-)
+from .parents import DatabaseObject
+from .collection import Collection
 
 
 class SourceTypes(Enum):
@@ -133,6 +133,25 @@ class Source(DatabaseObject, MetadataAttribute):
     homepage = property(fget=lambda self: SourcePages.get_homepage(self.page_enum))
 
 
+class SourceCollection(Collection):
+    def __init__(self, source_list: List[Source]):
+        super().__init__(data=source_list, element_type=Source)
+
+        self._page_to_source_list: Dict[SourcePages, List[Source]] = defaultdict(list)
+
+    def map_element(self, source: Source):
+        super().map_element(source)
+
+        self._page_to_source_list[source.page_enum].append(source)
+
+    def get_sources_from_page(self, source_page: SourcePages) -> List[Source]:
+        """
+        getting the sources for a specific page like
+        YouTube or musify
+        """
+        return self._page_to_source_list[source_page]
+
+
 class SourceAttribute(DatabaseObject):
     """
     This is a class that is meant to be inherited from.
@@ -194,12 +213,6 @@ class SourceAttribute(DatabaseObject):
         and the value is a List with all sources of according page
         """
         return self._source_dict
-    
-    def merge(self, other, override: bool = False):
-        super().merge(other, override)
-        
-        for source in other.source_list:
-            self.add_source(source=source)
 
     source_list: List[Source] = property(fget=get_source_list, fset=set_source_list)
     source_dict: Dict[object, List[Source]] = property(fget=get_source_dict)
