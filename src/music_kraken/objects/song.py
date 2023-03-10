@@ -219,19 +219,10 @@ class Album(MainObject, SourceAttribute, MetadataAttribute):
 
         self.song_collection: Collection = Collection(data=song_list, element_type=Song)
 
-        self.artist_collection: Collection = Collection(
-            data=artist_list or [],
-            map_attributes=["name"],
-            element_type=Artist
-        )
+        self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
 
-        self.label_collection: Collection = Collection(
-            data=label_list,
-            map_attributes=["name"],
-            element_type=Label
-        )
+        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
-        self.source_list = source_list or []
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -331,7 +322,10 @@ All objects dependent on Artist
 """
 
 
-class Artist(MainObject, SourceAttribute, MetadataAttribute):
+class Artist(MainObject, MetadataAttribute):
+    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
+    SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
+    
     def __init__(
             self,
             _id: str = None,
@@ -371,26 +365,14 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
         """
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
+        
+        self.source_collection: SourceCollection = SourceCollection(source_list)
 
-        self.feature_song_collection: Collection = Collection(
-            data=feature_song_list,
-            map_attributes=["title"],
-            element_type=Song
-        )
+        self.feature_song_collection: Collection = Collection(data=feature_song_list, element_type=Song)
 
-        self.main_album_collection: Collection = Collection(
-            data=main_album_list,
-            map_attributes=["title"],
-            element_type=Album
-        )
+        self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
 
-        self.label_collection: Collection = Collection(
-            data=label_list,
-            map_attributes=["name"],
-            element_type=Label
-        )
-
-        self.source_list = source_list or []
+        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -431,8 +413,9 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
                 continue
             album.albumsort = i + 1
 
-    def get_features(self) -> Album:
-        feature_release = Album(
+    @property
+    def feature_album(self) -> Album:
+        return Album(
             title="features",
             album_status=AlbumStatus.UNRELEASED,
             album_type=AlbumType.COMPILATION_ALBUM,
@@ -441,8 +424,6 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
             dynamic=True,
             song_list=self.feature_song_collection.copy()
         )
-
-        return feature_release
 
     def get_metadata(self) -> MetadataAttribute.Metadata:
         metadata = MetadataAttribute.Metadata({
@@ -472,23 +453,12 @@ class Artist(MainObject, SourceAttribute, MetadataAttribute):
 
         return collection
 
-    def get_discography(self) -> List[Album]:
+    @property
+    def discography(self) -> List[Album]:
         flat_copy_discography = self.main_album_collection.copy()
         flat_copy_discography.append(self.get_features())
 
         return flat_copy_discography
-
-    album_list: List[Album] = property(fget=lambda self: self.main_album_collection.copy())
-
-    complete_album_list: List[Album] = property(fget=get_discography)
-    discography: List[Album] = property(fget=get_discography)
-
-    feature_album: Album = property(fget=get_features)
-    song_list: List[Song] = property(fget=get_all_songs)
-    label_list: List[Type['Label']] = property(fget=lambda self: self.label_collection.copy())
-    
-    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
-    SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
 
 
 """
@@ -497,6 +467,9 @@ Label
 
 
 class Label(MainObject, SourceAttribute, MetadataAttribute):
+    COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
+    SIMPLE_ATTRIBUTES = ("name",)
+    
     def __init__(
             self,
             _id: str = None,
@@ -512,20 +485,12 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
 
         self.name: str = name
         self.unified_name: str = unified_name or unify(self.name)
+        
+        self.source_collection: SourceCollection = SourceCollection(source_list)
 
-        self.album_collection: Collection = Collection(
-            data=album_list,
-            map_attributes=["title"],
-            element_type=Album
-        )
+        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
 
-        self.current_artist_collection: Collection = Collection(
-            data=current_artist_list,
-            map_attributes=["name"],
-            element_type=Artist
-        )
-
-        self.source_list = source_list or []
+        self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -534,14 +499,3 @@ class Label(MainObject, SourceAttribute, MetadataAttribute):
             ('name', self.unified_name),
             *[('url', source.url) for source in self.source_list]
         ]
-
-    @property
-    def album_list(self) -> List[Album]:
-        return self.album_collection.copy()
-
-    @property
-    def current_artist_list(self) -> List[Artist]:
-        return self.current_artist_collection.copy()
-        
-    COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
-    SIMPLE_ATTRIBUTES = ("name",)
