@@ -2,7 +2,7 @@ from typing import (
     List
 )
 
-from ..database import (
+from ..objects import (
     Song,
     Source,
     Album,

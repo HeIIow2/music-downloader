@@ -20,7 +20,6 @@ from .source import (
     Source,
     SourceTypes,
     SourcePages,
-    SourceAttribute,
     SourceCollection
 )
 from .formatted_text import FormattedText
@@ -462,7 +461,7 @@ Label
 """
 
 
-class Label(MainObject, SourceAttribute):
+class Label(MainObject):
     COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
     SIMPLE_ATTRIBUTES = ("name",)
     

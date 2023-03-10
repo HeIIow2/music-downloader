@@ -47,7 +47,7 @@ class SourcePages(Enum):
         return homepage_map[attribute]
 
 
-class Source(DatabaseObject, MetadataAttribute):
+class Source(DatabaseObject):
     """
     create somehow like that
     ```python
@@ -95,14 +95,14 @@ class Source(DatabaseObject, MetadataAttribute):
         if url.startswith("https://twitter"):
             return cls(SourcePages.TWITTER, url)
 
-    def get_song_metadata(self) -> MetadataAttribute.Metadata:
-        return MetadataAttribute.Metadata({
+    def get_song_metadata(self) -> Metadata:
+        return Metadata({
             Mapping.FILE_WEBPAGE_URL: [self.url],
             Mapping.SOURCE_WEBPAGE_URL: [self.homepage]
         })
 
-    def get_artist_metadata(self) -> MetadataAttribute.Metadata:
-        return MetadataAttribute.Metadata({
+    def get_artist_metadata(self) -> Metadata:
+        return Metadata({
             Mapping.ARTIST_WEBPAGE_URL: [self.url]
         })
 
@@ -136,10 +136,11 @@ class Source(DatabaseObject, MetadataAttribute):
 
 class SourceCollection(Collection):
     def __init__(self, source_list: List[Source]):
-        super().__init__(data=source_list, element_type=Source)
-
         self._page_to_source_list: Dict[SourcePages, List[Source]] = defaultdict(list)
 
+        super().__init__(data=source_list, element_type=Source)
+
+        
     def map_element(self, source: Source):
         super().map_element(source)
 

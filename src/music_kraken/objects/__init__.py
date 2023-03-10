@@ -15,7 +15,6 @@ ID3Timestamp = metadata.ID3Timestamp
 Source = source.Source
 SourceTypes = source.SourceTypes
 SourcePages = source.SourcePages
-SourceAttribute = source.SourceAttribute
 
 Song = song.Song
 Artist = song.Artist

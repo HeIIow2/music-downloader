@@ -18,7 +18,7 @@ class Lyrics(DatabaseObject):
             source_list: List[Source] = None,
             **kwargs
     ) -> None:
-        DatabaseObject.__init__(_id=_id, dynamic=dynamic)
+        DatabaseObject.__init__(self, _id=_id, dynamic=dynamic)
 
         self.text: FormattedText = text
         self.language: pycountry.Languages = language

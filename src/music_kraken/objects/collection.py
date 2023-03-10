@@ -34,7 +34,8 @@ class Collection:
         """
         self._attribute_to_object_map: Dict[str, Dict[object, DatabaseObject]] = defaultdict(dict)
         
-        self.extend(data, merge_on_conflict=True)
+        if data is not None:
+            self.extend(data, merge_on_conflict=True)
 
     def sort(self, reverse: bool = False, **kwargs):
         self._data.sort(reverse=reverse, **kwargs)
@@ -51,7 +52,7 @@ class Collection:
         """
 
         # if the element type has been defined in the initializer it checks if the type matches
-        if self.element_type is not None and isinstance(element, self.element_type):
+        if self.element_type is not None and not isinstance(element, self.element_type):
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
 
         for name, value in element.indexing_values:
