@@ -84,7 +84,8 @@ class Collection:
 
         return self._data[item]
 
-    def copy(self) -> List:
+    @property
+    def shallow_list(self) -> List[DatabaseObject]:
         """
         returns a shallow copy of the data list
         """

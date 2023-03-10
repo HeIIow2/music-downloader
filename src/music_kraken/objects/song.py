@@ -5,7 +5,7 @@ import pycountry
 from .metadata import (
     Mapping as id3Mapping,
     ID3Timestamp,
-    MetadataAttribute
+    Metadata
 )
 from ..utils.shared import (
     MUSIC_DIR,
@@ -36,12 +36,10 @@ All Objects dependent
 CountryTyping = type(list(pycountry.countries)[0])
 
 
-class Song(MainObject, MetadataAttribute):
+class Song(MainObject):
     """
     Class representing a song object, with attributes id, mb_id, title, album_name, isrc, length,
     tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
-
-    Inherits from DatabaseObject, SourceAttribute, and MetadataAttribute classes.
     """
 
     COLLECTION_ATTRIBUTES = ("lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection", "source_collection")
@@ -65,9 +63,6 @@ class Song(MainObject, MetadataAttribute):
             feature_artist_list: List[Type['Artist']] = None,
             **kwargs
     ) -> None:
-        """
-        Initializes the Song object with the following attributes:
-        """
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
         # attributes
         self.title: str = title
@@ -89,6 +84,33 @@ class Song(MainObject, MetadataAttribute):
         self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
 
         self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
+
+    @property
+    def indexing_values(self) -> List[Tuple[str, object]]:
+        return [
+            ('id', self.id),
+            ('title', self.unified_title),
+            ('isrc', self.isrc.strip()),
+            *[('url', source.url) for source in self.source_list]
+        ]
+        
+    @property
+    def metadata(self) -> Metadata:
+        metadata = Metadata({
+            id3Mapping.TITLE: [self.title],
+            id3Mapping.ISRC: [self.isrc],
+            id3Mapping.LENGTH: [self.length],
+            id3Mapping.GENRE: [self.genre],
+            id3Mapping.TRACKNUMBER: [self.tracksort_str]
+        })
+
+        metadata.merge_many([s.get_song_metadata() for s in self.source_list])
+        metadata.merge_many([a.metadata for a in self.album_collection])
+        metadata.merge_many([a.metadata for a in self.main_artist_collection])
+        metadata.merge_many([a.metadata for a in self.feature_artist_collection])
+        metadata.merge_many([lyrics.metadata for lyrics in self.lyrics_collection])
+
+        return metadata
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -114,38 +136,13 @@ class Song(MainObject, MetadataAttribute):
     def __repr__(self) -> str:
         return f"Song(\"{self.title}\")"
 
-    def get_tracksort_str(self):
+    @property
+    def tracksort_str(self) -> str:
         """
         if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
         :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
         """
         return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
-
-    @property
-    def indexing_values(self) -> List[Tuple[str, object]]:
-        return [
-            ('id', self.id),
-            ('title', self.unified_title),
-            ('isrc', self.isrc.strip()),
-            *[('url', source.url) for source in self.source_list]
-        ]
-
-    def get_metadata(self) -> MetadataAttribute.Metadata:
-        metadata = MetadataAttribute.Metadata({
-            id3Mapping.TITLE: [self.title],
-            id3Mapping.ISRC: [self.isrc],
-            id3Mapping.LENGTH: [self.length],
-            id3Mapping.GENRE: [self.genre],
-            id3Mapping.TRACKNUMBER: [self.tracksort_str]
-        })
-
-        metadata.merge_many([s.get_song_metadata() for s in self.source_list])
-        metadata.merge_many([a.metadata for a in self.album_collection])
-        metadata.merge_many([a.metadata for a in self.main_artist_collection])
-        metadata.merge_many([a.metadata for a in self.feature_artist_collection])
-        metadata.merge_many([lyrics.metadata for lyrics in self.lyrics_collection])
-
-        return metadata
 
     def get_options(self) -> list:
         """
@@ -162,15 +159,13 @@ class Song(MainObject, MetadataAttribute):
     def get_option_string(self) -> str:
         return f"Song({self.title}) of Album({self.album.title}) from Artists({self.get_artist_credits()})"
 
-    tracksort_str: List[Type['Album']] = property(fget=get_tracksort_str)
-
 
 """
 All objects dependent on Album
 """
 
 
-class Album(MainObject, MetadataAttribute):
+class Album(MainObject):
     COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
     SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
 
@@ -232,6 +227,16 @@ class Album(MainObject, MetadataAttribute):
             ('barcode', self.barcode),
             *[('url', source.url) for source in self.source_list]
         ]
+        
+    @property
+    def metadata(self) -> Metadata:
+        return Metadata({
+            id3Mapping.ALBUM: [self.title],
+            id3Mapping.COPYRIGHT: [self.copyright],
+            id3Mapping.LANGUAGE: [self.iso_639_2_language],
+            id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
+            id3Mapping.DATE: [self.date.timestamp]
+        })
 
     def __repr__(self):
         return f"Album(\"{self.title}\")"
@@ -268,16 +273,10 @@ class Album(MainObject, MetadataAttribute):
                 continue
             song.tracksort = i + 1
 
-    def get_metadata(self) -> MetadataAttribute.Metadata:
-        return MetadataAttribute.Metadata({
-            id3Mapping.ALBUM: [self.title],
-            id3Mapping.COPYRIGHT: [self.copyright],
-            id3Mapping.LANGUAGE: [self.iso_639_2_language],
-            id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
-            id3Mapping.DATE: [self.date.timestamp]
-        })
 
-    def get_copyright(self) -> str:
+
+    @property
+    def copyright(self) -> str:
         if self.date is None:
             return ""
         if self.date.has_year or len(self.label_collection) == 0:
@@ -311,10 +310,6 @@ class Album(MainObject, MetadataAttribute):
 
     def get_option_string(self) -> str:
         return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artist_collection])}"
-
-    tracklist: List[Song] = property(fget=lambda self: self.song_collection.copy())
-
-    copyright = property(fget=get_copyright)
     
 
 """
@@ -322,7 +317,7 @@ All objects dependent on Artist
 """
 
 
-class Artist(MainObject, MetadataAttribute):
+class Artist(MainObject):
     COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
     SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
     
@@ -381,6 +376,15 @@ class Artist(MainObject, MetadataAttribute):
             ('name', self.unified_name),
             *[('url', source.url) for source in self.source_list]
         ]
+        
+    @property
+    def metadata(self) -> Metadata:
+        metadata = Metadata({
+            id3Mapping.ARTIST: [self.name]
+        })
+        metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
+
+        return metadata
 
     def __str__(self):
         string = self.name or ""
@@ -425,14 +429,6 @@ class Artist(MainObject, MetadataAttribute):
             song_list=self.feature_song_collection.copy()
         )
 
-    def get_metadata(self) -> MetadataAttribute.Metadata:
-        metadata = MetadataAttribute.Metadata({
-            id3Mapping.ARTIST: [self.name]
-        })
-        metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
-
-        return metadata
-
     def get_options(self) -> list:
         options = [self]
         options.extend(self.main_album_collection)
@@ -466,7 +462,7 @@ Label
 """
 
 
-class Label(MainObject, SourceAttribute, MetadataAttribute):
+class Label(MainObject, SourceAttribute):
     COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
     SIMPLE_ATTRIBUTES = ("name",)
     

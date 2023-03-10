@@ -2,7 +2,7 @@ from collections import defaultdict
 from enum import Enum
 from typing import List, Dict, Tuple
 
-from .metadata import Mapping, MetadataAttribute
+from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
 from .collection import Collection
 
@@ -106,14 +106,15 @@ class Source(DatabaseObject, MetadataAttribute):
             Mapping.ARTIST_WEBPAGE_URL: [self.url]
         })
 
-    def get_metadata(self) -> MetadataAttribute.Metadata:
+    @property
+    def metadata(self) -> Metadata:
         if self.type_enum == SourceTypes.SONG:
             return self.get_song_metadata()
 
         if self.type_enum == SourceTypes.ARTIST:
             return self.get_artist_metadata()
 
-        return super().get_metadata()
+        return super().metadata
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:

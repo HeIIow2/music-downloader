@@ -5,6 +5,7 @@ import uuid
 from ..utils.shared import (
     SONG_LOGGER as LOGGER
 )
+from .metadata import Metadata
 
 
 class DatabaseObject:
@@ -68,6 +69,10 @@ class DatabaseObject:
 
             if override or getattr(self, simple_attribute) is None:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
+
+    @property
+    def metadata(self) -> Metadata:
+        return Metadata()
 
 
 class MainObject(DatabaseObject):

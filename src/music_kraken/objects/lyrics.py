@@ -3,12 +3,12 @@ from typing import List
 import pycountry
 
 from .parents import DatabaseObject
-from .source import SourceAttribute, Source
-from .metadata import MetadataAttribute
+from .source import Source, SourceCollection
+from .metadata import Metadata
 from .formatted_text import FormattedText
 
 
-class Lyrics(DatabaseObject, SourceAttribute, MetadataAttribute):
+class Lyrics(DatabaseObject):
     def __init__(
             self,
             text: FormattedText,
@@ -23,5 +23,4 @@ class Lyrics(DatabaseObject, SourceAttribute, MetadataAttribute):
         self.text: FormattedText = text
         self.language: pycountry.Languages = language
 
-        if source_list is not None:
-            self.source_list = source_list
+        self.source_collection: SourceCollection = SourceCollection(source_list)
