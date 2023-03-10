@@ -11,7 +11,7 @@ from ..utils.shared import (
     MUSIC_DIR,
     DATABASE_LOGGER as LOGGER
 )
-from  ..utils.string_processing import unify
+from ..utils.string_processing import unify
 from .parents import (
     DatabaseObject,
     MainObject
@@ -33,6 +33,7 @@ All Objects dependent
 """
 
 CountryTyping = type(list(pycountry.countries)[0])
+OPTION_STRING_DELIMITER = " | "
 
 
 class Song(MainObject):
@@ -41,7 +42,9 @@ class Song(MainObject):
     tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
     """
 
-    COLLECTION_ATTRIBUTES = ("lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection", "source_collection")
+    COLLECTION_ATTRIBUTES = (
+        "lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection",
+        "source_collection")
     SIMPLE_ATTRIBUTES = ("title", "unified_title", "isrc", "length", "tracksort", "genre")
 
     def __init__(
@@ -73,15 +76,10 @@ class Song(MainObject):
         self.genre: str = genre
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-
         self.target_collection: Collection = Collection(data=target_list, element_type=Target)
-
         self.lyrics_collection: Collection = Collection(data=lyrics_list, element_type=Lyrics)
-
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-
         self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
-
         self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
 
     @property
@@ -92,7 +90,7 @@ class Song(MainObject):
             ('isrc', self.isrc.strip()),
             *[('url', source.url) for source in self.source_collection]
         ]
-        
+
     @property
     def metadata(self) -> Metadata:
         metadata = Metadata({
@@ -110,11 +108,6 @@ class Song(MainObject):
         metadata.merge_many([lyrics.metadata for lyrics in self.lyrics_collection])
 
         return metadata
-
-    def __eq__(self, other):
-        if type(other) != type(self):
-            return False
-        return self.id == other.id
 
     def get_artist_credits(self) -> str:
         main_artists = ", ".join([artist.name for artist in self.main_artist_collection])
@@ -136,6 +129,13 @@ class Song(MainObject):
         return f"Song(\"{self.title}\")"
 
     @property
+    def option_string(self) -> str:
+        return f"{self.__repr__()} " \
+               f"from Album({OPTION_STRING_DELIMITER.join(album.title for album in self.album_collection)}) " \
+               f"by Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.main_artist_collection)}) " \
+               f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
+
+    @property
     def tracksort_str(self) -> str:
         """
         if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
@@ -143,20 +143,18 @@ class Song(MainObject):
         """
         return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
 
-    def get_options(self) -> list:
+    @property
+    def option_list(self) -> list:
         """
         Return a list of related objects including the song object, album object, main artist objects, and feature artist objects.
 
         :return: a list of objects that are related to the Song object
         """
-        options = self.main_artist_list.copy()
+        options = self.main_artist_collection.shallow_list
         options.extend(self.feature_artist_collection)
         options.extend(self.album_collection)
         options.append(self)
         return options
-
-    def get_option_string(self) -> str:
-        return f"Song({self.title}) of Album({self.album.title}) from Artists({self.get_artist_credits()})"
 
 
 """
@@ -210,13 +208,9 @@ class Album(MainObject):
         self.albumsort: Optional[int] = albumsort
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-
         self.song_collection: Collection = Collection(data=song_list, element_type=Song)
-
         self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
-
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
-
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -226,7 +220,7 @@ class Album(MainObject):
             ('barcode', self.barcode),
             *[('url', source.url) for source in self.source_collection]
         ]
-        
+
     @property
     def metadata(self) -> Metadata:
         return Metadata({
@@ -239,6 +233,12 @@ class Album(MainObject):
 
     def __repr__(self):
         return f"Album(\"{self.title}\")"
+
+    @property
+    def option_string(self) -> str:
+        return f"{self.__repr__()} " \
+               f"by Artist({OPTION_STRING_DELIMITER.join([artist.name for artist in self.artist_collection])}) " \
+               f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     def update_tracksort(self):
         """
@@ -272,8 +272,6 @@ class Album(MainObject):
                 continue
             song.tracksort = i + 1
 
-
-
     @property
     def copyright(self) -> str:
         if self.date is None:
@@ -300,16 +298,16 @@ class Album(MainObject):
         """
         return len(self.artist_collection) > 1
 
-    def get_options(self) -> list:
-        options = self.artist_collection.copy()
+    @property
+    def option_list(self) -> list:
+        options = self.artist_collection.shallow_list
         options.append(self)
         options.extend(self.song_collection)
 
         return options
 
-    def get_option_string(self) -> str:
-        return f"Album: {self.title}; Artists {', '.join([i.name for i in self.artist_collection])}"
-    
+
+
 
 """
 All objects dependent on Artist
@@ -319,7 +317,7 @@ All objects dependent on Artist
 class Artist(MainObject):
     COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
     SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
-    
+
     def __init__(
             self,
             _id: str = None,
@@ -359,13 +357,10 @@ class Artist(MainObject):
         """
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
-        
+
         self.source_collection: SourceCollection = SourceCollection(source_list)
-
         self.feature_song_collection: Collection = Collection(data=feature_song_list, element_type=Song)
-
         self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
-
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
     @property
@@ -375,7 +370,7 @@ class Artist(MainObject):
             ('name', self.unified_name),
             *[('url', source.url) for source in self.source_collection]
         ]
-        
+
     @property
     def metadata(self) -> Metadata:
         metadata = Metadata({
@@ -394,6 +389,11 @@ class Artist(MainObject):
 
     def __repr__(self):
         return f"Artist(\"{self.name}\")"
+
+    @property
+    def option_string(self) -> str:
+        return f"{self.__repr__()} " \
+               f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
     def country_string(self):
@@ -428,14 +428,12 @@ class Artist(MainObject):
             song_list=self.feature_song_collection.copy()
         )
 
-    def get_options(self) -> list:
+    @property
+    def option_list(self) -> list:
         options = [self]
         options.extend(self.main_album_collection)
         options.extend(self.feature_song_collection)
         return options
-
-    def get_option_string(self) -> str:
-        return f"Artist: {self.name}"
 
     def get_all_songs(self) -> List[Song]:
         """
@@ -464,7 +462,7 @@ Label
 class Label(MainObject):
     COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
     SIMPLE_ATTRIBUTES = ("name",)
-    
+
     def __init__(
             self,
             _id: str = None,
@@ -480,7 +478,7 @@ class Label(MainObject):
 
         self.name: str = name
         self.unified_name: str = unified_name or unify(self.name)
-        
+
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)

@@ -19,7 +19,7 @@ class DatabaseObject:
             https://docs.python.org/3/library/uuid.html
             """
             _id = str(uuid.uuid4())
-            LOGGER.info(f"id for {type(self).__name__} isn't set. Setting to {_id}")
+            LOGGER.debug(f"id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
         self.id: Optional[str] = _id
@@ -74,6 +74,14 @@ class DatabaseObject:
     def metadata(self) -> Metadata:
         return Metadata()
 
+    @property
+    def option_list(self) -> List[Type['DatabaseObject']]:
+        return [self]
+
+    @property
+    def option_string(self) -> str:
+        return self.__repr__()
+
 
 class MainObject(DatabaseObject):
     """
@@ -91,12 +99,3 @@ class MainObject(DatabaseObject):
         DatabaseObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.additional_arguments: dict = kwargs
-
-    def get_options(self) -> list:
-        return []
-
-    def get_option_string(self) -> str:
-        return ""
-
-    options = property(fget=get_options)
-    options_str = property(fget=get_option_string)

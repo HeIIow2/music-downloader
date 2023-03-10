@@ -209,10 +209,10 @@ Label }o--o{ Artist : LabelSong
 
 ```
 
-Looks way more managebal, doesn't it? 
+Looks way more manageable, doesn't it? 
 
 The reason every relation here is a `n:m` *(many to many)* relation is not, that it makes sense in the aspekt of modeling reality, but to be able to put data from many Sources in the same Data Model.  
-Every Service models Data a bit different, and projecting a one to many relationship to a many to many relationship without data loss is easy. The other way around it is basically impossible
+Every Service models Data a bit different, and projecting a one-to-many relationship to a many to many relationship without data loss is easy. The other way around it is basically impossible
 
 ## Data Objects
 
@@ -222,60 +222,68 @@ Every Service models Data a bit different, and projecting a one to many relation
 
 ```python
 # importing the libraries I build on 
+from music_kraken import objects
+
 import pycountry
 
-# importing the custom dataclasses
-from music_kraken import (
-    Song,
-    Lyrics,
-    Target,
-    Source,
-    Album,
-    Artist,
 
-    # the custom date class
-    ID3Timestamp,
-
-    # the enums (I will elaborate on later)
-    SourcePages,
-    SourceTypes
-)
-
-
-song_object = Song(
+song = objects.Song(
     genre="HS Core",
     title="Vein Deep in the Solution",
     length=666,
     isrc="US-S1Z-99-00001",
     tracksort=2,
-    target=Target(file="song.mp3", path="~/Music"),
-    lyrics=[
-        Lyrics(text="these are some depressive lyrics", language="en"),
-        Lyrics(text="test", language="en")
+    target=[
+        objects.Target(file="song.mp3", path="example")
     ],
-    sources=[
-        Source(SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
-        Source(SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
+    lyrics_list=[
+        objects.Lyrics(text="these are some depressive lyrics", language="en"),
+        objects.Lyrics(text="Dies sind depressive Lyrics", language="de")
     ],
-    album=Album(
-        title="One Final Action",
-        date=ID3Timestamp(year=1986, month=3, day=1),
-        language=pycountry.languages.get(alpha_2="en"),
-        label="cum productions",
-        sources=[
-            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
-        ]
-    ),
+    source_list=[
+        objects.Source(objects.SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
+        objects.Source(objects.SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
+    ],
+    album_list=[
+        objects.Album(
+            title="One Final Action",
+            date=objects.ID3Timestamp(year=1986, month=3, day=1),
+            language=pycountry.languages.get(alpha_2="en"),
+            label_list=[
+                objects.Label(name="an album label")
+            ],
+            source_list=[
+                    objects.Source(objects.SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
+                ]
+        ),
+    ],
     main_artist_list=[
-        Artist(
+        objects.Artist(
             name="I'm in a coffin",
-            sources=[
-                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727")
+            source_list=[
+                objects.Source(
+                    objects.SourcePages.ENCYCLOPAEDIA_METALLUM,
+                    "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727"
+                    )
+            ]
+        ),
+        objects.Artist(name="some_split_artist")
+    ],
+    feature_artist_list=[
+        objects.Artist(
+            name="Ruffiction",
+            label_list=[
+                objects.Label(name="Ruffiction Productions")
             ]
         )
     ],
-    feature_artist_list=[Artist(name="Rick Astley")],
 )
+
+print(song.option_string)
+for album in song.album_collection:
+    print(album.option_string)
+for artist in song.main_artist_collection:
+    print(artist.option_string)
 ```
 
 
