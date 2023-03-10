@@ -348,7 +348,7 @@ class Artist(MainObject):
         self.country: CountryTyping = country
         self.formed_in: ID3Timestamp = formed_in
         """
-        notes, generall genre, lyrics themes are attributes
+        notes, general genre, lyrics themes are attributes
         which are meant to only use in outputs to describe the object
         i mean do as you want but there is no strict rule about em so good luck
         """
