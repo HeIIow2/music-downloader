@@ -170,7 +170,7 @@ All objects dependent on Album
 """
 
 
-class Album(MainObject, SourceAttribute, MetadataAttribute):
+class Album(MainObject, MetadataAttribute):
     COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
     SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
 
