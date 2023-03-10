@@ -57,7 +57,7 @@ class Song(MainObject):
             source_list: List[Source] = None,
             target_list: List[Target] = None,
             lyrics_list: List[Lyrics] = None,
-            album_list: Type['Album'] = None,
+            album_list: List[Type['Album']] = None,
             main_artist_list: List[Type['Artist']] = None,
             feature_artist_list: List[Type['Artist']] = None,
             **kwargs
@@ -90,7 +90,7 @@ class Song(MainObject):
             ('id', self.id),
             ('title', self.unified_title),
             ('isrc', self.isrc.strip()),
-            *[('url', source.url) for source in self.source_list]
+            *[('url', source.url) for source in self.source_collection]
         ]
         
     @property
@@ -103,7 +103,7 @@ class Song(MainObject):
             id3Mapping.TRACKNUMBER: [self.tracksort_str]
         })
 
-        metadata.merge_many([s.get_song_metadata() for s in self.source_list])
+        metadata.merge_many([s.get_song_metadata() for s in self.source_collection])
         metadata.merge_many([a.metadata for a in self.album_collection])
         metadata.merge_many([a.metadata for a in self.main_artist_collection])
         metadata.merge_many([a.metadata for a in self.feature_artist_collection])
@@ -179,7 +179,7 @@ class Album(MainObject):
             albumsort: int = None,
             dynamic: bool = False,
             source_list: List[Source] = None,
-            artist_list: list = None,
+            artist_list: List[Type['Artist']] = None,
             song_list: List[Song] = None,
             album_status: AlbumStatus = None,
             album_type: AlbumType = None,
@@ -224,7 +224,7 @@ class Album(MainObject):
             ('id', self.id),
             ('title', self.unified_title),
             ('barcode', self.barcode),
-            *[('url', source.url) for source in self.source_list]
+            *[('url', source.url) for source in self.source_collection]
         ]
         
     @property
@@ -373,7 +373,7 @@ class Artist(MainObject):
         return [
             ('id', self.id),
             ('name', self.unified_name),
-            *[('url', source.url) for source in self.source_list]
+            *[('url', source.url) for source in self.source_collection]
         ]
         
     @property
@@ -381,7 +381,7 @@ class Artist(MainObject):
         metadata = Metadata({
             id3Mapping.ARTIST: [self.name]
         })
-        metadata.merge_many([s.get_artist_metadata() for s in self.source_list])
+        metadata.merge_many([s.get_artist_metadata() for s in self.source_collection])
 
         return metadata
 
@@ -451,7 +451,7 @@ class Artist(MainObject):
     @property
     def discography(self) -> List[Album]:
         flat_copy_discography = self.main_album_collection.copy()
-        flat_copy_discography.append(self.get_features())
+        flat_copy_discography.append(self.feature_album)
 
         return flat_copy_discography
 
@@ -482,9 +482,7 @@ class Label(MainObject):
         self.unified_name: str = unified_name or unify(self.name)
         
         self.source_collection: SourceCollection = SourceCollection(source_list)
-
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-
         self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
 
     @property
@@ -492,5 +490,5 @@ class Label(MainObject):
         return [
             ('id', self.id),
             ('name', self.unified_name),
-            *[('url', source.url) for source in self.source_list]
+            *[('url', source.url) for source in self.source_collection]
         ]
