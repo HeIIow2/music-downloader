@@ -306,15 +306,28 @@ flowchart TD
     exist("""
 <b>Check if music_object already exists.</b>
 <hr>
-Gets all indexing values with <code>music_object.indices</code>.
-If any returned value exists in <code>Collection.object_map</code>, 
+Gets all indexing values with <code>music_object.indexing_values</code>.
+If any returned value exists in <code>Collection._attribute_to_object_map</code>, 
 the music_object exists
     """)
 
-    subgraph merge["Merge the object with the already existing one."]
+    subgraph merge["Merging"]
+
+    _merge("""merges the passed in object in the already 
+    existing whith <code>existing.merge(new)</code>""")
+
+    _map("""In case a new source or something simmilar
+    has been addet, it maps the existing object again.
+    """)
+
+    return
+
+    _merge --> _map --> return
+
     end
 
-    subgraph add["Adding the object to the collection."]
+    subgraph add["Adding"]
+
     end
 
     exist-->|"if it doesn't exist"|add
@@ -329,9 +342,9 @@ the music_object exists
 
 #### Song
 
-So as you can see, the probaply most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
+So as you can see, the probably most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
 
-It has handfull attributes, where half of em are self explanatory, like `title` or `genre`. The ones like `isrc` are only relevant to you, if you know what it is, so I won't elaborate on it.
+It has handful attributes, where half of em are self-explanatory, like `title` or `genre`. The ones like `isrc` are only relevant to you, if you know what it is, so I won't elaborate on it.
 
 Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
 
@@ -341,7 +354,7 @@ For multiple Reasons I don't use the default `datetime.datetime` class.
 
 The most important reason is, that you need to pass in at least year, month and day. For every other values there are default values, that are indistinguishable from values that are directly passed in. But I need optional values. The ID3 standart allows default values. Additionally `datetime.datetime` is immutable, thus I can't inherint all the methods. Sorry.
 
-Anyways you can create those custom objects easily.
+Anyway you can create those custom objects easily.
 
 ```python
 from music_kraken import ID3Timestamp

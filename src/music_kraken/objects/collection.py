@@ -59,7 +59,10 @@ class Collection:
             if value in self._attribute_to_object_map[name]:
                 # if the object does already exist
                 # thus merging and don't add it afterwards
-                self._attribute_to_object_map[name][value].merge(element)
+                existing_object = self._attribute_to_object_map[name][value]
+                existing_object.merge(element)
+                # in case any relevant data has been added (e.g. it remaps the old object)
+                self.map_element(existing_object)
                 return
 
         self._data.append(element)
