@@ -1,15 +1,5 @@
 import music_kraken
-from music_kraken import (
-    Song,
-    Lyrics,
-    Target,
-    Source,
-    Album,
-    Artist,
-    ID3Timestamp,
-    SourcePages,
-    cache
-)
+from music_kraken import objects
 
 from music_kraken.tagging import (
     AudioMetadata,
