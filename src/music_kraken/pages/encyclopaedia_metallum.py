@@ -211,7 +211,6 @@ class EncyclopaediaMetallum(Page):
         """
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
 
-
         # make the request
         r = cls.API_SESSION.get(discography_url.format(ma_artist_id))
         if r.status_code != 200:
@@ -237,15 +236,15 @@ class EncyclopaediaMetallum(Page):
             except ValueError():
                 pass
 
-            artist.main_album_collection.append(Album(
-                id_=album_id,
-                title=album_name,
-                album_type=album_type,
-                date=date_obj,
-                source_list=[
-                    Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
-                ]
-            ))
+            artist.main_album_collection.append(
+                Album(
+                    id_=album_id,
+                    title=album_name,
+                    album_type=album_type,
+                    date=date_obj,
+                    source_list=[Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)]
+                )
+            )
 
         if not flat:
             for album in artist.main_album_collection:
@@ -346,9 +345,13 @@ class EncyclopaediaMetallum(Page):
                     label_url = None
                     if label_anchor is not None:
                         label_url = label_anchor.get("href")
-                        print(label_url)
+                        label_id = None
+                        if type(label_url) is str and "/" in label_url:
+                            label_id = label_url.split("/")[-1]
                         
-                        artist.label_collection.append(                            Label(
+                        artist.label_collection.append(
+                            Label(
+                                _id=label_id,
                                 name=label_name,
                                 source_list=[
                                     Source(cls.SOURCE_TYPE, label_url)
@@ -378,7 +381,7 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
-        source_list = artist.get_sources_from_page(cls.SOURCE_TYPE)
+        source_list = artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
             return artist
 
@@ -412,7 +415,7 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
-        source_list = album.get_sources_from_page(cls.SOURCE_TYPE)
+        source_list = album.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
             return album
         
@@ -458,33 +461,21 @@ class EncyclopaediaMetallum(Page):
                 minutes, seconds = duration_stamp.split(":")
                 length = (int(minutes) * 60 + int(seconds))*1000 # in milliseconds
 
-            track: Song = album.song_collection.get_object_with_source(track_id) or album.song_collection.get_object_with_attribute("title", title)
-            
-            if track is not None:
-                track.add_source(Source(cls.SOURCE_TYPE, track_id))
-                if length is not None:
-                    track.length = length
-                track.tracksort = track_sort
-                continue
-
-            
-            track = Song(
-                id_=track_id,
-                title=title,
-                length=length,
-                tracksort=track_sort,
-                source_list=[
-                    Source(cls.SOURCE_TYPE, track_id)
-                ]
+            album.song_collection.append(
+                Song(
+                    id_=track_id,
+                    title=title,
+                    length=length,
+                    tracksort=track_sort,
+                    source_list=[Source(cls.SOURCE_TYPE, track_id)]
+                )
             )
-            
-            album.song_collection.append(track)
 
         return album
 
     @classmethod
     def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
-        source_list = song.get_sources_from_page(cls.SOURCE_TYPE)
+        source_list = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(source_list) == 0:
             return song
 

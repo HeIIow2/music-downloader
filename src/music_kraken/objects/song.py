@@ -87,7 +87,7 @@ class Song(MainObject):
         return [
             ('id', self.id),
             ('title', self.unified_title),
-            ('isrc', self.isrc.strip()),
+            ('isrc', self.isrc),
             *[('url', source.url) for source in self.source_collection]
         ]
 

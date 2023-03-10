@@ -42,6 +42,9 @@ class Collection:
 
     def map_element(self, element: DatabaseObject):
         for name, value in element.indexing_values:
+            if value is None:
+                continue
+
             self._attribute_to_object_map[name][value] = element
 
     def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
@@ -57,12 +60,13 @@ class Collection:
 
         for name, value in element.indexing_values:
             if value in self._attribute_to_object_map[name]:
-                # if the object does already exist
-                # thus merging and don't add it afterwards
-                existing_object = self._attribute_to_object_map[name][value]
-                existing_object.merge(element)
-                # in case any relevant data has been added (e.g. it remaps the old object)
-                self.map_element(existing_object)
+                if merge_on_conflict:
+                    # if the object does already exist
+                    # thus merging and don't add it afterwards
+                    existing_object = self._attribute_to_object_map[name][value]
+                    existing_object.merge(element)
+                    # in case any relevant data has been added (e.g. it remaps the old object)
+                    self.map_element(existing_object)
                 return
 
         self._data.append(element)

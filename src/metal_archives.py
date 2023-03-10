@@ -62,14 +62,16 @@ artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
 print_artist(artist)
 """
 
-results = EncyclopaediaMetallum.search_by_query("#a only smile")
+results = EncyclopaediaMetallum.search_by_query("#a Ghost Bath")
+
 artist = results[0]
 print(artist)
 
 artist: objects.Artist = EncyclopaediaMetallum.fetch_details(artist)
+print(artist.option_string)
 
 for release in artist.main_album_collection:
-    print(release)
+    print(release.option_string)
     
     print(release.song_collection)
 

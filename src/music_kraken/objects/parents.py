@@ -56,12 +56,12 @@ class DatabaseObject:
         return list()
         
     def merge(self, other, override: bool = False):
-        if isinstance(other, type(self)):
+        if not isinstance(other, type(self)):
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
             return
 
         for collection in type(self).COLLECTION_ATTRIBUTES:
-            getattr(self, collection).extend(collection)
+            getattr(self, collection).extend(getattr(other, collection))
 
         for simple_attribute in type(self).SIMPLE_ATTRIBUTES:
             if getattr(other, simple_attribute) is None:
