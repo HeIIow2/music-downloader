@@ -6,6 +6,7 @@ from ..utils.shared import (
     SONG_LOGGER as LOGGER
 )
 from .metadata import Metadata
+from .option import Options
 
 
 class DatabaseObject:
@@ -75,8 +76,8 @@ class DatabaseObject:
         return Metadata()
 
     @property
-    def option_list(self) -> List[Type['DatabaseObject']]:
-        return [self]
+    def options(self) -> Options:
+        return Options([self])
 
     @property
     def option_string(self) -> str:

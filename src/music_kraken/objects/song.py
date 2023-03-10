@@ -27,6 +27,7 @@ from .collection import Collection
 from .album import AlbumType, AlbumStatus
 from .lyrics import Lyrics
 from .target import Target
+from .option import Options
 
 """
 All Objects dependent 
@@ -136,15 +137,7 @@ class Song(MainObject):
                f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
 
     @property
-    def tracksort_str(self) -> str:
-        """
-        if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
-        :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
-        """
-        return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
-
-    @property
-    def option_list(self) -> list:
+    def options(self) -> Options:
         """
         Return a list of related objects including the song object, album object, main artist objects, and feature artist objects.
 
@@ -154,7 +147,15 @@ class Song(MainObject):
         options.extend(self.feature_artist_collection)
         options.extend(self.album_collection)
         options.append(self)
-        return options
+        return Options(options)
+
+    @property
+    def tracksort_str(self) -> str:
+        """
+        if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
+        :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
+        """
+        return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
 
 
 """
@@ -240,6 +241,14 @@ class Album(MainObject):
                f"by Artist({OPTION_STRING_DELIMITER.join([artist.name for artist in self.artist_collection])}) " \
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
+    @property
+    def options(self) -> Options:
+        options = self.artist_collection.shallow_list
+        options.append(self)
+        options.extend(self.song_collection)
+
+        return Options(options)
+
     def update_tracksort(self):
         """
         This updates the tracksort attributes, of the songs in
@@ -297,14 +306,6 @@ class Album(MainObject):
         :return:
         """
         return len(self.artist_collection) > 1
-
-    @property
-    def option_list(self) -> list:
-        options = self.artist_collection.shallow_list
-        options.append(self)
-        options.extend(self.song_collection)
-
-        return options
 
 
 
@@ -396,6 +397,13 @@ class Artist(MainObject):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
+    def options(self) -> Options:
+        options = [self]
+        options.extend(self.main_album_collection)
+        options.extend(self.feature_song_collection)
+        return Options(options)
+
+    @property
     def country_string(self):
         return self.country.alpha_3
 
@@ -427,13 +435,6 @@ class Artist(MainObject):
             dynamic=True,
             song_list=self.feature_song_collection.copy()
         )
-
-    @property
-    def option_list(self) -> list:
-        options = [self]
-        options.extend(self.main_album_collection)
-        options.extend(self.feature_song_collection)
-        return options
 
     def get_all_songs(self) -> List[Song]:
         """
@@ -490,3 +491,9 @@ class Label(MainObject):
             ('name', self.unified_name),
             *[('url', source.url) for source in self.source_collection]
         ]
+
+    @property
+    def options(self) -> Options:
+        options = [self]
+        options.extend(self.current_artist_collection.shallow_list)
+        options.extend(self.album_collection.shallow_list)

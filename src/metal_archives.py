@@ -62,7 +62,7 @@ artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
 print_artist(artist)
 """
 
-results = EncyclopaediaMetallum.search_by_query("#a Ghost Bath")
+results = EncyclopaediaMetallum.search_by_query("#a Thy art is Murder")
 
 artist = results[0]
 print(artist)
