@@ -320,20 +320,42 @@ the music_object exists
     has been addet, it maps the existing object again.
     """)
 
-    return
-
-    _merge --> _map --> return
+    _merge --> _map
 
     end
 
     subgraph add["Adding"]
 
+    __map("""map the values from <code>music_object.indexing_values</code>
+    to <code>Collection._attribute_to_object_map</code> by writing
+    those values in the map as keys, and the class I wanna add as values.
+    """)
+
+    _add("""add the new music object to <code>_data</code>""")
+
+    __map --> _add 
+
     end
 
-    exist-->|"if it doesn't exist"|add
-    exist-->|"if already exists"|merge
+    exist-->|"if it doesn't exist"|add --> return
+    exist-->|"if already exists"|merge --> return
 ```
 
+This is Implemented in [music_kraken.objects.Collection.append()](src/music_kraken/objects/collection.py).
+
+The <u>indexing values</u> are defined in the superclass [DatabaseObject](src/music_kraken/objects/parents.py) and get implemented for each Object seperately. I will just give as example its implementation for the `Song` class:
+
+```python
+@property
+def indexing_values(self) -> List[Tuple[str, object]]:
+    return [
+        ('id', self.id),
+        ('title', self.unified_title),
+        ('barcode', self.barcode),
+        *[('url', source.url) for source in self.source_collection]
+    ]
+```
+ 
 ## Classes and Objects
 
 ### music_kraken.objects
@@ -378,7 +400,7 @@ you can pass in the Arguments:
 
 # Old implementation
 
-> IF U USE THIS NOW YOU ARE DUMB. IT ISN'T FINISHED AND THE STUFF YOU CODE NOW WILL BE BROKEN TOMORROW
+> IF U USE THIS NOW YOU ARE DUMB *no offense thoug*. IT ISN'T FINISHED AND THE STUFF YOU CODE NOW WILL BE BROKEN TOMORROW
 > SOON YOU CAN THOUGH
 
 If you want to use this project, or parts from it in your own projects from it, 
