@@ -5,8 +5,8 @@ if TYPE_CHECKING:
 
 
 class Options:
-    def __init__(self, option_list: List[DatabaseObject] = None):
-        self._data: List[DatabaseObject] = option_list or list()
+    def __init__(self, option_list: List['DatabaseObject'] = None):
+        self._data: List['DatabaseObject'] = option_list or list()
 
     def __str__(self):
         return "\n".join(f"{i:02d}: {database_object.option_string}" for i, database_object in enumerate(self._data))

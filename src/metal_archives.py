@@ -65,13 +65,6 @@ print_artist(artist)
 results = EncyclopaediaMetallum.search_by_query("#a Thy art is Murder")
 
 artist = results[0]
-print(artist)
-
 artist: objects.Artist = EncyclopaediaMetallum.fetch_details(artist)
-print(artist.option_string)
-
-for release in artist.main_album_collection:
-    print(release.option_string)
-    
-    print(release.song_collection)
-
+print(artist.options)
+print()
