@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Type, Dict, Tuple
+from typing import List, Optional, Dict, Tuple
 import pycountry
 
 from .metadata import (
@@ -61,9 +61,9 @@ class Song(MainObject):
             source_list: List[Source] = None,
             target_list: List[Target] = None,
             lyrics_list: List[Lyrics] = None,
-            album_list: List[Type['Album']] = None,
-            main_artist_list: List[Type['Artist']] = None,
-            feature_artist_list: List[Type['Artist']] = None,
+            album_list: List['Album'] = None,
+            main_artist_list: List['Artist'] = None,
+            feature_artist_list: List['Artist'] = None,
             **kwargs
     ) -> None:
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
@@ -139,7 +139,8 @@ class Song(MainObject):
     @property
     def options(self) -> Options:
         """
-        Return a list of related objects including the song object, album object, main artist objects, and feature artist objects.
+        Return a list of related objects including the song object, album object, main artist objects, and
+        feature artist objects.
 
         :return: a list of objects that are related to the Song object
         """
@@ -152,7 +153,7 @@ class Song(MainObject):
     @property
     def tracksort_str(self) -> str:
         """
-        if the album tracklist is empty, it sets it length to 1, this song has to be in the Album
+        if the album tracklist is empty, it sets it length to 1, this song has to be on the Album
         :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
         """
         return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
@@ -178,11 +179,11 @@ class Album(MainObject):
             albumsort: int = None,
             dynamic: bool = False,
             source_list: List[Source] = None,
-            artist_list: List[Type['Artist']] = None,
+            artist_list: List['Artist'] = None,
             song_list: List[Song] = None,
             album_status: AlbumStatus = None,
             album_type: AlbumType = None,
-            label_list: List[Type['Label']] = None,
+            label_list: List['Label'] = None,
             **kwargs
     ) -> None:
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
@@ -333,7 +334,7 @@ class Artist(MainObject):
             general_genre: str = "",
             country: CountryTyping = None,
             formed_in: ID3Timestamp = None,
-            label_list: List[Type['Label']] = None,
+            label_list: List['Label'] = None,
             **kwargs
     ):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
