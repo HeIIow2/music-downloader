@@ -5,64 +5,7 @@ from music_kraken.pages import (
     EncyclopaediaMetallum
 )
 
-"""
-test_db = Database("test.db")
-# test_db.reset()
-
-def print_source(source_obj):
-    for source in source_obj.source_list:
-        print(source)
-
-def print_song(song_: Song):
-    print(str(song_.metadata))
-    print("----album--")
-    print(song_.album)
-    print("----src----")
-    print("song:")
-    print(song_.source_list)
-    print("album:")
-    print(song_.album.source_list)
-    print("artist:")
-    print([a.source_list for a in song_.main_artist_list])
-    print([a.source_list for a in song_.feature_artist_list])
-    print("\n")
-
-def print_artist(artist: Artist):
-    print(artist)
-    print_source(artist)
-    print("---discography---")
-    for album in artist.discography:
-        print_album(album)
-
-
-def print_album(album: Album):
-    print(album)
-    print_source(album)
-
-
-# only_smile = EncyclopaediaMetallum.search_by_query("only smile")
-# print(EncyclopaediaMetallum.search_by_query("#a Ghost Bath"))
-# print(EncyclopaediaMetallum.search_by_query("#a Ghost Bath #r Self Loather"))
-
-songs_in_db = test_db.pull_songs()
-song: Song
-
-if len(songs_in_db) <= 0:
-    print("didn't find song in db.... downloading")
-    song: Song = EncyclopaediaMetallum.search_by_query("#a Ghost Bath #r Self Loather #t hide from the sun")[0]
-    test_db.push_song(song)
-else:
-    print("found song in database")
-    song = songs_in_db[0]
-
-print_song(song)
-
-artist = song.main_artist_list[0]
-artist = EncyclopaediaMetallum.fetch_artist_details(artist, flat=False)
-print_artist(artist)
-"""
-
-results = EncyclopaediaMetallum.search_by_query("#a Thy art is Murder")
+results = EncyclopaediaMetallum.search_by_query("#a Only Smile")
 
 artist = results[0]
 artist: objects.Artist = EncyclopaediaMetallum.fetch_details(artist)
