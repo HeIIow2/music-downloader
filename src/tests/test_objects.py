@@ -1,4 +1,4 @@
-from music_kraken import objects
+
 import pycountry
 import unittest
 import sys
@@ -7,6 +7,7 @@ import os
 # Add the parent directory of the src package to the Python module search path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from music_kraken import objects
 
 class TestSong(unittest.TestCase):
 
@@ -134,13 +135,15 @@ class TestAlbum(unittest.TestCase):
         self.assertEqual(self.album.language.alpha_2, "en")
 
     def test_album_label(self):
-        self.assertEqual(self.album.label_list[0].name, "an album label")
+        self.assertEqual(self.album.label_collection[0].name, "an album label")
 
     def test_album_source(self):
+        sp = self.album.source_collection.get_sources_from_page(objects.SourcePages.ENCYCLOPAEDIA_METALLUM)[0]
+
         self.assertEqual(
-            self.album.source_list[0].page, objects.SourcePages.ENCYCLOPAEDIA_METALLUM)
+            sp.page_enum, objects.SourcePages.ENCYCLOPAEDIA_METALLUM)
         self.assertEqual(
-            self.album.source_list[0].url, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
+            sp.url, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
 
 
 class TestCollection(unittest.TestCase):
