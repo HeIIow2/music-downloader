@@ -1,3 +1,3 @@
-from tests import example_data_objects
+from tests import test_objects
 
 
