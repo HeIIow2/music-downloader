@@ -1,5 +1,6 @@
 LICENSE
 README.md
+pyproject.toml
 requirements.txt
 setup.py
 version
