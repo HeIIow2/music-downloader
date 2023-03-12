@@ -29,6 +29,10 @@ pip install music-kraken
 music-kraken
 ```
 
+## Dependencies
+- ffmpeg
+- pandoc
+
 ### Notes for Python 3.9
 
 Unfortunately I use features that newly git introduced in [Python 3.10](https://docs.python.org/3/library/types.html#types.UnionType).
