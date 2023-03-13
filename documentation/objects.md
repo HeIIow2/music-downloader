@@ -19,6 +19,12 @@ Additionally it provides an **Interface** to:
 
 ### DatabaseObject.merge()
 
+To  merge the data of two instances of the same type, the attributes defined in `DatabaseObject.COLLECTION_ATTRIBUTES` and `SIMPLE_ATTRIBUTES` are used.
+
+The simple attributes just get carried from the other instance, to the self instance.
+
+The collection attributes appends all elements from other.collection to self.collection, but ofc [checks if already exists](#collection).
+
 ## Collection
 
 [music_kraken.objects.Collection](../src/music_kraken/objects/collection.py)
