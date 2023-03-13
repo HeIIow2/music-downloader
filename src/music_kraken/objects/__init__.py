@@ -4,7 +4,8 @@ from . import (
     source,
     parents,
     formatted_text,
-    album
+    album,
+    option
 )
 
 MusicObject = parents.DatabaseObject
@@ -28,3 +29,5 @@ AlbumStatus = album.AlbumStatus
 Album = song.Album
 
 FormattedText = formatted_text.FormattedText
+
+Options = option.Options

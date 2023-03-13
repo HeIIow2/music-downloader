@@ -9,7 +9,8 @@ from ..objects import (
     Artist,
     Lyrics,
     Target,
-    MusicObject
+    MusicObject,
+    Options
 )
 
 
@@ -69,7 +70,7 @@ class Page:
         song_str = property(fget=lambda self: self.get_str(self.song))
 
     @classmethod
-    def search_by_query(cls, query: str) -> List[MusicObject]:        
+    def search_by_query(cls, query: str) -> Options:        
         """
         # The Query
         You can define a new parameter with "#",
@@ -84,7 +85,7 @@ class Page:
         :return possible_music_objects:
         """
 
-        return []
+        return Options()
 
     @classmethod
     def fetch_details(cls, music_object: MusicObject, flat: bool = False) -> MusicObject:
