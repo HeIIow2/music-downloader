@@ -9,8 +9,8 @@ from .formatted_text import FormattedText
 
 
 class Lyrics(DatabaseObject):
-    COLLECTION_ATTRIBUTES = ["source_collection"]
-    SIMPLE_ATTRIBUTES = ["text", "language"]
+    COLLECTION_ATTRIBUTES = ("source_collection",)
+    SIMPLE_ATTRIBUTES = ("text", "language")
     
     def __init__(
             self,

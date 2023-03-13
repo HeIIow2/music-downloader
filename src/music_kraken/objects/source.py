@@ -55,8 +55,8 @@ class Source(DatabaseObject):
     Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
     ```
     """
-    COLLECTION_ATTRIBUTES = []
-    SIMPLE_ATTRIBUTES = ["type_enum", "page_enum", "url"]
+    COLLECTION_ATTRIBUTES = tuple()
+    SIMPLE_ATTRIBUTES = ("type_enum", "page_enum", "url")
 
     def __init__(self, page_enum: SourcePages, url: str, id_: str = None, type_enum=None) -> None:
         DatabaseObject.__init__(self, id_=id_)

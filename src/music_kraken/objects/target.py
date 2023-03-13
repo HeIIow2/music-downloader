@@ -15,6 +15,7 @@ class Target(DatabaseObject):
     """
 
     SIMPLE_ATTRIBUTES = ("_file", "_path")
+    COLLECTION_ATTRIBUTES = tuple()
 
     def __init__(
             self,
