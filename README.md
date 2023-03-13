@@ -79,7 +79,7 @@ I decided against creating a discord server, due to piracy communities get often
 
 This application is $100\%$ centered around Data. Thus the most important thing for working with musik kraken is, to understand how I structured the data.  
 
-## quick Overview
+## Quick Overview
 
 - explanation of the [Data Model](#data-model)
 - how to use the [Data Objects](#data-objects)
