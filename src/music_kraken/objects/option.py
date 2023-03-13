@@ -21,8 +21,10 @@ class Options:
 
         return self._data[index].options
 
-    def __getitem__(self, item: int) -> 'Options':
+    def __getitem__(self, item: int) -> 'DatabaseObject':
         if type(item) != int:
             raise TypeError("Key needs to be an Integer")
+        if item >= len(self._data):
+            raise ValueError("Index out of bounds")
 
-        return self.get_next_options(item)
+        return self._data[item]
