@@ -83,6 +83,7 @@ This application is $100\%$ centered around Data. Thus the most important thing 
 
 - explanation of the [Data Model](#data-model)
 - how to use the [Data Objects](#data-objects)
+- further Dokumentation of *hopefully* [most relevant classes](documentation/objects.md)
 
 ```mermaid
 ---
@@ -295,8 +296,7 @@ For those who don't want any bugs and use it as intended *(which is recommended,
 
 If you want to append for example a Song to an Album, you obviously need to check beforehand if the Song already exists in the Album, and if so, you need to merge their data in one Song object, to not loose any Information.
 
-Fortunately I implemented all of this functionality in [objects.Collection](#collection).append(music_object).  
-I made a flow chart showing how it works:
+This is how I solve this problem:
 
 ```mermaid
 ---
@@ -341,9 +341,9 @@ the music_object exists
     exist-->|"if already exists"|merge --> return
 ```
 
-This is Implemented in [music_kraken.objects.Collection.append()](src/music_kraken/objects/collection.py).
+This is Implemented in [music_kraken.objects.Collection.append()](documentation/objects.md#collection). The merging which is mentioned in the flowchart is explained in the documentation of [DatabaseObject.merge()](documentation/objects.md#databaseobjectmerge).
 
-The <u>indexing values</u> are defined in the superclass [DatabaseObject](src/music_kraken/objects/parents.py) and get implemented for each Object seperately. I will just give as example its implementation for the `Song` class:
+The <u>indexing values</u> are defined in the superclass [DatabaseObject](documentation/objects.md#databaseobject) and get implemented for each Object seperately. I will just give as example its implementation for the `Song` class:
 
 ```python
 @property
@@ -355,48 +355,7 @@ def indexing_values(self) -> List[Tuple[str, object]]:
         *[('url', source.url) for source in self.source_collection]
     ]
 ```
- 
-## Classes and Objects
 
-### music_kraken.objects
-
-#### Collection
-
-#### Song
-
-So as you can see, the probably most important Class is the `music_kraken.Song` class. It is used to save the song in *(duh)*.
-
-It has handful attributes, where half of em are self-explanatory, like `title` or `genre`. The ones like `isrc` are only relevant to you, if you know what it is, so I won't elaborate on it.
-
-Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
-
-#### ID3Timestamp
-
-For multiple Reasons I don't use the default `datetime.datetime` class.
-
-The most important reason is, that you need to pass in at least year, month and day. For every other values there are default values, that are indistinguishable from values that are directly passed in. But I need optional values. The ID3 standart allows default values. Additionally `datetime.datetime` is immutable, thus I can't inherint all the methods. Sorry.
-
-Anyway you can create those custom objects easily.
-
-```python
-from music_kraken import ID3Timestamp
-
-# returns an instance of ID3Timestamp with the current time
-ID3Timestamp.now()
-
-# yea
-ID3Timestamp(year=1986, month=3, day=1)
-```
-
-you can pass in the Arguments:
- - year
- - month
- - day
- - hour
- - minute
- - second
-
-:)
 
 # Old implementation
 

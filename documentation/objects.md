@@ -53,3 +53,30 @@ Function | Explanation
 ## Options
 
 ## Metadata
+
+## Song
+
+This object inherits from [DatabaseObject](#databaseobject) and implements all its interfaces.
+
+It has handful attributes, where half of em are self-explanatory, like `title` or `genre`. The ones like `isrc` are only relevant to you, if you know what it is, so I won't elaborate on it.
+
+Interesting is the `date`. It uses a custom class. More on that [here](#music_krakenid3timestamp).
+
+## ID3Timestamp
+
+For multiple Reasons I don't use the default `datetime.datetime` class.
+
+The most important reason is, that you need to pass in at least year, month and day. For every other values there are default values, that are indistinguishable from values that are directly passed in. But I need optional values. The ID3 standart allows default values. Additionally `datetime.datetime` is immutable, thus I can't inherint all the methods. Sorry.
+
+Anyway you can create those custom objects easily.
+
+```python
+from music_kraken import ID3Timestamp
+
+# returns an instance of ID3Timestamp with the current time
+ID3Timestamp.now()
+
+# returns an instance of ID3Timestamp with the given values
+# all values are optional if unknown
+ID3Timestamp(year=1986, month=3, day=1, hour=12, minute=30, second=6)
+```
