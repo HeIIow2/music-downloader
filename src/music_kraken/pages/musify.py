@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 import requests
 from bs4 import BeautifulSoup
 import pycountry
+import time
 
 from ..utils.shared import (
     ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
@@ -24,6 +25,9 @@ from ..utils import (
     string_processing,
     shared
 )
+from ..utils.shared import (
+    MUSIFY_LOGGER as LOGGER
+)
 
 
 class EncyclopaediaMetallum(Page):
@@ -42,33 +46,80 @@ class EncyclopaediaMetallum(Page):
         query_obj = cls.Query(query)
 
         if query_obj.is_raw:
-            return cls.simple_search(query_obj)
-        return cls.advanced_search(query_obj)
+            return cls.plaintext_search(query_obj.query)
+        return cls.plaintext_search(cls.get_plaintext_query(query_obj))
 
     @classmethod
-    def advanced_search(cls, query: Page.Query) -> Options:
-        if query.song is not None:
-            return Options(cls.search_for_song(query=query))
-        if query.album is not None:
-            return Options(cls.search_for_album(query=query))
-        if query.artist is not None:
-            return Options(cls.search_for_artist(query=query))
-        return Options
+    def get_plaintext_query(cls, query: Page.Query) -> str:
+        if query.album is None:
+            return f"{query.artist or '*'} - {query.song or '*'}"
+        return f"{query.artist or '*'} - {query.album * '*'} - {query.song or '*'}"
 
     @classmethod
-    def search_for_song(cls, query: Page.Query) -> List[Song]:
-        return []
+    def get_soup_of_search(cls, query: str, trie=0) -> Optional[BeautifulSoup]:
+        url = f"https://musify.club/search?searchText={query}"
+        LOGGER.debug(f"Trying to get soup from {url}")
+        try:
+            r = cls.API_SESSION.get(url, timeout=15)
+        except requests.exceptions.Timeout:
+            return None
+        if r.status_code != 200:
+            if r.status_code in [503] and trie < cls.TRIES:
+                LOGGER.warning(f"youtube blocked downloading. ({trie}-{cls.TRIES})")
+                LOGGER.warning(f"retrying in {cls.TIMEOUT} seconds again")
+                time.sleep(cls.TIMEOUT)
+                return cls.get_soup_of_search(query, trie=trie + 1)
+
+            LOGGER.warning("too many tries, returning")
+            return None
+        return BeautifulSoup(r.content, features="html.parser")
 
     @classmethod
-    def search_for_album(cls, query: Page.Query) -> List[Album]:
-        return []
+    def plaintext_search(cls, query: Page.Query) -> List[MusicObject]:
+        search_soup = cls.get_soup_of_search(query=query)
+        if search_soup is None:
+            return None
+        
+        # album and songs
+        # child of div class: contacts row
+        for contact_container_soup in search_soup.find_all("div", {"class": ["contacts", "row"]}):
+            pass
+        
+        # song
+        # div class: playlist__item
+        for playlist_soup in search_soup.find_all("div", {"class": "playlist"}):
+            pass
 
-    @classmethod
-    def search_for_artist(cls, query: Page.Query) -> List[Artist]:
-        return []
+        # get the soup of the container with all track results
+        tracklist_container_soup = search_soup.find_all("div", {"class": "playlist"})
+        if len(tracklist_container_soup) == 0:
+            return []
+        if len(tracklist_container_soup) != 1:
+            LOGGER.warning("HTML Layout of https://musify.club/ changed. (or bug)")
+        tracklist_container_soup = tracklist_container_soup[0]
 
-    @classmethod
-    def simple_search(cls, query: Page.Query) -> List[Artist]:
+        tracklist_soup = tracklist_container_soup.find_all("div", {"class": "playlist__details"})
+
+        def parse_track_soup(_track_soup):
+            anchor_soups = _track_soup.find_all("a")
+            artist_ = anchor_soups[0].text.strip()
+            track_ = anchor_soups[1].text.strip()
+            url_ = anchor_soups[1]['href']
+            return artist_, track_, url_
+
+        # check each track in the container, if they match
+        for track_soup in tracklist_soup:
+            artist_option, title_option, track_url = parse_track_soup(track_soup)
+
+            title_match, title_distance = phonetic_compares.match_titles(title, title_option)
+            artist_match, artist_distance = phonetic_compares.match_artists(artist, artist_option)
+
+            logging.debug(f"{(title, title_option, title_match, title_distance)}")
+            logging.debug(f"{(artist, artist_option, artist_match, artist_distance)}")
+
+            if not title_match and not artist_match:
+                return cls.get_download_link(track_url)
+
         return []
 
     @classmethod
