@@ -82,6 +82,18 @@ class DatabaseObject:
     @property
     def option_string(self) -> str:
         return self.__repr__()
+    
+    def compile(self) -> bool:
+        """
+        compiles the recursive structures,
+
+        Args:
+            traceback (set, optional): Defaults to an empty set.
+
+        Returns:
+            bool: returns true if id has been found in set
+        """
+        pass
 
 
 class MainObject(DatabaseObject):

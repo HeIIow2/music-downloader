@@ -33,6 +33,7 @@ class Collection:
         ```
         """
         self._attribute_to_object_map: Dict[str, Dict[object, DatabaseObject]] = defaultdict(dict)
+        self._used_ids: set = set()
         
         if data is not None:
             self.extend(data, merge_on_conflict=True)
@@ -46,6 +47,8 @@ class Collection:
                 continue
 
             self._attribute_to_object_map[name][value] = element
+            
+        self._used_ids.add(element.id)
 
     def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
         """
@@ -98,3 +101,21 @@ class Collection:
         returns a shallow copy of the data list
         """
         return self._data.copy()
+    
+    def insecure_append(self, element: DatabaseObject):
+        if element.id in self._used_ids:
+            return False
+        self._used_ids.add(element.id)
+            
+        self._data.append(element)
+        self.map_element(element)
+        return True
+    
+    def insecure_extend(self, element_list: Iterable[DatabaseObject]):
+        success = False
+        
+        for element in element_list:
+            if self.insecure_append(element):
+                success = True
+                
+        return success

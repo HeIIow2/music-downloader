@@ -83,6 +83,21 @@ class Song(MainObject):
         self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
         self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
 
+    def compile(self):
+        album: Album
+        for album in self.album_collection:
+            if album.song_collection.insecure_append(self):
+                album.compile()
+            
+        artist: Artist
+        for artist in self.feature_artist_collection:
+            if artist.feature_song_collection.insecure_append(self):
+                artist.compile()
+                
+        for artist in self.main_artist_collection:
+            if artist.main_album_collection.insecure_extend(self.album_collection):
+                artist.compile()
+
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
@@ -213,6 +228,24 @@ class Album(MainObject):
         self.song_collection: Collection = Collection(data=song_list, element_type=Song)
         self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+
+    def compile(self):
+        song: "Song"
+        for song in self.song_collection:
+            if song.album_collection.insecure_append(self):
+                song.compile()
+            
+        artist: Artist
+        for artist in self.artist_collection:
+            if artist.main_album_collection.insecure_append(self):
+                artist.compile()
+            
+        label: Label
+        for label in self.label_collection:
+            if label.album_collection.insecure_append(self):
+                label.compile()
+            
+        
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -365,6 +398,22 @@ class Artist(MainObject):
         self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
+    def compile(self):
+        song: "Song"
+        for song in self.feature_song_collection:
+            if song.feature_artist_collection.insecure_append(self):
+                song.compile()
+            
+        album: "Album"
+        for album in self.main_album_collection:
+            if album.artist_collection.insecure_append(self):
+                album.compile()
+                
+        label: Label
+        for label in self.label_collection:
+            if label.current_artist_collection.insecure_append(self):
+                label.compile()
+
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
@@ -484,6 +533,17 @@ class Label(MainObject):
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
+
+    def compile(self) -> bool:
+        album: Album
+        for album in self.album_collection:
+            if album.label_collection.insecure_append(self):
+                album.compile()
+        
+        artist: Artist
+        for artist in self.current_artist_collection:
+            if artist.label_collection.insecure_append(self):
+                artist.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
