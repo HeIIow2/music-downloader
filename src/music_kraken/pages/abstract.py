@@ -103,13 +103,19 @@ class Page:
         """
 
         if type(music_object) == Song:
-            return cls.fetch_song_details(music_object, flat=flat)
+            song = cls.fetch_song_details(music_object, flat=flat)
+            song.compile()
+            return song
         
         if type(music_object) == Album:
-            return cls.fetch_album_details(music_object, flat=flat)
+            album = cls.fetch_album_details(music_object, flat=flat)
+            album.compile()
+            return album
 
         if type(music_object) == Artist:
-            return cls.fetch_artist_details(music_object, flat=flat)
+            artist = cls.fetch_artist_details(music_object, flat=flat)
+            artist.compile()
+            return artist
 
         raise NotImplementedError(f"MusicObject {type(music_object)} has not been implemented yet")
 
