@@ -73,9 +73,12 @@ class EncyclopaediaMetallum(Page):
             LOGGER.warning("too many tries, returning")
             return None
         return BeautifulSoup(r.content, features="html.parser")
+    
+    @classmethod
+    def parse_contact_container(cls,)
 
     @classmethod
-    def plaintext_search(cls, query: Page.Query) -> List[MusicObject]:
+    def plaintext_search(cls, query: str) -> List[MusicObject]:
         search_soup = cls.get_soup_of_search(query=query)
         if search_soup is None:
             return None
