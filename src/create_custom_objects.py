@@ -60,8 +60,4 @@ song = objects.Song(
 
 song.compile()
 
-print(song.option_string)
-for album in song.album_collection:
-    print(album.option_string)
-for artist in song.main_artist_collection:
-    print(artist.option_string)
+print(song.options)
