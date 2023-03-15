@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 import requests
 from bs4 import BeautifulSoup
 import pycountry
@@ -30,7 +30,7 @@ from ..utils.shared import (
 )
 
 
-class EncyclopaediaMetallum(Page):
+class Musify(Page):
     API_SESSION: requests.Session = requests.Session()
     API_SESSION.headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
@@ -40,6 +40,8 @@ class EncyclopaediaMetallum(Page):
     API_SESSION.proxies = shared.proxies
 
     SOURCE_TYPE = SourcePages.MUSIFY
+    
+    HOST = "https://musify.club"
 
     @classmethod
     def search_by_query(cls, query: str) -> Options:
@@ -75,24 +77,89 @@ class EncyclopaediaMetallum(Page):
         return BeautifulSoup(r.content, features="html.parser")
     
     @classmethod
-    def parse_contact_container(cls,)
+    def parse_artist_contact(cls, contact: BeautifulSoup) -> Artist:
+        source_list: List[Source] = []
+        name = ""
+        _id = None
+        
+        # source
+        anchor = contact.find("a")
+        if anchor is not None:
+            href = anchor.get("href")
+            name = anchor.get("title")
+            
+            if "-" in href:
+                _id = href.split("-")[-1]
+            
+            source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+            
+        # artist image
+        image_soup = contact.find("img")
+        if image_soup is not None:
+            alt = image_soup.get("alt")
+            if alt is not None:
+                name = alt
+                
+            artist_thumbnail = image_soup.get("src")
+        
+        return Artist(
+            _id=_id,
+            name=name,
+            source_list=source_list
+        )
+    
+    @classmethod
+    def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
+        print(contact)
+        return Album(title="")
+    
+    @classmethod
+    def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
+        # print(contact_container_soup.prettify)
+        contacts = []
+        
+        # print(contact_container_soup)
+        
+        contact: BeautifulSoup
+        for contact in contact_container_soup.find_all("div", {"class": "contacts__item"}):
+            # print(contact)
+            
+            anchor_soup = contact.find("a")
+            if anchor_soup is not None:
+                url = anchor_soup.get("href")
+                if url is not None:
+                    print(url)
+                    if "artist" in url:
+                        contacts.append(cls.parse_artist_contact(contact))
+                    elif "release" in url:
+                        contacts.append(cls.parse_album_contact(contact))
+                        break
+        return contacts
+    
+    @classmethod
+    def parse_playlist_soup(cls, playlist_soup: BeautifulSoup) -> List[Song]:
+        # print(playlist_soup.prettify)
+        return []
 
     @classmethod
     def plaintext_search(cls, query: str) -> List[MusicObject]:
+        search_results = []
+        
         search_soup = cls.get_soup_of_search(query=query)
         if search_soup is None:
             return None
         
         # album and songs
         # child of div class: contacts row
-        for contact_container_soup in search_soup.find_all("div", {"class": ["contacts", "row"]}):
-            pass
+        for contact_container_soup in search_soup.find_all("div", {"class": "contacts"}):
+            search_results.extend(cls.parse_contact_container(contact_container_soup))
         
         # song
         # div class: playlist__item
         for playlist_soup in search_soup.find_all("div", {"class": "playlist"}):
-            pass
+            search_results.extend(cls.parse_playlist_soup(playlist_soup))
 
+        """
         # get the soup of the container with all track results
         tracklist_container_soup = search_soup.find_all("div", {"class": "playlist"})
         if len(tracklist_container_soup) == 0:
@@ -122,8 +189,9 @@ class EncyclopaediaMetallum(Page):
 
             if not title_match and not artist_match:
                 return cls.get_download_link(track_url)
+        """
 
-        return []
+        return search_results
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
