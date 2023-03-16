@@ -14,12 +14,15 @@ class DatabaseObject:
     SIMPLE_ATTRIBUTES: tuple = tuple()
     
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs) -> None:
+        self.automatic_id: bool = False
+        
         if _id is None and not dynamic:
             """
             generates a random UUID
             https://docs.python.org/3/library/uuid.html
             """
             _id = str(uuid.uuid4())
+            self.automatic_id = True
             LOGGER.debug(f"id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
@@ -70,6 +73,7 @@ class DatabaseObject:
 
             if override or getattr(self, simple_attribute) is None:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
+
 
     @property
     def metadata(self) -> Metadata:

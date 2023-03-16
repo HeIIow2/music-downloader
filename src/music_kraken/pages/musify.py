@@ -55,7 +55,7 @@ class Musify(Page):
     def get_plaintext_query(cls, query: Page.Query) -> str:
         if query.album is None:
             return f"{query.artist or '*'} - {query.song or '*'}"
-        return f"{query.artist or '*'} - {query.album * '*'} - {query.song or '*'}"
+        return f"{query.artist or '*'} - {query.album or '*'} - {query.song or '*'}"
 
     @classmethod
     def get_soup_of_search(cls, query: str, trie=0) -> Optional[BeautifulSoup]:
@@ -110,30 +110,134 @@ class Musify(Page):
     
     @classmethod
     def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
-        print(contact)
-        return Album(title="")
+        """
+        parsing following html:
+        
+        ```html
+        <div class="contacts__item">
+            <a href="/release/ghost-bath-ghost-bath-2013-602489" title="Ghost Bath - 2013">
+            
+            <div class="contacts__img release">
+                <img alt="Ghost Bath" class="lozad" data-src="https://37s.musify.club/img/69/9060265/24178833.jpg"/>
+                <noscript><img alt="Ghost Bath" src="https://37s.musify.club/img/69/9060265/24178833.jpg"/></noscript>
+            </div>
+            
+            <div class="contacts__info">
+                <strong>Ghost Bath - 2013</strong>
+                <small>Ghost Bath</small>
+                <small>Треков: 4</small>    <!--tracks-->
+                <small><i class="zmdi zmdi-star zmdi-hc-fw"></i> 9,04</small>
+            </div>
+            </a>
+        </div>
+        ```
+        """
+        
+        source_list: List[Source] = []
+        title = ""
+        _id = None
+        year = None
+        artist_list: List[Artist] = []
+        
+        def parse_title_date(title_date: Optional[str], delimiter: str = " - "):
+            if title_date is None:
+                return
+            
+            title_date = title_date.strip()    
+            split_attr = title_date.split(delimiter)
+            
+            if len(split_attr) < 2:
+                return
+            if not split_attr[-1].isdigit():
+                return
+            
+            year = int(split_attr[-1])
+            title = delimiter.join(split_attr[:-1])
+        
+        # source
+        anchor = contact.find("a")
+        if anchor is not None:
+            href = anchor.get("href")
+            
+            # get the title and year
+            parse_title_date(anchor.get("title"))
+            
+            
+            if "-" in href:
+                _id = href.split("-")[-1]
+            
+            source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+        
+        # cover art
+        image_soup = contact.find("img")
+        if image_soup is not None:
+            alt = image_soup.get("alt")
+            if alt is not None:
+                title = alt
+                
+            cover_art = image_soup.get("src")
+        
+        contact_info_soup = contact.find("div", {"class": "contacts__info"})
+        if contact_info_soup is not None:
+            """
+            <strong>Ghost Bath - 2013</strong>
+            <small>Ghost Bath</small>
+            <small>Треков: 4</small>    <!--tracks-->
+            <small><i class="zmdi zmdi-star zmdi-hc-fw"></i> 9,04</small>
+            """
+            
+            title_soup = contact_info_soup.find("strong")
+            if title_soup is None:
+                parse_title_date(title_soup)
+                
+            small_list = contact_info_soup.find_all("small")
+            if len(small_list) == 3:
+                # artist
+                artist_soup: BeautifulSoup = small_list[0]
+                raw_artist_str = artist_soup.text
+
+                for artist_str in raw_artist_str.split("&\r\n"):
+                    artist_str = artist_str.rstrip("& ...\r\n")
+                    artist_str = artist_str.strip()
+                    
+                    artist_list.append(Artist(name=artist_str))
+                
+                track_count_soup: BeautifulSoup = small_list[1]
+                rating_soup: BeautifulSoup = small_list[2]
+            else:
+                LOGGER.warning("got an unequal ammount than 3 small elements")
+                
+            
+        
+        return Album(
+            _id=_id,
+            title=title,
+            source_list=source_list,
+            date=ID3Timestamp(year=year),
+            artist_list=artist_list
+        )
     
     @classmethod
     def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
-        # print(contact_container_soup.prettify)
+        #print(contact_container_soup.prettify)
         contacts = []
         
         # print(contact_container_soup)
         
         contact: BeautifulSoup
         for contact in contact_container_soup.find_all("div", {"class": "contacts__item"}):
-            # print(contact)
             
             anchor_soup = contact.find("a")
+
             if anchor_soup is not None:
                 url = anchor_soup.get("href")
+            
                 if url is not None:
-                    print(url)
+                    #print(url)
                     if "artist" in url:
                         contacts.append(cls.parse_artist_contact(contact))
                     elif "release" in url:
                         contacts.append(cls.parse_album_contact(contact))
-                        break
         return contacts
     
     @classmethod
@@ -142,7 +246,7 @@ class Musify(Page):
         return []
 
     @classmethod
-    def plaintext_search(cls, query: str) -> List[MusicObject]:
+    def plaintext_search(cls, query: str) -> Options:
         search_results = []
         
         search_soup = cls.get_soup_of_search(query=query)
@@ -159,39 +263,7 @@ class Musify(Page):
         for playlist_soup in search_soup.find_all("div", {"class": "playlist"}):
             search_results.extend(cls.parse_playlist_soup(playlist_soup))
 
-        """
-        # get the soup of the container with all track results
-        tracklist_container_soup = search_soup.find_all("div", {"class": "playlist"})
-        if len(tracklist_container_soup) == 0:
-            return []
-        if len(tracklist_container_soup) != 1:
-            LOGGER.warning("HTML Layout of https://musify.club/ changed. (or bug)")
-        tracklist_container_soup = tracklist_container_soup[0]
-
-        tracklist_soup = tracklist_container_soup.find_all("div", {"class": "playlist__details"})
-
-        def parse_track_soup(_track_soup):
-            anchor_soups = _track_soup.find_all("a")
-            artist_ = anchor_soups[0].text.strip()
-            track_ = anchor_soups[1].text.strip()
-            url_ = anchor_soups[1]['href']
-            return artist_, track_, url_
-
-        # check each track in the container, if they match
-        for track_soup in tracklist_soup:
-            artist_option, title_option, track_url = parse_track_soup(track_soup)
-
-            title_match, title_distance = phonetic_compares.match_titles(title, title_option)
-            artist_match, artist_distance = phonetic_compares.match_artists(artist, artist_option)
-
-            logging.debug(f"{(title, title_option, title_match, title_distance)}")
-            logging.debug(f"{(artist, artist_option, artist_match, artist_distance)}")
-
-            if not title_match and not artist_match:
-                return cls.get_download_link(track_url)
-        """
-
-        return search_results
+        return Options(search_results)
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
