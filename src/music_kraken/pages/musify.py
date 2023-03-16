@@ -29,6 +29,28 @@ from ..utils.shared import (
     MUSIFY_LOGGER as LOGGER
 )
 
+"""
+https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
+https://musify.club/artist/ghost-bath-280348/releases?_pjax=#bodyContent
+https://musify.club/artist/ghost-bath-280348/clips?_pjax=#bodyContent
+https://musify.club/artist/ghost-bath-280348/photos?_pjax=#bodyContent
+
+POST https://musify.club/artist/filtersongs
+ID: 280348
+NameForUrl: ghost-bath
+Page: 1
+IsAllowed: True
+SortOrder.Property: dateCreated
+SortOrder.IsAscending: false
+X-Requested-With: XMLHttpRequest
+
+POST https://musify.club/artist/filteralbums
+ArtistID: 280348
+SortOrder.Property: dateCreated
+SortOrder.IsAscending: false
+X-Requested-With: XMLHttpRequest
+"""
+
 
 class Musify(Page):
     API_SESSION: requests.Session = requests.Session()
