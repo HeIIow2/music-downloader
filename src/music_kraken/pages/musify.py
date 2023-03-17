@@ -148,9 +148,6 @@ class Musify(Page):
     @classmethod
     def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
         """
-        parsing following html:
-        
-        ```html
         <div class="contacts__item">
             <a href="/release/ghost-bath-ghost-bath-2013-602489" title="Ghost Bath - 2013">
             
@@ -167,7 +164,6 @@ class Musify(Page):
             </div>
             </a>
         </div>
-        ```
         """
         
         source_list: List[Source] = []
