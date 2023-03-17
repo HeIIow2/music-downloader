@@ -419,15 +419,25 @@ class Musify(Page):
         name: str = ""
         source_list: List[Source] = []
         
-        
-        anchor_list = album_card.find_all("a", recursive=False)
-        if len(anchor_list) > 0:
-            anchor = anchor_list[0]
+        def parse_release_anchor(anchor: BeautifulSoup, text_is_name=False):
+            if anchor is None:
+                return
             
             source_list.append(Source(
                 cls.SOURCE_TYPE,
                 cls.HOST + anchor.get("href")
             ))
+            
+            if not text_is_name:
+                return
+            
+            name = anchor.text
+        
+        
+        anchor_list = album_card.find_all("a", recursive=False)
+        if len(anchor_list) > 0:
+            anchor = anchor_list[0]
+            parse_release_anchor(anchor)
             
             thumbnail: BeautifulSoup = anchor.find("img")
             if thumbnail is not None:
@@ -436,9 +446,21 @@ class Musify(Page):
                     name = alt
                 
                 image_url = thumbnail.get("src")
-                
         else:
             LOGGER.debug("the card has no thumbnail or url")
+        
+        card_body = album_card.find("div", {"class": "card-body"})
+        if card_body is not None:
+            parse_release_anchor(card_body.find("a"), text_is_name=True)
+                
+                
+                
+        card_footer_list = album_card.find_all("div", {"class": "card-footer"})
+        
+        return Album(
+            title=name,
+            source_list=source_list
+        )
         
         
     @classmethod
