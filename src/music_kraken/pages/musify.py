@@ -588,7 +588,8 @@ class Musify(Page):
         """
         name = ""
         source_list: List[Source] = []
-        county = None
+        country = None
+        notes: FormattedText = None
 
         breadcrumbs: BeautifulSoup = soup.find("ol", {"class": "breadcrumb"})
         if breadcrumbs is not None:
@@ -645,11 +646,17 @@ class Musify(Page):
 
                     country = pycountry.countries.get(alpha_2=list(country_set)[0])
 
+        note_soup: BeautifulSoup = soup.find(id="text-main")
+        if note_soup is not None:
+            notes = FormattedText(html=note_soup.decode_contents())
+            print(notes.plaintext)
+
         return Artist(
             _id=url.musify_id,
             name=name,
-            country=county,
-            source_list=source_list
+            country=country,
+            source_list=source_list,
+            notes=notes
         )
 
     @classmethod
