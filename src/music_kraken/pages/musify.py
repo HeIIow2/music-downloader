@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Optional, Union
 import requests
 from bs4 import BeautifulSoup
@@ -22,7 +23,9 @@ from ..objects import (
     ID3Timestamp,
     FormattedText,
     Label,
-    Options
+    Options,
+    AlbumType,
+    AlbumStatus
 )
 from ..utils import (
     string_processing,
@@ -411,22 +414,62 @@ class Musify(Page):
             </div>
         </div>
         """
+
+        album_type_map = defaultdict(lambda: AlbumType.OTHER, {
+            1: AlbumType.OTHER,                 # literally other xD
+            2: AlbumType.STUDIO_ALBUM,
+            3: AlbumType.EP,
+            4: AlbumType.SINGLE,
+            5: AlbumType.OTHER,                 # BOOTLEG
+            6: AlbumType.LIVE_ALBUM,
+            7: AlbumType.COMPILATION_ALBUM,     # compilation of different artists
+            8: AlbumType.MIXTAPE,
+            9: AlbumType.DEMO,
+            10: AlbumType.MIXTAPE,              # DJ Mixes
+            11: AlbumType.COMPILATION_ALBUM,    # compilation of only this artist
+            13: AlbumType.COMPILATION_ALBUM,    # unofficial
+            14: AlbumType.MIXTAPE               # "Soundtracks"
+        })
+
+        _id: Optional[str] = None
         name: str = ""
         source_list: List[Source] = []
+        timestamp: Optional[ID3Timestamp] = None
+        album_status = None
 
-        def parse_release_anchor(anchor: BeautifulSoup, text_is_name=False):
-            if anchor is None:
+        album_status_id = album_card.get("data-type")
+        if album_status_id.isdigit():
+            album_status_id = int(album_status_id)
+        album_type = album_type_map[album_status_id]
+
+        if album_status_id == 5:
+            album_status = AlbumStatus.BOOTLEG
+
+        def parse_release_anchor(_anchor: BeautifulSoup, text_is_name=False):
+            nonlocal _id
+            nonlocal name
+            nonlocal source_list
+
+            if _anchor is None:
                 return
 
-            source_list.append(Source(
-                cls.SOURCE_TYPE,
-                cls.HOST + anchor.get("href")
-            ))
+            href = _anchor.get("href")
+            if href is not None:
+                # add url to sources
+                source_list.append(Source(
+                    cls.SOURCE_TYPE,
+                    cls.HOST + href
+                ))
+
+                # split id from url
+                split_href = href.split("-")
+                if len(split_href) > 1:
+                    _id = split_href[-1]
 
             if not text_is_name:
                 return
 
-            name = anchor.text
+            name = _anchor.text
 
         anchor_list = album_card.find_all("a", recursive=False)
         if len(anchor_list) > 0:
@@ -447,11 +490,43 @@ class Musify(Page):
         if card_body is not None:
             parse_release_anchor(card_body.find("a"), text_is_name=True)
 
+        def parse_small_date(small_soup: BeautifulSoup):
+            """
+            <small>
+                <i class="zmdi zmdi-calendar" title="Добавлено"></i>
+                13.11.2021
+            </small>
+            """
+            nonlocal timestamp
+
+            italic_tagging_soup: BeautifulSoup = small_soup.find("i")
+            if italic_tagging_soup is None:
+                return
+            if italic_tagging_soup.get("title") != "Добавлено":
+                # "Добавлено" can be translated to "Added (at)"
+                return
+
+            raw_time = small_soup.text.strip()
+            timestamp = ID3Timestamp.strptime(raw_time, "%d.%m.%Y")
+
+        # parse small date
         card_footer_list = album_card.find_all("div", {"class": "card-footer"})
+        if len(card_footer_list) != 3:
+            LOGGER.debug("there are not exactly 3 card footers in a card")
+
+        if len(card_footer_list) > 0:
+            for any_small_soup in card_footer_list[-1].find_all("small"):
+                parse_small_date(any_small_soup)
+        else:
+            LOGGER.debug("there is not even 1 footer in the album card")
 
         return Album(
+            _id=_id,
             title=name,
-            source_list=source_list
+            source_list=source_list,
+            date=timestamp,
+            album_type=album_type,
+            album_status=album_status
         )
 
     @classmethod
@@ -475,9 +550,6 @@ class Musify(Page):
 
         soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
 
-        print(r)
-        # print(soup.prettify)
-
         discography: List[Album] = []
         for card_soup in soup.find_all("div", {"class": "card"}):
             discography.append(cls.parse_album_card(card_soup))
@@ -489,7 +561,7 @@ class Musify(Page):
         """
         fetches artist from source
 
-        [] discography
+        [x] discography
         [] attributes
         [] picture galery
 
