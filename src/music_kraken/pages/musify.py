@@ -79,10 +79,11 @@ class Musify(Page):
         "Referer": "https://musify.club/"
     }
     API_SESSION.proxies = shared.proxies
+    TIMEOUT = 5
+    TRIES = 5
+    HOST = "https://musify.club"
 
     SOURCE_TYPE = SourcePages.MUSIFY
-
-    HOST = "https://musify.club"
 
     @classmethod
     def search_by_query(cls, query: str) -> Options:
@@ -97,25 +98,6 @@ class Musify(Page):
         if query.album is None:
             return f"{query.artist or '*'} - {query.song or '*'}"
         return f"{query.artist or '*'} - {query.album or '*'} - {query.song or '*'}"
-
-    @classmethod
-    def get_soup_of_search(cls, query: str, trie=0) -> Optional[BeautifulSoup]:
-        url = f"https://musify.club/search?searchText={query}"
-        LOGGER.debug(f"Trying to get soup from {url}")
-        try:
-            r = cls.API_SESSION.get(url, timeout=15)
-        except requests.exceptions.Timeout:
-            return None
-        if r.status_code != 200:
-            if r.status_code in [503] and trie < cls.TRIES:
-                LOGGER.warning(f"{cls.__name__} blocked downloading. ({trie}-{cls.TRIES})")
-                LOGGER.warning(f"retrying in {cls.TIMEOUT} seconds again")
-                time.sleep(cls.TIMEOUT)
-                return cls.get_soup_of_search(query, trie=trie + 1)
-
-            LOGGER.warning("too many tries, returning")
-            return None
-        return BeautifulSoup(r.content, features="html.parser")
 
     @classmethod
     def parse_artist_contact(cls, contact: BeautifulSoup) -> Artist:
@@ -356,9 +338,10 @@ class Musify(Page):
     def plaintext_search(cls, query: str) -> Options:
         search_results = []
 
-        search_soup = cls.get_soup_of_search(query=query)
-        if search_soup is None:
-            return None
+        r = cls.get_request(f"https://musify.club/search?searchText={query}")
+        if r is None:
+            return Options()
+        search_soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
 
         # album and songs
         # child of div class: contacts row
@@ -541,13 +524,14 @@ class Musify(Page):
 
         endpoint = cls.HOST + "/" + url.source_type.value + "/filteralbums"
 
-        r = cls.API_SESSION.post(url=endpoint, json={
+        r = cls.post_request(url=endpoint, json={
             "ArtistID": str(url.musify_id),
             "SortOrder.Property": "dateCreated",
             "SortOrder.IsAscending": False,
             "X-Requested-With": "XMLHttpRequest"
         })
-
+        if r is None:
+            return []
         soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
 
         discography: List[Album] = []
@@ -555,6 +539,20 @@ class Musify(Page):
             discography.append(cls.parse_album_card(card_soup))
 
         return discography
+
+    @classmethod
+    def get_artist_attributes(cls, url: MusifyUrl) -> Artist:
+        """
+        fetches the main Artist attributes from this endpoint
+        https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
+        it needs to parse html
+
+        :param url:
+        :return:
+        """
+        return Artist(
+            name=""
+        )
 
     @classmethod
     def get_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
@@ -573,16 +571,14 @@ class Musify(Page):
             Artist: the artist fetched
         """
 
-        print(source)
         url = cls.parse_url(source.url)
-        print(url)
+
+        artist = cls.get_artist_attributes(url)
 
         discography: List[Album] = cls.get_discography(url)
+        artist.main_album_collection.extend(discography)
 
-        return Artist(
-            name="",
-            main_album_list=discography
-        )
+        return artist
 
     @classmethod
     def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:

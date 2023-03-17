@@ -1,6 +1,10 @@
-from typing import (
-    List
-)
+from typing import Optional
+import requests
+import logging
+
+LOGGER = logging.getLogger("this shouldn't be used")
+
+from ..utils import shared
 
 from ..objects import (
     Song,
@@ -19,6 +23,49 @@ class Page:
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
+
+    API_SESSION: requests.Session = requests.Session()
+    API_SESSION.proxies = shared.proxies
+    TIMEOUT = 5
+    TRIES = 5
+
+    @classmethod
+    def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+        requests.Request]:
+        try:
+            r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return None
+
+        if r.status_code in accepted_response_codes:
+            return r
+
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.debug(r.content)
+
+        if trie <= cls.TRIES:
+            LOGGER.warning("to many tries. Aborting.")
+
+        return cls.get_request(url, accepted_response_codes, trie + 1)
+
+    @classmethod
+    def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+        requests.Request]:
+        try:
+            r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return None
+
+        if r.status_code in accepted_response_codes:
+            return r
+
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.debug(r.content)
+
+        if trie <= cls.TRIES:
+            LOGGER.warning("to many tries. Aborting.")
+
+        return cls.post_request(url, accepted_response_codes, trie + 1)
 
     class Query:
         def __init__(self, query: str):
@@ -70,7 +117,7 @@ class Page:
         song_str = property(fget=lambda self: self.get_str(self.song))
 
     @classmethod
-    def search_by_query(cls, query: str) -> Options:        
+    def search_by_query(cls, query: str) -> Options:
         """
         # The Query
         You can define a new parameter with "#",
@@ -106,7 +153,7 @@ class Page:
             song = cls.fetch_song_details(music_object, flat=flat)
             song.compile()
             return song
-        
+
         if type(music_object) == Album:
             album = cls.fetch_album_details(music_object, flat=flat)
             album.compile()
