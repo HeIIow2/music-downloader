@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import pycountry
 import time
+from urllib.parse import urlparse
+from enum import Enum
+from dataclasses import dataclass
 
 from ..utils.shared import (
     ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
@@ -50,6 +53,18 @@ SortOrder.Property: dateCreated
 SortOrder.IsAscending: false
 X-Requested-With: XMLHttpRequest
 """
+
+class MusifyTypes(Enum):
+    ARTIST = "artist"
+    
+
+@dataclass
+class MusifyUrl:
+    source_type: MusifyTypes
+    name_without_id: str
+    name_with_id: str
+    musify_id: str
+    url: str
 
 
 class Musify(Page):
@@ -358,6 +373,142 @@ class Musify(Page):
             search_results.extend(cls.parse_playlist_soup(playlist_soup))
 
         return Options(search_results)
+    
+    @classmethod
+    def parse_url(cls, url: str) -> MusifyUrl:
+        parsed = urlparse(url)
+        
+        path = parsed.path.split("/")
+        
+        split_name = path[2].split("-")
+        url_id = split_name[-1]
+        name_for_url = "-".join(split_name[:-1])
+        
+        return MusifyUrl(
+            source_type=MusifyTypes(path[1]),
+            name_without_id=name_for_url,
+            name_with_id=path[2],
+            musify_id=url_id,
+            url=url
+        )
+        
+    @classmethod
+    def parse_album_card(cls, album_card: BeautifulSoup) -> Album:
+        """
+        <div class="card release-thumbnail" data-type="2">
+            <a href="/release/ghost-bath-self-loather-2021-1554266">
+                <img alt="Self Loather" class="card-img-top lozad" data-src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/>
+                <noscript><img alt="Self Loather" src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/></noscript>
+            </a>
+            <div class="card-body">
+                <h4 class="card-subtitle">
+                <a href="/release/ghost-bath-self-loather-2021-1554266">Self Loather</a>
+                </h4>
+            </div>
+            <div class="card-footer"><p class="card-text"><a href="/albums/2021">2021</a></p></div>
+            <div class="card-footer">
+                <p class="card-text genre__labels">
+                <a href="/genre/depressive-black-132">Depressive Black</a><a href="/genre/post-black-metal-295">Post-Black Metal</a> </p>
+            </div>
+            <div class="card-footer">
+                <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 13.11.2021</small>
+                <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 5,88</small>
+            </div>
+        </div>
+        """
+        name: str = ""
+        source_list: List[Source] = []
+        
+        
+        anchor_list = album_card.find_all("a", recursive=False)
+        if len(anchor_list) > 0:
+            anchor = anchor_list[0]
+            
+            source_list.append(Source(
+                cls.SOURCE_TYPE,
+                cls.HOST + anchor.get("href")
+            ))
+            
+            thumbnail: BeautifulSoup = anchor.find("img")
+            if thumbnail is not None:
+                alt = thumbnail.get("alt")
+                if alt is not None:
+                    name = alt
+                
+                image_url = thumbnail.get("src")
+                
+        else:
+            LOGGER.debug("the card has no thumbnail or url")
+        
+        
+    @classmethod
+    def get_discography(cls, url: MusifyUrl) -> List[Album]:
+        """
+        POST https://musify.club/artist/filteralbums
+        ArtistID: 280348
+        SortOrder.Property: dateCreated
+        SortOrder.IsAscending: false
+        X-Requested-With: XMLHttpRequest
+        """
+        
+        endpoint = cls.HOST + "/" + url.source_type.value + "/filteralbums"
+        
+        r = cls.API_SESSION.post(url=endpoint, json={
+            "ArtistID": str(url.musify_id),
+            "SortOrder.Property": "dateCreated",
+            "SortOrder.IsAscending": False,
+            "X-Requested-With": "XMLHttpRequest"
+        })
+        
+        soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
+        
+        print(r)
+        # print(soup.prettify)
+        
+        discography: List[Album] = []
+        for card_soup in soup.find_all("div", {"class": "card"}):
+            discography.append(cls.parse_album_card(card_soup))
+        
+        return discography
+    
+    @classmethod
+    def get_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+        """
+        fetches artist from source
+
+        [] discography
+        [] attributes
+        [] picture galery
+
+        Args:
+            source (Source): the source to fetch
+            flat (bool, optional): if it is false, every album from discograohy will be fetched. Defaults to False.
+
+        Returns:
+            Artist: the artist fetched
+        """
+        
+        print(source)
+        url = cls.parse_url(source.url)
+        print(url)
+        
+        discography: List[Album] = cls.get_discography(url)
+        
+        return Artist(
+            name="",
+            main_album_list=discography
+        )
+
+    @classmethod
+    def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
+        source_list = artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+        if len(source_list) == 0:
+            return artist
+        
+        for source in source_list:
+            artist.merge(cls.get_artist_from_source(source, flat=flat))
+        
+        return artist
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:

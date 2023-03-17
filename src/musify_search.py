@@ -2,12 +2,19 @@ from music_kraken import objects
 from music_kraken.pages import Musify
 
 
-results = Musify.search_by_query("#a Ghost Bath")
-print(results)
-exit()
+def search():
+    results = Musify.search_by_query("#a Ghost Bath")
+    print(results)
 
-artist = results[0]
-artist: objects.Artist = Musify.fetch_details(artist)
 
-print(artist.options)
-print()
+def fetch_artist():
+    artist = objects.Artist(
+        name="Ghost Bath",
+        source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/ghost-bath-280348")]
+    )
+    
+    artist = Musify.fetch_details(artist)
+    print(artist.options)
+
+if __name__ == "__main__":
+    fetch_artist()
