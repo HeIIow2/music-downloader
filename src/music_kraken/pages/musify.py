@@ -550,8 +550,106 @@ class Musify(Page):
         :param url:
         :return:
         """
+
+        r = cls.get_request(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
+        if r is None:
+            return Artist(_id=url.musify_id, name="")
+
+        soup = BeautifulSoup(r.content, "html.parser")
+
+        """
+        <ol class="breadcrumb" itemscope="" itemtype="http://schema.org/BreadcrumbList">
+            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/" itemprop="item"><span itemprop="name">Главная</span><meta content="1" itemprop="position"/></a></li>
+            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/artist" itemprop="item"><span itemprop="name">Исполнители</span><meta content="2" itemprop="position"/></a></li>
+            <li class="breadcrumb-item active">Ghost Bath</li>
+        </ol>
+        
+        <ul class="nav nav-tabs nav-fill">
+            <li class="nav-item"><a class="active nav-link" href="/artist/ghost-bath-280348">песни (41)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/releases">альбомы (12)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/clips">видеоклипы (23)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/photos">фото (38)</a></li>
+        </ul>
+        
+        <header class="content__title">
+            <h1>Ghost Bath</h1>
+            <div class="actions">
+                ...
+            </div>
+        </header>
+        
+        <ul class="icon-list">
+            <li>
+                <i class="zmdi zmdi-globe zmdi-hc-fw" title="Страна"></i> 
+                <i class="flag-icon US shadow"></i>
+                Соединенные Штаты
+            </li>
+        </ul>
+        """
+        name = ""
+        source_list: List[Source] = []
+        county = None
+
+        breadcrumbs: BeautifulSoup = soup.find("ol", {"class": "breadcrumb"})
+        if breadcrumbs is not None:
+            breadcrumb_list: List[BeautifulSoup] = breadcrumbs.find_all("li", {"class": "breadcrumb"}, recursive=False)
+            if len(breadcrumb_list) == 3:
+                name = breadcrumb_list[-1].get_text(strip=True)
+            else:
+                LOGGER.debug("breadcrumb layout on artist page changed")
+
+        nav_tabs: BeautifulSoup = soup.find("ul", {"class": "nav-tabs"})
+        if nav_tabs is not None:
+            list_item: BeautifulSoup
+            for list_item in nav_tabs.find_all("li", {"class": "nav-item"}, recursive=False):
+                if not list_item.get_text(strip=True).startswith("песни"):
+                    # "песни" translates to "songs"
+                    continue
+
+                anchor: BeautifulSoup = list_item.find("a")
+                if anchor is None:
+                    continue
+                href = anchor.get("href")
+                if href is None:
+                    continue
+
+                source_list.append(Source(
+                    cls.SOURCE_TYPE,
+                    cls.HOST + href
+                ))
+
+        content_title: BeautifulSoup = soup.find("header", {"class": "content__title"})
+        if content_title is not None:
+            h1_name: BeautifulSoup = soup.find("h1", recursive=False)
+            if h1_name is not None:
+                name = h1_name.get_text(strip=True)
+
+        icon_list: BeautifulSoup = soup.find("ul", {"class": "icon-list"})
+        if icon_list is not None:
+            country_italic: BeautifulSoup = icon_list.find("i", {"class", "flag-icon"})
+            if country_italic is not None:
+                style_classes: set = {'flag-icon', 'shadow'}
+                classes: set = set(country_italic.get("class"))
+
+                country_set: set = classes.difference(style_classes)
+                if len(country_set) != 1:
+                    LOGGER.debug("the country set contains multiple values")
+                if len(country_set) != 0:
+                    """
+                    This is the css file, where all flags that can be used on musify
+                    are laid out and styled.
+                    Every flag has two upper case letters, thus I assume they follow the alpha_2
+                    standard, though I haven't checked.
+                    https://musify.club/content/flags.min.css
+                    """
+
+                    country = pycountry.countries.get(alpha_2=list(country_set)[0])
+
         return Artist(
-            name=""
+            _id=url.musify_id,
+            name=name,
+            country=county,
+            source_list=source_list
         )
 
     @classmethod
@@ -560,8 +658,8 @@ class Musify(Page):
         fetches artist from source
 
         [x] discography
-        [] attributes
-        [] picture galery
+        [x] attributes *(name and country... wooooow and I waste one request for this)*
+        [] picture gallery
 
         Args:
             source (Source): the source to fetch
