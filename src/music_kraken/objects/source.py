@@ -26,6 +26,7 @@ class SourcePages(Enum):
     SPOTIFY = "spotify"
 
     # This has nothing to do with audio, but bands can be here
+    WIKIPEDIA = "wikipedia"
     INSTAGRAM = "instagram"
     FACEBOOK = "facebook"
     TWITTER = "twitter"     # I will use nitter though lol
@@ -45,7 +46,8 @@ class SourcePages(Enum):
             cls.FACEBOOK: "https://www.facebook.com/",
             cls.SPOTIFY: "https://open.spotify.com/",
             cls.TWITTER: "https://twitter.com/",
-            cls.MYSPACE: "https://myspace.com/"
+            cls.MYSPACE: "https://myspace.com/",
+            cls.WIKIPEDIA: "https://en.wikipedia.org/wiki/Main_Page"
         }
         return homepage_map[attribute]
 
@@ -93,6 +95,9 @@ class Source(DatabaseObject):
 
         if "bandcamp" in url:
             return cls(SourcePages.BANDCAMP, url)
+
+        if "wikipedia" in parsed.netloc:
+            return cls(SourcePages.WIKIPEDIA, url)
 
         if url.startswith("https://www.metal-archives.com/"):
             return cls(SourcePages.ENCYCLOPAEDIA_METALLUM, url)
