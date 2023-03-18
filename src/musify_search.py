@@ -12,9 +12,10 @@ def fetch_artist():
         name="Ghost Bath",
         source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/psychonaut-4-83193")]
     )
-    
+
     artist = Musify.fetch_details(artist)
     print(artist.options)
+
 
 if __name__ == "__main__":
     fetch_artist()

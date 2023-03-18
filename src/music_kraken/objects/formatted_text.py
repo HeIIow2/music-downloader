@@ -43,18 +43,31 @@ class FormattedText:
 
     def get_markdown(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="markdown").strip()
 
     def get_html(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="html").strip()
 
     def get_plaintext(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="plain").strip()
+
+    @property
+    def is_empty(self) -> bool:
+        return self.doc is None
+
+    def __eq__(self, other) -> False:
+        if type(other) != type(self):
+            return False
+        if self.is_empty and other.is_empty:
+            return True
+
+        return self.doc == other.doc
+
 
 
     plaintext = property(fget=get_plaintext, fset=set_plaintext)

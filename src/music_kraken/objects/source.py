@@ -56,7 +56,11 @@ class Source(DatabaseObject):
     ```
     """
     COLLECTION_ATTRIBUTES = tuple()
-    SIMPLE_ATTRIBUTES = ("type_enum", "page_enum", "url")
+    SIMPLE_ATTRIBUTES = {
+        "type_enum": None,
+        "page_enum": None,
+        "url": None
+    }
 
     def __init__(self, page_enum: SourcePages, url: str, id_: str = None, type_enum=None) -> None:
         DatabaseObject.__init__(self, id_=id_)
