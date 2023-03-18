@@ -377,7 +377,7 @@ All objects dependent on Artist
 
 
 class Artist(MainObject):
-    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
+    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection", "source_collection")
     SIMPLE_ATTRIBUTES = {
         "name": None,
         "unified_name": None,

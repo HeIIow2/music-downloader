@@ -9,7 +9,6 @@ def search():
 
 def fetch_artist():
     artist = objects.Artist(
-        name="Ghost Bath",
         source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/psychonaut-4-83193")]
     )
 

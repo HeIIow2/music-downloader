@@ -102,7 +102,7 @@ class Musify(Page):
     @classmethod
     def parse_artist_contact(cls, contact: BeautifulSoup) -> Artist:
         source_list: List[Source] = []
-        name = ""
+        name = None
         _id = None
 
         # source
@@ -153,12 +153,15 @@ class Musify(Page):
         """
 
         source_list: List[Source] = []
-        title = ""
+        title = None
         _id = None
         year = None
         artist_list: List[Artist] = []
 
         def parse_title_date(title_date: Optional[str], delimiter: str = " - "):
+            nonlocal year
+            nonlocal title
+
             if title_date is None:
                 return
 
@@ -262,7 +265,7 @@ class Musify(Page):
     @classmethod
     def parse_playlist_item(cls, playlist_item_soup: BeautifulSoup) -> Song:
         _id = None
-        song_title = playlist_item_soup.get("data-name") or ""
+        song_title = playlist_item_soup.get("data-name")
         artist_list: List[Artist] = []
         source_list: List[Source] = []
 
@@ -415,7 +418,7 @@ class Musify(Page):
         })
 
         _id: Optional[str] = None
-        name: str = ""
+        name: str = None
         source_list: List[Source] = []
         timestamp: Optional[ID3Timestamp] = None
         album_status = None
@@ -586,7 +589,7 @@ class Musify(Page):
             </li>
         </ul>
         """
-        name = ""
+        name = None
         source_list: List[Source] = []
         country = None
         notes: FormattedText = None
@@ -625,6 +628,7 @@ class Musify(Page):
             if h1_name is not None:
                 name = h1_name.get_text(strip=True)
 
+        # country and sources
         icon_list: BeautifulSoup = soup.find("ul", {"class": "icon-list"})
         if icon_list is not None:
             country_italic: BeautifulSoup = icon_list.find("i", {"class", "flag-icon"})
@@ -646,10 +650,20 @@ class Musify(Page):
 
                     country = pycountry.countries.get(alpha_2=list(country_set)[0])
 
+            # get all additional sources
+            additional_source: BeautifulSoup
+            for additional_source in icon_list.find_all("a", {"class", "link"}):
+                href = additional_source.get("href")
+                if href is None:
+                    continue
+                new_src = Source.match_url(href)
+                if new_src is None:
+                    continue
+                source_list.append(new_src)
+
         note_soup: BeautifulSoup = soup.find(id="text-main")
         if note_soup is not None:
             notes = FormattedText(html=note_soup.decode_contents())
-            print(notes.plaintext)
 
         return Artist(
             _id=url.musify_id,

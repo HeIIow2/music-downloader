@@ -1,6 +1,7 @@
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
+from urllib.parse import urlparse
 
 from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
@@ -27,7 +28,8 @@ class SourcePages(Enum):
     # This has nothing to do with audio, but bands can be here
     INSTAGRAM = "instagram"
     FACEBOOK = "facebook"
-    TWITTER = "twitter" # I will use nitter though lol
+    TWITTER = "twitter"     # I will use nitter though lol
+    MYSPACE = "myspace"     # Yes somehow this ancient site is linked EVERYWHERE
 
     @classmethod
     def get_homepage(cls, attribute) -> str:
@@ -42,7 +44,8 @@ class SourcePages(Enum):
             cls.INSTAGRAM: "https://www.instagram.com/",
             cls.FACEBOOK: "https://www.facebook.com/",
             cls.SPOTIFY: "https://open.spotify.com/",
-            cls.TWITTER: "https://twitter.com/"
+            cls.TWITTER: "https://twitter.com/",
+            cls.MYSPACE: "https://myspace.com/"
         }
         return homepage_map[attribute]
 
@@ -71,11 +74,14 @@ class Source(DatabaseObject):
         self.url = url
 
     @classmethod
-    def match_url(cls, url: str):
+    def match_url(cls, url: str) -> Optional["Source"]:
         """
         this shouldn't be used, unlesse you are not certain what the source is for
         the reason is that it is more inefficient
         """
+        parsed = urlparse(url)
+        url = parsed.geturl()
+
         if url.startswith("https://www.youtube"):
             return cls(SourcePages.YOUTUBE, url)
 
@@ -100,6 +106,9 @@ class Source(DatabaseObject):
 
         if url.startswith("https://twitter"):
             return cls(SourcePages.TWITTER, url)
+
+        if url.startswith("https://myspace.com"):
+            return cls(SourcePages.MYSPACE, url)
 
     def get_song_metadata(self) -> Metadata:
         return Metadata({
@@ -157,4 +166,4 @@ class SourceCollection(Collection):
         getting the sources for a specific page like
         YouTube or musify
         """
-        return self._page_to_source_list[source_page]
+        return self._page_to_source_list[source_page].copy()
