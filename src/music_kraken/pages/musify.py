@@ -564,7 +564,7 @@ class Musify(Page):
             album_source: Source
             if not flat:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    new_album.merge(cls.get_album_from_source(album_source))
+                    new_album.merge(cls.fetch_album_from_source(album_source))
                     
             discography.append(new_album)
 
@@ -727,5 +727,15 @@ class Musify(Page):
         return artist
     
     @classmethod
-    def get_album_from_source(cls, source: Source, flat: bool = False) -> Album:
-        return Album()
+    def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+        """_summary_
+
+        Args:
+            source (Source): _description_
+            flat (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            Album: _description_
+        """
+        
+        return Album(title="works")
