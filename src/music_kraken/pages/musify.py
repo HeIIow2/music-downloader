@@ -377,7 +377,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def parse_album_card(cls, album_card: BeautifulSoup) -> Album:
+    def parse_album_card(cls, album_card: BeautifulSoup, artist_name: str = None) -> Album:
         """
         <div class="card release-thumbnail" data-type="2">
             <a href="/release/ghost-bath-self-loather-2021-1554266">
@@ -423,6 +423,27 @@ class Musify(Page):
         timestamp: Optional[ID3Timestamp] = None
         album_status = None
 
+        def set_name(new_name: str):
+            nonlocal name
+            nonlocal artist_name
+            
+            # example of just setting not working: https://musify.club/release/unjoy-eurythmie-psychonaut-4-tired-numb-still-alive-2012-324067
+            if new_name.count(" - ") != 1:
+                name = new_name
+                return
+            
+            potential_artist_list, potential_name = new_name.split(" - ")
+            unified_artist_list = string_processing.unify(potential_artist_list)
+            if artist_name is not None:
+                if string_processing.unify(artist_name) not in unified_artist_list:
+                    name = new_name
+                    return
+                
+                name = potential_name
+                return
+            
+            name = new_name
+
         album_status_id = album_card.get("data-type")
         if album_status_id.isdigit():
             album_status_id = int(album_status_id)
@@ -455,7 +476,7 @@ class Musify(Page):
             if not text_is_name:
                 return
 
-            name = _anchor.text
+            set_name(_anchor.text)
 
         anchor_list = album_card.find_all("a", recursive=False)
         if len(anchor_list) > 0:
@@ -466,7 +487,7 @@ class Musify(Page):
             if thumbnail is not None:
                 alt = thumbnail.get("alt")
                 if alt is not None:
-                    name = alt
+                    set_name(alt)
 
                 image_url = thumbnail.get("src")
         else:
@@ -516,7 +537,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def get_discography(cls, url: MusifyUrl, flat=False) -> List[Album]:
+    def get_discography(cls, url: MusifyUrl, artist_name: str = None, flat=False) -> List[Album]:
         """
         POST https://musify.club/artist/filteralbums
         ArtistID: 280348
@@ -539,7 +560,7 @@ class Musify(Page):
 
         discography: List[Album] = []
         for card_soup in soup.find_all("div", {"class": "card"}):
-            new_album: Album = cls.parse_album_card(card_soup)
+            new_album: Album = cls.parse_album_card(card_soup, artist_name)
             album_source: Source
             if not flat:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
@@ -700,7 +721,7 @@ class Musify(Page):
 
         artist = cls.get_artist_attributes(url)
 
-        discography: List[Album] = cls.get_discography(url)
+        discography: List[Album] = cls.get_discography(url, artist.name)
         artist.main_album_collection.extend(discography)
 
         return artist
