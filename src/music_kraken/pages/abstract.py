@@ -14,7 +14,8 @@ from ..objects import (
     Lyrics,
     Target,
     MusicObject,
-    Options
+    Options,
+    SourcePages
 )
 
 
@@ -28,6 +29,8 @@ class Page:
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
     TRIES = 5
+    
+    SOURCE_TYPE: SourcePages
 
     @classmethod
     def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
@@ -167,6 +170,10 @@ class Page:
         raise NotImplementedError(f"MusicObject {type(music_object)} has not been implemented yet")
 
     @classmethod
+    def fetch_song_from_source(cls, source: Source, flat: bool = False) -> Song:
+        return Song()
+
+    @classmethod
     def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
         """
         for a general description check cls.fetch_details
@@ -181,8 +188,17 @@ class Page:
         
         :return detailed_song: it modifies the input song
         """
+        
+        source: Source
+        for source in song.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_song = cls.fetch_song_from_source(source, flat)
+            song.merge(new_song)
 
         return song
+
+    @classmethod
+    def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+        return Album()
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
@@ -201,7 +217,16 @@ class Page:
         :return detailed_artist: it modifies the input artist
         """
 
+        source: Source
+        for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_album: Album = cls.fetch_album_from_source(source, flat)
+            album.merge(new_album)
+
         return album
+
+    @classmethod
+    def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+        return Artist()
 
     @classmethod
     def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
@@ -217,5 +242,10 @@ class Page:
         
         :return detailed_artist: it modifies the input artist
         """
+        
+        source: Source
+        for source in artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_artist: Artist = cls.fetch_artist_from_source(source, flat)
+            artist.merge(new_artist)
 
         return artist

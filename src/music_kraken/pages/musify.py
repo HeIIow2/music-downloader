@@ -516,7 +516,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def get_discography(cls, url: MusifyUrl) -> List[Album]:
+    def get_discography(cls, url: MusifyUrl, flat=False) -> List[Album]:
         """
         POST https://musify.club/artist/filteralbums
         ArtistID: 280348
@@ -539,7 +539,13 @@ class Musify(Page):
 
         discography: List[Album] = []
         for card_soup in soup.find_all("div", {"class": "card"}):
-            discography.append(cls.parse_album_card(card_soup))
+            new_album: Album = cls.parse_album_card(card_soup)
+            album_source: Source
+            if not flat:
+                for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+                    new_album.merge(cls.get_album_from_source(album_source))
+                    
+            discography.append(new_album)
 
         return discography
 
@@ -556,7 +562,7 @@ class Musify(Page):
 
         r = cls.get_request(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
         if r is None:
-            return Artist(_id=url.musify_id, name="")
+            return Artist(_id=url.musify_id)
 
         soup = BeautifulSoup(r.content, "html.parser")
 
@@ -592,11 +598,11 @@ class Musify(Page):
         name = None
         source_list: List[Source] = []
         country = None
-        notes: FormattedText = None
+        notes: FormattedText = FormattedText()
 
         breadcrumbs: BeautifulSoup = soup.find("ol", {"class": "breadcrumb"})
         if breadcrumbs is not None:
-            breadcrumb_list: List[BeautifulSoup] = breadcrumbs.find_all("li", {"class": "breadcrumb"}, recursive=False)
+            breadcrumb_list: List[BeautifulSoup] = breadcrumbs.find_all("li", {"class": "breadcrumb-item"}, recursive=False)
             if len(breadcrumb_list) == 3:
                 name = breadcrumb_list[-1].get_text(strip=True)
             else:
@@ -624,7 +630,7 @@ class Musify(Page):
 
         content_title: BeautifulSoup = soup.find("header", {"class": "content__title"})
         if content_title is not None:
-            h1_name: BeautifulSoup = soup.find("h1", recursive=False)
+            h1_name: BeautifulSoup = content_title.find("h1", recursive=False)
             if h1_name is not None:
                 name = h1_name.get_text(strip=True)
 
@@ -663,7 +669,7 @@ class Musify(Page):
 
         note_soup: BeautifulSoup = soup.find(id="text-main")
         if note_soup is not None:
-            notes = FormattedText(html=note_soup.decode_contents())
+            notes.html = note_soup.decode_contents()
 
         return Artist(
             _id=url.musify_id,
@@ -674,7 +680,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def get_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+    def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
         """
         fetches artist from source
 
@@ -698,32 +704,7 @@ class Musify(Page):
         artist.main_album_collection.extend(discography)
 
         return artist
-
+    
     @classmethod
-    def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
-        source_list = artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
-        if len(source_list) == 0:
-            return artist
-
-        for source in source_list:
-            artist.merge(cls.get_artist_from_source(source, flat=flat))
-
-        return artist
-
-    @classmethod
-    def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
-
-        return album
-
-    @classmethod
-    def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
-        source_list = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
-        if len(source_list) == 0:
-            return song
-
-        """
-        TODO
-        lyrics
-        """
-
-        return song
+    def get_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+        return Album()
