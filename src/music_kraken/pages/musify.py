@@ -780,12 +780,18 @@ class Musify(Page):
         """
         song_name = song_card.get("data-name")
         artist_list: List[Artist] = []
+        source_list: List[Source] = []
         tracksort = None
 
+        def parse_title(_title: str) -> str:
+            return _title
+
+        """
         # get from parent div
         _artist_name = song_card.get("data-artist")
         if _artist_name is not None:
             artist_list.append(Artist(name=_artist_name))
+        """
 
         # get tracksort
         tracksort_soup: BeautifulSoup = song_card.find("div", {"class": "playlist__position"})
@@ -795,6 +801,48 @@ class Musify(Page):
                 tracksort = int(raw_tracksort)
 
         # playlist details
+        playlist_details: BeautifulSoup = song_card.find("div", {"class": "playlist__details"})
+        if playlist_details is not None:
+            """
+            <div class="playlist__heading">
+                <a href="/artist/tamas-141317" rel="nofollow">Tamas</a> ft.<a href="/artist/zombiez-630767" rel="nofollow">Zombiez</a> - <a class="strong" href="/track/tamas-zombiez-voodoo-feat-zombiez-16185276">Voodoo (Feat. Zombiez)</a>                            
+                <span itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
+                    <meta content="/artist/tamas-141317" itemprop="url" />
+                    <meta content="Tamas" itemprop="name" />
+                </span>
+                <span itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
+                    <meta content="/artist/zombiez-630767" itemprop="url" />
+                    <meta content="Zombiez" itemprop="name" />
+                </span>
+            </div>
+            """
+            # track
+            anchor_list: List[BeautifulSoup] = playlist_details.find_all("a")
+            if len(anchor_list) > 1:
+                track_anchor: BeautifulSoup = anchor_list[-1]
+                href: str = track_anchor.get("href")
+                if href is not None:
+                    source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+                song_name = parse_title(track_anchor.get_text(strip=True))
+
+            # artist
+            artist_span: BeautifulSoup
+            for artist_span in playlist_details.find_all("span", {"itemprop": "byArtist"}):
+                _artist_src = None
+                _artist_name = None
+                meta_artist_src = artist_span.find("meta", {"itemprop": "url"})
+                if meta_artist_src is not None:
+                    meta_artist_url = meta_artist_src.get("content")
+                    if meta_artist_url is not None:
+                        _artist_src = [Source(cls.SOURCE_TYPE, cls.HOST + meta_artist_url)]
+
+                meta_artist_name = artist_span.find("meta", {"itemprop": "name"})
+                if meta_artist_name is not None:
+                    meta_artist_name_text = meta_artist_name.get("content")
+                    _artist_name = meta_artist_name_text
+
+                if _artist_name is not None or _artist_src is not None:
+                    artist_list.append(Artist(name=_artist_name, source_list=_artist_src))
 
         return Song(
             title=song_name,
@@ -810,14 +858,14 @@ class Musify(Page):
 
         /html/musify/album_overview.html
         [] tracklist
-        [] attributes *(name and country... wooooow and I waste one request for this)*
+        [] attributes
         [] ratings
 
         :param source:
         :param flat:
         :return:
         """
-        album = Album()
+        album = Album(title="Hi :)")
 
         url = cls.parse_url(source.url)
 

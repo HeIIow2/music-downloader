@@ -51,7 +51,7 @@ class Song(MainObject):
         "title": None,
         "unified_title": None,
         "isrc": None,
-        "length":  None,
+        "length": None,
         "tracksort": 0,
         "genre": None,
         "notes": FormattedText()
@@ -101,12 +101,12 @@ class Song(MainObject):
         for album in self.album_collection:
             if album.song_collection.insecure_append(self):
                 album.compile()
-            
+
         artist: Artist
         for artist in self.feature_artist_collection:
             if artist.feature_song_collection.insecure_append(self):
                 artist.compile()
-                
+
         for artist in self.main_artist_collection:
             if artist.main_album_collection.insecure_extend(self.album_collection):
                 artist.compile()
@@ -261,18 +261,16 @@ class Album(MainObject):
         for song in self.song_collection:
             if song.album_collection.insecure_append(self):
                 song.compile()
-            
+
         artist: Artist
         for artist in self.artist_collection:
             if artist.main_album_collection.insecure_append(self):
                 artist.compile()
-            
+
         label: Label
         for label in self.label_collection:
             if label.album_collection.insecure_append(self):
                 label.compile()
-            
-        
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -369,15 +367,14 @@ class Album(MainObject):
         return len(self.artist_collection) > 1
 
 
-
-
 """
 All objects dependent on Artist
 """
 
 
 class Artist(MainObject):
-    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection", "source_collection")
+    COLLECTION_ATTRIBUTES = (
+    "feature_song_collection", "main_album_collection", "label_collection", "source_collection")
     SIMPLE_ATTRIBUTES = {
         "name": None,
         "unified_name": None,
@@ -440,12 +437,12 @@ class Artist(MainObject):
         for song in self.feature_song_collection:
             if song.feature_artist_collection.insecure_append(self):
                 song.compile()
-            
+
         album: "Album"
         for album in self.main_album_collection:
             if album.artist_collection.insecure_append(self):
                 album.compile()
-                
+
         label: Label
         for label in self.label_collection:
             if label.current_artist_collection.insecure_append(self):
@@ -584,7 +581,7 @@ class Label(MainObject):
         for album in self.album_collection:
             if album.label_collection.insecure_append(self):
                 album.compile()
-        
+
         artist: Artist
         for artist in self.current_artist_collection:
             if artist.label_collection.insecure_append(self):
