@@ -61,6 +61,7 @@ X-Requested-With: XMLHttpRequest
 class MusifyTypes(Enum):
     ARTIST = "artist"
     RELEASE = "release"
+    SONG = "track"
 
 
 @dataclass
@@ -732,7 +733,75 @@ class Musify(Page):
         artist.main_album_collection.extend(discography)
 
         return artist
-    
+
+    @classmethod
+    def parse_song_card(cls, song_card: BeautifulSoup) -> Song:
+        """
+            <div id="playerDiv3051" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut">
+                <div id="play_3051" class="playlist__control play" data-url="/track/play/3051/linkin-park-papercut.mp3" data-position="1" data-title="Linkin Park - Papercut" title="Слушать Linkin Park - Papercut">
+                    <span class="ico-play"><i class="zmdi zmdi-play-circle-outline zmdi-hc-2-5x"></i></span>
+                    <span class="ico-pause"><i class="zmdi zmdi-pause-circle-outline zmdi-hc-2-5x"></i></span>
+                </div>
+                <div class="playlist__position">
+                    1
+                </div>
+                <div class="playlist__details">
+                    <div class="playlist__heading">
+                        <a href="/artist/linkin-park-5" rel="nofollow">Linkin Park</a> - <a class="strong" href="/track/linkin-park-papercut-3051">Papercut</a>
+                        <span itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
+                            <meta content="/artist/linkin-park-5" itemprop="url" />
+                            <meta content="Linkin Park" itemprop="name" />
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="track__details track__rating hidden-xs-down">
+                        <span class="text-muted">
+                            <i class="zmdi zmdi-star-circle zmdi-hc-1-3x" title="Рейтинг"></i>
+                            326,3K
+                        </span>
+                    </div>
+                </div>
+                <div class="track__details hidden-xs-down">
+                    <span class="text-muted">03:05</span>
+                    <span class="text-muted">320 Кб/с</span>
+                </div>
+                <div class="track__details hidden-xs-down">
+                    <span title='Есть видео Linkin Park - Papercut'><i class='zmdi zmdi-videocam zmdi-hc-1-3x'></i></span>
+                    <span title='Есть текст Linkin Park - Papercut'><i class='zmdi zmdi-file-text zmdi-hc-1-3x'></i></span>
+                </div>
+                <div class="playlist__actions">
+                    <span class="pl-btn save-to-pl" id="add_3051" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
+                    <a target="_blank" itemprop="audio" download="Linkin Park - Papercut.mp3" href="/track/dl/3051/linkin-park-papercut.mp3" class="no-ajaxy yaBrowser" id="dl_3051" title='Скачать Linkin Park - Papercut'>
+                        <span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span>
+                    </a>
+                </div>
+            </div>
+        """
+        song_name = song_card.get("data-name")
+        artist_list: List[Artist] = []
+        tracksort = None
+
+        # get from parent div
+        _artist_name = song_card.get("data-artist")
+        if _artist_name is not None:
+            artist_list.append(Artist(name=_artist_name))
+
+        # get tracksort
+        tracksort_soup: BeautifulSoup = song_card.find("div", {"class": "playlist__position"})
+        if tracksort_soup is not None:
+            raw_tracksort: str = tracksort_soup.get_text(strip=True)
+            if raw_tracksort.isdigit():
+                tracksort = int(raw_tracksort)
+
+        # playlist details
+
+        return Song(
+            title=song_name,
+            tracksort=tracksort,
+            main_artist_list=artist_list
+        )
+
     @classmethod
     def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
         """
@@ -748,14 +817,23 @@ class Musify(Page):
         :param flat:
         :return:
         """
+        album = Album()
+
         url = cls.parse_url(source.url)
 
         endpoint = cls.HOST + "/release/" + url.name_with_id
         r = cls.get_request(endpoint)
         if r is None:
-            return Album()
+            return album
 
         soup = BeautifulSoup(r.content, "html.parser")
 
+        # <div class="card"><div class="card-body">...</div></div>
+        cards_soup: BeautifulSoup = soup.find("div", {"class": "card-body"})
+        if cards_soup is not None:
+            card_soup: BeautifulSoup
+            for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
+                album.song_collection.append(cls.parse_song_card(card_soup))
+        album.update_tracksort()
 
-        return Album(title="works")
+        return album
