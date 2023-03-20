@@ -60,6 +60,7 @@ X-Requested-With: XMLHttpRequest
 
 class MusifyTypes(Enum):
     ARTIST = "artist"
+    RELEASE = "release"
 
 
 @dataclass
@@ -84,6 +85,30 @@ class Musify(Page):
     HOST = "https://musify.club"
 
     SOURCE_TYPE = SourcePages.MUSIFY
+
+    @classmethod
+    def parse_url(cls, url: str) -> MusifyUrl:
+        parsed = urlparse(url)
+
+        path = parsed.path.split("/")
+
+        split_name = path[2].split("-")
+        url_id = split_name[-1]
+        name_for_url = "-".join(split_name[:-1])
+
+        try:
+            type_enum = MusifyTypes(path[1])
+        except ValueError as e:
+            print(f"{path[1]} is not yet implemented, add it to MusifyTypes")
+            raise e
+
+        return MusifyUrl(
+            source_type=type_enum,
+            name_without_id=name_for_url,
+            name_with_id=path[2],
+            musify_id=url_id,
+            url=url
+        )
 
     @classmethod
     def search_by_query(cls, query: str) -> Options:
@@ -357,24 +382,6 @@ class Musify(Page):
             search_results.extend(cls.parse_playlist_soup(playlist_soup))
 
         return Options(search_results)
-
-    @classmethod
-    def parse_url(cls, url: str) -> MusifyUrl:
-        parsed = urlparse(url)
-
-        path = parsed.path.split("/")
-
-        split_name = path[2].split("-")
-        url_id = split_name[-1]
-        name_for_url = "-".join(split_name[:-1])
-
-        return MusifyUrl(
-            source_type=MusifyTypes(path[1]),
-            name_without_id=name_for_url,
-            name_with_id=path[2],
-            musify_id=url_id,
-            url=url
-        )
 
     @classmethod
     def parse_album_card(cls, album_card: BeautifulSoup, artist_name: str = None) -> Album:
@@ -706,7 +713,7 @@ class Musify(Page):
         fetches artist from source
 
         [x] discography
-        [x] attributes *(name and country... wooooow and I waste one request for this)*
+        [x] attributes
         [] picture gallery
 
         Args:
@@ -728,14 +735,27 @@ class Musify(Page):
     
     @classmethod
     def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
-        """_summary_
-
-        Args:
-            source (Source): _description_
-            flat (bool, optional): _description_. Defaults to False.
-
-        Returns:
-            Album: _description_
         """
-        
+        fetches album from source:
+        eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
+
+        /html/musify/album_overview.html
+        [] tracklist
+        [] attributes *(name and country... wooooow and I waste one request for this)*
+        [] ratings
+
+        :param source:
+        :param flat:
+        :return:
+        """
+        url = cls.parse_url(source.url)
+
+        endpoint = cls.HOST + "/release/" + url.name_with_id
+        r = cls.get_request(endpoint)
+        if r is None:
+            return Album()
+
+        soup = BeautifulSoup(r.content, "html.parser")
+
+
         return Album(title="works")

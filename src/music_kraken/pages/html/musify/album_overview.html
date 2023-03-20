@@ -21,154 +21,159 @@
     soup.find("div", {"id": "bodyContent"})
 -->
 
-<body data-ma-theme="blue-grey">
-    <main class="main main--alt">
-        <section class="content content--full">
-            <div class="row content__inner">
-                <div id="bodyContent" class="content__inner--sm col-md-12 col-lg-9">
-                    
+<body data-ma-theme="blue-grey"><main class="main main--alt"><section class="content content--full"><div class="row content__inner">
+<div id="bodyContent" class="content__inner--sm col-md-12 col-lg-9">
+    <!--if breadcrumb list has 4 elements-->
+    <!--the -2 is the artist link: the li-a-span has the tag "content="3""-->
+    <!--the -1 is the album on, which also has the class "active", which can be tested-->
+    <ol class="breadcrumb" itemscope itemtype="http://schema.org/BreadcrumbList">
+        <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
+            <a href="/" itemprop="item">
+                <span itemprop="name">Главная</span>
+                <meta itemprop="position" content="1">
+            </a>
+        </li>
+        <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
+            <a href="/artist" itemprop="item">
+                <span itemprop="name">Исполнители</span>
+                <meta itemprop="position" content="2">
+            </a>
+        </li>
+        <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
+            <a href="/artist/linkin-park-5" itemprop="item">
+                <span itemprop="name">Linkin Park</span>
+                <meta itemprop="position" content="3">
+            </a>
+        </li>
+        <li class="breadcrumb-item active">Hybrid Theory</li>
+    </ol>
 
-                <!--if breadcrumb list has 4 elements-->
-                <!--the -2 is the artist link: the li-a-span has the tag "content="3""-->
-                <!--the -1 is the album on, which also has the class "active", which can be tested-->
-                <ol class="breadcrumb" itemscope itemtype="http://schema.org/BreadcrumbList">
-                    <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
-                        <a href="/" itemprop="item">
-                            <span itemprop="name">Главная</span>
-                            <meta itemprop="position" content="1">
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
-                        <a href="/artist" itemprop="item">
-                            <span itemprop="name">Исполнители</span>
-                            <meta itemprop="position" content="2">
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item" itemscope itemprop="itemListElement" itemtype="http://schema.org/ListItem">
-                        <a href="/artist/linkin-park-5" itemprop="item">
-                            <span itemprop="name">Linkin Park</span>
-                            <meta itemprop="position" content="3">
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item active">Hybrid Theory</li>
-                </ol>
+    <!--the proper information for source and album name-->
+    <meta content="/release/linkin-park-hybrid-theory-2000-188" itemprop="url" />
+    <meta content="Hybrid Theory" itemprop="name" />
 
-        <!--the proper informations for source and album name-->
-        <meta content="/release/linkin-park-hybrid-theory-2000-188" itemprop="url" />
-        <meta content="Hybrid Theory" itemprop="name" />
-
-        <!--
-            parsing the header seems like a nightmare, but if I don't find the date (year)
-            in another place, I will take it from here. 
-            I'll probaply just implement it
-        -->
-        <header class="content__title">
-            <h1>Linkin Park - Hybrid Theory (2000)</h1>
-            <div class="actions">
-                <div class="dropdown actions__item">
-                    <i data-toggle="dropdown" class="zmdi zmdi-share" title="Поделиться"></i>
-                    <div class="dropdown-menu dropdown-menu-right p-2 share-page">
-                        <div id="site-share" class="ya-share2" data-services="vkontakte,facebook,odnoklassniki,moimir,collections,telegram,viber,whatsapp" data-counter=""></div>
-                    </div>
+    <!--
+        parsing the header seems like a nightmare, but if I don't find the date (year)
+        in another place, I will take it from here.
+        I'll probably just implement it or I dunno
+    -->
+    <header class="content__title">
+        <h1>Linkin Park - Hybrid Theory (2000)</h1>
+        <div class="actions">
+            <div class="dropdown actions__item">
+                <i data-toggle="dropdown" class="zmdi zmdi-share" title="Поделиться"></i>
+                <div class="dropdown-menu dropdown-menu-right p-2 share-page">
+                    <div id="site-share" class="ya-share2" data-services="vkontakte,facebook,odnoklassniki,moimir,collections,telegram,viber,whatsapp" data-counter=""></div>
                 </div>
             </div>
-        </header>
-
-        <!--
-            this container contains multiple information.
-            It is hard to get it due to the lack of proper class names
-            
-            1. album cover + album_name (alt) [could search this at the end with ("img", {"alt": "{name}"})]
-            2. album information (list li)
-                1. artist (name + src) [use the meta tags in the a]
-                2. release time [use the datetime <time>]
-            3. genre list
-            4. album notes
-        -->
-        <div class="row justify-content-center">
-            <div class="col-auto">
-                <img alt="Hybrid Theory" data-src="https://38s-a.musify.club/img/70/11055724/29441605.jpg" class="album-img lozad" />
-                <noscript><img src="https://38s-a.musify.club/img/70/11055724/29441605.jpg" alt="Hybrid Theory" /></noscript>
-                    <a data-ma-action="aside-open" data-ma-target=".user-login-summary" class="btn btn--icon-text btn-block follow">
-                        В избранное <i class="zmdi zmdi-favorite-outline zmdi-hc-fw"></i> <span id="f_cnt" class="fav">298</span>
-                    </a>
-                    <a data-ma-action="aside-open" data-ma-target=".user-login-summary" class="btn btn--icon-text btn-block bg-primary"><i class="zmdi zmdi-download zmdi-hc-fw"></i> Скачать альбом</a>
-                <button class="btn btn-primary btn--icon-text btn-block no-ajaxy play-all"><i class="zmdi zmdi-play"></i> Слушать альбом</button>
-            </div>
-
-            <div class="col-md-7">
-                <ul class="icon-list album-info">
-                    <li>
-                        <i class="zmdi zmdi-accounts zmdi-hc-fw" title="Исполнитель"></i>
-                        <a href="/artist/linkin-park-5" itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
-                            <meta content="/artist/linkin-park-5" itemprop="url" />
-                            <meta content="Linkin Park" itemprop="name" />
-                            Linkin Park
-                        </a>
-                    </li>
-                    <li>
-                        <i class="zmdi zmdi-calendar-note zmdi-hc-fw" title="Год релиза"></i>
-                        <time datetime="2000-01-01" itemprop="datePublished"></time>
-                        <a href="/albums/2000">2000</a>                
-                    </li>
-                    <li>
-                        <i class="zmdi zmdi-collection-music zmdi-hc-fw" title="Тип"></i>
-                        Студийный альбом
-                    </li>
-                </ul>
-
-                <p class="genre__labels">
-                    <a href="/genre/alternative-metal-17">#Alternative Metal</a>
-                    <a href="/genre/nu-metal-36">#Nu-Metal</a>
-                    <a href="/genre/rap-rock-291">#Rap-Rock</a>
-                </p>
-
-                <p>
-                    <div class="desc-text artist-short" id="text-main">Hybrid Theory (в пер с. англ. Теория гибридов) — дебютный альбом американской рок-группы Linkin Park. Релиз состоялся 24 октября 2000 года лейблом Warner Bros. Диск имел огромный коммерческий успех. Только в Соединённых Штатах по состоянию на 2012 год было продано свыше 10 млн экземпляров.     Альбом поднялся на вторую позицию в Billboard 200 и, несмотря на смешанные отзывы критиков, он разошёлся в 24 млн экземпляров по всему миру. Hybrid Theory стал самым продаваемым альбомом группы и занял седьмое место среди самых продаваемых альбомов десятилетия.<br/> В 2002 Linkin Park получили премию &#171;Грэмми&#187; за лучшее хард-рок исполнение песни &#171;Crawling&#187;, также Hybrid Theory был номинирован на &#171;Грэмми&#187; как &#171;Лучший рок-альбом&#187;. Специальное издание Hybrid Theory было выпущено 11 марта 2002, через два года после выхода оригинала.<br/>Предыстория<br/> Группа Linkin Park сформировалась в 1996 в Южной Калифорнии. SuperXero было первым названием группы (позднее сменилось на Xero), в состав которой входили Майк Шинода, его школьные друзья Брэд Делсон и Роб Бурдон, а также сосед Делсона по комнате в университетском общежитии Дэвид Фаррелл и колледжский друг Шиноды Джо Хан. Позже к ним присоединился Марк Уэйкфилд. После отказов многих лейблов от контракта, Уэйкфилд покинул группу, решив, что у Xero нет будущего. В то же время Фаррелл оставит группу, чтобы отправиться в гастрольный тур с другой своей группой Tasty Snax.<br/> Xero занялись поиском нового вокалиста: они отослали свою запись Джеффу Блю из Zomba Music, работавшему с ними до этого, и попросили отослать её кому-нибудь. 20 марта 1999 года, когда Блю позвонил в Аризону бывшему вокалисту группы Grey Daze Честеру Беннингтону, чтобы рассказать ему о Xero, тот праздновал свой 23-й день рождения. На следующий день, получив запись, Беннингтон тут же отправился в студию, записал, смонтировал вокал и сразу перезвонил Джеффу. Он прокрутил ему и музыкантам кассету с записью по телефону. Его голос произвел на них сильное впечатление, он тут же был приглашен на прослушивание, после чего был принят в группу. Секстет изменил свое название на Hybrid Theory и выпустил одноименный мини-альбом. Для того, чтобы избежать судебных разбирательств с другой группой, они меняют свое название на Lincoln Park. А чтобы приобрести своё доменное имя, группа меняет название Lincoln Park на Linkin Park.<br/>Содержание<br/>Музыка Hybrid Theory содержит различные вдохновения. Стиль пения Беннингтона находится под влиянием таких исполнителей, как Depeche Mode и Stone Temple Pilots, а риффы и техника игры гитариста Брэда Делсона вдохновлены Deftones, Guns N&#39; Roses, U2 и The Smiths. Рэп Майка Шиноды, который присутствует на семи треках, очень близок к стилю The Roots. Лирическое содержание песен прежде всего затрагивает проблемы Беннингтона, возникающие во время его отрочества, включая жестокое обращение, постоянное и чрезмерное злоупотребление наркотиков и алкоголя, развод его родителей, изоляция, разочарования и чувства последствия неудачных отношений.<br/>&#171;Points of Authority&#187;, четвёртый трек в альбоме, имеет свой видеоклип, который можно найти на Frat Party at the Pankake Festival, первом DVD группы. Барабанщик Роб Бурдон описывает процесс записи песни: &#171;Брэд написал этот рифф, затем пошел домой. Майк решил разрезать его на различные части и переставить их на компьютере. Брэду в свою очередь пришлось узнать свою собственную часть с компьютера&#187;. Что касается песни, Делсон похвалил мастерство Шиноды, охарактеризовав его как &#171;гения&#187; и &#171;талантливого Трента Резнора&#187;.</div>
-                        <span class="desc-switch" data-target="#text-main" data-class-toggle="artist-short" data-hide="Свернуть" data-show="Развернуть">
-                            Развернуть
-                        </span>
-                </p>
-            </div>
         </div>
+    </header>
+
+    <!--
+        this container contains multiple information.
+        It is hard to get it due to the lack of proper class names
+
+        1. album cover + album_name (alt) [could search this at the end with ("img", {"alt": "{name}"})]
+        2. album information (list li)
+            1. artist (name + src) [use the meta tags in the a]
+            2. release time [use the datetime <time>]
+        3. genre list
+        4. album notes
+    -->
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <img alt="Hybrid Theory" data-src="https://38s-a.musify.club/img/70/11055724/29441605.jpg" class="album-img lozad" />
+            <noscript><img src="https://38s-a.musify.club/img/70/11055724/29441605.jpg" alt="Hybrid Theory" /></noscript>
+            <a data-ma-action="aside-open" data-ma-target=".user-login-summary" class="btn btn--icon-text btn-block follow">
+                В избранное <i class="zmdi zmdi-favorite-outline zmdi-hc-fw"></i> <span id="f_cnt" class="fav">298</span>
+            </a>
+            <a data-ma-action="aside-open" data-ma-target=".user-login-summary" class="btn btn--icon-text btn-block bg-primary"><i class="zmdi zmdi-download zmdi-hc-fw"></i> Скачать альбом</a>
+        <button class="btn btn-primary btn--icon-text btn-block no-ajaxy play-all"><i class="zmdi zmdi-play"></i> Слушать альбом</button>
+    </div>
+
+    <div class="col-md-7">
+        <ul class="icon-list album-info">
+            <li>
+                <i class="zmdi zmdi-accounts zmdi-hc-fw" title="Исполнитель"></i>
+                <a href="/artist/linkin-park-5" itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
+                    <meta content="/artist/linkin-park-5" itemprop="url" />
+                    <meta content="Linkin Park" itemprop="name" />
+                    Linkin Park
+                </a>
+            </li>
+            <li>
+                <i class="zmdi zmdi-calendar-note zmdi-hc-fw" title="Год релиза"></i>
+                <time datetime="2000-01-01" itemprop="datePublished"></time>
+                <a href="/albums/2000">2000</a>
+            </li>
+            <li>
+                <i class="zmdi zmdi-collection-music zmdi-hc-fw" title="Тип"></i>
+                Студийный альбом
+            </li>
+        </ul>
+
+        <p class="genre__labels">
+            <a href="/genre/alternative-metal-17">#Alternative Metal</a>
+            <a href="/genre/nu-metal-36">#Nu-Metal</a>
+            <a href="/genre/rap-rock-291">#Rap-Rock</a>
+        </p>
+
+        <p>
+            <div class="desc-text artist-short" id="text-main">Hybrid Theory (в пер с. англ. Теория гибридов) — дебютный альбом американской рок-группы Linkin Park. Релиз состоялся 24 октября 2000 года лейблом Warner Bros. Диск имел огромный коммерческий успех. Только в Соединённых Штатах по состоянию на 2012 год было продано свыше 10 млн экземпляров.     Альбом поднялся на вторую позицию в Billboard 200 и, несмотря на смешанные отзывы критиков, он разошёлся в 24 млн экземпляров по всему миру. Hybrid Theory стал самым продаваемым альбомом группы и занял седьмое место среди самых продаваемых альбомов десятилетия.<br/> В 2002 Linkin Park получили премию &#171;Грэмми&#187; за лучшее хард-рок исполнение песни &#171;Crawling&#187;, также Hybrid Theory был номинирован на &#171;Грэмми&#187; как &#171;Лучший рок-альбом&#187;. Специальное издание Hybrid Theory было выпущено 11 марта 2002, через два года после выхода оригинала.<br/>Предыстория<br/> Группа Linkin Park сформировалась в 1996 в Южной Калифорнии. SuperXero было первым названием группы (позднее сменилось на Xero), в состав которой входили Майк Шинода, его школьные друзья Брэд Делсон и Роб Бурдон, а также сосед Делсона по комнате в университетском общежитии Дэвид Фаррелл и колледжский друг Шиноды Джо Хан. Позже к ним присоединился Марк Уэйкфилд. После отказов многих лейблов от контракта, Уэйкфилд покинул группу, решив, что у Xero нет будущего. В то же время Фаррелл оставит группу, чтобы отправиться в гастрольный тур с другой своей группой Tasty Snax.<br/> Xero занялись поиском нового вокалиста: они отослали свою запись Джеффу Блю из Zomba Music, работавшему с ними до этого, и попросили отослать её кому-нибудь. 20 марта 1999 года, когда Блю позвонил в Аризону бывшему вокалисту группы Grey Daze Честеру Беннингтону, чтобы рассказать ему о Xero, тот праздновал свой 23-й день рождения. На следующий день, получив запись, Беннингтон тут же отправился в студию, записал, смонтировал вокал и сразу перезвонил Джеффу. Он прокрутил ему и музыкантам кассету с записью по телефону. Его голос произвел на них сильное впечатление, он тут же был приглашен на прослушивание, после чего был принят в группу. Секстет изменил свое название на Hybrid Theory и выпустил одноименный мини-альбом. Для того, чтобы избежать судебных разбирательств с другой группой, они меняют свое название на Lincoln Park. А чтобы приобрести своё доменное имя, группа меняет название Lincoln Park на Linkin Park.<br/>Содержание<br/>Музыка Hybrid Theory содержит различные вдохновения. Стиль пения Беннингтона находится под влиянием таких исполнителей, как Depeche Mode и Stone Temple Pilots, а риффы и техника игры гитариста Брэда Делсона вдохновлены Deftones, Guns N&#39; Roses, U2 и The Smiths. Рэп Майка Шиноды, который присутствует на семи треках, очень близок к стилю The Roots. Лирическое содержание песен прежде всего затрагивает проблемы Беннингтона, возникающие во время его отрочества, включая жестокое обращение, постоянное и чрезмерное злоупотребление наркотиков и алкоголя, развод его родителей, изоляция, разочарования и чувства последствия неудачных отношений.<br/>&#171;Points of Authority&#187;, четвёртый трек в альбоме, имеет свой видеоклип, который можно найти на Frat Party at the Pankake Festival, первом DVD группы. Барабанщик Роб Бурдон описывает процесс записи песни: &#171;Брэд написал этот рифф, затем пошел домой. Майк решил разрезать его на различные части и переставить их на компьютере. Брэду в свою очередь пришлось узнать свою собственную часть с компьютера&#187;. Что касается песни, Делсон похвалил мастерство Шиноды, охарактеризовав его как &#171;гения&#187; и &#171;талантливого Трента Резнора&#187;.</div>
+                <span class="desc-switch" data-target="#text-main" data-class-toggle="artist-short" data-hide="Свернуть" data-show="Развернуть">
+                    Развернуть
+                </span>
+        </p>
+    </div>
+</div>
 
 <div class="card">
     <div class="card-body">
         <h2 class="card-title">Песни в альбоме<br>Linkin Park - Hybrid Theory (2000)</h2>
-<div class="playlist playlist--hover">
-    <div id="playerDiv3051" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut">
+        <div class="playlist playlist--hover">
+        <div id="playerDiv3051" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut">
             <div id="play_3051" class="playlist__control play" data-url="/track/play/3051/linkin-park-papercut.mp3" data-position="1" data-title="Linkin Park - Papercut" title="Слушать Linkin Park - Papercut">
                 <span class="ico-play"><i class="zmdi zmdi-play-circle-outline zmdi-hc-2-5x"></i></span>
                 <span class="ico-pause"><i class="zmdi zmdi-pause-circle-outline zmdi-hc-2-5x"></i></span>
             </div>
-                    <div class="playlist__position">
+            <div class="playlist__position">
                 1
             </div>
         <div class="playlist__details">
             <div class="playlist__heading">
-<a href="/artist/linkin-park-5" rel="nofollow">Linkin Park</a> - <a class="strong" href="/track/linkin-park-papercut-3051">Papercut</a>                            <span itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
-                                <meta content="/artist/linkin-park-5" itemprop="url" />
-                                <meta content="Linkin Park" itemprop="name" />
-                            </span>
+                <a href="/artist/linkin-park-5" rel="nofollow">Linkin Park</a> - <a class="strong" href="/track/linkin-park-papercut-3051">Papercut</a>
+                <span itemprop="byArtist" itemscope="itemscope" itemtype="http://schema.org/MusicGroup">
+                    <meta content="/artist/linkin-park-5" itemprop="url" />
+                    <meta content="Linkin Park" itemprop="name" />
+                </span>
             </div>
         </div>
-            <div><div class="track__details track__rating hidden-xs-down">
-                <span class="text-muted"><i class="zmdi zmdi-star-circle zmdi-hc-1-3x" title="Рейтинг"></i> 326,3K</span>
-            </div></div>
-            <div class="track__details hidden-xs-down">
-                <span class="text-muted">03:05</span>
-                <span class="text-muted">320 Кб/с</span>
+        <div>
+            <div class="track__details track__rating hidden-xs-down">
+                <span class="text-muted">
+                    <i class="zmdi zmdi-star-circle zmdi-hc-1-3x" title="Рейтинг"></i>
+                    326,3K
+                </span>
             </div>
-            <div class="track__details hidden-xs-down">
-                <span title='Есть видео Linkin Park - Papercut'><i class='zmdi zmdi-videocam zmdi-hc-1-3x'></i></span>
-                <span title='Есть текст Linkin Park - Papercut'><i class='zmdi zmdi-file-text zmdi-hc-1-3x'></i></span>
-            </div>
-    <div class="playlist__actions">
+        </div>
+        <div class="track__details hidden-xs-down">
+            <span class="text-muted">03:05</span>
+            <span class="text-muted">320 Кб/с</span>
+        </div>
+        <div class="track__details hidden-xs-down">
+            <span title='Есть видео Linkin Park - Papercut'><i class='zmdi zmdi-videocam zmdi-hc-1-3x'></i></span>
+            <span title='Есть текст Linkin Park - Papercut'><i class='zmdi zmdi-file-text zmdi-hc-1-3x'></i></span>
+        </div>
+        <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3051" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
-                    <a target="_blank" itemprop="audio" download="Linkin Park - Papercut.mp3" href="/track/dl/3051/linkin-park-papercut.mp3" class="no-ajaxy yaBrowser" id="dl_3051" title='Скачать Linkin Park - Papercut'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+            <a target="_blank" itemprop="audio" download="Linkin Park - Papercut.mp3" href="/track/dl/3051/linkin-park-papercut.mp3" class="no-ajaxy yaBrowser" id="dl_3051" title='Скачать Linkin Park - Papercut'>
+                <span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span>
+            </a>
+        </div>
     </div>
-    </div>
+
+
+
     <div id="playerDiv3052" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="One Step Closer">
             <div id="play_3052" class="playlist__control play" data-url="/track/play/3052/linkin-park-one-step-closer.mp3" data-position="2" data-title="Linkin Park - One Step Closer" title="Слушать Linkin Park - One Step Closer">
                 <span class="ico-play"><i class="zmdi zmdi-play-circle-outline zmdi-hc-2-5x"></i></span>
@@ -199,7 +204,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3052" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - One Step Closer.mp3" href="/track/dl/3052/linkin-park-one-step-closer.mp3" class="no-ajaxy yaBrowser" id="dl_3052" title='Скачать Linkin Park - One Step Closer'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3053" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="With You">
@@ -232,7 +237,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3053" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - With You.mp3" href="/track/dl/3053/linkin-park-with-you.mp3" class="no-ajaxy yaBrowser" id="dl_3053" title='Скачать Linkin Park - With You'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3054" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Points Of Authority">
@@ -265,7 +270,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3054" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Points Of Authority.mp3" href="/track/dl/3054/linkin-park-points-of-authority.mp3" class="no-ajaxy yaBrowser" id="dl_3054" title='Скачать Linkin Park - Points Of Authority'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3055" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Crawling">
@@ -298,7 +303,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3055" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Crawling.mp3" href="/track/dl/3055/linkin-park-crawling.mp3" class="no-ajaxy yaBrowser" id="dl_3055" title='Скачать Linkin Park - Crawling'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3056" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Runaway">
@@ -331,7 +336,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3056" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Runaway.mp3" href="/track/dl/3056/linkin-park-runaway.mp3" class="no-ajaxy yaBrowser" id="dl_3056" title='Скачать Linkin Park - Runaway'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3057" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="By Myself">
@@ -364,7 +369,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3057" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - By Myself.mp3" href="/track/dl/3057/linkin-park-by-myself.mp3" class="no-ajaxy yaBrowser" id="dl_3057" title='Скачать Linkin Park - By Myself'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3058" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="In The End">
@@ -397,7 +402,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3058" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - In The End.mp3" href="/track/dl/3058/linkin-park-in-the-end.mp3" class="no-ajaxy yaBrowser" id="dl_3058" title='Скачать Linkin Park - In The End'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3059" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="A Place For My Head">
@@ -430,7 +435,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3059" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - A Place For My Head.mp3" href="/track/dl/3059/linkin-park-a-place-for-my-head.mp3" class="no-ajaxy yaBrowser" id="dl_3059" title='Скачать Linkin Park - A Place For My Head'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3060" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Forgotten">
@@ -463,7 +468,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3060" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Forgotten.mp3" href="/track/dl/3060/linkin-park-forgotten.mp3" class="no-ajaxy yaBrowser" id="dl_3060" title='Скачать Linkin Park - Forgotten'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3061" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Cure For The Itch">
@@ -496,7 +501,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3061" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Cure For The Itch.mp3" href="/track/dl/3061/linkin-park-cure-for-the-itch.mp3" class="no-ajaxy yaBrowser" id="dl_3061" title='Скачать Linkin Park - Cure For The Itch'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv3062" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Pushing Me Away">
@@ -529,7 +534,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_3062" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Pushing Me Away.mp3" href="/track/dl/3062/linkin-park-pushing-me-away.mp3" class="no-ajaxy yaBrowser" id="dl_3062" title='Скачать Linkin Park - Pushing Me Away'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv2654520" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="My December">
@@ -562,7 +567,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_2654520" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - My December.mp3" href="/track/dl/2654520/linkin-park-my-december.mp3" class="no-ajaxy yaBrowser" id="dl_2654520" title='Скачать Linkin Park - My December'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv2654521" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="High Voltage">
@@ -595,7 +600,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_2654521" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - High Voltage.mp3" href="/track/dl/2654521/linkin-park-high-voltage.mp3" class="no-ajaxy yaBrowser" id="dl_2654521" title='Скачать Linkin Park - High Voltage'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5320629" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut (Live)">
@@ -628,7 +633,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5320629" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Papercut (Live).mp3" href="/track/dl/5320629/linkin-park-papercut-live.mp3" class="no-ajaxy yaBrowser" id="dl_5320629" title='Скачать Linkin Park - Papercut (Live)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5320630" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="A Place For My Head (Live)">
@@ -656,12 +661,12 @@
             </div>
             <div class="track__details hidden-xs-down">
                 <span title='Есть видео Linkin Park - A Place For My Head (Live)'><i class='zmdi zmdi-videocam zmdi-hc-1-3x'></i></span>
-                
+
             </div>
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5320630" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - A Place For My Head (Live).mp3" href="/track/dl/5320630/linkin-park-a-place-for-my-head-live.mp3" class="no-ajaxy yaBrowser" id="dl_5320630" title='Скачать Linkin Park - A Place For My Head (Live)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5320631" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Points Of Authority (Live)">
@@ -694,7 +699,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5320631" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Points Of Authority (Live).mp3" href="/track/dl/5320631/linkin-park-points-of-authority-live.mp3" class="no-ajaxy yaBrowser" id="dl_5320631" title='Скачать Linkin Park - Points Of Authority (Live)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5390803" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="High Voltage (Live)">
@@ -727,7 +732,7 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5390803" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - High Voltage (Live).mp3" href="/track/dl/5390803/linkin-park-high-voltage-live.mp3" class="no-ajaxy yaBrowser" id="dl_5390803" title='Скачать Linkin Park - High Voltage (Live)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5390804" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Points Of Authority (Crystal Method Remix)">
@@ -755,12 +760,12 @@
             </div>
             <div class="track__details hidden-xs-down">
                 <span title='Есть видео Linkin Park - Points Of Authority (Crystal Method Remix)'><i class='zmdi zmdi-videocam zmdi-hc-1-3x'></i></span>
-                
+
             </div>
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5390804" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Points Of Authority (Crystal Method Remix).mp3" href="/track/dl/5390804/linkin-park-points-of-authority-crystal-method-remix.mp3" class="no-ajaxy yaBrowser" id="dl_5390804" title='Скачать Linkin Park - Points Of Authority (Crystal Method Remix)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
     <div id="playerDiv5390805" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut (Live At Milton Keynes)">
@@ -793,401 +798,13 @@
     <div class="playlist__actions">
             <span class="pl-btn save-to-pl" id="add_5390805" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
                     <a target="_blank" itemprop="audio" download="Linkin Park - Papercut (Live At Milton Keynes).mp3" href="/track/dl/5390805/linkin-park-papercut-live-at-milton-keynes.mp3" class="no-ajaxy yaBrowser" id="dl_5390805" title='Скачать Linkin Park - Papercut (Live At Milton Keynes)'><span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span></a>
-        
+
     </div>
     </div>
+</div></div>
 </div>
-    </div>
 </div>
-
-<div class="text-center mb-3">
-        <center><a class="badge badge-primary mb-1" data-ma-action="aside-open" data-ma-target=".user-login-summary" href="#">отключить рекламу</a></center>
-	<div id="MF_musify_D_728x90" style="max-width:825px; margin: auto;"></div>
 </div>
-
-
-
-    Залогиньтесь для того чтобы проголосовать за альбом
-
-<select id="rating" data-rating="9.08" data-url="/release/vote/" data-id="188" data-readonly="true">
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5">5</option>
-    <option value="6">6</option>
-    <option value="7">7</option>
-    <option value="8">8</option>
-    <option value="9">9</option>
-    <option value="10">10</option>
-</select>
-<p class="text-muted rating-count">Всего голосов: 784</p>
-
-
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Другие альбомы исполнителя Linkin Park</h3>
-            <div class="card-deck">
-<div data-type="0" class="card release-thumbnail">
-    <a href="/release/linkin-park-wastelands-2014-508334">
-        <img class="card-img-top lozad" data-src="https://40s.musify.club/img/69/7395270/20806785.jpg" alt="Wastelands" />
-        <noscript><img src="https://40s.musify.club/img/69/7395270/20806785.jpg" alt="Wastelands" /></noscript>
-    </a>
-    <div class="card-body">
-            <h3 class="card-title">
-<a href="/artist/linkin-park-5">Linkin Park</a>            </h3>
-        <h4 class="card-subtitle"><a href="/release/linkin-park-wastelands-2014-508334">Wastelands</a></h4>
-    </div>
-
-        <div class="card-footer">
-            <p class="card-text"><a href="/albums/2014">2014</a></p>
-        </div>
-            <div class="card-footer">
-            <p class="card-text genre__labels">
-<a href="/genre/alternative-metal-17">Alternative Metal</a><a href="/genre/rapcore-38">Rapcore</a>            </p>
-        </div>
-<div class="card-footer">
-    <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 01.06.2014</small>
-    <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 6,79</small>
-</div>
-</div><div data-type="0" class="card release-thumbnail">
-    <a href="/release/linkin-park-lpu10-2010-106107">
-        <img class="card-img-top lozad" data-src="https://41s-a.musify.club/img/70/1058780/40332317.jpg" alt="LPU10" />
-        <noscript><img src="https://41s-a.musify.club/img/70/1058780/40332317.jpg" alt="LPU10" /></noscript>
-    </a>
-    <div class="card-body">
-            <h3 class="card-title">
-<a href="/artist/linkin-park-5">Linkin Park</a>            </h3>
-        <h4 class="card-subtitle"><a href="/release/linkin-park-lpu10-2010-106107">LPU10</a></h4>
-    </div>
-
-        <div class="card-footer">
-            <p class="card-text"><a href="/albums/2010">2010</a></p>
-        </div>
-            <div class="card-footer">
-            <p class="card-text genre__labels">
-<a href="/genre/alternative-metal-17">Alternative Metal</a>            </p>
-        </div>
-<div class="card-footer">
-    <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 08.11.2010</small>
-    <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 5,47</small>
-</div>
-</div><div data-type="0" class="card release-thumbnail">
-    <a href="/release/linkin-park-demos-2000-18630">
-        <img class="card-img-top lozad" data-src="https://41s-a.musify.club/img/70/786536/40605763.jpg" alt="Demos" />
-        <noscript><img src="https://41s-a.musify.club/img/70/786536/40605763.jpg" alt="Demos" /></noscript>
-    </a>
-    <div class="card-body">
-            <h3 class="card-title">
-<a href="/artist/linkin-park-5">Linkin Park</a>            </h3>
-        <h4 class="card-subtitle"><a href="/release/linkin-park-demos-2000-18630">Demos</a></h4>
-    </div>
-
-        <div class="card-footer">
-            <p class="card-text"><a href="/albums/2000">2000</a></p>
-        </div>
-            <div class="card-footer">
-            <p class="card-text genre__labels">
-<a href="/genre/nu-metal-36">Nu-Metal</a>            </p>
-        </div>
-<div class="card-footer">
-    <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 04.08.2008</small>
-    <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 8,81</small>
-</div>
-</div>            </div>
-        </div>
-    </div>
-
-
-<div class="messages">
-    <div class="messages__body">
-        <div class="messages__header">
-            <div class="toolbar toolbar--inner mb-0">
-                <div class="toolbar__label">Комментарии</div>
-            </div>
-        </div>
-
-        <a id="new"></a>
-        <div class="messages__reply">
-
-        </div>
-
-<div class="messages__content inf-scroll" id="messages">
-    <div class="messages__item ">
-            <img src="https://38s.musify.club/img/68/22210529/57471442.jpg" alt="Харамаки Зоро" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">Харамаки Зоро</small>
-                            </div>
-            <p>Весьма симпатишно. <br/>Сочетание ярости с лиризмом и грустью. <br/>Кажется логичным продолжением RATM, правда не такое качевое.</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://38s.musify.club/img/68/22063914/57334365.jpg" alt="germanost" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">germanost</small>
-                            </div>
-            <p>Хи, хи  хардер чего овцой прикидываешься.. Смущаешь юные умы.. <img src='/images/Smiles/s18.gif' alt=''></img>  <img src='/images/Smiles/s70.gif' alt=''></img></p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://41s.musify.club/img/68/27084662/67311114.jpg" alt="TradeShark1" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">TradeShark1</small>
-                            </div>
-            <p>Я бы рекомендовал бы вам послушать Дельфина, Токио, Красная плесень, они не далеко от Линкин Парк, только интереснее, изобретательнее, драйвовее, мелодичнее. Ну ещё Bestie Boys. Они все намного круче. Потом спасибо мне скажите &#128521;</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://41s.musify.club/img/68/27084662/67311114.jpg" alt="TradeShark1" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">TradeShark1</small>
-                            </div>
-            <p>Послушал, слабенькая группа, одну мелодию на весь альбом. Красная плесень намного круче, у них хотя бы разнообразие в музыке, много красивых мелодий, сотни красивых песен. Такова реальность. Думаю фанатам Линкин Парк зайдёт Красная плесень в таком же стиле, но более мелодично</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://41s-a.musify.club/img/70/14592985/37156016.jpg" alt="way" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">way</small>
-                            </div>
-            <p>Лучший их альбом и нет лучше. Все песни тут огонь!</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://38s-a.musify.club/img/71/23700912/60277424.jpg" alt="Dungeon Freestyler" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">Dungeon Freestyler</small>
-                            </div>
-            <p>Не зацепили только  High Voltage, Pushing Me Away, Cure For The Itch. Остальное просто улет! <img src='/Content/Smiles/116-music.svg' height='24' alt=''></img></p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://37s.musify.club/img/69/25626482/64245309.jpg" alt="goreThrasher" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">goreThrasher</small>
-                            </div>
-            <p>}{уйня какая-то</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://sun1-23.userapi.com/impg/j_BJpAzLJsSDC9uVJCMG3vqaYcqeWaKnVafEjA/OlbyQXoH5QI.jpg?size=50x0&amp;quality=96&amp;crop=0,54,341,341&amp;sign=dd4937bc43dae396ce5a09a9525431bb&amp;c_uniq_tag=La2cobtZGUiWM5NK7bcV9R3AQz7u-Y9NGzWkNklXppI&amp;ava=1" alt="Владислав Владислав" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">Владислав Владислав</small>
-                            </div>
-            <p>Самый лучший альбом Линкинов!<br/>Лучшие треки:<br/>Papercut <br/>One Step Closer <br/>Crawling <br/>Runaway <br/>In the End <br/>Pushing Me Away</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="https://39s-a.musify.club/img/70/5855975/17875592.jpg" alt="insane Hwo" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">insane Hwo</small>
-                            </div>
-            <p>В детстве казались намного тяжелее. Сейчас слушается как легенькая поп-музыка.</p>
-        </div>
-    </div>
-    <div class="messages__item ">
-            <img src="/images/default-ava.png" alt="Hi123" class="avatar-img">
-        <div class="messages__details">
-            <div class="messages__actions">
-                    <small class="name">Hi123</small>
-                            </div>
-            <p>Этот альбом шедевр на все времена!</p>
-        </div>
-    </div>
-            <a class="d-none pagination__next" rel="nofollow" href="/albumcomment/messagelistajax/188?page=2"></a>
-</div>
-<div class="text-center page-load-status m-5">
-    <div class="spinner-grow infinite-scroll-request d-none" role="status">
-        <span class="sr-only">Loading...</span>
-    </div>
-</div>
-
-    </div>
-</div>
-	<div id="MF_musify_D_Billboard"></div>
-                </div>
-                <div class="left-sidebar hidden-md-down col-lg-3">
-                    
-<div class="card">
-    <div class="card-body">
-        <h3 class="card-title">Популярные исполнители</h3>
-        <div class="listview listview--hover top-uploaders">
-                <a class="listview__item" href="/artist/korol-i-shut-76588">
-                    <img src="https://40s-a.musify.club/img/70/25412682/63792162.jpg" class="listview__img lozad" alt="Король и Шут">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Король и Шут</div>
-                        <p>2676 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/leningrad-71003">
-                    <img src="https://40s-a.musify.club/img/70/25412665/63792119.jpg" class="listview__img lozad" alt="Ленинград">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Ленинград</div>
-                        <p>1690 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/pink-floyd-235">
-                    <img src="https://39s-a.musify.club/img/71/21606334/54844322.jpg" class="listview__img lozad" alt="Pink Floyd">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Pink Floyd</div>
-                        <p>8325 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/linkin-park-5">
-                    <img src="https://39s.musify.club/img/68/25102361/62958672.jpg" class="listview__img lozad" alt="Linkin Park">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Linkin Park</div>
-                        <p>9761 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/kino-25537">
-                    <img src="https://37s.musify.club/img/69/25969238/64947758.jpg" class="listview__img lozad" alt="Кино">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Кино</div>
-                        <p>5809 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/david-guetta-608">
-                    <img src="https://39s.musify.club/img/68/21602761/54836062.jpg" class="listview__img lozad" alt="David Guetta">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">David Guetta</div>
-                        <p>3115 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/grigorii-leps-97816">
-                    <img src="https://39s.musify.club/img/69/21563345/54758019.jpg" class="listview__img lozad" alt="Григорий Лепс">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Григорий Лепс</div>
-                        <p>1816 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/deep-purple-1190">
-                    <img src="https://39s.musify.club/img/68/21602843/54836167.jpg" class="listview__img lozad" alt="Deep Purple">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Deep Purple</div>
-                        <p>6459 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/vladimir-visotskii-90531">
-                    <img src="https://38s.musify.club/img/68/21638788/54903095.jpg" class="listview__img lozad" alt="Владимир Высоцкий">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Владимир Высоцкий</div>
-                        <p>9234 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/imany-96002">
-                    <img src="https://37s.musify.club/img/69/25246613/63347914.jpg" class="listview__img lozad" alt="Imany">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Imany</div>
-                        <p>246 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/the-prodigy-27233">
-                    <img src="https://38s-a.musify.club/img/70/18365891/48153351.jpg" class="listview__img lozad" alt="The Prodigy">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">The Prodigy</div>
-                        <p>2492 треков</p>
-                    </div>
-                </a>
-                <a class="listview__item" href="/artist/ariya-70285">
-                    <img src="https://38s.musify.club/img/68/23501229/59855504.jpg" class="listview__img lozad" alt="Ария">
-
-                    <div class="listview__content">
-                        <div class="listview__heading">Ария</div>
-                        <p>2293 треков</p>
-                    </div>
-                </a>
-        </div>
-        <a href="/artist" class="view-more">Все исполнители</a>
-    </div>
-</div>
-                    <div class="card">
-    <div class="card-body">
-        <h3 class="card-title">Популярные жанры</h3>
-        <div class="genre__labels">
-<a href="/genre/hard-rock-28">#Hard Rock</a><a href="/genre/pop-11">#Pop</a><a href="/genre/disco-25">#Disco</a><a href="/genre/heavy-metal-30">#Heavy Metal</a><a href="/genre/rock-1">#Rock</a><a href="/genre/blues-rock-158">#Blues Rock</a><a href="/genre/eurodance-234">#Eurodance</a><a href="/genre/trance-12">#Trance</a><a href="/genre/synthpop-21">#Synthpop</a><a href="/genre/rap-8">#Rap</a><a href="/genre/thrash-metal-67">#Thrash Metal</a><a href="/genre/ost-229">#OST</a><a href="/genre/russkii-shanson-267">#Русский шансон</a><a href="/genre/power-metal-75">#Power Metal</a><a href="/genre/progressive-rock-53">#Progressive Rock</a><a href="/genre/blues-62">#Blues</a><a href="/genre/alternative-rock-14">#Alternative Rock</a><a href="/genre/electronic-2">#Electronic</a><a href="/genre/jazz-51">#Jazz</a><a href="/genre/new-age-58">#New Age</a>        </div>
-        <a href="/genre" class="view-more">Все жанры</a>
-    </div>
-</div>
-        <center><a class="badge badge-primary mb-1" data-ma-action="aside-open" data-ma-target=".user-login-summary" href="#">отключить рекламу</a></center>
-        <a href="https://goodhit.me/new/" target="_blank"><img data-src="/images/ads/rbt.jpg" class="lozad"><noscript><img src="/images/ads/rbt.jpg" /></noscript></a>
-                                    </div>
-            </div>
-        </section>
-        <footer class="footer">
-            <p>© Musify - 2023</p>
-            <ul class="nav footer__nav">
-                <li><a class="nav-link" href="mailto:admin@musify.club">admin@musify.club</a></li>
-                <li><span class="nav-link internal-link" data-sub="L2ZlZWRiYWNr">Обратная связь</span></li>
-                <li><span class="nav-link internal-link" data-sub="L2FidXNl">Жалоба / DMCA</span></li>
-                <li><span class="nav-link internal-link" data-sub="L2NvbnRhY3RzL2xlZ2Fs">Правовая информация</span></li>
-                <li><span class="nav-link internal-link" data-sub="L3Rlcm1z">Пользовательское соглашение</span></li>
-                <li><span class="nav-link internal-link" data-sub="aHR0cHM6Ly9yLmludGVyYWt0LnJ1L2Fzc2V0cy9kb2NzL29waXNhbmllLXVzbHVnLnBkZg==">Описание услуг</span></li>
-            </ul>
-            <p>
-                ООО «АдвМьюзик» заключил лицензионные соглашения с крупнейшими российскими правообладателями на использование музыкальных произведений. <span class="internal-link" data-sub="L2NvbnRhY3RzL2xlZ2Fs">Полная информация</span>
-            </p>
-        </footer>
-        <footer class="player-footer d-none">
-            <div id="jp_container_N" class="container-fluid">
-    <div class="jp-type-playlist">
-        <div id="jplayer_N" class="jp-jplayer"></div>
-        <div class="jp-gui">
-            <div class="jp-interface">
-                <div class="jp-controls">
-                    <div><span class="jp-replay"><i class="zmdi zmdi-replay-10 zmdi-hc-4x"></i></span></div>
-                    <div>
-                        <span class="jp-play"><i class="zmdi zmdi-play-circle-outline zmdi-hc-4x"></i></span>
-                        <span class="jp-pause"><i class="zmdi zmdi-pause-circle-outline zmdi-hc-4x"></i></span>
-                    </div>
-                    <div><span class="jp-next"><i class="zmdi zmdi-skip-next zmdi-hc-4x"></i></span></div>
-                    <div><span class="jp-forward"><i class="zmdi zmdi-forward-10 zmdi-hc-4x"></i></span></div>
-
-                    <div class="jp-progress jp-seek-bar progress">
-                        <div class="jp-play-bar progress-bar" role="progressbar"></div>
-                        <div class="jp-title-container">
-                            <div class="jp-title jp-details"></div>
-                        </div>
-                    </div>
-
-                    <ul class="list-unstyled jp-duration-container">
-                        <li class="jp-current-time text-muted"></li>
-                        <li class="jp-duration"></li>
-                    </ul>
-                    <div>
-                        <span class="jp-mute"><i class="zmdi zmdi-volume-up zmdi-hc-4x"></i></span>
-                        <span class="jp-unmute"><i class="zmdi zmdi-volume-off zmdi-hc-4x"></i></span>
-                    </div>
-                    <div class="jp-volume jp-volume-bar progress">
-                        <div class="jp-volume-bar-value progress-bar"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-        </footer>
-    </main>
-    
+</section>
+</main>
 </body>
-</html>

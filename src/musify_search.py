@@ -15,11 +15,13 @@ def fetch_artist():
     artist = Musify.fetch_details(artist)
     print(artist.options)
 
+
 def fetch_album():
     album = objects.Album(
-        source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/release/linkin-park-hybrid-theory-2000-188")]
+        source_list=[objects.Source(objects.SourcePages.MUSIFY,
+                                    "https://musify.club/release/linkin-park-hybrid-theory-2000-188")]
     )
-    
+
     album = Musify.fetch_details(album)
     print(album.options)
 
