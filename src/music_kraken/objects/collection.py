@@ -50,7 +50,7 @@ class Collection:
             
         self._used_ids.add(element.id)
 
-    def append(self, element: DatabaseObject, merge_on_conflict: bool = True):
+    def append(self, element: DatabaseObject, merge_on_conflict: bool = True) -> DatabaseObject:
         """
         :param element:
         :param merge_on_conflict:
@@ -63,17 +63,20 @@ class Collection:
 
         for name, value in element.indexing_values:
             if value in self._attribute_to_object_map[name]:
+                existing_object = self._attribute_to_object_map[name][value]
+                
                 if merge_on_conflict:
                     # if the object does already exist
                     # thus merging and don't add it afterwards
-                    existing_object = self._attribute_to_object_map[name][value]
                     existing_object.merge(element)
                     # in case any relevant data has been added (e.g. it remaps the old object)
                     self.map_element(existing_object)
-                return
+                return existing_object
 
         self._data.append(element)
         self.map_element(element)
+        
+        return element
 
     def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
         for element in element_list:

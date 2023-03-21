@@ -5,7 +5,8 @@ from . import (
     parents,
     formatted_text,
     album,
-    option
+    option,
+    collection
 )
 
 MusicObject = parents.DatabaseObject
@@ -31,3 +32,4 @@ Album = song.Album
 FormattedText = formatted_text.FormattedText
 
 Options = option.Options
+Collection = collection.Collection

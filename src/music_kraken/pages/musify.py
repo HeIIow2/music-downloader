@@ -151,11 +151,11 @@ class Musify(Page):
 
             artist_thumbnail = image_soup.get("src")
 
-        return Artist(
+        return cls.ARTIST_CACHE.append(Artist(
             _id=_id,
             name=name,
             source_list=source_list
-        )
+        ))
 
     @classmethod
     def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
@@ -257,13 +257,13 @@ class Musify(Page):
             else:
                 LOGGER.warning("got an unequal ammount than 3 small elements")
 
-        return Album(
+        return cls.ALBUM_CACHE.append(Album(
             _id=_id,
             title=title,
             source_list=source_list,
             date=ID3Timestamp(year=year),
             artist_list=artist_list
-        )
+        ))
 
     @classmethod
     def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
@@ -535,14 +535,14 @@ class Musify(Page):
         else:
             LOGGER.debug("there is not even 1 footer in the album card")
 
-        return Album(
+        return cls.ALBUM_CACHE.append(Album(
             _id=_id,
             title=name,
             source_list=source_list,
             date=timestamp,
             album_type=album_type,
             album_status=album_status
-        )
+        ))
 
     @classmethod
     def get_discography(cls, url: MusifyUrl, artist_name: str = None, flat=False) -> List[Album]:
@@ -700,13 +700,13 @@ class Musify(Page):
         if note_soup is not None:
             notes.html = note_soup.decode_contents()
 
-        return Artist(
+        return cls.ARTIST_CACHE.append(Artist(
             _id=url.musify_id,
             name=name,
             country=country,
             source_list=source_list,
             notes=notes
-        )
+        ))
 
     @classmethod
     def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
@@ -842,7 +842,7 @@ class Musify(Page):
                     _artist_name = meta_artist_name_text
 
                 if _artist_name is not None or _artist_src is not None:
-                    artist_list.append(Artist(name=_artist_name, source_list=_artist_src))
+                    artist_list.append(cls.ARTIST_CACHE.append(Artist(name=_artist_name, source_list=_artist_src)))
 
         return Song(
             title=song_name,
