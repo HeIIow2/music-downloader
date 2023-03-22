@@ -151,11 +151,11 @@ class Musify(Page):
 
             artist_thumbnail = image_soup.get("src")
 
-        return cls.ARTIST_CACHE.append(Artist(
+        return Artist(
             _id=_id,
             name=name,
             source_list=source_list
-        ))
+        )
 
     @classmethod
     def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
@@ -700,13 +700,13 @@ class Musify(Page):
         if note_soup is not None:
             notes.html = note_soup.decode_contents()
 
-        return cls.ARTIST_CACHE.append(Artist(
+        return Artist(
             _id=url.musify_id,
             name=name,
             country=country,
             source_list=source_list,
             notes=notes
-        ))
+        )
 
     @classmethod
     def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
@@ -842,7 +842,7 @@ class Musify(Page):
                     _artist_name = meta_artist_name_text
 
                 if _artist_name is not None or _artist_src is not None:
-                    artist_list.append(cls.ARTIST_CACHE.append(Artist(name=_artist_name, source_list=_artist_src)))
+                    artist_list.append(Artist(name=_artist_name, source_list=_artist_src))
 
         return Song(
             title=song_name,

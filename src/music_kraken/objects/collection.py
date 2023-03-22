@@ -49,12 +49,25 @@ class Collection:
             self._attribute_to_object_map[name][value] = element
             
         self._used_ids.add(element.id)
+        
+    def unmap_element(self, element: DatabaseObject):
+        for name, value in element.indexing_values:
+            if value is None:
+                continue
+            
+            if value in self._attribute_to_object_map[name]:
+                if element is self._attribute_to_object_map[name][value]:
+                    try:
+                        self._attribute_to_object_map[name].pop(value)
+                    except KeyError:
+                        pass
 
-    def append(self, element: DatabaseObject, merge_on_conflict: bool = True) -> DatabaseObject:
+    def append(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> bool:
         """
         :param element:
         :param merge_on_conflict:
-        :return:
+        :param merge_into_existing:
+        :return did_not_exist:
         """
 
         # if the element type has been defined in the initializer it checks if the type matches
@@ -68,15 +81,24 @@ class Collection:
                 if merge_on_conflict:
                     # if the object does already exist
                     # thus merging and don't add it afterwards
-                    existing_object.merge(element)
-                    # in case any relevant data has been added (e.g. it remaps the old object)
-                    self.map_element(existing_object)
-                return existing_object
+                    if merge_into_existing:
+                        existing_object.merge(element)
+                        # in case any relevant data has been added (e.g. it remaps the old object)
+                        self.map_element(existing_object)
+                    else:
+                        element.merge(existing_object)
+                        
+                        exists_at = self._data.index(existing_object)
+                        self._data[exists_at] = element
+                        
+                        self.unmap_element(existing_object)
+                        self.map_element(element)
+                return True
 
         self._data.append(element)
         self.map_element(element)
         
-        return element
+        return False
 
     def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
         for element in element_list:
@@ -104,21 +126,3 @@ class Collection:
         returns a shallow copy of the data list
         """
         return self._data.copy()
-    
-    def insecure_append(self, element: DatabaseObject):
-        if element.id in self._used_ids:
-            return False
-        self._used_ids.add(element.id)
-            
-        self._data.append(element)
-        self.map_element(element)
-        return True
-    
-    def insecure_extend(self, element_list: Iterable[DatabaseObject]):
-        success = False
-        
-        for element in element_list:
-            if self.insecure_append(element):
-                success = True
-                
-        return success

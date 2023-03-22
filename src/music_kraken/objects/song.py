@@ -99,17 +99,18 @@ class Song(MainObject):
     def compile(self):
         album: Album
         for album in self.album_collection:
-            if album.song_collection.insecure_append(self):
+            if album.song_collection.append(self, merge_into_existing=False):
                 album.compile()
 
         artist: Artist
         for artist in self.feature_artist_collection:
-            if artist.feature_song_collection.insecure_append(self):
+            if artist.feature_song_collection.append(self, merge_into_existing=False):
                 artist.compile()
 
         for artist in self.main_artist_collection:
-            if artist.main_album_collection.insecure_extend(self.album_collection):
-                artist.compile()
+            for album in self.album_collection:
+                if artist.main_album_collection.append(album, merge_into_existing=False):
+                    artist.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -259,17 +260,17 @@ class Album(MainObject):
     def compile(self):
         song: Song
         for song in self.song_collection:
-            if song.album_collection.insecure_append(self):
+            if song.album_collection.append(self, merge_into_existing=False):
                 song.compile()
 
         artist: Artist
         for artist in self.artist_collection:
-            if artist.main_album_collection.insecure_append(self):
+            if artist.main_album_collection.append(self, merge_into_existing=False):
                 artist.compile()
 
         label: Label
         for label in self.label_collection:
-            if label.album_collection.insecure_append(self):
+            if label.album_collection.append(self, merge_into_existing=False):
                 label.compile()
 
     @property
@@ -435,17 +436,17 @@ class Artist(MainObject):
     def compile(self):
         song: "Song"
         for song in self.feature_song_collection:
-            if song.feature_artist_collection.insecure_append(self):
+            if song.feature_artist_collection.append(self, merge_into_existing=False):
                 song.compile()
 
         album: "Album"
         for album in self.main_album_collection:
-            if album.artist_collection.insecure_append(self):
+            if album.artist_collection.append(self, merge_into_existing=False):
                 album.compile()
 
         label: Label
         for label in self.label_collection:
-            if label.current_artist_collection.insecure_append(self):
+            if label.current_artist_collection.append(self, merge_into_existing=False):
                 label.compile()
 
     @property
@@ -579,12 +580,12 @@ class Label(MainObject):
     def compile(self) -> bool:
         album: Album
         for album in self.album_collection:
-            if album.label_collection.insecure_append(self):
+            if album.label_collection.append(self, merge_into_existing=False):
                 album.compile()
 
         artist: Artist
         for artist in self.current_artist_collection:
-            if artist.label_collection.insecure_append(self):
+            if artist.label_collection.append(self, merge_into_existing=False):
                 artist.compile()
 
     @property

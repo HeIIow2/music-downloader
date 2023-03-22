@@ -20,20 +20,11 @@ from ..objects import (
 )
 
 
-class PageCache(Collection):
-    def clear(self):
-        self.__init__(element_type=self.element_type)
-
-
 class Page:
     """
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
-    SONG_CACHE = PageCache(element_type=Song)
-    ALBUM_CACHE = PageCache(element_type=Album)
-    ARTIST_CACHE = PageCache(element_type=Artist)
-
     API_SESSION: requests.Session = requests.Session()
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
@@ -160,10 +151,6 @@ class Page:
         tracklist of every album of the artist.
         :return detailed_music_object: IT MODIFIES THE INPUT OBJ
         """
-        
-        cls.ARTIST_CACHE.clear()
-        cls.ALBUM_CACHE.clear()
-        cls.SONG_CACHE.clear()
 
         if type(music_object) == Song:
             song = cls.fetch_song_details(music_object, flat=flat)
