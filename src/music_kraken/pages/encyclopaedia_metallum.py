@@ -17,7 +17,8 @@ from ..objects import (
     Album,
     ID3Timestamp,
     FormattedText,
-    Label
+    Label,
+    Options
 )
 from ..utils import (
     string_processing
@@ -34,7 +35,7 @@ class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
 
     @classmethod
-    def search_by_query(cls, query: str) -> List[MusicObject]:
+    def search_by_query(cls, query: str) -> Options:
         query_obj = cls.Query(query)
 
         if query_obj.is_raw:
@@ -42,14 +43,14 @@ class EncyclopaediaMetallum(Page):
         return cls.advanced_search(query_obj)
 
     @classmethod
-    def advanced_search(cls, query: Page.Query) -> List[MusicObject]:
+    def advanced_search(cls, query: Page.Query) -> Options:
         if query.song is not None:
-            return cls.search_for_song(query=query)
+            return Options(cls.search_for_song(query=query))
         if query.album is not None:
-            return cls.search_for_album(query=query)
+            return Options(cls.search_for_album(query=query))
         if query.artist is not None:
-            return cls.search_for_artist(query=query)
-        return []
+            return Options(cls.search_for_artist(query=query))
+        return Options
 
     @classmethod
     def search_for_song(cls, query: Page.Query) -> List[Song]:

@@ -154,6 +154,8 @@ class ID3Timestamp:
         return self.date_obj >= other.date_obj
 
     def __eq__(self, other):
+        if type(other) != type(self):
+            return False
         return self.date_obj == other.date_obj
 
     def get_time_format(self) -> str:

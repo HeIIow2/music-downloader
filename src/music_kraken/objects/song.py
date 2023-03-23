@@ -1,6 +1,7 @@
 import os
 from typing import List, Optional, Dict, Tuple
 import pycountry
+from collections import defaultdict
 
 from .metadata import (
     Mapping as id3Mapping,
@@ -46,7 +47,15 @@ class Song(MainObject):
     COLLECTION_ATTRIBUTES = (
         "lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection",
         "source_collection")
-    SIMPLE_ATTRIBUTES = ("title", "unified_title", "isrc", "length", "tracksort", "genre")
+    SIMPLE_ATTRIBUTES = {
+        "title": None,
+        "unified_title": None,
+        "isrc": None,
+        "length": None,
+        "tracksort": 0,
+        "genre": None,
+        "notes": FormattedText()
+    }
 
     def __init__(
             self,
@@ -64,17 +73,21 @@ class Song(MainObject):
             album_list: List['Album'] = None,
             main_artist_list: List['Artist'] = None,
             feature_artist_list: List['Artist'] = None,
+            notes: FormattedText = None,
             **kwargs
     ) -> None:
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
         # attributes
         self.title: str = title
-        self.unified_title: str = unified_title or unify(title)
+        self.unified_title: str = unified_title
+        if unified_title is None and title is not None:
+            self.unified_title = unify(title)
 
         self.isrc: str = isrc
         self.length: int = length
         self.tracksort: int = tracksort or 0
         self.genre: str = genre
+        self.notes: FormattedText = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.target_collection: Collection = Collection(data=target_list, element_type=Target)
@@ -82,6 +95,22 @@ class Song(MainObject):
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
         self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
         self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
+
+    def compile(self):
+        album: Album
+        for album in self.album_collection:
+            if album.song_collection.append(self, merge_into_existing=False):
+                album.compile()
+
+        artist: Artist
+        for artist in self.feature_artist_collection:
+            if artist.feature_song_collection.append(self, merge_into_existing=False):
+                artist.compile()
+
+        for artist in self.main_artist_collection:
+            for album in self.album_collection:
+                if artist.main_album_collection.append(album, merge_into_existing=False):
+                    artist.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -166,7 +195,17 @@ All objects dependent on Album
 
 class Album(MainObject):
     COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
-    SIMPLE_ATTRIBUTES = ("title", "album_status", "album_type", "language", "date", "barcode", "albumsort")
+    SIMPLE_ATTRIBUTES = {
+        "title": None,
+        "unified_title": None,
+        "album_status": None,
+        "album_type": AlbumType.OTHER,
+        "language": None,
+        "date": ID3Timestamp(),
+        "barcode": None,
+        "albumsort": None,
+        "notes": FormattedText()
+    }
 
     def __init__(
             self,
@@ -184,15 +223,18 @@ class Album(MainObject):
             album_status: AlbumStatus = None,
             album_type: AlbumType = None,
             label_list: List['Label'] = None,
+            notes: FormattedText = None,
             **kwargs
     ) -> None:
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.title: str = title
-        self.unified_title: str = unified_title or unify(self.title)
+        self.unified_title: str = unified_title
+        if unified_title is None and title is not None:
+            self.unified_title = unify(title)
 
         self.album_status: AlbumStatus = album_status
-        self.album_type: AlbumType = album_type
+        self.album_type: AlbumType = album_type or AlbumType.OTHER
         self.language: pycountry.Languages = language
         self.date: ID3Timestamp = date or ID3Timestamp()
 
@@ -208,11 +250,28 @@ class Album(MainObject):
         to set albumsort with help of the release year
         """
         self.albumsort: Optional[int] = albumsort
+        self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.song_collection: Collection = Collection(data=song_list, element_type=Song)
         self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+
+    def compile(self):
+        song: Song
+        for song in self.song_collection:
+            if song.album_collection.append(self, merge_into_existing=False):
+                song.compile()
+
+        artist: Artist
+        for artist in self.artist_collection:
+            if artist.main_album_collection.append(self, merge_into_existing=False):
+                artist.compile()
+
+        label: Label
+        for label in self.label_collection:
+            if label.album_collection.append(self, merge_into_existing=False):
+                label.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -309,16 +368,23 @@ class Album(MainObject):
         return len(self.artist_collection) > 1
 
 
-
-
 """
 All objects dependent on Artist
 """
 
 
 class Artist(MainObject):
-    COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection", "label_collection")
-    SIMPLE_ATTRIBUTES = ("name", "name", "country", "formed_in", "notes", "lyrical_themes", "general_genre")
+    COLLECTION_ATTRIBUTES = (
+    "feature_song_collection", "main_album_collection", "label_collection", "source_collection")
+    SIMPLE_ATTRIBUTES = {
+        "name": None,
+        "unified_name": None,
+        "country": None,
+        "formed_in": ID3Timestamp(),
+        "notes": FormattedText(),
+        "lyrical_themes": [],
+        "general_genre": ""
+    }
 
     def __init__(
             self,
@@ -340,7 +406,9 @@ class Artist(MainObject):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.name: str = name
-        self.unified_name: str = unified_name or unify(self.name)
+        self.unified_name: str = unified_name
+        if unified_name is None and name is not None:
+            self.unified_name = unify(name)
 
         """
         TODO implement album type and notes
@@ -364,6 +432,22 @@ class Artist(MainObject):
         self.feature_song_collection: Collection = Collection(data=feature_song_list, element_type=Song)
         self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+
+    def compile(self):
+        song: "Song"
+        for song in self.feature_song_collection:
+            if song.feature_artist_collection.append(self, merge_into_existing=False):
+                song.compile()
+
+        album: "Album"
+        for album in self.main_album_collection:
+            if album.artist_collection.append(self, merge_into_existing=False):
+                album.compile()
+
+        label: Label
+        for label in self.label_collection:
+            if label.current_artist_collection.append(self, merge_into_existing=False):
+                label.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -463,7 +547,11 @@ Label
 
 class Label(MainObject):
     COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
-    SIMPLE_ATTRIBUTES = ("name",)
+    SIMPLE_ATTRIBUTES = {
+        "name": None,
+        "unified_name": None,
+        "notes": FormattedText()
+    }
 
     def __init__(
             self,
@@ -471,6 +559,7 @@ class Label(MainObject):
             dynamic: bool = False,
             name: str = None,
             unified_name: str = None,
+            notes: FormattedText = None,
             album_list: List[Album] = None,
             current_artist_list: List[Artist] = None,
             source_list: List[Source] = None,
@@ -479,11 +568,25 @@ class Label(MainObject):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.name: str = name
-        self.unified_name: str = unified_name or unify(self.name)
+        self.unified_name: str = unified_name
+        if unified_name is None and name is not None:
+            self.unified_name = unify(name)
+        self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
+
+    def compile(self) -> bool:
+        album: Album
+        for album in self.album_collection:
+            if album.label_collection.append(self, merge_into_existing=False):
+                album.compile()
+
+        artist: Artist
+        for artist in self.current_artist_collection:
+            if artist.label_collection.append(self, merge_into_existing=False):
+                artist.compile()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:

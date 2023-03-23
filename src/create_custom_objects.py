@@ -1,4 +1,4 @@
-from music_kraken import objects
+from music_kraken import objects, recurse
 
 import pycountry
 
@@ -41,6 +41,9 @@ song = objects.Song(
                     objects.SourcePages.ENCYCLOPAEDIA_METALLUM,
                     "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727"
                     )
+            ],
+            label_list=[
+                objects.Label(name="Depressive records")
             ]
         ),
         objects.Artist(name="some_split_artist")
@@ -55,8 +58,6 @@ song = objects.Song(
     ],
 )
 
-print(song.option_string)
-for album in song.album_collection:
-    print(album.option_string)
-for artist in song.main_artist_collection:
-    print(artist.option_string)
+song.compile()
+
+print(song.options)
