@@ -93,12 +93,13 @@ class Collection:
                         
                         self.unmap_element(existing_object)
                         self.map_element(element)
-                return True
+                
+                return False
 
         self._data.append(element)
         self.map_element(element)
         
-        return False
+        return True
 
     def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
         for element in element_list:
