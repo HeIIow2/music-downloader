@@ -11,15 +11,18 @@ from .option import Options
 
 class DatabaseObject:
     COLLECTION_ATTRIBUTES: tuple = tuple()
-    SIMPLE_ATTRIBUTES: tuple = tuple()
-    
+    SIMPLE_ATTRIBUTES: dict = dict()
+
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs) -> None:
+        self.automatic_id: bool = False
+
         if _id is None and not dynamic:
             """
             generates a random UUID
             https://docs.python.org/3/library/uuid.html
             """
             _id = str(uuid.uuid4())
+            self.automatic_id = True
             LOGGER.debug(f"id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
@@ -43,7 +46,7 @@ class DatabaseObject:
                 return True
 
         return False
-        
+
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         """
@@ -53,9 +56,9 @@ class DatabaseObject:
         Returns:
             List[Tuple[str, object]]: the first element in the tuple is the name of the attribute, the second the value.
         """
-        
+
         return list()
-        
+
     def merge(self, other, override: bool = False):
         if not isinstance(other, type(self)):
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
@@ -64,11 +67,11 @@ class DatabaseObject:
         for collection in type(self).COLLECTION_ATTRIBUTES:
             getattr(self, collection).extend(getattr(other, collection))
 
-        for simple_attribute in type(self).SIMPLE_ATTRIBUTES:
-            if getattr(other, simple_attribute) is None:
+        for simple_attribute, default_value in type(self).SIMPLE_ATTRIBUTES.items():
+            if getattr(other, simple_attribute) == default_value:
                 continue
 
-            if override or getattr(self, simple_attribute) is None:
+            if override or getattr(self, simple_attribute) == default_value:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
     @property
@@ -83,6 +86,18 @@ class DatabaseObject:
     def option_string(self) -> str:
         return self.__repr__()
 
+    def compile(self) -> bool:
+        """
+        compiles the recursive structures,
+
+        Args:
+            traceback (set, optional): Defaults to an empty set.
+
+        Returns:
+            bool: returns true if id has been found in set
+        """
+        pass
+
 
 class MainObject(DatabaseObject):
     """
@@ -95,7 +110,7 @@ class MainObject(DatabaseObject):
     It has all the functionality of the "DatabaseObject" (it inherits from said class)
     but also some added functions as well.
     """
-    
+
     def __init__(self, _id: str = None, dynamic: bool = False, **kwargs):
         DatabaseObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 

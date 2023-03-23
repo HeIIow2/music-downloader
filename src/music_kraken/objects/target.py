@@ -1,5 +1,6 @@
 from typing import Optional, List, Tuple
 from pathlib import Path
+from collections import defaultdict
 
 from ..utils import shared
 from .parents import DatabaseObject
@@ -14,7 +15,11 @@ class Target(DatabaseObject):
     ```
     """
 
-    SIMPLE_ATTRIBUTES = ("_file", "_path")
+    SIMPLE_ATTRIBUTES = {
+        "_file": None,
+        "_path": None
+    }
+    COLLECTION_ATTRIBUTES = tuple()
 
     def __init__(
             self,

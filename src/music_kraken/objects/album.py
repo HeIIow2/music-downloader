@@ -22,4 +22,5 @@ class AlbumType(Enum):
     LIVE_ALBUM = "Live Album"
     COMPILATION_ALBUM = "Compilation Album"
     MIXTAPE = "Mixtape"
+    DEMO = "Demo"
     OTHER = "Other"

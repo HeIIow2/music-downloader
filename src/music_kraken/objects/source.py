@@ -1,6 +1,7 @@
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
+from urllib.parse import urlparse
 
 from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
@@ -25,9 +26,11 @@ class SourcePages(Enum):
     SPOTIFY = "spotify"
 
     # This has nothing to do with audio, but bands can be here
+    WIKIPEDIA = "wikipedia"
     INSTAGRAM = "instagram"
     FACEBOOK = "facebook"
-    TWITTER = "twitter" # I will use nitter though lol
+    TWITTER = "twitter"     # I will use nitter though lol
+    MYSPACE = "myspace"     # Yes somehow this ancient site is linked EVERYWHERE
 
     @classmethod
     def get_homepage(cls, attribute) -> str:
@@ -42,7 +45,9 @@ class SourcePages(Enum):
             cls.INSTAGRAM: "https://www.instagram.com/",
             cls.FACEBOOK: "https://www.facebook.com/",
             cls.SPOTIFY: "https://open.spotify.com/",
-            cls.TWITTER: "https://twitter.com/"
+            cls.TWITTER: "https://twitter.com/",
+            cls.MYSPACE: "https://myspace.com/",
+            cls.WIKIPEDIA: "https://en.wikipedia.org/wiki/Main_Page"
         }
         return homepage_map[attribute]
 
@@ -55,6 +60,12 @@ class Source(DatabaseObject):
     Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
     ```
     """
+    COLLECTION_ATTRIBUTES = tuple()
+    SIMPLE_ATTRIBUTES = {
+        "type_enum": None,
+        "page_enum": None,
+        "url": None
+    }
 
     def __init__(self, page_enum: SourcePages, url: str, id_: str = None, type_enum=None) -> None:
         DatabaseObject.__init__(self, id_=id_)
@@ -65,11 +76,14 @@ class Source(DatabaseObject):
         self.url = url
 
     @classmethod
-    def match_url(cls, url: str):
+    def match_url(cls, url: str) -> Optional["Source"]:
         """
         this shouldn't be used, unlesse you are not certain what the source is for
         the reason is that it is more inefficient
         """
+        parsed = urlparse(url)
+        url = parsed.geturl()
+
         if url.startswith("https://www.youtube"):
             return cls(SourcePages.YOUTUBE, url)
 
@@ -81,6 +95,9 @@ class Source(DatabaseObject):
 
         if "bandcamp" in url:
             return cls(SourcePages.BANDCAMP, url)
+
+        if "wikipedia" in parsed.netloc:
+            return cls(SourcePages.WIKIPEDIA, url)
 
         if url.startswith("https://www.metal-archives.com/"):
             return cls(SourcePages.ENCYCLOPAEDIA_METALLUM, url)
@@ -94,6 +111,9 @@ class Source(DatabaseObject):
 
         if url.startswith("https://twitter"):
             return cls(SourcePages.TWITTER, url)
+
+        if url.startswith("https://myspace.com"):
+            return cls(SourcePages.MYSPACE, url)
 
     def get_song_metadata(self) -> Metadata:
         return Metadata({
@@ -151,4 +171,4 @@ class SourceCollection(Collection):
         getting the sources for a specific page like
         YouTube or musify
         """
-        return self._page_to_source_list[source_page]
+        return self._page_to_source_list[source_page].copy()

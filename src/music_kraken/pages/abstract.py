@@ -1,6 +1,10 @@
-from typing import (
-    List
-)
+from typing import Optional
+import requests
+import logging
+
+LOGGER = logging.getLogger("this shouldn't be used")
+
+from ..utils import shared
 
 from ..objects import (
     Song,
@@ -9,7 +13,10 @@ from ..objects import (
     Artist,
     Lyrics,
     Target,
-    MusicObject
+    MusicObject,
+    Options,
+    SourcePages,
+    Collection
 )
 
 
@@ -18,6 +25,50 @@ class Page:
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
+    API_SESSION: requests.Session = requests.Session()
+    API_SESSION.proxies = shared.proxies
+    TIMEOUT = 5
+    TRIES = 5
+    
+    SOURCE_TYPE: SourcePages
+
+    @classmethod
+    def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+        requests.Request]:
+        try:
+            r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return None
+
+        if r.status_code in accepted_response_codes:
+            return r
+
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.debug(r.content)
+
+        if trie <= cls.TRIES:
+            LOGGER.warning("to many tries. Aborting.")
+
+        return cls.get_request(url, accepted_response_codes, trie + 1)
+
+    @classmethod
+    def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+        requests.Request]:
+        try:
+            r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return None
+
+        if r.status_code in accepted_response_codes:
+            return r
+
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.debug(r.content)
+
+        if trie <= cls.TRIES:
+            LOGGER.warning("to many tries. Aborting.")
+
+        return cls.post_request(url, accepted_response_codes, trie + 1)
 
     class Query:
         def __init__(self, query: str):
@@ -69,7 +120,7 @@ class Page:
         song_str = property(fget=lambda self: self.get_str(self.song))
 
     @classmethod
-    def search_by_query(cls, query: str) -> List[MusicObject]:        
+    def search_by_query(cls, query: str) -> Options:
         """
         # The Query
         You can define a new parameter with "#",
@@ -84,7 +135,7 @@ class Page:
         :return possible_music_objects:
         """
 
-        return []
+        return Options()
 
     @classmethod
     def fetch_details(cls, music_object: MusicObject, flat: bool = False) -> MusicObject:
@@ -102,15 +153,25 @@ class Page:
         """
 
         if type(music_object) == Song:
-            return cls.fetch_song_details(music_object, flat=flat)
-        
+            song = cls.fetch_song_details(music_object, flat=flat)
+            song.compile()
+            return song
+
         if type(music_object) == Album:
-            return cls.fetch_album_details(music_object, flat=flat)
+            album = cls.fetch_album_details(music_object, flat=flat)
+            album.compile()
+            return album
 
         if type(music_object) == Artist:
-            return cls.fetch_artist_details(music_object, flat=flat)
+            artist = cls.fetch_artist_details(music_object, flat=flat)
+            artist.compile()
+            return artist
 
         raise NotImplementedError(f"MusicObject {type(music_object)} has not been implemented yet")
+
+    @classmethod
+    def fetch_song_from_source(cls, source: Source, flat: bool = False) -> Song:
+        return Song()
 
     @classmethod
     def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
@@ -127,8 +188,17 @@ class Page:
         
         :return detailed_song: it modifies the input song
         """
+        
+        source: Source
+        for source in song.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_song = cls.fetch_song_from_source(source, flat)
+            song.merge(new_song)
 
         return song
+
+    @classmethod
+    def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+        return Album()
 
     @classmethod
     def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
@@ -147,7 +217,16 @@ class Page:
         :return detailed_artist: it modifies the input artist
         """
 
+        source: Source
+        for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_album: Album = cls.fetch_album_from_source(source, flat)
+            album.merge(new_album)
+
         return album
+
+    @classmethod
+    def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+        return Artist()
 
     @classmethod
     def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
@@ -163,5 +242,10 @@ class Page:
         
         :return detailed_artist: it modifies the input artist
         """
+        
+        source: Source
+        for source in artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+            new_artist: Artist = cls.fetch_artist_from_source(source, flat)
+            artist.merge(new_artist)
 
         return artist

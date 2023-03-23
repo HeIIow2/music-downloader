@@ -10,6 +10,10 @@ https://pandoc.org/installing.html
 
 
 class FormattedText:
+    """
+    the self.html value should be saved to the database
+    """
+    
     doc = None
 
     def __init__(
@@ -39,33 +43,36 @@ class FormattedText:
 
     def get_markdown(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="markdown").strip()
 
     def get_html(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="html").strip()
 
     def get_plaintext(self) -> str:
         if self.doc is None:
-            return None
+            return ""
         return pandoc.write(self.doc, format="plain").strip()
-    
+
     @property
-    def json(self) -> str:
-        if self.doc is None:
-            return None
-        return pandoc.write(self.doc, format="json")
+    def is_empty(self) -> bool:
+        return self.doc is None
+
+    def __eq__(self, other) -> False:
+        if type(other) != type(self):
+            return False
+        if self.is_empty and other.is_empty:
+            return True
+
+        return self.doc == other.doc
+
+
 
     plaintext = property(fget=get_plaintext, fset=set_plaintext)
     markdown = property(fget=get_markdown, fset=set_markdown)
     html = property(fget=get_html, fset=set_html)
-
-
-class NotesAttributes:
-    def __init__(self) -> None:
-        pass
 
 
 if __name__ == "__main__":
