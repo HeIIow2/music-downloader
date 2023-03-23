@@ -5,9 +5,12 @@ import sys
 import os
 
 # Add the parent directory of the src package to the Python module search path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from music_kraken import objects
+
+from music_kraken import metadata
+
 
 class TestSong(unittest.TestCase):
 
@@ -149,7 +152,7 @@ class TestAlbum(unittest.TestCase):
 class TestCollection(unittest.TestCase):
 
     def setUp(self):
-        self.collection = objects.Collection(
+        self.collection = objects.collection.Collection(
             title="A collection",
             date=objects.ID3Timestamp(year=1986, month=3, day=1),
             language=pycountry.languages.get(alpha_2="en"),
@@ -163,7 +166,7 @@ class TestCollection(unittest.TestCase):
         )
 
     def test_collection_title(self):
-        self.assertEqual(self.collection.title, "A collection")
+        self.assertEqual(self.collection, "A collection")
 
     def test_collection_date(self):
         self.assertEqual(self.collection.date.year, 1986)
