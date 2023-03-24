@@ -275,7 +275,7 @@ class Metadata:
     # the key is an enum from Mapping
     # the value is a list with each value
     # the mutagen object for each frame will be generated dynamically
-    id3_dict: Dict[any, list]
+    id3_dict: Dict[Mapping, list]
 
     def __init__(self, id3_dict: Dict[any, list] = None) -> None:
         self.id3_dict = dict()

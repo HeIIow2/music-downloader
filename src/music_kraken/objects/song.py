@@ -131,7 +131,7 @@ class Song(MainObject):
             id3Mapping.TRACKNUMBER: [self.tracksort_str]
         })
 
-        metadata.merge_many([s.get_song_metadata() for s in self.source_collection])
+        metadata.merge_many([s.metadata for s in self.source_collection])
         metadata.merge_many([a.metadata for a in self.album_collection])
         metadata.merge_many([a.metadata for a in self.main_artist_collection])
         metadata.merge_many([a.metadata for a in self.feature_artist_collection])
@@ -185,7 +185,10 @@ class Song(MainObject):
         if the album tracklist is empty, it sets it length to 1, this song has to be on the Album
         :returns id3_tracksort: {song_position}/{album.length_of_tracklist} 
         """
-        return f"{self.tracksort}/{len(self.album.tracklist) or 1}"
+        if len(self.album_collection) == 0:
+            return f"{self.tracksort}"
+        
+        return f"{self.tracksort}/{len(self.album_collection[0].tracklist) or 1}"
 
 
 """

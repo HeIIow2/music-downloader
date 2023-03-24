@@ -1,5 +1,7 @@
 # Which "Modules" do I have
+
 ## Overview
+
 - fetching of metadata
 - creating the target paths/filenames
 - fetching of the download sourced
@@ -7,6 +9,7 @@
 - fetching of the lyrics
 
 ## Naming and Structure of Modules
+
 - utils
   - shared (equivalent to global variables and constants)
   - config
