@@ -168,21 +168,9 @@ class TestCollection(unittest.TestCase):
         for song in self.collection:
             self.assertIn(song.unified_title, self.unified_titels)
 
-
-class TestCollectionAppending(unittest.TestCase):
-    def setUp(self):
-        self.song_list: objects.song = [
-            objects.Song(title="hasskrank"),
-            objects.Song(title="HaSSkrank"),
-            objects.Song(title="Suicideseason", isrc="uniqueID"),
-            objects.Song(title="same isrc different title", isrc="uniqueID")
-        ]
-        self.unified_titels = set(song.unified_title for song in self.song_list)
-
     def test_appending(self):
         collection = objects.Collection(
-            element_type=objects.Song,
-            data=self.song_list
+            element_type=objects.Song
         )
 
         res = collection.append(self.song_list[0])
@@ -197,9 +185,11 @@ class TestCollectionAppending(unittest.TestCase):
         self.assertEqual(res.was_in_collection, False)
         self.assertEqual(res.current_element, self.song_list[2])
 
-        res = collection.append(self.song_list[3])
+        res = collection.append(self.song_list[3], merge_into_existing=False)
         self.assertEqual(res.was_in_collection, True)
-        self.assertEqual(res.current_element, self.song_list[2])
+        self.assertEqual(res.current_element, self.song_list[3])
+
+
 
 
 
