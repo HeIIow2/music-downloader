@@ -62,7 +62,7 @@ class Collection:
                     except KeyError:
                         pass
 
-    def append(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> bool:
+    def append(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> DatabaseObject:
         """
         :param element:
         :param merge_on_conflict:
@@ -78,28 +78,33 @@ class Collection:
             if value in self._attribute_to_object_map[name]:
                 existing_object = self._attribute_to_object_map[name][value]
                 
-                if merge_on_conflict:
-                    # if the object does already exist
-                    # thus merging and don't add it afterwards
-                    if merge_into_existing:
-                        existing_object.merge(element)
-                        # in case any relevant data has been added (e.g. it remaps the old object)
-                        self.map_element(existing_object)
-                    else:
-                        element.merge(existing_object)
-                        
-                        exists_at = self._data.index(existing_object)
-                        self._data[exists_at] = element
-                        
-                        self.unmap_element(existing_object)
-                        self.map_element(element)
+                if not merge_on_conflict:
+                    return existing_object
+                    
+                # if the object does already exist
+                # thus merging and don't add it afterwards
+                if merge_into_existing:
+                    existing_object.merge(element)
+                    # in case any relevant data has been added (e.g. it remaps the old object)
+                    self.map_element(existing_object)
+                    return existing_object
                 
-                return False
+                element.merge(existing_object)
+                
+                exists_at = self._data.index(existing_object)
+                self._data[exists_at] = element
+                
+                self.unmap_element(existing_object)
+                self.map_element(element)
+                return element
 
         self._data.append(element)
         self.map_element(element)
         
-        return True
+        return element
+    
+    def append_is_already_in_collection(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> bool:
+        object_representing_the_data = self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
 
     def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
         for element in element_list:

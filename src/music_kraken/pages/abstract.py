@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union, Type
 import requests
 import logging
 
@@ -16,7 +16,8 @@ from ..objects import (
     MusicObject,
     Options,
     SourcePages,
-    Collection
+    Collection,
+    Label
 )
 
 
@@ -138,114 +139,62 @@ class Page:
         return Options()
 
     @classmethod
-    def fetch_details(cls, music_object: MusicObject, flat: bool = False) -> MusicObject:
+    def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> MusicObject:
         """
         when a music object with laccing data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
         If you for example put in an album, it fetches the tracklist
 
         :param music_object:
-        :param flat: 
-        if it is true it fetches only the most important information (only one level)
-        if an Artist is passed in, it fetches only the discography of the artist, and not the
-        tracklist of every album of the artist.
+        :param stop_at_level: 
+        This says the depth of the level the scraper will recurse to.
+        If this is for example set to 2, then the levels could be:
+        1. Level: the album
+        2. Level: every song of the album + every artist of the album
+        If no additional requests are needed to get the data one level below the supposed stop level
+        this gets ignored
         :return detailed_music_object: IT MODIFIES THE INPUT OBJ
         """
+        
+        new_music_object: MusicObject = type(music_object).__init__()
+        
+        source: Source
+        for source in music_object.source_collection:
+            new_music_object.merge(cls.fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
 
-        if type(music_object) == Song:
-            song = cls.fetch_song_details(music_object, flat=flat)
-            song.compile()
-            return song
 
-        if type(music_object) == Album:
-            album = cls.fetch_album_details(music_object, flat=flat)
-            album.compile()
-            return album
+        
+        music_object.merge(new_music_object)            
+        music_object.compile()
 
-        if type(music_object) == Artist:
-            artist = cls.fetch_artist_details(music_object, flat=flat)
-            artist.compile()
-            return artist
-
-        raise NotImplementedError(f"MusicObject {type(music_object)} has not been implemented yet")
+        return music_object
 
     @classmethod
-    def fetch_song_from_source(cls, source: Source, flat: bool = False) -> Song:
+    def fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
+        if obj_type == Artist:
+            return cls.fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
+        
+        if obj_type == Song:
+            return cls.fetch_song_from_source(source=source, stop_at_level=stop_at_level)
+        
+        if obj_type == Album:
+            return cls.fetch_album_from_source(source=source, stop_at_level=stop_at_level)
+        
+        if obj_type == Label:
+            return cls.fetch_label_from_source(source=source, stop_at_level=stop_at_level)
+
+    @classmethod
+    def fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
 
     @classmethod
-    def fetch_song_details(cls, song: Song, flat: bool = False) -> Song:
-        """
-        for a general description check cls.fetch_details
-
-        :param song: song without much data
-        :param flat: 
-        when True it only fetches the artist and the album, and the attributes of those,
-        who can be gotten with one api request
-        when False it fetches everything including, but not limited to:
-         - Lyrics
-         - Album + Tracklist (for tracksort)
-        
-        :return detailed_song: it modifies the input song
-        """
-        
-        source: Source
-        for source in song.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-            new_song = cls.fetch_song_from_source(source, flat)
-            song.merge(new_song)
-
-        return song
-
-    @classmethod
-    def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+    def fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         return Album()
 
-    @classmethod
-    def fetch_album_details(cls, album: Album, flat: bool = False) -> Album:
-        """
-        for a general description check cls.fetch_details
-
-        :param album: album without much data
-        :param flat: 
-        when True it only fetches the artist and the tracklist, and the attributes of those,
-        which can be gotten with one api request
-        when False it fetches everything including, but not limited to:
-         - Lyrics of every song
-         - Artist, Album, Tracklist
-         - every attribute of those
-        
-        :return detailed_artist: it modifies the input artist
-        """
-
-        source: Source
-        for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-            new_album: Album = cls.fetch_album_from_source(source, flat)
-            album.merge(new_album)
-
-        return album
 
     @classmethod
-    def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+    def fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
         return Artist()
-
-    @classmethod
-    def fetch_artist_details(cls, artist: Artist, flat: bool = False) -> Artist:
-        """
-        for a general description check cls.fetch_details
-
-        :param artist: artist without much data
-        :param flat: 
-        when True it only fetches the discographie, meaning every album, but not every tracklist
-        when False it fetches everything including, but not limited to:
-         - the whole discography
-         - the tracklist of every album in the discography
-        
-        :return detailed_artist: it modifies the input artist
-        """
-        
-        source: Source
-        for source in artist.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-            new_artist: Artist = cls.fetch_artist_from_source(source, flat)
-            artist.merge(new_artist)
-
-        return artist
+    
+    def fetch_label_from_source(source: Source, stop_at_level: int = 1) -> Label:
+        return Label()
