@@ -4,6 +4,7 @@
 
 - [Music Kraken](#music-kraken)
   - [Installation](#installation)
+    - [Dependencies](#dependencies)
     - [Notes for Python 3.9](#notes-for-python-39)
     - [Notes for WSL](#notes-for-wsl)
   - [Quick-Guide](#quick-guide)
@@ -33,7 +34,10 @@ pip install music-kraken
 music-kraken
 ```
 
-## Dependencies
+### Dependencies
+
+You will need to install these two programms.
+
 - ffmpeg
 - pandoc
 
