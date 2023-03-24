@@ -7,7 +7,6 @@ from pathlib import Path
 
 # Add the parent directory of the src package to the Python module search path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from music_kraken import objects
 
 """

@@ -99,7 +99,6 @@ class DatabaseObject:
         pass
 
 
-
 class MainObject(DatabaseObject):
     """
     This is the parent class for all "main" data objects:
