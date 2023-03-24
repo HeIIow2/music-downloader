@@ -38,18 +38,18 @@ logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 
-def get_options_from_query(query: str) -> List[objects.MusicObject]:
+def get_options_from_query(query: str) -> List[objects.DatabaseObject]:
     options = []
     for MetadataPage in pages.MetadataPages:
         options.extend(MetadataPage.search_by_query(query=query))
     return options
 
-def get_options_from_option(option: objects.MusicObject) -> List[objects.MusicObject]:
+def get_options_from_option(option: objects.DatabaseObject) -> List[objects.DatabaseObject]:
     for MetadataPage in pages.MetadataPages:
         option = MetadataPage.fetch_details(option, flat=False)
     return option.get_options()
 
-def print_options(options: List[objects.MusicObject]):
+def print_options(options: List[objects.DatabaseObject]):
     print("\n".join([f"{str(j).zfill(2)}: {i.get_option_string()}" for j, i in enumerate(options)]))
 
 def cli():

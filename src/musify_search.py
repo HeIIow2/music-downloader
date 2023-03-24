@@ -22,9 +22,15 @@ def fetch_album():
                                     "https://musify.club/release/linkin-park-hybrid-theory-2000-188")]
     )
 
-    album = Musify.fetch_details(album)
+    album: objects.Album = Musify.fetch_details(album)
     print(album.options)
 
+    song: objects.Song
+    for artist in album.artist_collection:
+        print(artist.id, artist.name)
+    for song in album.song_collection:
+        for artist in song.main_artist_collection:
+            print(artist.id, artist.name)
 
 if __name__ == "__main__":
     fetch_album()

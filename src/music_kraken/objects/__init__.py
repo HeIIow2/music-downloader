@@ -9,7 +9,7 @@ from . import (
     collection
 )
 
-MusicObject = parents.DatabaseObject
+DatabaseObject = parents.DatabaseObject
 
 ID3Mapping = metadata.Mapping
 ID3Timestamp = metadata.ID3Timestamp

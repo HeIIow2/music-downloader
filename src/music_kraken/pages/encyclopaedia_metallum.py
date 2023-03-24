@@ -9,7 +9,7 @@ from ..utils.shared import (
 
 from .abstract import Page
 from ..objects import (
-    MusicObject,
+    DatabaseObject,
     Artist,
     Source,
     SourcePages,

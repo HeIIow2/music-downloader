@@ -1,7 +1,14 @@
 from typing import List, Iterable, Dict
 from collections import defaultdict
+from dataclasses import dataclass
 
 from .parents import DatabaseObject
+
+
+@dataclass
+class AppendResult:
+    was_in_collection: bool
+    current_element: DatabaseObject
 
 
 class Collection:
@@ -14,12 +21,12 @@ class Collection:
     _by_url: dict
     _by_attribute: dict
 
-    def __init__(self, data: List[DatabaseObject] = None, element_type = None, *args, **kwargs) -> None:
+    def __init__(self, data: List[DatabaseObject] = None, element_type=None, *args, **kwargs) -> None:
         # Attribute needs to point to
         self.element_type = element_type
-        
+
         self._data: List[DatabaseObject] = list()
-        
+
         """
         example of attribute_to_object_map
         the song objects are references pointing to objects
@@ -34,7 +41,7 @@ class Collection:
         """
         self._attribute_to_object_map: Dict[str, Dict[object, DatabaseObject]] = defaultdict(dict)
         self._used_ids: set = set()
-        
+
         if data is not None:
             self.extend(data, merge_on_conflict=True)
 
@@ -47,14 +54,14 @@ class Collection:
                 continue
 
             self._attribute_to_object_map[name][value] = element
-            
+
         self._used_ids.add(element.id)
-        
+
     def unmap_element(self, element: DatabaseObject):
         for name, value in element.indexing_values:
             if value is None:
                 continue
-            
+
             if value in self._attribute_to_object_map[name]:
                 if element is self._attribute_to_object_map[name][value]:
                     try:
@@ -62,7 +69,8 @@ class Collection:
                     except KeyError:
                         pass
 
-    def append(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> DatabaseObject:
+    def append(self, element: DatabaseObject, merge_on_conflict: bool = True,
+               merge_into_existing: bool = True) -> AppendResult:
         """
         :param element:
         :param merge_on_conflict:
@@ -77,41 +85,39 @@ class Collection:
         for name, value in element.indexing_values:
             if value in self._attribute_to_object_map[name]:
                 existing_object = self._attribute_to_object_map[name][value]
-                
+
                 if not merge_on_conflict:
-                    return existing_object
-                    
+                    return AppendResult(True, existing_object)
+
                 # if the object does already exist
                 # thus merging and don't add it afterwards
                 if merge_into_existing:
                     existing_object.merge(element)
                     # in case any relevant data has been added (e.g. it remaps the old object)
                     self.map_element(existing_object)
-                    return existing_object
-                
+                    return AppendResult(True, existing_object)
+
                 element.merge(existing_object)
-                
+
                 exists_at = self._data.index(existing_object)
                 self._data[exists_at] = element
-                
+
                 self.unmap_element(existing_object)
                 self.map_element(element)
-                return element
+                return AppendResult(True, existing_object)
 
         self._data.append(element)
         self.map_element(element)
-        
-        return element
-    
-    def append_is_already_in_collection(self, element: DatabaseObject, merge_on_conflict: bool = True, merge_into_existing: bool = True) -> bool:
-        object_representing_the_data = self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
 
-    def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True):
+        return AppendResult(False, element)
+
+    def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True,
+               merge_into_existing: bool = True):
         for element in element_list:
-            self.append(element, merge_on_conflict=merge_on_conflict)
+            self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
 
     def __iter__(self):
-        for element in self._data:
+        for element in self.shallow_list:
             yield element
 
     def __str__(self) -> str:
@@ -120,11 +126,22 @@ class Collection:
     def __len__(self) -> int:
         return len(self._data)
 
-    def __getitem__(self, item):
-        if type(item) != int:
+    def __getitem__(self, key):
+        if type(key) != int:
             return ValueError("key needs to be an integer")
 
-        return self._data[item]
+        return self._data[key]
+
+    def __setitem__(self, key, value: DatabaseObject):
+        print(key, value)
+        if type(key) != int:
+            return ValueError("key needs to be an integer")
+
+        old_item = self._data[key]
+        self.unmap_element(old_item)
+        self.map_element(value)
+
+        self._data[key] = value
 
     @property
     def shallow_list(self) -> List[DatabaseObject]:

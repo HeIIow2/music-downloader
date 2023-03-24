@@ -14,7 +14,7 @@ from ..utils.shared import (
 
 from .abstract import Page
 from ..objects import (
-    MusicObject,
+    DatabaseObject,
     Artist,
     Source,
     SourcePages,
@@ -545,7 +545,7 @@ class Musify(Page):
         ))
 
     @classmethod
-    def get_discography(cls, url: MusifyUrl, artist_name: str = None, flat=False) -> List[Album]:
+    def get_discography(cls, url: MusifyUrl, artist_name: str = None, stop_at_level: int = 1) -> List[Album]:
         """
         POST https://musify.club/artist/filteralbums
         ArtistID: 280348
@@ -570,9 +570,9 @@ class Musify(Page):
         for card_soup in soup.find_all("div", {"class": "card"}):
             new_album: Album = cls.parse_album_card(card_soup, artist_name)
             album_source: Source
-            if not flat:
+            if stop_at_level > 1:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    new_album.merge(cls.fetch_album_from_source(album_source))
+                    new_album.merge(cls.fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
                     
             discography.append(new_album)
 
@@ -709,7 +709,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def fetch_artist_from_source(cls, source: Source, flat: bool = False) -> Artist:
+    def fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
         """
         fetches artist from source
 
@@ -719,7 +719,7 @@ class Musify(Page):
 
         Args:
             source (Source): the source to fetch
-            flat (bool, optional): if it is false, every album from discograohy will be fetched. Defaults to False.
+            stop_at_level: int = 1: if it is false, every album from discograohy will be fetched. Defaults to False.
 
         Returns:
             Artist: the artist fetched
@@ -851,7 +851,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def fetch_album_from_source(cls, source: Source, flat: bool = False) -> Album:
+    def fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         """
         fetches album from source:
         eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
@@ -861,8 +861,8 @@ class Musify(Page):
         [] attributes
         [] ratings
 
+        :param stop_at_level:
         :param source:
-        :param flat:
         :return:
         """
         album = Album(title="Hi :)")

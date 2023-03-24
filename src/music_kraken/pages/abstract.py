@@ -1,11 +1,8 @@
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, Dict
 import requests
 import logging
 
-LOGGER = logging.getLogger("this shouldn't be used")
-
 from ..utils import shared
-
 from ..objects import (
     Song,
     Source,
@@ -13,12 +10,14 @@ from ..objects import (
     Artist,
     Lyrics,
     Target,
-    MusicObject,
+    DatabaseObject,
     Options,
     SourcePages,
     Collection,
     Label
 )
+
+LOGGER = logging.getLogger("this shouldn't be used")
 
 
 class Page:
@@ -139,7 +138,7 @@ class Page:
         return Options()
 
     @classmethod
-    def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> MusicObject:
+    def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:
         """
         when a music object with laccing data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
@@ -156,21 +155,28 @@ class Page:
         :return detailed_music_object: IT MODIFIES THE INPUT OBJ
         """
         
-        new_music_object: MusicObject = type(music_object).__init__()
-        
+        new_music_object: DatabaseObject = type(music_object)()
+
         source: Source
         for source in music_object.source_collection:
-            new_music_object.merge(cls.fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
+            new_music_object.merge(cls._fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
 
+        collections = {
+            Label: Collection(element_type=Label),
+            Artist: Collection(element_type=Artist),
+            Album: Collection(element_type=Album),
+            Song: Collection(element_type=Song)
+        }
 
+        cls._clean_music_object(new_music_object, collections)
         
         music_object.merge(new_music_object)            
-        music_object.compile()
+        # music_object.compile()
 
         return music_object
 
     @classmethod
-    def fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
+    def _fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
         if obj_type == Artist:
             return cls.fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
         
@@ -184,6 +190,54 @@ class Page:
             return cls.fetch_label_from_source(source=source, stop_at_level=stop_at_level)
 
     @classmethod
+    def _clean_music_object(cls, music_object: Union[Label, Album, Artist, Song], collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        if type(music_object) == Label:
+            return cls._clean_label(label=music_object, collections=collections)
+        if type(music_object) == Artist:
+            return cls._clean_artist(artist=music_object, collections=collections)
+        if type(music_object) == Album:
+            return cls._clean_album(album=music_object, collections=collections)
+        if type(music_object) == Song:
+            return cls._clean_song(song=music_object, collections=collections)
+
+    @classmethod
+    def _clean_collection(cls, collection: Collection, collection_dict: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        if collection.element_type not in collection_dict:
+            return
+
+        for i, element in enumerate(collection):
+            r = collection_dict[collection.element_type].append(element)
+            if not r.was_in_collection:
+                cls._clean_music_object(r.current_element, collection_dict)
+                continue
+
+            collection[i] = r.current_element
+            cls._clean_music_object(r.current_element, collection_dict)
+
+    @classmethod
+    def _clean_label(cls, label: Label, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        cls._clean_collection(label.current_artist_collection, collections)
+        cls._clean_collection(label.album_collection, collections)
+
+    @classmethod
+    def _clean_artist(cls, artist: Artist, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        cls._clean_collection(artist.main_album_collection, collections)
+        cls._clean_collection(artist.feature_song_collection, collections)
+        cls._clean_collection(artist.label_collection, collections)
+
+    @classmethod
+    def _clean_album(cls, album: Album, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        cls._clean_collection(album.label_collection, collections)
+        cls._clean_collection(album.song_collection, collections)
+        cls._clean_collection(album.artist_collection, collections)
+
+    @classmethod
+    def _clean_song(cls, song: Song, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
+        cls._clean_collection(song.album_collection, collections)
+        cls._clean_collection(song.feature_artist_collection, collections)
+        cls._clean_collection(song.main_artist_collection, collections)
+
+    @classmethod
     def fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
 
@@ -195,6 +249,7 @@ class Page:
     @classmethod
     def fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
         return Artist()
-    
-    def fetch_label_from_source(source: Source, stop_at_level: int = 1) -> Label:
+
+    @classmethod
+    def fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
         return Label()

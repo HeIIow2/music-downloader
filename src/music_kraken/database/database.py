@@ -130,7 +130,7 @@ class Database:
             
             print(model._meta.fields)
 
-    def push(self, database_object: objects.MusicObject):
+    def push(self, database_object: objects.DatabaseObject):
         """
         Adds a new music object to the database using the corresponding method from the `write` session.
         When possible, rather use the `push_many` function.
@@ -153,7 +153,7 @@ class Database:
             if isinstance(database_object, objects.Artist):
                 return writing_session.add_artist(database_object)
 
-    def push_many(self, database_objects: List[objects.MusicObject]) -> None:
+    def push_many(self, database_objects: List[objects.DatabaseObject]) -> None:
         """
         Adds a list of MusicObject instances to the database.
         This function sends only needs one querry for each type of table added.

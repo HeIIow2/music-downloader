@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 import weakref
 
-from src.music_kraken.objects import MusicObject
+from src.music_kraken.objects import DatabaseObject
 
 """
 This is a cache for the objects, that et pulled out of the database.
@@ -32,14 +32,14 @@ class ObjectCache:
     :method extent: Add a list of MusicObjects to the cache.
     :method remove: Remove a MusicObject from the cache by its id.
     :method get: Retrieve a MusicObject from the cache by its id.    """
-    object_to_id: Dict[str, MusicObject]
+    object_to_id: Dict[str, DatabaseObject]
     weakref_map: Dict[weakref.ref, str]
 
     def __init__(self) -> None:
         self.object_to_id = dict()
         self.weakref_map = defaultdict()
 
-    def exists(self, music_object: MusicObject) -> bool:
+    def exists(self, music_object: DatabaseObject) -> bool:
         """
         Check if a MusicObject with the same id already exists in the cache.
 
@@ -60,7 +60,7 @@ class ObjectCache:
         data_id = self.weakref_map.pop(weakref_)
         self.object_to_id.pop(data_id)
 
-    def append(self, music_object: MusicObject) -> bool:
+    def append(self, music_object: DatabaseObject) -> bool:
         """
         Add a MusicObject to the cache.
 
@@ -75,7 +75,7 @@ class ObjectCache:
 
         return False
 
-    def extent(self, music_object_list: List[MusicObject]):
+    def extent(self, music_object_list: List[DatabaseObject]):
         """
         adjacent to the extent method of list, this appends n Object
         """
@@ -93,7 +93,7 @@ class ObjectCache:
             self.weakref_map.pop(weakref.ref(data))
             self.object_to_id.pop(_id)
 
-    def __getitem__(self, item) -> Optional[MusicObject]:
+    def __getitem__(self, item) -> Optional[DatabaseObject]:
         """
         this returns the data obj
         :param item: the id of the music object
@@ -102,5 +102,5 @@ class ObjectCache:
 
         return self.object_to_id.get(item)
 
-    def get(self, _id: str) -> Optional[MusicObject]:
+    def get(self, _id: str) -> Optional[DatabaseObject]:
         return self.__getitem__(_id)
