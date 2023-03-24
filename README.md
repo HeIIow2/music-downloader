@@ -156,21 +156,21 @@ Source {
 
 }
 
-Source }o--|| Song : from
-Source }o--|| Lyrics : from
-Source }o--|| Album : from
-Source }o--|| Artist : from
-Source }o--|| Label : from
+Source }o--|| Song : ""
+Source }o--|| Lyrics : ""
+Source }o--|| Album : ""
+Source }o--|| Artist : ""
+Source }o--|| Label : ""
 
 Song }o--o{ Album : AlbumSong
 Album }o--o{ Artist : ArtistAlbum
-Song }o--o{ Artist : features
+Song }o--o{ Artist : "ArtistSong (features)"
 
 Label }o--o{ Album : LabelAlbum
 Label }o--o{ Artist : LabelSong
 
-Song ||--o{ Lyrics : contains
-Song ||--o{ Target : points
+Song ||--o{ Lyrics : ""
+Song ||--o{ Target : ""
 ```
 
 Ok now this **WILL** look intimidating, thus I break it down quickly.  
@@ -216,7 +216,7 @@ Label {
 
 Song }o--o{ Album : AlbumSong
 Album }o--o{ Artist : ArtistAlbum
-Song }o--o{ Artist : features
+Song }o--o{ Artist : "ArtistSong (features)"
 
 Label }o--o{ Album : LabelAlbum
 Label }o--o{ Artist : LabelSong
