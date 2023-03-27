@@ -257,13 +257,13 @@ class Musify(Page):
             else:
                 LOGGER.warning("got an unequal ammount than 3 small elements")
 
-        return cls.ALBUM_CACHE.append(Album(
+        return Album(
             _id=_id,
             title=title,
             source_list=source_list,
             date=ID3Timestamp(year=year),
             artist_list=artist_list
-        ))
+        )
 
     @classmethod
     def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:

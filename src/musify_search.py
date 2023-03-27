@@ -33,4 +33,4 @@ def fetch_album():
             print(artist.id, artist.name)
 
 if __name__ == "__main__":
-    fetch_album()
+    search()

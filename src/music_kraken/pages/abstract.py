@@ -34,7 +34,7 @@ class Page:
 
     @classmethod
     def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
-        requests.Request]:
+        requests.Response]:
         try:
             r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT)
         except requests.exceptions.Timeout:
@@ -53,7 +53,7 @@ class Page:
 
     @classmethod
     def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
-        requests.Request]:
+        requests.Response]:
         try:
             r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
         except requests.exceptions.Timeout:
