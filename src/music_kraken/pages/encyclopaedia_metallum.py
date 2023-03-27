@@ -95,11 +95,16 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def search_for_artist(cls, query: Page.Query) -> List[Artist]:
-        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={" \
+                   "artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location" \
+                   "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
+                   "&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
 
         r = cls.API_SESSION.get(endpoint.format(artist=query.artist))
-        if r.status_code != 200:
-            LOGGER.warning(f"code {r.status_code} at {endpoint.format(artist=query.artist)}")
+
+        data_key = 'aaData'
+        parsed_data = r.json()
+        if data_key not in parsed_data:
             return []
 
         return [
@@ -176,7 +181,7 @@ class EncyclopaediaMetallum(Page):
             source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
             ],
-            artists=[
+            artist_list=[
                 cls.get_artist_from_json(artist_html=artist_html)
             ]
         )
@@ -197,7 +202,9 @@ class EncyclopaediaMetallum(Page):
             main_artist_list=[
                 cls.get_artist_from_json(artist_html=artist_html)
             ],
-            album=cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html),
+            album_list=[
+                cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
+            ],
             source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, song_id)
             ]
