@@ -299,12 +299,7 @@ class EncyclopaediaMetallum(Page):
         return artist
 
     @classmethod
-    def fetch_artist_attributes(cls, artist: Artist, url: str) -> Artist:
-        r = cls.get_request(url)
-        if r is None:
-            return artist
-        soup: BeautifulSoup = cls.get_soup_from_response(r)
-
+    def _parse_artist_attributes(cls, artist_soup: BeautifulSoup) -> Artist:
         country: pycountry.Countrie = None
         formed_in_year: int = None
         genre: str = None
@@ -312,7 +307,7 @@ class EncyclopaediaMetallum(Page):
         label_name: str = None
         label_url: str = None
 
-        band_stat_soup = soup.find("div", {"id": "band_stats"})
+        band_stat_soup = artist_soup.find("div", {"id": "band_stats"})
         for dl_soup in band_stat_soup.find_all("dl"):
             for title, data in zip(dl_soup.find_all("dt"), dl_soup.find_all("dd")):
                 title_text = title.text
@@ -320,7 +315,6 @@ class EncyclopaediaMetallum(Page):
                 if "Country of origin:" == title_text:
                     href = data.find('a').get('href')
                     country = pycountry.countries.get(alpha_2=href.split("/")[-1])
-                    artist.country = country
                     continue
 
                 # not needed: Location: Minot, North Dakota
@@ -335,15 +329,12 @@ class EncyclopaediaMetallum(Page):
                     if not data.text.isnumeric():
                         continue
                     formed_in_year = int(data.text)
-                    artist.formed_in = ID3Timestamp(year=formed_in_year)
                     continue
                 if "Genre:" == title_text:
                     genre = data.text
-                    artist.general_genre = genre
                     continue
                 if "Lyrical themes:" == title_text:
                     lyrical_themes = data.text.split(", ")
-                    artist.lyrical_themes = lyrical_themes
                     continue
                 if "Current label:" == title_text:
                     label_name = data.text
@@ -354,23 +345,37 @@ class EncyclopaediaMetallum(Page):
                         label_id = None
                         if type(label_url) is str and "/" in label_url:
                             label_id = label_url.split("/")[-1]
-                        
-                        artist.label_collection.append(
-                            Label(
-                                _id=label_id,
-                                name=label_name,
-                                source_list=[
-                                    Source(cls.SOURCE_TYPE, label_url)
-                                ]
-                            ))
-
 
                 """
+                TODO
                 years active: 2012-present
                 process this and add field to class
                 """
 
-        return artist
+        return Artist(
+            country=country,
+            formed_in=ID3Timestamp(year=formed_in_year),
+            general_genre=genre,
+            lyrical_themes=lyrical_themes,
+            label_list=[
+                Label(
+                    name=label_name,
+                    source_list=[
+                        Source(cls.SOURCE_TYPE, label_url)
+                    ]
+                )
+            ]
+        )
+
+    @classmethod
+    def _fetch_artist_attributes(cls, url: str) -> Artist:
+        print(url)
+        r = cls.get_request(url)
+        if r is None:
+            return Artist()
+        soup: BeautifulSoup = cls.get_soup_from_response(r)
+
+        return cls._parse_artist_attributes(artist_soup=soup)
 
     @classmethod
     def fetch_band_notes(cls, artist: Artist, ma_artist_id: str) -> Artist:
@@ -383,6 +388,23 @@ class EncyclopaediaMetallum(Page):
             return artist
 
         artist.notes.html = r.text
+        return artist
+
+    @classmethod
+    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
+        """
+        What it could fetch, and what is implemented:
+
+        [x] https://www.metal-archives.com/bands/Ghost_Bath/3540372489
+        [x] https://www.metal-archives.com/band/discography/id/3540372489/tab/all
+        [] reviews: https://www.metal-archives.com/review/ajax-list-band/id/3540372489/json/1?sEcho=1&iColumns=4&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&iSortCol_0=3&sSortDir_0=desc&iSortingCols=1&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=true&_=1675155257133
+        [] simmilar: https://www.metal-archives.com/band/ajax-recommendations/id/3540372489
+        [x] sources: https://www.metal-archives.com/link/ajax-list/type/band/id/3540372489
+        [x] band notes: https://www.metal-archives.com/band/read-more/id/3540372489
+        """
+
+        artist = cls._fetch_artist_attributes(source.url)
+
         return artist
 
     @classmethod
@@ -406,7 +428,7 @@ class EncyclopaediaMetallum(Page):
         """
 
         # SIMPLE METADATA
-        artist = cls.fetch_artist_attributes(artist, source.url)
+        artist = cls._fetch_artist_attributes(artist, source.url)
 
         # DISCOGRAPHY
         artist = cls.fetch_artist_discography(artist, artist_id, flat=flat)

@@ -36,38 +36,42 @@ class Page:
     @classmethod
     def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
         requests.Response]:
+        retry = False
         try:
             r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT)
         except requests.exceptions.Timeout:
-            return None
+            retry = True
 
-        if r.status_code in accepted_response_codes:
+        if not retry and r.status_code in accepted_response_codes:
             return r
 
-        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
         LOGGER.debug(r.content)
 
-        if trie <= cls.TRIES:
+        if trie >= cls.TRIES:
             LOGGER.warning("to many tries. Aborting.")
+            return None
 
         return cls.get_request(url, accepted_response_codes, trie + 1)
 
     @classmethod
     def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
         requests.Response]:
+        retry = False
         try:
             r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
         except requests.exceptions.Timeout:
-            return None
+            retry = True
 
-        if r.status_code in accepted_response_codes:
+        if not retry and r.status_code in accepted_response_codes:
             return r
 
-        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at {url}. ({trie}-{cls.TRIES})")
+        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
         LOGGER.debug(r.content)
 
-        if trie <= cls.TRIES:
+        if trie >= cls.TRIES:
             LOGGER.warning("to many tries. Aborting.")
+            return None
 
         return cls.post_request(url, accepted_response_codes, trie + 1)
 
@@ -163,7 +167,7 @@ class Page:
         new_music_object: DatabaseObject = type(music_object)()
 
         source: Source
-        for source in music_object.source_collection:
+        for source in music_object.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
             new_music_object.merge(cls._fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
 
         collections = {
