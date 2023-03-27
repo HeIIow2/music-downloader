@@ -572,7 +572,7 @@ class Musify(Page):
             album_source: Source
             if stop_at_level > 1:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    new_album.merge(cls.fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
+                    new_album.merge(cls._fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
                     
             discography.append(new_album)
 
@@ -709,7 +709,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
+    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
         """
         fetches artist from source
 
@@ -851,7 +851,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
+    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         """
         fetches album from source:
         eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'

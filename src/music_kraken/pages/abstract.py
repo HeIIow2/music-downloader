@@ -1,4 +1,5 @@
 from typing import Optional, Union, Type, Dict
+from bs4 import BeautifulSoup
 import requests
 import logging
 
@@ -69,6 +70,10 @@ class Page:
             LOGGER.warning("to many tries. Aborting.")
 
         return cls.post_request(url, accepted_response_codes, trie + 1)
+
+    @classmethod
+    def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
+        return BeautifulSoup(r.content, "html.parser")
 
     class Query:
         def __init__(self, query: str):
@@ -178,16 +183,16 @@ class Page:
     @classmethod
     def _fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
         if obj_type == Artist:
-            return cls.fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
+            return cls._fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
         
         if obj_type == Song:
-            return cls.fetch_song_from_source(source=source, stop_at_level=stop_at_level)
+            return cls._fetch_song_from_source(source=source, stop_at_level=stop_at_level)
         
         if obj_type == Album:
-            return cls.fetch_album_from_source(source=source, stop_at_level=stop_at_level)
+            return cls._fetch_album_from_source(source=source, stop_at_level=stop_at_level)
         
         if obj_type == Label:
-            return cls.fetch_label_from_source(source=source, stop_at_level=stop_at_level)
+            return cls._fetch_label_from_source(source=source, stop_at_level=stop_at_level)
 
     @classmethod
     def _clean_music_object(cls, music_object: Union[Label, Album, Artist, Song], collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
@@ -238,18 +243,33 @@ class Page:
         cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
-    def fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
+    def _parse_song(cls, song_soup: BeautifulSoup) -> Song:
         return Song()
 
     @classmethod
-    def fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
-        return Album()
-
+    def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
+        return Song()
 
     @classmethod
-    def fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
+    def _parse_artist(cls, album_soup: BeautifulSoup) -> Album:
+        return Album()
+    
+    @classmethod
+    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
+        return Album()
+
+    @classmethod
+    def _parse_artist(cls, artist_soup: BeautifulSoup) -> Artist:
         return Artist()
 
     @classmethod
-    def fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
+    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
+        return Artist()
+
+    @classmethod
+    def _parse_label(cls, label_soup: BeautifulSoup) -> Label:
+        return Label()
+
+    @classmethod
+    def _fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
