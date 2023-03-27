@@ -243,32 +243,16 @@ class Page:
         cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
-    def _parse_song(cls, song_soup: BeautifulSoup) -> Song:
-        return Song()
-
-    @classmethod
     def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
-
-    @classmethod
-    def _parse_artist(cls, album_soup: BeautifulSoup) -> Album:
-        return Album()
     
     @classmethod
     def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         return Album()
 
     @classmethod
-    def _parse_artist(cls, artist_soup: BeautifulSoup) -> Artist:
-        return Artist()
-
-    @classmethod
     def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
         return Artist()
-
-    @classmethod
-    def _parse_label(cls, label_soup: BeautifulSoup) -> Label:
-        return Label()
 
     @classmethod
     def _fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
