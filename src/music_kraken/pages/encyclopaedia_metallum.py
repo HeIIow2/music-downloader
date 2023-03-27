@@ -300,12 +300,56 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def _parse_artist_attributes(cls, artist_soup: BeautifulSoup) -> Artist:
+        name: str = None
         country: pycountry.Countrie = None
         formed_in_year: int = None
         genre: str = None
         lyrical_themes: List[str] = []
         label_name: str = None
         label_url: str = None
+        source_list: List[Source] = []
+
+        title_soup: BeautifulSoup = artist_soup.find("title")
+        if title_soup is not None:
+            bad_name_substring = " - Encyclopaedia Metallum: The Metal Archives"
+            title_text = title_soup.get_text()
+            if title_text.count(bad_name_substring) == 1:
+                name = title_text.replace(bad_name_substring, "")
+            else:
+                LOGGER.debug(f"the title of the page is \"{title_text}\"")
+
+        """
+        TODO
+        Implement the bandpictures and logos that can be gotten with the elements
+        <a class="image" id="photo" title="Ghost Bath"...
+        <a class="image" id="logo" title="Ghost Bath"...
+        where the titles are the band name
+        """
+        image_container_soup: BeautifulSoup = artist_soup.find(id="band_sidebar")
+        if image_container_soup is not None:
+            logo_soup = image_container_soup.find(id="logo")
+            if logo_soup is not None:
+                logo_title = logo_soup.get("title")
+                if logo_title is not None:
+                    name = logo_title.strip()
+
+            band_pictures = image_container_soup.find(id="photo")
+            if band_pictures is not None:
+                band_picture_title = logo_soup.get("title")
+                if band_picture_title is not None:
+                    name = band_picture_title.strip()
+
+        for h1_band_name_soup in artist_soup.find_all("h1", {"class": "band_name"}):
+            anchor: BeautifulSoup = h1_band_name_soup.find("a")
+            if anchor is None:
+                continue
+
+            href = anchor.get("href")
+            if href is not None:
+                source_list.append(Source(cls.SOURCE_TYPE, href))
+
+            name = anchor.get_text(strip=True)
+
 
         band_stat_soup = artist_soup.find("div", {"id": "band_stats"})
         for dl_soup in band_stat_soup.find_all("dl"):
@@ -353,6 +397,7 @@ class EncyclopaediaMetallum(Page):
                 """
 
         return Artist(
+            name=name,
             country=country,
             formed_in=ID3Timestamp(year=formed_in_year),
             general_genre=genre,
@@ -364,12 +409,12 @@ class EncyclopaediaMetallum(Page):
                         Source(cls.SOURCE_TYPE, label_url)
                     ]
                 )
-            ]
+            ],
+            source_list=source_list
         )
 
     @classmethod
     def _fetch_artist_attributes(cls, url: str) -> Artist:
-        print(url)
         r = cls.get_request(url)
         if r is None:
             return Artist()
