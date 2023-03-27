@@ -1,0 +1,378 @@
+<body>
+<div id="wrapper">
+    <div id="header">
+        <!--IRRELEVANT-->
+    </div>
+    <div id="left_col">
+        <!--Stuff regarding the global site-->
+    </div>
+    <div id="content_wrapper">
+      <script type="fa6a2c5f843c7c9cb55beb35-text/javascript">
+
+	$(document).ready(function() {
+		$(".no-js").removeClass("no-js");
+		$('#album_tabs').tabs({ beforeLoad: cacheTab }).show();
+		$('#album_members').tabs();
+		$('.albumMenu').click(toggleAlbumMenu);
+									toggleLyrics(0);
+			});
+	
+	function hideToolMenu(event) {
+		 $('.toolMenu-content').hide();
+	}
+	
+	function makeChildVersion() {
+		var releaseId = 392863;
+		var newParentId = prompt("Make a child of which album ID?");
+		
+		if(newParentId != null) {
+		
+			$('.loading').show();
+			$.post(URL_SITE + 'review/ajax-validate-move/json/1', { 'releaseId' : newParentId, "oldReleaseId": releaseId }, function(result) {
+				$('.loading').hide();
+				if(result.reviewConflict) {
+					alert("This action would cause at least two reviews by the same user to be listed for one album. This is not allowed. One of the reviews will need to be deleted first.");
+				}
+				else if(result.success) {
+					var confirmMove = confirm("Make this album (and all its own versions, if any) a version of " + result.band + " - " + result.release + "?");
+					
+					if(confirmMove) {
+						var params = { 'releaseId' : releaseId, "newParentId" : newParentId, 'csrfToken': window.csrfToken};
+						$('.loading').show();
+						$.post(URL_SITE + 'release/ajax-make-child/json/1', params, function(result) {
+							$('.loading').hide();
+							if(result.success) {
+								location.href = "https://www.metal-archives.com/albums/Ghost_Bath/Ghost_Bath/392863";
+							}
+							else {
+								alert("An error occurred: " + result.error);
+							}
+						}, 'json');
+					}
+				}
+				else {
+					alert("An error occurred: " + result.error);
+				}
+			}, 'json');			
+		}
+	}
+    
+    
+
+        </script>
+
+      <div id="album_sidebar">
+            <a href="https://www.metal-archives.com/bands/Ghost_Bath/3540372489#band_tab_discography">Ghost Bath</a>
+            > Ghost Bath
+
+            <div class="album_img">
+                <a class="image" id="cover" title="Ghost Bath - Ghost Bath" href="https://www.metal-archives.com/images/3/9/2/8/392863.jpg?0012">
+                  <img src="https://www.metal-archives.com/images/3/9/2/8/392863.jpg?0012" title="Click to zoom" alt="Ghost Bath - Ghost Bath" border="0"/></a>
+            </div>
+
+            <div id="affiliation-links">
+                <!--Links to an ebay search of the band-->
+            </div>
+
+            <table cellspacing="1" cellpadding="1" width="262" class="chronology">
+                <tr class="hidden">
+                    <th class="spacer"></th>
+                    <th colspan="2"></th>
+                    <th class="spacer"></th>
+                </tr>
+                <tr>
+                    <th colspan="4"><span>Ghost Bath</span> discography (misc)</th>
+                </tr>
+                <tr class="prevNext">
+                    <td class="arrows"></td>
+                    <td class="prev">
+                    </td>
+                    <td class="next">
+                        <a href="https://www.metal-archives.com/albums/Ghost_Bath/Burial/1099114"
+                           title="Burial (Single)">Burial</a><br/>(2014)
+                    </td>
+                    <td class="arrows"><a href="https://www.metal-archives.com/albums/Ghost_Bath/Burial/1099114"
+                                          title="Burial (Single)">></a></td>
+                </tr>
+                <tr>
+                    <th colspan="4"><span>Ghost Bath</span> discography (all)</th>
+                </tr>
+                <tr class="prevNext">
+                    <td class="arrows"></td>
+                    <td class="prev">
+                    </td>
+                    <td class="next">
+                        <a href="https://www.metal-archives.com/albums/Ghost_Bath/Funeral/401651"
+                           title="Funeral (Full-length)">Funeral</a><br/>(2014)
+                    </td>
+                    <td class="arrows"><a href="https://www.metal-archives.com/albums/Ghost_Bath/Funeral/401651" title="Funeral (Full-length)">></a></td>
+                </tr>
+            </table>
+        </div>
+        <div id="album_content">
+            <div class="tool_strip right">
+                <ul>
+                    <li><a title="Report a mistake or additional information for this page"
+                           href="javascript:popupReportDialog(4, 392863);" class="btn_report_error writeAction"> </a>
+                    </li>
+                    <li>
+                        <a href="https://www.metal-archives.com/bands/Ghost_Bath/3540372489" title="Back to Ghost Bath"
+                           class="btn_back"> </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="album_info">
+
+                <h1 class="album_name"><a href="https://www.metal-archives.com/albums/Ghost_Bath/Ghost_Bath/392863">Ghost
+                    Bath</a></h1>
+                <h2 class="band_name">
+                    <a href="https://www.metal-archives.com/bands/Ghost_Bath/3540372489">Ghost Bath</a>
+                </h2>
+
+                <div class="clear block_spacer_5"></div>
+                <div id="message"></div>
+
+                <div class="clear block_spacer_20"></div>
+                <dl class="float_left">
+                    <dt>Type:</dt>
+                    <dd>EP</dd>
+                    <dt>Release date:</dt>
+                    <dd>October 21st, 2013</dd>
+                    <dt>Catalog ID:</dt>
+                    <dd>N/A</dd>
+                </dl>
+                <dl class="float_right">
+                    <dt>Label:</dt>
+                    <dd>Independent</dd>
+                    <dt>Format:</dt>
+                    <dd>Digital</dd>
+                    <dt>Reviews:</dt>
+                    <dd>
+                        2 <a href="https://www.metal-archives.com/reviews/Ghost_Bath/Ghost_Bath/392863/">reviews</a>
+                        (avg. 29%)
+                    </dd>
+                </dl>
+            </div>
+            <div id="album_tabs" class="clear tabs block_spacer_top_20 ui-tabs no-js">
+                <ul class="ui-tabs-nav">
+                    <li><a href="#album_tabs_tracklist">Songs</a></li>
+                    <li><a href="#album_tabs_lineup">Lineup</a></li>
+                    <li><a href="https://www.metal-archives.com/release/ajax-versions/current/392863/parent/392863">Other
+                        versions</a></li>
+                    <li><a href="#album_tabs_reviews">Reviews</a></li>
+                </ul>
+
+                <div id="album_tabs_tracklist" class="ui-tabs-hide">
+                    <div id="album_songs" class="tabs2lvl">
+
+                    </div>
+                    <div class="ui-tabs-panel-content block_spacer_top_20">
+                        <script type="fa6a2c5f843c7c9cb55beb35-text/javascript">
+                          function toggleLyrics(songId) {
+                              var lyricsRow = $('#song' + songId);
+                              lyricsRow.toggle();
+                              var lyrics = $('#lyrics_' + songId);
+                              if (lyrics.html() == '(loading lyrics...)') {
+                                  var realId = songId;
+                                  if(!$.isNumeric(songId.substring(songId.length -1, songId.length))) {
+                                      realId = songId.substring(0, songId.length -1);
+                                  }
+                                  lyrics.load(URL_SITE + "release/ajax-view-lyrics/id/" + realId);
+                              }
+                              // toggle link
+                              var linkLabel = "lyrics";
+                              $("#lyricsButton" + songId).text(lyricsRow.css("display") == "none" ? "Show " + linkLabel : "Hide " + linkLabel);
+                              return false;
+                          }
+                        </script>
+
+                        <table class="display table_lyrics" cellpadding="0" cellspacing="0">
+                            <tbody>
+                            <tr class="even">
+                                <td width="20"><a name="2723064" class="anchor"> </a>1.</td>
+                                <td class="wrapWords">
+                                    Apathy
+                                </td>
+                                <td align="right">06:47</td>
+                                <td nowrap="nowrap">&nbsp;
+                                    <a id="lyricsButton2723064" href="#2723064"
+                                       onclick="if (!window.__cfRLUnblockHandlers) return false; toggleLyrics('2723064'); return false;"
+                                       data-cf-modified-fa6a2c5f843c7c9cb55beb35-="">Show lyrics</a>
+                                </td>
+                            </tr>
+                            <tr id="song2723064" class="displayNone" height="0">
+                                <td>&nbsp;</td>
+                                <td colspan="3" id="lyrics_2723064">(loading lyrics...)</td>
+                            </tr>
+                            <tr class="odd">
+                                <td width="20"><a name="2723065" class="anchor"> </a>2.</td>
+                                <td class="wrapWords">
+                                    Despair
+                                </td>
+                                <td align="right">04:29</td>
+                                <td nowrap="nowrap">&nbsp;
+                                    <em>instrumental</em>
+                                </td>
+                            </tr>
+                            <tr id="song2723065" class="displayNone" height="0">
+                                <td>&nbsp;</td>
+                                <td colspan="3" id="lyrics_2723065">(loading lyrics...)</td>
+                            </tr>
+                            <tr class="even">
+                                <td width="20"><a name="2723066" class="anchor"> </a>3.</td>
+                                <td class="wrapWords">
+                                    Lust
+                                </td>
+                                <td align="right">06:57</td>
+                                <td nowrap="nowrap">&nbsp;
+                                    <a id="lyricsButton2723066" href="#2723066"
+                                       onclick="if (!window.__cfRLUnblockHandlers) return false; toggleLyrics('2723066'); return false;"
+                                       data-cf-modified-fa6a2c5f843c7c9cb55beb35-="">Show lyrics</a>
+                                </td>
+                            </tr>
+                            <tr id="song2723066" class="displayNone" height="0">
+                                <td>&nbsp;</td>
+                                <td colspan="3" id="lyrics_2723066">(loading lyrics...)</td>
+                            </tr>
+                            <tr class="odd">
+                                <td width="20"><a name="2723067" class="anchor"> </a>4.</td>
+                                <td class="wrapWords">
+                                    Hope
+                                </td>
+                                <td align="right">06:31</td>
+                                <td nowrap="nowrap">&nbsp;
+                                    <em>instrumental</em>
+                                </td>
+                            </tr>
+                            <tr id="song2723067" class="displayNone" height="0">
+                                <td>&nbsp;</td>
+                                <td colspan="3" id="lyrics_2723067">(loading lyrics...)</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">&nbsp;</td>
+                                <td align="right"><strong>24:44</strong></td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <div id="album_tabs_lineup">
+                    <div id="album_members" class="tabs2lvl">
+                        <ul>
+                            <li><a href="#album_members_lineup">Band members</a></li>
+                        </ul>
+
+                        <div id="album_members_lineup">
+                            <div class="ui-tabs-panel-content">
+                                <table class="display lineupTable" cellpadding="0" cellspacing="0">
+                                    <tr class="lineupRow">
+                                        <td width="300" valign="top">
+                                            <a href="https://www.metal-archives.com/artists/%E6%9D%B0%E7%B1%B3/532538">杰米</a>
+                                        </td>
+                                        <td>
+                                            Bass, Vocals
+                                        </td>
+                                    </tr>
+                                    <tr class="lineupRow">
+                                        <td width="300" valign="top">
+                                            <a href="https://www.metal-archives.com/artists/%E6%B3%B0%E5%8B%92/532539">泰勒</a>
+                                        </td>
+                                        <td>
+                                            Drums
+                                        </td>
+                                    </tr>
+                                    <tr class="lineupRow">
+                                        <td width="300" valign="top">
+                                            <a href="https://www.metal-archives.com/artists/%E5%A4%9A%E8%AF%BA%E4%B8%87/532537">多诺万</a>
+                                        </td>
+                                        <td>
+                                            Guitars, Vocals
+                                        </td>
+                                    </tr>
+                                    <tr class="lineupRow">
+                                        <td width="300" valign="top">
+                                            <a href="https://www.metal-archives.com/artists/Dennis_Mikula/532536">丹尼斯:</a>
+                                        </td>
+                                        <td>
+                                            Guitars, Vocals, Keyboards
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div id="album_tabs_reviews" class="ui-tabs-hide">
+                    <div id="album_reviews" class="tabs2lvl">
+                        <div class="tool_strip top right writeAction">
+                            <ul>
+                                <li><a href="https://www.metal-archives.com/review/write/releaseId/392863"
+                                       class="btn_add">Add</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="ui-tabs-panel-content block_spacer_top_36">
+                        <table id="review_list" class="display" cellpadding="0" cellspacing="0">
+                            <tr class="even">
+                                <td nowrap="nowrap"><a
+                                        href="https://www.metal-archives.com/reviews/Ghost_Bath/Ghost_Bath/392863/Zodijackyl/113957"
+                                        title="Read" class="iconContainer ui-state-default ui-corner-all"><span
+                                        class="ui-icon ui-icon-search">Read</span></a></td>
+                                <td>Do hipsters ironically buy...</td>
+                                <td>3%</td>
+                                <td><a href="https://www.metal-archives.com/users/Zodijackyl" class="profileMenu">Zodijackyl</a>
+                                </td>
+                                <td>June 27th, 2015</td>
+                            </tr>
+                            <tr class="odd">
+                                <td nowrap="nowrap"><a
+                                        href="https://www.metal-archives.com/reviews/Ghost_Bath/Ghost_Bath/392863/Sweetie/348473"
+                                        title="Read" class="iconContainer ui-state-default ui-corner-all"><span
+                                        class="ui-icon ui-icon-search">Read</span></a></td>
+                                <td>Instrumentation And...</td>
+                                <td>55%</td>
+                                <td><a href="https://www.metal-archives.com/users/Sweetie"
+                                       class="profileMenu">Sweetie</a></td>
+                                <td>May 10th, 2015</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="auditTrail">
+                <table>
+                    <tr>
+                        <td>Added by: <a href="https://www.metal-archives.com/users/Teglement" class="profileMenu">Teglement</a>
+                        </td>
+                        <td align="right">Modified by: <a href="https://www.metal-archives.com/users/GuardAwakening"
+                                                          class="profileMenu">GuardAwakening</a></td>
+                    </tr>
+                    <tr>
+                        <td>Added on: 2013-11-06 22:29:38</td>
+                        <td align="right">Last modified on: 2017-05-03 04:48:50</td>
+                    </tr>
+                    <tr>
+                        <td valign="top">
+                            &nbsp;
+                        </td>
+                        <td align="right" valign="top">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
+        data-cf-settings="fa6a2c5f843c7c9cb55beb35-|49" defer=""></script>
+</body>
+</html>
