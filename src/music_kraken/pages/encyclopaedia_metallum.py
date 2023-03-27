@@ -300,12 +300,10 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def fetch_artist_attributes(cls, artist: Artist, url: str) -> Artist:
-        r = cls.API_SESSION.get(url)
-        if r.status_code != 200:
-            LOGGER.warning(f"code {r.status_code} at {url}")
+        r = cls.get_request(url)
+        if r is None:
             return artist
-
-        soup = BeautifulSoup(r.text, 'html.parser')
+        soup: BeautifulSoup = cls.get_soup_from_response(r)
 
         country: pycountry.Countrie = None
         formed_in_year: int = None
