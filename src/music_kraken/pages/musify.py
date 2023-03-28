@@ -100,7 +100,7 @@ class Musify(Page):
         try:
             type_enum = MusifyTypes(path[1])
         except ValueError as e:
-            print(f"{path[1]} is not yet implemented, add it to MusifyTypes")
+            LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
             raise e
 
         return MusifyUrl(
@@ -267,10 +267,7 @@ class Musify(Page):
 
     @classmethod
     def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
-        # print(contact_container_soup.prettify)
         contacts = []
-
-        # print(contact_container_soup)
 
         contact: BeautifulSoup
         for contact in contact_container_soup.find_all("div", {"class": "contacts__item"}):
@@ -281,7 +278,6 @@ class Musify(Page):
                 url = anchor_soup.get("href")
 
                 if url is not None:
-                    # print(url)
                     if "artist" in url:
                         contacts.append(cls.parse_artist_contact(contact))
                     elif "release" in url:
@@ -301,7 +297,6 @@ class Musify(Page):
             anchor_list = playlist_details.find_all("a")
 
             if len(anchor_list) >= 2:
-                print(anchor_list)
                 # artists
                 artist_anchor: BeautifulSoup
                 for artist_anchor in anchor_list[:-1]:

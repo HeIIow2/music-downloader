@@ -4,11 +4,7 @@ from .musify import Musify
 EncyclopaediaMetallum = EncyclopaediaMetallum
 Musify = Musify
 
-MetadataPages = {
-    EncyclopaediaMetallum,
-    Musify
-}
+from . import download_center
 
-AudioPages = {
-    Musify
-}
+Search = download_center.Search
+
