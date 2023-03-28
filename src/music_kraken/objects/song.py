@@ -96,21 +96,25 @@ class Song(MainObject):
         self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
         self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
 
-    def compile(self):
+    def _build_recursive_structures(self, build_version: int, merge: bool):
+        if build_version == self.build_version:
+            return
+        self.build_version = build_version
+        
         album: Album
         for album in self.album_collection:
-            if album.song_collection.append(self, merge_into_existing=False):
-                album.compile()
+            album.song_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            album._build_recursive_structures(build_version=build_version, merge=merge)
 
         artist: Artist
         for artist in self.feature_artist_collection:
-            if artist.feature_song_collection.append(self, merge_into_existing=False):
-                artist.compile()
+            artist.feature_song_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            artist._build_recursive_structures(build_version=build_version, merge=merge)
 
         for artist in self.main_artist_collection:
             for album in self.album_collection:
-                if artist.main_album_collection.append(album, merge_into_existing=False):
-                    artist.compile()
+                artist.main_album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+                artist._build_recursive_structures(build_version=build_version, merge=merge)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -260,21 +264,25 @@ class Album(MainObject):
         self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
-    def compile(self):
+    def _build_recursive_structures(self, build_version: int, merge: bool):
+        if build_version == self.build_version:
+            return
+        self.build_version = build_version
+        
         song: Song
         for song in self.song_collection:
-            if song.album_collection.append(self, merge_into_existing=False):
-                song.compile()
-
+            song.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            song._build_recursive_structures(build_version=build_version, merge=merge)
+        
         artist: Artist
         for artist in self.artist_collection:
-            if artist.main_album_collection.append(self, merge_into_existing=False):
-                artist.compile()
-
+            artist.main_album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            artist._build_recursive_structures(build_version=build_version, merge=merge)
+            
         label: Label
         for label in self.label_collection:
-            if label.album_collection.append(self, merge_into_existing=False):
-                label.compile()
+            label.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            label._build_recursive_structures(build_version=build_version, merge=merge)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -436,21 +444,25 @@ class Artist(MainObject):
         self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
-    def compile(self):
-        song: "Song"
+    def _build_recursive_structures(self, build_version: int, merge: False):
+        if build_version == self.build_version:
+            return
+        self.build_version = build_version
+        
+        song: Song
         for song in self.feature_song_collection:
-            if song.feature_artist_collection.append(self, merge_into_existing=False):
-                song.compile()
-
-        album: "Album"
+            song.feature_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            song._build_recursive_structures(build_version=build_version, merge=merge)
+            
+        album: Album
         for album in self.main_album_collection:
-            if album.artist_collection.append(self, merge_into_existing=False):
-                album.compile()
-
+            album.artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            album._build_recursive_structures(build_version=build_version, merge=merge)
+            
         label: Label
         for label in self.label_collection:
-            if label.current_artist_collection.append(self, merge_into_existing=False):
-                label.compile()
+            label.current_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            label._build_recursive_structures(build_version=build_version, merge=merge)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -580,16 +592,20 @@ class Label(MainObject):
         self.album_collection: Collection = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
 
-    def compile(self) -> bool:
+    def _build_recursive_structures(self, build_version: int, merge: False):
+        if build_version == self.build_version:
+            return
+        self.build_version = build_version
+        
         album: Album
         for album in self.album_collection:
-            if album.label_collection.append(self, merge_into_existing=False):
-                album.compile()
+            album.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            album._build_recursive_structures(build_version=build_version, merge=merge)
 
         artist: Artist
-        for artist in self.current_artist_collection:
-            if artist.label_collection.append(self, merge_into_existing=False):
-                artist.compile()
+        for artist in self.current_artist_collection:            
+            artist.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+            artist._build_recursive_structures(build_version=build_version, merge=merge)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
