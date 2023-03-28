@@ -4,7 +4,7 @@ from typing import Tuple, List, Set, Dict, Type
 from . import page_attributes
 from ..abstract import Page
 
-from ...objects import Options
+from ...objects import Options, DatabaseObject
 
 
 class MultiPageOptions:
@@ -27,10 +27,22 @@ class MultiPageOptions:
     def __repr__(self) -> str:
         lines: List[str] = []
         
+        page_name_fill = "-"
+        max_page_len = 21
+        
         j = 0
         for page, options in self._current_option_dict.items():
-            lines.append(f"----------{page.__name__}----------")
+            lines.append(f"----------{page.__name__:{page_name_fill}<{max_page_len}}----------")
             
+            option_obj: DatabaseObject
+            for i, option_obj in enumerate(options):
+                if i >= self.max_displayed_options:
+                    lines.append("...")
+                    break
+                
+                lines.append(f"{j+i:0{self.option_digits}} {option_obj.option_string}")
+            
+            j += i + 1
             
         return "\n".join(lines)
 
@@ -99,5 +111,4 @@ class Search:
         for page in self.pages:
             self._current_option[page] = page.search_by_query(query=query)
             
-        print(self._current_option)
                 
