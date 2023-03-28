@@ -113,7 +113,7 @@ class Song(MainObject):
 
         for artist in self.main_artist_collection:
             for album in self.album_collection:
-                artist.main_album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
+                artist.main_album_collection.append(album, merge_on_conflict=merge, merge_into_existing=False)
                 artist._build_recursive_structures(build_version=build_version, merge=merge)
 
     @property

@@ -35,7 +35,7 @@ class TestSong(unittest.TestCase):
         
         self.artist_list = []
         
-        main_artist_list=[
+        self.main_artist_list=[
             objects.Artist(
                 name="I'm in a coffin",
                 source_list=[
@@ -56,7 +56,7 @@ class TestSong(unittest.TestCase):
                 )
             ]
         
-        self.artist_list.extend(main_artist_list)
+        self.artist_list.extend(self.main_artist_list)
         self.artist_list.extend(feature_artist_list)
         
         self.song = objects.Song(
@@ -81,13 +81,19 @@ class TestSong(unittest.TestCase):
                                "https://ln.topdf.de/Music-Kraken/")
             ],
             album_list=self.album_list,
-            main_artist_list=main_artist_list,
+            main_artist_list=self.main_artist_list,
             feature_artist_list=feature_artist_list,
         )
+        
+        self.song.compile()
 
     def test_album(self):
-        pass
+        for artist in self.song.main_artist_collection:
+            for artist_album in artist.main_album_collection:
+                self.assertIn(artist_album, self.song.album_collection)
     
     def test_artist(self):
-        pass
+        for album in self.song.album_collection:
+            for album_artist in album.artist_collection:
+                self.assertIn(album_artist, self.song.main_artist_collection)
 
