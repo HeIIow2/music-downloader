@@ -78,7 +78,7 @@ class MultiPageOptions:
         return self._current_option_dict[page][index]
         
     def __repr__(self) -> str:
-        self.string_all_pages()
+        return self.string_from_all_pages()
 
 
 class Search:
