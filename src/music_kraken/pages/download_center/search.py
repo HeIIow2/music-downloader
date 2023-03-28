@@ -18,10 +18,10 @@ class MultiPageOptions:
         
         self._current_option_dict: Dict[Type[Page], Options] = defaultdict(lambda: Options())
 
-    def __getitem__(self, key: Page):
+    def __getitem__(self, key: Type[Page]):
         return self._current_option_dict[key]
     
-    def __setitem__(self, key: Page, value: Options):
+    def __setitem__(self, key: Type[Page], value: Options):
         self._current_option_dict[key] = value
         
     def string_from_all_pages(self) -> str:
@@ -60,7 +60,7 @@ class MultiPageOptions:
             
         raise KeyError("index is out of range")
     
-    def string_from_single_page(self, page: Page) -> str:
+    def string_from_single_page(self, page: Type[Page]) -> str:
         lines: List[str] = []
         
         page_name_fill = "-"
@@ -74,7 +74,7 @@ class MultiPageOptions:
             
         return "\n".join(lines)
     
-    def choose_from_single_page(self, page: Page, index: int) -> DatabaseObject:
+    def choose_from_single_page(self, page: Type[Page], index: int) -> DatabaseObject:
         return self._current_option_dict[page][index]
         
     def __repr__(self) -> str:
@@ -85,14 +85,14 @@ class Search:
     def __init__(
         self,
         query: str,
-        pages: Tuple[Page] = page_attributes.ALL_PAGES,
-        exclude_pages: Set[Page] = set(),
+        pages: Tuple[Type[Page]] = page_attributes.ALL_PAGES,
+        exclude_pages: Set[Type[Page]] = set(),
         exclude_shady: bool = False,
         max_displayed_options: int = 10,
         option_digits: int = 3
     ) -> None:
-        _page_list: List[Page] = []
-        _audio_page_list: List[Page] = []
+        _page_list: List[Type[Page]] = []
+        _audio_page_list: List[Type[Page]] = []
         
         for page in pages:
             if exclude_shady and page in page_attributes.SHADY_PAGES:
@@ -105,8 +105,8 @@ class Search:
             if page in page_attributes.AUDIO_PAGES:
                 _audio_page_list.append(page)
             
-        self.pages: Tuple[Page] = tuple(_page_list)
-        self.audio_pages: Tuple[Page] = tuple(_audio_page_list)
+        self.pages: Tuple[Type[Page]] = tuple(_page_list)
+        self.audio_pages: Tuple[Type[Page]] = tuple(_audio_page_list)
         
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
