@@ -28,3 +28,6 @@ class Options:
             raise ValueError("Index out of bounds")
 
         return self._data[item]
+    
+    def __len__(self) -> int:
+        return len(self._data)

@@ -24,7 +24,7 @@ class MultiPageOptions:
     def __setitem__(self, key: Page, value: Options):
         self._current_option_dict[key] = value
         
-    def __repr__(self) -> str:
+    def string_from_all_pages(self) -> str:
         lines: List[str] = []
         
         page_name_fill = "-"
@@ -45,6 +45,40 @@ class MultiPageOptions:
             j += i + 1
             
         return "\n".join(lines)
+    
+    def choose_from_all_pages(self, index: int) -> DatabaseObject:
+        j = 0
+        for page, options in self._current_option_dict.items():
+            option_len = len(options)
+            if option_len > self.max_displayed_options:
+                option_len = self.max_displayed_options
+                
+            if index < j + option_len:
+                return options[j+option_len-1]
+            
+            j += option_len - 1
+            
+        raise KeyError("index is out of range")
+    
+    def string_from_single_page(self, page: Page) -> str:
+        lines: List[str] = []
+        
+        page_name_fill = "-"
+        max_page_len = 21
+
+        lines.append(f"----------{page.__name__:{page_name_fill}<{max_page_len}}----------")
+            
+        option_obj: DatabaseObject
+        for i, option_obj in enumerate(self._current_option_dict[page]):            
+            lines.append(f"{i:0{self.option_digits}} {option_obj.option_string}")
+            
+        return "\n".join(lines)
+    
+    def choose_from_single_page(self, page: Page, index: int) -> DatabaseObject:
+        return self._current_option_dict[page][index]
+        
+    def __repr__(self) -> str:
+        self.string_all_pages()
 
 
 class Search:
