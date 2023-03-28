@@ -9,11 +9,6 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from music_kraken import objects
 
-"""
-Testing the Formatted text is barely possible cuz one false character and it fails.
-Not worth the trouble
-"""
-
 
 class TestSong(unittest.TestCase):
 
