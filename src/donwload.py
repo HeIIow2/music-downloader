@@ -7,7 +7,7 @@ def search_pages():
     print("audio", search.audio_pages)
     
     print()
-    print(search._current_option)
+    print(search)
 
 
 if __name__ == "__main__":
