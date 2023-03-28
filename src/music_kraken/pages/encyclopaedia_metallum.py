@@ -10,7 +10,7 @@ from ..utils.shared import (
 
 from .abstract import Page
 from ..objects import (
-    DatabaseObject,
+    Lyrics,
     Artist,
     Source,
     SourcePages,
@@ -475,9 +475,14 @@ class EncyclopaediaMetallum(Page):
         
         row_list = track_row.find_all(recursive=False)
 
+        source_list: List[Source] = []
+
         track_sort_soup = row_list[0]
         track_sort = int(track_sort_soup.text[:-1])
-        track_id = track_sort_soup.find("a").get("name")
+        track_id = track_sort_soup.find("a").get("name").strip()
+        
+        if track_row.find("a", {"href": f"#{track_id}"}) is not None:
+            source_list.append(Source(cls.SOURCE_TYPE, track_id))
 
         title = row_list[1].text.strip()
 
@@ -492,7 +497,7 @@ class EncyclopaediaMetallum(Page):
             title=title,
             length=length,
             tracksort=track_sort,
-            source_list=[Source(cls.SOURCE_TYPE, track_id)]
+            source_list=source_list
         )
         
 
@@ -579,11 +584,54 @@ class EncyclopaediaMetallum(Page):
         
         if stop_at_level > 1:
             for song in album.song_collection:
-                for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+                for source in song.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
                     song.merge(cls._fetch_song_from_source(source=source, stop_at_level=stop_at_level-1))
                     
         return album
+    
+    @classmethod
+    def _fetch_lyrics(cls, song_id: str) -> Optional[Lyrics]:
+        """
+        function toggleLyrics(songId) {
+            var lyricsRow = $('#song' + songId);
+            lyricsRow.toggle();
+            var lyrics = $('#lyrics_' + songId);
+            if (lyrics.html() == '(loading lyrics...)') {
+                var realId = songId;
+                if(!$.isNumeric(songId.substring(songId.length -1, songId.length))) {
+                    realId = songId.substring(0, songId.length -1);
+                }
+                lyrics.load(URL_SITE + "release/ajax-view-lyrics/id/" + realId);
+            }
+            // toggle link
+            var linkLabel = "lyrics";
+            $("#lyricsButton" + songId).text(lyricsRow.css("display") == "none" ? "Show " + linkLabel : "Hide " + linkLabel);
+            return false;
+        }
+        """
+        if song_id is None:
+            return None
+        
+        endpoint = "https://www.metal-archives.com/release/ajax-view-lyrics/id/{id}".format(id=song_id)
+        
+        r = cls.get_request(endpoint)
+        if r is None:
+            return None
+        
+        return Lyrics(
+            text=FormattedText(html=r.text),
+            language=pycountry.languages.get(alpha_2="en"),
+            source_list=[
+                Source(cls.SOURCE_TYPE, endpoint)
+            ]
+        )
 
     @classmethod
     def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
-        return Song()
+        song_id = source.url
+        
+        return Song(
+            lyrics_list=[
+                cls._fetch_lyrics(song_id=song_id)
+            ]
+        )

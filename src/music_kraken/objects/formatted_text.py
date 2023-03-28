@@ -67,6 +67,9 @@ class FormattedText:
             return True
 
         return self.doc == other.doc
+    
+    def __str__(self) -> str:
+        return self.plaintext
 
 
 
