@@ -85,18 +85,20 @@ class DatabaseObject:
     @property
     def option_string(self) -> str:
         return self.__repr__()
+    
+    def build_recursive_structures(self) -> bool:
+        return False
 
     def compile(self) -> bool:
         """
         compiles the recursive structures,
-
-        Args:
-            traceback (set, optional): Defaults to an empty set.
-
-        Returns:
-            bool: returns true if id has been found in set
+        and does depending on the object some other stuff.
+        
+        no need to override if only the recursive structure should be build.
+        override self.build_recursive_structures() instead
         """
-        pass
+        
+        self.build_recursive_structures()
 
 
 class MainObject(DatabaseObject):
