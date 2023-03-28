@@ -16,8 +16,11 @@ def fetch_artist():
         ]
     )
 
-    artist = EncyclopaediaMetallum.fetch_details(artist)
+    artist: objects.Artist = EncyclopaediaMetallum.fetch_details(artist, stop_at_level=2)
     print(artist.options)
+    
+    for album in artist.main_album_collection:
+        print(album.options)
 
 
 def fetch_album():

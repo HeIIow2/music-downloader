@@ -461,6 +461,103 @@ class EncyclopaediaMetallum(Page):
         return artist
 
     @classmethod
+    def _parse_album_track_row(cls, track_row: BeautifulSoup) -> Song:
+        """
+        <tr class="even">
+            <td width="20"><a class="anchor" name="5948442"> </a>1.</td>        # id and tracksort
+            <td class="wrapWords">Convince Me to Bleed</td>                     # name
+            <td align="right">03:40</td>                                        # length
+            <td nowrap="nowrap"> 
+            <a href="#5948442" id="lyricsButton5948442" onclick="toggleLyrics('5948442'); return false;">Show lyrics</a>
+            </td>
+        </tr>
+        """
+        
+        row_list = track_row.find_all(recursive=False)
+
+        track_sort_soup = row_list[0]
+        track_sort = int(track_sort_soup.text[:-1])
+        track_id = track_sort_soup.find("a").get("name")
+
+        title = row_list[1].text.strip()
+
+        length = None
+
+        duration_stamp = row_list[2].text
+        if ":" in duration_stamp:
+            minutes, seconds = duration_stamp.split(":")
+            length = (int(minutes) * 60 + int(seconds)) * 1000  # in milliseconds
+
+        return Song(
+            title=title,
+            length=length,
+            tracksort=track_sort,
+            source_list=[Source(cls.SOURCE_TYPE, track_id)]
+        )
+        
+
+    @classmethod
+    def _parse_album_attributes(cls, album_soup: BeautifulSoup, stop_at_level: int = 1) -> Album:
+        tracklist: List[Song] = []
+        artist_list = []
+        album_name: str = None
+        source_list: List[Source] = []
+        
+        def _parse_album_info(album_info_soup: BeautifulSoup):
+            nonlocal artist_list
+            nonlocal album_name
+            nonlocal source_list
+            
+            if album_info_soup is None:
+                return
+            
+            album_soup_list = album_info_soup.find_all("h1", {"class": "album_name"})
+            if len(album_soup_list) == 1:
+                anchor: BeautifulSoup = album_soup_list[0].find("a")
+                
+                href = anchor.get("href")
+                if href is not None:
+                    source_list.append(Source(cls.SOURCE_TYPE, href.strip()))
+                    
+                album_name = anchor.get_text(strip=True)
+                
+            elif len(album_soup_list) > 1:
+                LOGGER.debug("there are more than 1 album soups")
+                
+            
+            artist_soup_list = album_info_soup.find_all("h2", {"class": "band_name"})
+            if len(artist_soup_list) == 1:
+                for anchor in artist_soup_list[0].find_all("a"):
+                    artist_sources: List[Source] = []
+                    
+                    href = anchor.get("href")
+                    if href is not None:
+                        artist_sources.append(Source(cls.SOURCE_TYPE, href.strip()))
+                        
+                    artist_name = anchor.get_text(strip=True)
+                    
+                    artist_list.append(Artist(
+                        name=artist_name,
+                        source_list=artist_sources
+                    ))
+                
+            elif len(artist_soup_list) > 1:
+                LOGGER.debug("there are more than 1 artist soups")
+        
+        _parse_album_info(album_info_soup=album_soup.find(id="album_info"))
+        
+        tracklist_soup = album_soup.find("table", {"class": "table_lyrics"}).find("tbody")
+        for track_soup in tracklist_soup.find_all("tr", {"class": ["even", "odd"]}):
+            tracklist.append(cls._parse_album_track_row(track_row=track_soup))
+
+        return Album(
+            title=album_name,
+            source_list=source_list,
+            artist_list=artist_list,
+            song_list=tracklist
+        )
+
+    @classmethod
     def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         """
         I am preeeety sure I can get way more data than... nothing from there
@@ -472,51 +569,21 @@ class EncyclopaediaMetallum(Page):
 
         # <table class="display table_lyrics
 
-        album = Album()
-
         r = cls.get_request(source.url)
         if r is None:
-            return album
+            return Album()
 
         soup = cls.get_soup_from_response(r)
-
-        tracklist_soup = soup.find("table", {"class": "table_lyrics"}).find("tbody")
-        for row in tracklist_soup.find_all("tr", {"class": ["even", "odd"]}):
-            """
-            example of row:
-
-            <tr class="even">
-                <td width="20"><a class="anchor" name="5948442"> </a>1.</td>        # id and tracksort
-                <td class="wrapWords">Convince Me to Bleed</td>                     # name
-                <td align="right">03:40</td>                                        # length
-                <td nowrap="nowrap"> 
-                <a href="#5948442" id="lyricsButton5948442" onclick="toggleLyrics('5948442'); return false;">Show lyrics</a>
-                </td>
-            </tr>
-            """
-            row_list = row.find_all(recursive=False)
-
-            track_sort_soup = row_list[0]
-            track_sort = int(track_sort_soup.text[:-1])
-            track_id = track_sort_soup.find("a").get("name")
-
-            title = row_list[1].text.strip()
-
-            length = None
-
-            duration_stamp = row_list[2].text
-            if ":" in duration_stamp:
-                minutes, seconds = duration_stamp.split(":")
-                length = (int(minutes) * 60 + int(seconds)) * 1000  # in milliseconds
-
-            album.song_collection.append(
-                Song(
-                    id_=track_id,
-                    title=title,
-                    length=length,
-                    tracksort=track_sort,
-                    source_list=[Source(cls.SOURCE_TYPE, track_id)]
-                )
-            )
-
+        
+        album = cls._parse_album_attributes(soup, stop_at_level=stop_at_level)
+        
+        if stop_at_level > 1:
+            for song in album.song_collection:
+                for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+                    song.merge(cls._fetch_song_from_source(source=source, stop_at_level=stop_at_level-1))
+                    
         return album
+
+    @classmethod
+    def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
+        return Song()
