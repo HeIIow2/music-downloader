@@ -129,11 +129,13 @@ class Search:
             option_digits=self.option_digits
         )
         self._option_history.append(mpo)
+        self._current_option = mpo
         return mpo
 
     @property
     def previous_options(self) -> MultiPageOptions:
         self._option_history.pop()
+        self._current_option = self._option_history[-1]
         return self._option_history[-1]
 
     def search(self, query: str):
@@ -150,7 +152,15 @@ class Search:
             self._current_option[page] = page.search_by_query(query=query)
 
     def choose_page(self, page: Type[Page]) -> MultiPageOptions:
-        pass
+        if page not in page_attributes.ALL_PAGES:
+            raise ValueError(f"Page \"{page.__name__}\" does not exist in page_attributes.ALL_PAGES")
+        
+        prev_mpo = self._current_option
+        mpo = self.next_options
+        
+        mpo[page] = prev_mpo[page]
+        return mpo
+
     
     def choose_index(self, index: int) -> MultiPageOptions:
         pass
