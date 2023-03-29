@@ -530,14 +530,14 @@ class Musify(Page):
         else:
             LOGGER.debug("there is not even 1 footer in the album card")
 
-        return cls.ALBUM_CACHE.append(Album(
+        return Album(
             _id=_id,
             title=name,
             source_list=source_list,
             date=timestamp,
             album_type=album_type,
             album_status=album_status
-        ))
+        )
 
     @classmethod
     def get_discography(cls, url: MusifyUrl, artist_name: str = None, stop_at_level: int = 1) -> List[Album]:
