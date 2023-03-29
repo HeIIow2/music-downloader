@@ -166,9 +166,16 @@ class Page:
         
         new_music_object: DatabaseObject = type(music_object)()
 
+        had_sources = False
+
         source: Source
         for source in music_object.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
             new_music_object.merge(cls._fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
+            had_sources = True
+            
+        if not had_sources:
+            music_object.compile(merge_into=True)
+            return music_object
 
         collections = {
             Label: Collection(element_type=Label),

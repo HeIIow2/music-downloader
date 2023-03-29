@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Tuple, List, Set, Dict, Type, Union
 
 from . import page_attributes
+from .download import Download
 from ..abstract import Page
 from ...objects import Options, DatabaseObject
 
@@ -45,7 +46,7 @@ class MultiPageOptions:
 
         return "\n".join(lines)
 
-    def choose_from_all_pages(self, index: int) -> DatabaseObject:
+    def choose_from_all_pages(self, index: int) -> Tuple[DatabaseObject, Type[Page]]:
         j = 0
         for page, options in self._current_option_dict.items():
             option_len = len(options)
@@ -53,7 +54,7 @@ class MultiPageOptions:
                 option_len = self.max_displayed_options
 
             if index < j + option_len:
-                return options[j + option_len - 1]
+                return options[j + option_len - 1], Page
 
             j += option_len - 1
 
@@ -80,7 +81,7 @@ class MultiPageOptions:
         return self.string_from_all_pages()
 
 
-class Search:
+class Search(Download):
     def __init__(
             self,
             query: str,
@@ -91,22 +92,11 @@ class Search:
             option_digits: int = 3,
             dry: bool = False,
     ) -> None:
-        _page_list: List[Type[Page]] = []
-        _audio_page_list: List[Type[Page]] = []
-
-        for page in pages:
-            if exclude_shady and page in page_attributes.SHADY_PAGES:
-                continue
-            if page in exclude_pages:
-                continue
-
-            _page_list.append(page)
-
-            if page in page_attributes.AUDIO_PAGES:
-                _audio_page_list.append(page)
-
-        self.pages: Tuple[Type[Page]] = tuple(_page_list)
-        self.audio_pages: Tuple[Type[Page]] = tuple(_audio_page_list)
+        super().__init__(
+            pages=pages,
+            exclude_pages=exclude_pages,
+            exclude_shady=exclude_shady
+        )
 
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
@@ -163,7 +153,14 @@ class Search:
 
     
     def choose_index(self, index: int) -> MultiPageOptions:
-        pass
+        db_object, page = self._current_option.choose_from_all_pages(index=index)
+        
+        music_object = self.fetch_details(db_object)
+        
+        mpo = self.next_options
+        mpo[page] = music_object.options
+        
+        return mpo
     
     def choose(self, choosen: Union[Type[Page], int]) -> MultiPageOptions:
         if type(choosen) == int:
