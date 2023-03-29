@@ -100,13 +100,11 @@ class MultiPageOptions:
 class Search(Download):
     def __init__(
             self,
-            query: str,
             pages: Tuple[Type[Page]] = page_attributes.ALL_PAGES,
             exclude_pages: Set[Type[Page]] = set(),
             exclude_shady: bool = False,
             max_displayed_options: int = 10,
             option_digits: int = 3,
-            dry: bool = False,
     ) -> None:
         super().__init__(
             pages=pages,
@@ -120,9 +118,6 @@ class Search(Download):
         self._option_history: List[MultiPageOptions] = []
 
         self._current_option: MultiPageOptions = self.next_options
-
-        if not dry:
-            self.search(query)
 
 
     def __repr__(self):
