@@ -89,7 +89,8 @@ class Search:
             exclude_pages: Set[Type[Page]] = set(),
             exclude_shady: bool = False,
             max_displayed_options: int = 10,
-            option_digits: int = 3
+            option_digits: int = 3,
+            dry: bool = False,
     ) -> None:
         _page_list: List[Type[Page]] = []
         _audio_page_list: List[Type[Page]] = []
@@ -115,7 +116,8 @@ class Search:
 
         self._current_option: MultiPageOptions = self.next_options
 
-        self.search(query)
+        if not dry:
+            self.search(query)
 
     @property
     def next_options(self) -> MultiPageOptions:
