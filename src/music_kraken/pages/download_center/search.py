@@ -203,4 +203,7 @@ class Search(Download):
             except IndexError:
                 return self
             
+        if query.lower() in page_attributes.page_names:
+            return self.choose_page(page_attributes.page_names[query.lower()])
+            
         return self.search(query=query)
