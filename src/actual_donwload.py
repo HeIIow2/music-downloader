@@ -8,6 +8,9 @@ def search_pages():
     
     print()
     print(search)
+    
+    search.choose(1)
+    print(search)
 
 
 if __name__ == "__main__":

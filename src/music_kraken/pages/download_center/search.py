@@ -53,10 +53,10 @@ class MultiPageOptions:
             if option_len > self.max_displayed_options:
                 option_len = self.max_displayed_options
 
-            if index < j + option_len:
-                return options[j + option_len - 1], Page
+            if j <= index < j + option_len:
+                return options[j + option_len - 1], page
 
-            j += option_len - 1
+            j += option_len
 
         raise KeyError("index is out of range")
 
