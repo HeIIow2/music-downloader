@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Tuple, List, Set, Dict, Type, Union
 
 from . import page_attributes
-from .download import Download
+from .actual_download import Download
 from ..abstract import Page
 from ...objects import Options, DatabaseObject
 
