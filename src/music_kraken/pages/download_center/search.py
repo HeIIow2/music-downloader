@@ -16,6 +16,7 @@ class MultiPageOptions:
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
 
+        self._length = 0
         self._current_option_dict: Dict[Type[Page], Options] = defaultdict(lambda: Options())
 
     def __getitem__(self, key: Type[Page]):
@@ -23,8 +24,19 @@ class MultiPageOptions:
 
     def __setitem__(self, key: Type[Page], value: Options):
         self._current_option_dict[key] = value
+        
+        self._length = 0
+        for key in self._current_option_dict:
+            self._length += 1
+
+    def __len__(self) -> int:
+        return self._length
 
     def string_from_all_pages(self) -> str:
+        if self._length == 1:
+            for key in self._current_option_dict:
+                return self.string_from_single_page(key)
+        
         lines: List[str] = []
 
         page_name_fill = "-"
@@ -47,6 +59,10 @@ class MultiPageOptions:
         return "\n".join(lines)
 
     def choose_from_all_pages(self, index: int) -> Tuple[DatabaseObject, Type[Page]]:
+        if self._length == 1:
+            for key in self._current_option_dict:
+                return self.choose_from_single_page(key, index), key
+        
         j = 0
         for page, options in self._current_option_dict.items():
             option_len = len(options)

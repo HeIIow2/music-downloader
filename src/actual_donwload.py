@@ -9,7 +9,12 @@ def search_pages():
     print()
     print(search)
     
-    search.choose(1)
+    search.choose(pages.Musify)
+    
+    print()
+    print(search)
+    
+    search.choose(0)
     print(search)
 
 
