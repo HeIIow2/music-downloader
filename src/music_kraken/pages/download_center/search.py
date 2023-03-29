@@ -32,6 +32,12 @@ class MultiPageOptions:
     def __len__(self) -> int:
         return self._length
 
+    def get_page_str(self, page: Type[Page]) -> str:
+        page_name_fill = "-"
+        max_page_len = 21
+        
+        return f"({page_attributes.shorthand_of_page[page]}) ------------------------{page.__name__:{page_name_fill}<{max_page_len}}------------"
+
     def string_from_all_pages(self) -> str:
         if self._length == 1:
             for key in self._current_option_dict:
@@ -39,12 +45,11 @@ class MultiPageOptions:
         
         lines: List[str] = []
 
-        page_name_fill = "-"
-        max_page_len = 21
-
         j = 0
         for page, options in self._current_option_dict.items():
-            lines.append(f"----------{page.__name__:{page_name_fill}<{max_page_len}}----------")
+            lines.append(self.get_page_str(page))
+
+            i = -1
 
             option_obj: DatabaseObject
             for i, option_obj in enumerate(options):
@@ -77,12 +82,7 @@ class MultiPageOptions:
         raise IndexError("index is out of range")
 
     def string_from_single_page(self, page: Type[Page]) -> str:
-        lines: List[str] = []
-
-        page_name_fill = "-"
-        max_page_len = 21
-
-        lines.append(f"----------{page.__name__:{page_name_fill}<{max_page_len}}----------")
+        lines: List[str] = [self.get_page_str(page)]
 
         option_obj: DatabaseObject
         for i, option_obj in enumerate(self._current_option_dict[page]):
