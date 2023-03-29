@@ -7,7 +7,6 @@ import os
 
 from . import (
     objects,
-    database,
     pages
 )
 
@@ -16,8 +15,6 @@ from .utils.shared import (
     MUSIC_DIR,
     NOT_A_GENRE
 )
-
-# from .lyrics import lyrics
 
 
 """
@@ -39,6 +36,8 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 
 def cli():
-    print("HelloWorld")
-
-
+    search = pages.Search()
+    
+    while True:
+        search.next_input(input(">> "))
+        print(search)
