@@ -1,9 +1,8 @@
 from collections import defaultdict
-from typing import Tuple, List, Set, Dict, Type
+from typing import Tuple, List, Set, Dict, Type, Union
 
 from . import page_attributes
 from ..abstract import Page
-
 from ...objects import Options, DatabaseObject
 
 
@@ -119,6 +118,10 @@ class Search:
         if not dry:
             self.search(query)
 
+
+    def __repr__(self):
+        return self._current_option.__repr__()
+
     @property
     def next_options(self) -> MultiPageOptions:
         mpo = MultiPageOptions(
@@ -145,6 +148,3 @@ class Search:
 
         for page in self.pages:
             self._current_option[page] = page.search_by_query(query=query)
-
-    def __repr__(self):
-        return self._current_option.__repr__()
