@@ -148,3 +148,18 @@ class Search:
 
         for page in self.pages:
             self._current_option[page] = page.search_by_query(query=query)
+
+    def choose_page(self, page: Type[Page]) -> MultiPageOptions:
+        pass
+    
+    def choose_index(self, index: int) -> MultiPageOptions:
+        pass
+    
+    def choose(self, choosen: Union[Type[Page], int]) -> MultiPageOptions:
+        if type(choosen) == int:
+            return self.choose_index(choosen)
+        
+        if choosen in page_attributes.ALL_PAGES:
+            return self.choose_page(choosen)
+        
+        raise ValueError("choose is neiter an integer, nor a page in page_attributes.ALL_PAGES.")
