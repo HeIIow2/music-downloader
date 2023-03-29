@@ -74,7 +74,7 @@ class MultiPageOptions:
 
             j += option_len
 
-        raise KeyError("index is out of range")
+        raise IndexError("index is out of range")
 
     def string_from_single_page(self, page: Type[Page]) -> str:
         lines: List[str] = []
@@ -144,7 +144,7 @@ class Search(Download):
         self._current_option = self._option_history[-1]
         return self._option_history[-1]
 
-    def search(self, query: str):
+    def search(self, query: str) -> "Search":
         """
         # The Query
         
@@ -156,8 +156,10 @@ class Search(Download):
 
         for page in self.pages:
             self._current_option[page] = page.search_by_query(query=query)
+            
+        return self
 
-    def choose_page(self, page: Type[Page]) -> MultiPageOptions:
+    def choose_page(self, page: Type[Page]) -> "Search":
         if page not in page_attributes.ALL_PAGES:
             raise ValueError(f"Page \"{page.__name__}\" does not exist in page_attributes.ALL_PAGES")
         
@@ -165,10 +167,10 @@ class Search(Download):
         mpo = self.next_options
         
         mpo[page] = prev_mpo[page]
-        return mpo
+        return self
 
     
-    def choose_index(self, index: int) -> MultiPageOptions:
+    def choose_index(self, index: int) -> "Search":
         db_object, page = self._current_option.choose_from_all_pages(index=index)
         
         music_object = self.fetch_details(db_object)
@@ -176,9 +178,9 @@ class Search(Download):
         mpo = self.next_options
         mpo[page] = music_object.options
         
-        return mpo
+        return self
     
-    def choose(self, choosen: Union[Type[Page], int]) -> MultiPageOptions:
+    def choose(self, choosen: Union[Type[Page], int]) -> "Search":
         if type(choosen) == int:
             return self.choose_index(choosen)
         
@@ -186,3 +188,24 @@ class Search(Download):
             return self.choose_page(choosen)
         
         raise ValueError("choose is neiter an integer, nor a page in page_attributes.ALL_PAGES.")
+    
+    def next_input(self, query: str) -> "Search":
+        query: str = query.strip()
+        
+        if query == ".":
+            return self
+        
+        if query == "..":
+            try:
+                self.previous_options
+            except IndexError:
+                pass
+            return self
+        
+        if query.isdigit():
+            try:
+                return self.choose_index(int(query))
+            except IndexError:
+                return self
+            
+        return self.search(query=query)
