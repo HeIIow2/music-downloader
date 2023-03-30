@@ -213,7 +213,7 @@ class Page:
         
 
     @classmethod
-    def _fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
+    def _fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1) -> Union[Song, Album, Artist, Label]:
         if obj_type == Artist:
             return cls._fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
         
@@ -273,6 +273,39 @@ class Page:
         cls._clean_collection(song.album_collection, collections)
         cls._clean_collection(song.feature_artist_collection, collections)
         cls._clean_collection(song.main_artist_collection, collections)
+
+    @classmethod
+    def download(cls, music_object: Union[Song, Album, Artist, Label], download_features: bool = True):
+        if type(music_object) is Song:
+            return cls.download_song(music_object)
+        if type(music_object) is Album:
+            return cls.download_album(music_object)
+        if type(music_object) is Artist:
+            return cls.download_artist(music_object, download_features=download_features)
+        if type(music_object) is Label:
+            return cls.download_label(music_object, download_features=download_features)
+        
+    @classmethod
+    def download_label(cls, label: Label, download_features: bool = True):
+        for artist in label.current_artist_collection:
+            cls.download_artist(artist, download_features=download_features)
+        
+        for album in label.album_collection:
+            cls.download_album(album)
+
+    @classmethod
+    def download_artist(cls, artist: Artist, download_features: bool = True):
+        for album in artist.main_album_collection:
+            cls.download_album(album)
+        
+        if download_features:
+            for song in artist.feature_album:
+                cls.download_song(song)
+
+    @classmethod
+    def download_album(cls, album: Album):
+        for song in album.song_collection:
+            cls.download_song(song)
 
     @classmethod
     def download_song(cls, song: Song):
