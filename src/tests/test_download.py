@@ -10,20 +10,16 @@ from music_kraken.pages.download_center import page_attributes
 
 class TestPageSelection(unittest.TestCase):
     def test_no_shady_pages(self):
-        search = download_center.Search(
-            "Hello World",
-            exclude_shady=True,
-            dry=True
+        search = download_center.Download(
+            exclude_shady=True
         )
         
         for page in search.pages:
             self.assertNotIn(page, page_attributes.SHADY_PAGES)
     
     def test_excluding(self):
-        search = download_center.Search(
-            "Hello World",
-            exclude_pages=set((pages.EncyclopaediaMetallum,)),
-            dry=True
+        search = download_center.Download(
+            exclude_pages=set((pages.EncyclopaediaMetallum,))
         )
         
         for page in search.pages:
@@ -31,20 +27,15 @@ class TestPageSelection(unittest.TestCase):
         
         
     def test_audio_one(self):
-        search = download_center.Search(
-            "Hello World",
-            exclude_shady=True,
-            dry=True
+        search = download_center.Download(
+            exclude_shady=True
         )
         
         for audio_page in search.audio_pages:
             self.assertIn(audio_page, page_attributes.AUDIO_PAGES)        
 
     def test_audio_two(self):
-        search = download_center.Search(
-            "Hello World",
-            dry=True
-        )
+        search = download_center.Download()
         
         for audio_page in search.audio_pages:
             self.assertIn(audio_page, page_attributes.AUDIO_PAGES)        
