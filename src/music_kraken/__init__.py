@@ -3,7 +3,7 @@ import gc
 from typing import List
 import musicbrainzngs
 import logging
-import os
+import re
 
 from . import (
     objects,
@@ -34,6 +34,8 @@ gc.set_threshold(allocs, gen1, gen2)
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
+URL_REGGEX = 'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+
 
 def cli():
     def next_search(search: pages.Search, query: str):
@@ -48,6 +50,12 @@ def cli():
         
         if parsed.isdigit():
             search.choose_index(int(parsed))
+            return
+        
+        url = re.match(URL_REGGEX, query)
+        if url is not None:
+            if not search.search_url(url.string):
+                print("The given url couldn't be downloaded")
             return
         
         page = search.get_page_from_query(parsed)

@@ -29,4 +29,4 @@ def direct_download():
 
 
 if __name__ == "__main__":
-    direct_download()
+    music_kraken.cli()
