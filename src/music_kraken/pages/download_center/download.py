@@ -1,8 +1,8 @@
-from typing import Tuple, Type, Set, Union, List
+from typing import Optional, Tuple, Type, Set, Union, List
 
 from . import page_attributes
 from ..abstract import Page
-from ...objects import Song, Album, Artist, Label
+from ...objects import Song, Album, Artist, Label, Source
 
 MusicObject = Union[Song, Album, Artist, Label]
 
@@ -34,3 +34,12 @@ class Download:
         for page in self.pages:
             page.fetch_details(music_object=music_object)
         return music_object
+
+    def fetch_source(self, source: Source) -> Optional[MusicObject]:
+        source_page = page_attributes.SOURCE_PAGE_MAP[source.page_enum]
+        
+        if source_page not in self.pages:
+            return
+        
+        return source_page.fetch_object_from_source(source)
+    

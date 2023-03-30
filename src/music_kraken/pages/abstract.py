@@ -193,12 +193,23 @@ class Page:
         return music_object
     
     @classmethod
-    def fetch_object_from_source(cls, source: Source):
+    def fetch_object_from_source(cls, source: Source, stop_at_level: int = 2):
         obj_type = cls._get_type_of_url(source.url)
         if obj_type is None:
             return Artist()
         
-        return cls._fetch_object_from_source(source=source, obj_type=obj_type)
+        music_object = cls._fetch_object_from_source(source=source, obj_type=obj_type, stop_at_level=stop_at_level)
+        
+        collections = {
+            Label: Collection(element_type=Label),
+            Artist: Collection(element_type=Artist),
+            Album: Collection(element_type=Album),
+            Song: Collection(element_type=Song)
+        }
+
+        cls._clean_music_object(music_object, collections)  
+        music_object.compile(merge_into=True)
+        return music_object
         
 
     @classmethod
