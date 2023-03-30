@@ -83,6 +83,9 @@ class Source(DatabaseObject):
         """
         parsed = urlparse(url)
         url = parsed.geturl()
+        
+        if "musify" in parsed.netloc:
+            return cls(SourcePages.MUSIFY, url)
 
         if url.startswith("https://www.youtube"):
             return cls(SourcePages.YOUTUBE, url)

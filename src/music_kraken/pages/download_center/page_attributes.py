@@ -7,7 +7,7 @@ from ..musify import Musify
 
 NAME_PAGE_MAP: Dict[str, Type[Page]] = dict()
 PAGE_NAME_MAP: Dict[Type[Page], str] = dict()
-SOURCE_PAGE_MAP: Dict[SourcePages, Type[Page]]
+SOURCE_PAGE_MAP: Dict[SourcePages, Type[Page]] = dict()
 
 ALL_PAGES: Tuple[Type[Page]] = (
     EncyclopaediaMetallum,
