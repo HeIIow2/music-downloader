@@ -47,7 +47,7 @@ class Target(DatabaseObject):
     
     @property
     def exists(self) -> bool:
-        return self.file_path.exists
+        return self.file_path.is_file()
     
     def create_path(self):
         self._path.mkdir(parents=True, exist_ok=True)

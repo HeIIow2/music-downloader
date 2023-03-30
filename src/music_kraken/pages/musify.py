@@ -24,7 +24,8 @@ from ..objects import (
     Label,
     Options,
     AlbumType,
-    AlbumStatus
+    AlbumStatus,
+    Target
 )
 from ..utils import (
     string_processing,
@@ -891,3 +892,10 @@ class Musify(Page):
         if url.source_type == MusifyTypes.SONG:
             return Song
         return None
+    
+    @classmethod
+    def _download_song_to_targets(cls, source: Source, target_list: List[Target]):
+        """
+        https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
+        """
+        pass
