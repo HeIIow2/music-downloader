@@ -196,7 +196,7 @@ class Page:
     def fetch_object_from_source(cls, source: Source, stop_at_level: int = 2):
         obj_type = cls._get_type_of_url(source.url)
         if obj_type is None:
-            return Artist()
+            return None
         
         music_object = cls._fetch_object_from_source(source=source, obj_type=obj_type, stop_at_level=stop_at_level)
         

@@ -4,7 +4,7 @@ from typing import Tuple, List, Set, Dict, Type, Union, Optional
 from . import page_attributes
 from .download import Download
 from ..abstract import Page
-from ...objects import Options, DatabaseObject
+from ...objects import Options, DatabaseObject, Source
 
 
 class MultiPageOptions:
@@ -180,3 +180,18 @@ class Search(Download):
             self._current_option = self._previous_options
         except IndexError:
             pass
+        
+    def search_url(self, url: str) -> bool:
+        source = Source.match_url(url=url)
+        if source is None: 
+            return False
+        
+        new_object = self.fetch_source(source)
+        if new_object is None:
+            return False
+        
+        page = page_attributes.SOURCE_PAGE_MAP[source.page_enum]
+        mpo = self.next_options
+        mpo[page] = new_object.options
+        
+        return True
