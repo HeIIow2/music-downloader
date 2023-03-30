@@ -44,3 +44,10 @@ class Target(DatabaseObject):
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [('filepath', self.file_path)]
+    
+    @property
+    def exists(self) -> bool:
+        return self.file_path.exists
+    
+    def create_path(self):
+        self._path.mkdir(parents=True, exist_ok=True)
