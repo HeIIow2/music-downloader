@@ -1,9 +1,6 @@
-from .id3 import (
-    AudioMetadata,
-    write_many_metadata,
-    write_metadata
-)
+from . import id3
 
-AudioMetadata = AudioMetadata
-write_many_metadata = write_many_metadata
-write_metadata = write_metadata
+AudioMetadata = id3.AudioMetadata
+write_many_metadata = id3.write_many_metadata
+write_metadata = id3.write_metadata
+write_metadata_to_target = id3.write_metadata_to_target

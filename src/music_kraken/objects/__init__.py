@@ -11,6 +11,7 @@ from . import (
 
 DatabaseObject = parents.DatabaseObject
 
+Metadata = metadata.Metadata
 ID3Mapping = metadata.Mapping
 ID3Timestamp = metadata.ID3Timestamp
 

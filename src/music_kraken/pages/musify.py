@@ -6,9 +6,12 @@ import pycountry
 from urllib.parse import urlparse
 from enum import Enum
 from dataclasses import dataclass
+from pathlib import Path
+import random
 
 from ..utils.shared import (
-    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
+    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER,
+    TEMP_FOLDER
 )
 
 from .abstract import Page
@@ -894,8 +897,21 @@ class Musify(Page):
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target_list: List[Target]):
+    def _download_song_to_targets(cls, source: Source) -> Path:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
+        https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
         """
-        pass
+        url: MusifyUrl = cls.parse_url(source.url)
+        if url.source_type != MusifyTypes.SONG:
+            return
+        
+        target: Target = Target(
+            path=TEMP_FOLDER,
+            file=str(random.randint(0, 999999))
+        )
+        
+        endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
+        print(endpoint)
+        
+        return target

@@ -17,7 +17,7 @@ from ..objects import (
     Collection,
     Label
 )
-from ..tagging import write_metadata
+from ..tagging import write_metadata_to_target
 
 LOGGER = logging.getLogger("this shouldn't be used")
 
@@ -330,11 +330,16 @@ class Page:
         if len(sources) == 0:
             return
         
-        cls._download_song_to_targets(source=sources[0], target_list=song.target_collection.shallow_list)
+        temp_target = cls._download_song_to_targets(source=sources[0], target_list=song.target_collection.shallow_list)
+        cls._post_process_targets(song, temp_target)
     
     @classmethod
-    def _post_process_targets(cls, song: Song):
-        write_metadata(song)
+    def _post_process_targets(cls, song: Song, temp_target: Target):
+        write_metadata_to_target(song.metadata, temp_target)
+        
+        target: Target
+        for target in song.target_collection:
+            temp_target.copy_content(target)
         
 
     @classmethod
@@ -358,6 +363,5 @@ class Page:
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target_list: List[Target]):
-        for target in target_list:
-            print(f"downloading {source} to {target}")
+    def _download_song_to_targets(cls, source: Source) -> Target:
+        return Target()

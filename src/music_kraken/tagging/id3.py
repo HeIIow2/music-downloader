@@ -7,7 +7,7 @@ import logging
 from ..utils.shared import (
     TAGGING_LOGGER as logger
 )
-from ..objects import Song, Target
+from ..objects import Song, Target, Metadata
 
 
 class AudioMetadata:
@@ -18,13 +18,17 @@ class AudioMetadata:
 
         if file_location is not None:
             self.file_location = file_location
-
-    def add_song_metadata(self, song: Song):
-        for value in song.metadata:
+            
+    def add_metadata(self, metadata: Metadata):
+        for value in metadata:
             """
             https://www.programcreek.com/python/example/84797/mutagen.id3.ID3
             """
             self.frames.add(value)
+
+    def add_song_metadata(self, song: Song):
+        self.add_metadata(song.metadata)
+
 
     def save(self, file_location: str = None):
         print("saving")
@@ -47,6 +51,13 @@ class AudioMetadata:
 
     file_location = property(fget=lambda self: self._file_location, fset=set_file_location)
 
+def write_metadata_to_target(metadata: Metadata, target: Target):
+    if not target.exists:
+        return
+    
+    id3_object = AudioMetadata(file_location=target.file_path)
+    id3_object.add_metadata(metadata)
+    id3_object.save()
 
 def write_metadata(song: Song, ignore_file_not_found: bool = True):
     target: Target
