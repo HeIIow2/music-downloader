@@ -133,7 +133,6 @@ class Collection:
         return self._data[key]
 
     def __setitem__(self, key, value: DatabaseObject):
-        print(key, value)
         if type(key) != int:
             return ValueError("key needs to be an integer")
 
