@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Tuple, List, Set, Dict, Type, Union
+from typing import Tuple, List, Set, Dict, Type, Union, Optional
 
 from . import page_attributes
 from .download import Download
@@ -36,7 +36,7 @@ class MultiPageOptions:
         page_name_fill = "-"
         max_page_len = 21
         
-        return f"({page_attributes.shorthand_of_page[page]}) ------------------------{page.__name__:{page_name_fill}<{max_page_len}}------------"
+        return f"({page_attributes.PAGE_NAME_MAP[page]}) ------------------------{page.__name__:{page_name_fill}<{max_page_len}}------------"
 
     def string_from_all_pages(self) -> str:
         if self._length == 1:
@@ -134,12 +134,12 @@ class Search(Download):
         return mpo
 
     @property
-    def previous_options(self) -> MultiPageOptions:
+    def _previous_options(self) -> MultiPageOptions:
         self._option_history.pop()
         self._current_option = self._option_history[-1]
         return self._option_history[-1]
 
-    def search(self, query: str) -> "Search":
+    def search(self, query: str):
         """
         # The Query
         
@@ -151,10 +151,8 @@ class Search(Download):
 
         for page in self.pages:
             self._current_option[page] = page.search_by_query(query=query)
-            
-        return self
 
-    def choose_page(self, page: Type[Page]) -> "Search":
+    def choose_page(self, page: Type[Page]):
         if page not in page_attributes.ALL_PAGES:
             raise ValueError(f"Page \"{page.__name__}\" does not exist in page_attributes.ALL_PAGES")
         
@@ -162,10 +160,14 @@ class Search(Download):
         mpo = self.next_options
         
         mpo[page] = prev_mpo[page]
-        return self
+        
+    def get_page_from_query(self, query: str) -> Optional[Type[Page]]:
+        page = page_attributes.NAME_PAGE_MAP.get(query.lower().strip())
+        
+        if page in self.pages:
+            return page
 
-    
-    def choose_index(self, index: int) -> "Search":
+    def choose_index(self, index: int):
         db_object, page = self._current_option.choose_from_all_pages(index=index)
         
         music_object = self.fetch_details(db_object)
@@ -173,37 +175,5 @@ class Search(Download):
         mpo = self.next_options
         mpo[page] = music_object.options
         
-        return self
-    
-    def choose(self, choosen: Union[Type[Page], int]) -> "Search":
-        if type(choosen) == int:
-            return self.choose_index(choosen)
-        
-        if choosen in page_attributes.ALL_PAGES:
-            return self.choose_page(choosen)
-        
-        raise ValueError("choose is neiter an integer, nor a page in page_attributes.ALL_PAGES.")
-    
-    def next_input(self, query: str) -> "Search":
-        query: str = query.strip()
-        
-        if query == ".":
-            return self
-        
-        if query == "..":
-            try:
-                self.previous_options
-            except IndexError:
-                pass
-            return self
-        
-        if query.isdigit():
-            try:
-                return self.choose_index(int(query))
-            except IndexError:
-                return self
-            
-        if query.lower() in page_attributes.page_names:
-            return self.choose_page(page_attributes.page_names[query.lower()])
-            
-        return self.search(query=query)
+    def goto_previous(self):
+        self._current_option = self._previous_options
