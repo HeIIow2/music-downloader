@@ -1,9 +1,8 @@
 from collections import defaultdict
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 import requests
 from bs4 import BeautifulSoup
 import pycountry
-import time
 from urllib.parse import urlparse
 from enum import Enum
 from dataclasses import dataclass
@@ -880,3 +879,15 @@ class Musify(Page):
         album.update_tracksort()
 
         return album
+
+    @classmethod
+    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
+        url: MusifyUrl = cls.parse_url(url)
+        
+        if url.source_type == MusifyTypes.ARTIST:
+            return Artist
+        if url.source_type == MusifyTypes.RELEASE:
+            return Album
+        if url.source_type == MusifyTypes.SONG:
+            return Song
+        return None

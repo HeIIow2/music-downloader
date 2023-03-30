@@ -191,6 +191,15 @@ class Page:
         music_object.compile(merge_into=True)
 
         return music_object
+    
+    @classmethod
+    def fetch_object_from_source(cls, source: Source):
+        obj_type = cls._get_type_of_url(source.url)
+        if obj_type is None:
+            return Artist()
+        
+        return cls._fetch_object_from_source(source=source, obj_type=obj_type)
+        
 
     @classmethod
     def _fetch_object_from_source(cls, source: Source, obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]], stop_at_level: int = 1):
@@ -269,3 +278,7 @@ class Page:
     @classmethod
     def _fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
+
+    @classmethod
+    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
+        return None

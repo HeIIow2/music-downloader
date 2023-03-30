@@ -1,8 +1,9 @@
 from collections import defaultdict
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Type, Union
 import requests
 from bs4 import BeautifulSoup
 import pycountry
+from urllib.parse import urlparse
 
 from ..utils.shared import (
     ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
@@ -635,3 +636,21 @@ class EncyclopaediaMetallum(Page):
                 cls._fetch_lyrics(song_id=song_id)
             ]
         )
+
+    @classmethod
+    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
+        parsed_url = urlparse(url)
+        path: List[str] = parsed_url.path.split("/")
+        
+        if "band" in path:
+            return Artist
+        if "bands" in path:
+            return Artist
+        
+        if "albums" in path:
+            return Album
+        
+        if "labels" in path:
+            return Label
+        
+        return None
