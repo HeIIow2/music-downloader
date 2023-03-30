@@ -36,8 +36,31 @@ musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeI
 
 
 def cli():
-    search = pages.Search()
+    def next_search(search: pages.Search, query: str):
+        query: str = query.strip()
+        parsed: str = query.lower()
+        
+        if parsed == ".":
+            return
+        if parsed == "..":
+            search.goto_previous()
+            return
+        
+        if parsed.isdigit():
+            search.choose_index(int(parsed))
+            return
+        
+        page = search.get_page_from_query(parsed)
+        if page is not None:
+            search.choose_page(page)
+            return
+        
+        # if everything else is not valid search
+        search.search(query)
     
+    search = pages.Search()
+
     while True:
-        search.next_input(input(">> "))
+        next_search(search, input(">> "))
         print(search)
+        
