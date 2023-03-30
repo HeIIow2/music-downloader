@@ -25,15 +25,17 @@ class Target(DatabaseObject):
             self,
             file: str = None,
             path: str = None,
-            _id: str = None,
             dynamic: bool = False,
             relative_to_music_dir: bool = False
     ) -> None:
-        super().__init__(_id=_id, dynamic=dynamic)
+        super().__init__(dynamic=dynamic)
         self._file: Path = Path(file)
-        self._path: Path = Path(path) if relative_to_music_dir else Path(path)
+        self._path: Path = Path(shared.MUSIC_DIR, path) if relative_to_music_dir else Path(path)
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
+
+    def __repr__(self) -> str:
+        return str(self.file_path)
 
     @property
     def file_path(self) -> Path:

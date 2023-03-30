@@ -1,4 +1,4 @@
-from typing import Optional, Union, Type, Dict
+from typing import Optional, Union, Type, Dict, List
 from bs4 import BeautifulSoup
 import requests
 import logging
@@ -275,6 +275,18 @@ class Page:
         cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
+    def download_song(cls, song: Song):
+        if song.target_collection.empty:
+            return
+        
+        sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+        if len(sources) == 0:
+            return
+        
+        cls._download_song_to_targets(source=sources[0], target_list=song.target_collection.shallow_list)
+        
+
+    @classmethod
     def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
     
@@ -293,3 +305,8 @@ class Page:
     @classmethod
     def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
         return None
+    
+    @classmethod
+    def _download_song_to_targets(cls, source: Source, target_list: List[Target]):
+        for target in target_list:
+            print(f"downloading {source} to {target}")

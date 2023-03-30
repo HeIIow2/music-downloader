@@ -148,3 +148,7 @@ class Collection:
         returns a shallow copy of the data list
         """
         return self._data.copy()
+    
+    @property
+    def empty(self) -> bool:
+        return len(self._data) == 0

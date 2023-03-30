@@ -1,5 +1,6 @@
 import music_kraken
 from music_kraken import pages
+from music_kraken.objects import Song, Target, Source, SourcePages
 
 
 def search_pages():
@@ -26,7 +27,20 @@ def direct_download():
     
     search.search_url("https://musify.club/artist/ghost-bath-280348")
     print(search)
+    
+def download_audio():
+    song = Song(
+        source_list=[
+            Source(SourcePages.MUSIFY, "https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302")
+        ],
+        target_list=[
+            Target(relative_to_music_dir=True, path="example", file="waste_of_skin_1"),
+            Target(relative_to_music_dir=True, path="example", file="waste_of_skin_2")
+        ]
+    )
+    
+    pages.Musify.download_song(song)
 
 
 if __name__ == "__main__":
-    music_kraken.cli()
+    download_audio()
