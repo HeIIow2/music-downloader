@@ -51,3 +51,12 @@ class Target(DatabaseObject):
     
     def create_path(self):
         self._path.mkdir(parents=True, exist_ok=True)
+        
+    def copy_content(self, copy_to: "Target"):
+        if not self.exists:
+            return
+        
+        with open(self.file_path, "rb") as read_from:
+            copy_to.create_path()
+            with open(self.file_path, "wb") as write_to:
+                write_to.write(read_from.read())

@@ -312,6 +312,19 @@ class Page:
         if song.target_collection.empty:
             return
         
+        target: Target
+        if any(target.exists for target in song.target_collection):
+            existing_target: Target
+            for existing_target in song.target_collection:
+                if existing_target.exists:
+                    break
+                
+            for target in song.target_collection:
+                if target is existing_target:
+                    continue
+                
+                existing_target.copy_content(target)
+        
         sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(sources) == 0:
             return
