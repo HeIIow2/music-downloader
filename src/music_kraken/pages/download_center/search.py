@@ -176,4 +176,7 @@ class Search(Download):
         mpo[page] = music_object.options
         
     def goto_previous(self):
-        self._current_option = self._previous_options
+        try:
+            self._current_option = self._previous_options
+        except IndexError:
+            pass
