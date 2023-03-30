@@ -7,9 +7,7 @@ import logging
 from ..utils.shared import (
     TAGGING_LOGGER as logger
 )
-from ..database import (
-    Song
-)
+from ..objects import Song, Target
 
 
 class AudioMetadata:
@@ -50,15 +48,18 @@ class AudioMetadata:
     file_location = property(fget=lambda self: self._file_location, fset=set_file_location)
 
 
-def write_metadata(song: Song, ignore_file_not_found: bool = False):
-    if not song.target.exists_on_disc:
-        if ignore_file_not_found:
-            return
-        raise ValueError(f"{song.target.file} not found")
+def write_metadata(song: Song, ignore_file_not_found: bool = True):
+    target: Target
+    for target in song.target:
+        if not target.exists:
+            if ignore_file_not_found:
+                continue
+            else:
+                raise ValueError(f"{song.target.file} not found")
 
-    id3_object = AudioMetadata(file_location=song.target.file)
-    id3_object.add_song_metadata(song=song)
-    id3_object.save()
+        id3_object = AudioMetadata(file_location=target.file_path)
+        id3_object.add_song_metadata(song=song)
+        id3_object.save()
 
 
 def write_many_metadata(song_list: List[Song]):

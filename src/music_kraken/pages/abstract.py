@@ -17,6 +17,7 @@ from ..objects import (
     Collection,
     Label
 )
+from ..tagging import write_metadata
 
 LOGGER = logging.getLogger("this shouldn't be used")
 
@@ -286,34 +287,34 @@ class Page:
             return cls.download_label(music_object, download_features=download_features)
         
     @classmethod
-    def download_label(cls, label: Label, download_features: bool = True):
+    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False):
         for artist in label.current_artist_collection:
-            cls.download_artist(artist, download_features=download_features)
+            cls.download_artist(artist, download_features=download_features, override_existing=override_existing)
         
         for album in label.album_collection:
-            cls.download_album(album)
+            cls.download_album(album, override_existing=override_existing)
 
     @classmethod
-    def download_artist(cls, artist: Artist, download_features: bool = True):
+    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False):
         for album in artist.main_album_collection:
-            cls.download_album(album)
+            cls.download_album(album, override_existing=override_existing)
         
         if download_features:
             for song in artist.feature_album:
-                cls.download_song(song)
+                cls.download_song(song, override_existing=override_existing)
 
     @classmethod
-    def download_album(cls, album: Album):
+    def download_album(cls, album: Album, override_existing: bool = False):
         for song in album.song_collection:
-            cls.download_song(song)
+            cls.download_song(song, override_existing=override_existing)
 
     @classmethod
-    def download_song(cls, song: Song):
+    def download_song(cls, song: Song, override_existing: bool = False):
         if song.target_collection.empty:
             return
         
         target: Target
-        if any(target.exists for target in song.target_collection):
+        if any(target.exists for target in song.target_collection) and not override_existing:
             existing_target: Target
             for existing_target in song.target_collection:
                 if existing_target.exists:
@@ -330,6 +331,10 @@ class Page:
             return
         
         cls._download_song_to_targets(source=sources[0], target_list=song.target_collection.shallow_list)
+    
+    @classmethod
+    def _post_process_targets(cls, song: Song):
+        write_metadata(song)
         
 
     @classmethod
