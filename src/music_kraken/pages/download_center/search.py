@@ -68,16 +68,16 @@ class MultiPageOptions:
             for key in self._current_option_dict:
                 return self.choose_from_single_page(key, index), key
         
-        j = 0
+        sum_of_length = 0
         for page, options in self._current_option_dict.items():
-            option_len = len(options)
-            if option_len > self.max_displayed_options:
-                option_len = self.max_displayed_options
+            option_len = min((len(options), self.max_displayed_options))
 
-            if j <= index < j + option_len:
-                return options[j + option_len - 1], page
+            index_of_list = index - sum_of_length
+            
+            if index_of_list < option_len:
+                return options[index_of_list], page
 
-            j += option_len
+            sum_of_length += option_len
 
         raise IndexError("index is out of range")
 
