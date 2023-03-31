@@ -60,7 +60,7 @@ class Target(DatabaseObject):
         
         with open(self.file_path, "rb") as read_from:
             copy_to.create_path()
-            with open(self.file_path, "wb") as write_to:
+            with open(copy_to.file_path, "wb") as write_to:
                 write_to.write(read_from.read())
 
     def stream_into(self, r: requests.Response):
