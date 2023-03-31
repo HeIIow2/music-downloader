@@ -67,12 +67,15 @@ class Page:
             r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
         except requests.exceptions.Timeout:
             retry = True
+        except requests.exceptions.ConnectionError:
+            retry = True
 
         if not retry and r.status_code in accepted_response_codes:
             return r
 
-        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
-        LOGGER.debug(r.content)
+        if not retry:
+            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
+            LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
             LOGGER.warning("to many tries. Aborting.")
