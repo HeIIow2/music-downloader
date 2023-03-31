@@ -192,7 +192,7 @@ class Song(MainObject):
         if len(self.album_collection) == 0:
             return f"{self.tracksort}"
         
-        return f"{self.tracksort}/{len(self.album_collection[0].tracklist) or 1}"
+        return f"{self.tracksort}/{len(self.album_collection[0].song_collection) or 1}"
 
 
 """
@@ -298,7 +298,7 @@ class Album(MainObject):
         return Metadata({
             id3Mapping.ALBUM: [self.title],
             id3Mapping.COPYRIGHT: [self.copyright],
-            id3Mapping.LANGUAGE: [self.iso_639_2_language],
+            id3Mapping.LANGUAGE: [self.iso_639_2_lang],
             id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
             id3Mapping.DATE: [self.date.timestamp]
         })

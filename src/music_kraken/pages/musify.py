@@ -845,7 +845,8 @@ class Musify(Page):
         return Song(
             title=song_name,
             tracksort=tracksort,
-            main_artist_list=artist_list
+            main_artist_list=artist_list,
+            source_list=source_list
         )
 
     @classmethod
