@@ -81,7 +81,7 @@ class Page:
             LOGGER.warning("to many tries. Aborting.")
             return None
 
-        return cls.post_request(url, accepted_response_codes, trie + 1)
+        return cls.post_request(url, json, accepted_response_codes, trie + 1)
 
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
