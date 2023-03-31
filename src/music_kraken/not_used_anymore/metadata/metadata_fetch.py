@@ -332,7 +332,7 @@ if __name__ == "__main__":
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
-            logging.FileHandler(os.path.join(temp_dir, LOG_FILE)),
+            logging.FileHandler(os.path.join(TEMP_DIR, LOG_FILE)),
             logging.StreamHandler()
         ]
     )

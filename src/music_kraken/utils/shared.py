@@ -11,18 +11,18 @@ LOG_FILE = "download_logs.log"
 TEMP_DATABASE_FILE = "metadata.db"
 DATABASE_STRUCTURE_FILE = "database_structure.sql"
 DATABASE_STRUCTURE_FALLBACK = "https://raw.githubusercontent.com/HeIIow2/music-downloader/master/assets/database_structure.sql"
-temp_dir = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
-if not os.path.exists(temp_dir):
-    os.mkdir(temp_dir)
+TEMP_DIR = os.path.join(tempfile.gettempdir(), TEMP_FOLDER)
+if not os.path.exists(TEMP_DIR):
+    os.mkdir(TEMP_DIR)
 
-TEMP_DATABASE_PATH = os.path.join(temp_dir, TEMP_DATABASE_FILE)
+TEMP_DATABASE_PATH = os.path.join(TEMP_DIR, TEMP_DATABASE_FILE)
 
 # configure logger default
 logging.basicConfig(
     level=logging.INFO,
     format=logging.BASIC_FORMAT,
     handlers=[
-        logging.FileHandler(os.path.join(temp_dir, LOG_FILE)),
+        logging.FileHandler(os.path.join(TEMP_DIR, LOG_FILE)),
         logging.StreamHandler()
     ]
 )

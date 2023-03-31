@@ -1,3 +1,4 @@
+import random
 from typing import Optional, Union, Type, Dict, List
 from bs4 import BeautifulSoup
 import requests
@@ -35,19 +36,22 @@ class Page:
     SOURCE_TYPE: SourcePages
 
     @classmethod
-    def get_request(cls, url: str, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+    def get_request(cls, url: str, stream: bool = False, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
         requests.Response]:
         retry = False
         try:
-            r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT)
+            r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT, stream=stream)
         except requests.exceptions.Timeout:
+            retry = True
+        except requests.exceptions.ConnectionError:
             retry = True
 
         if not retry and r.status_code in accepted_response_codes:
             return r
 
-        LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
-        LOGGER.debug(r.content)
+        if not retry:
+            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
+            LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
             LOGGER.warning("to many tries. Aborting.")
@@ -330,7 +334,12 @@ class Page:
         if len(sources) == 0:
             return
         
-        temp_target = cls._download_song_to_targets(source=sources[0], target_list=song.target_collection.shallow_list)
+        temp_target: Target = Target(
+            path=shared.TEMP_DIR,
+            file=str(random.randint(0, 999999))
+        )
+        
+        cls._download_song_to_targets(source=sources[0], target=temp_target)
         cls._post_process_targets(song, temp_target)
     
     @classmethod

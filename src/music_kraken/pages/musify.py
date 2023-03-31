@@ -897,7 +897,7 @@ class Musify(Page):
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source) -> Path:
+    def _download_song_to_targets(cls, source: Source, target: Target) -> Path:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
@@ -906,12 +906,8 @@ class Musify(Page):
         if url.source_type != MusifyTypes.SONG:
             return
         
-        target: Target = Target(
-            path=TEMP_FOLDER,
-            file=str(random.randint(0, 999999))
-        )
+
         
         endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
         print(endpoint)
-        
-        return target
+        target.stream_into(cls.get_request(endpoint, stream=True))

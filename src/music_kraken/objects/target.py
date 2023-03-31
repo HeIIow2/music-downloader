@@ -1,6 +1,8 @@
 from typing import Optional, List, Tuple
 from pathlib import Path
 from collections import defaultdict
+import requests
+# from tqdm import tqdm
 
 from ..utils import shared
 from .parents import DatabaseObject
@@ -60,3 +62,26 @@ class Target(DatabaseObject):
             copy_to.create_path()
             with open(self.file_path, "wb") as write_to:
                 write_to.write(read_from.read())
+
+    def stream_into(self, r: requests.Response):
+        self.create_path()
+        
+        chunk_size = 1024
+        total_size = int(r.headers.get('content-length'))
+        initial_pos = 0
+        
+        with open(self.file_path,'wb') as f:      
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                size = f.write(chunk) 
+        
+        """
+        # doesn't work yet due to
+        # https://github.com/tqdm/tqdm/issues/261
+        
+        
+        with open(self.file_path,'wb') as f, \
+        tqdm(desc=self._file, total=total_size, unit='iB', unit_scale=True, unit_divisor=chunk_size) as pbar:      
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                size = f.write(chunk) 
+                pbar.update(size)
+        """

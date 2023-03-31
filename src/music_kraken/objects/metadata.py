@@ -140,6 +140,9 @@ class ID3Timestamp:
             minute=minute,
             second=second
         )
+        
+    def __hash__(self):
+        return self.date_obj.__hash__()
 
     def __lt__(self, other):
         return self.date_obj < other.date_obj
