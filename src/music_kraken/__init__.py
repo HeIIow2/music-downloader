@@ -1,5 +1,5 @@
 import gc
-
+from pathlib import Path
 from typing import List
 import musicbrainzngs
 import logging
@@ -35,6 +35,12 @@ logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
 URL_REGGEX = 'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+DOWNLOAD_COMMANDS = {
+    "ok",
+    "download",
+    "\d",
+    "hs"
+}
 
 
 def cli():
@@ -51,6 +57,14 @@ def cli():
         if parsed.isdigit():
             search.choose_index(int(parsed))
             return
+        
+        if parsed in DOWNLOAD_COMMANDS:
+            if not search.download_chosen():
+                print("could not download the chosen option.. sorry.")
+            else:
+                print("success! have fun :)")
+            return
+            
         
         url = re.match(URL_REGGEX, query)
         if url is not None:

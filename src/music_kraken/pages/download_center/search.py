@@ -11,13 +11,21 @@ class MultiPageOptions:
     def __init__(
             self,
             max_displayed_options: int = 10,
-            option_digits: int = 3
+            option_digits: int = 3,
+            database_object: DatabaseObject = None,
+            page: Type[Page] = None
     ) -> None:
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
 
         self._length = 0
         self._current_option_dict: Dict[Type[Page], Options] = defaultdict(lambda: Options())
+        
+        self.database_object = database_object
+        self.page = page
+        
+        if database_object is not None and page is not None:
+            self[page] = database_object.options
 
     def __getitem__(self, key: Type[Page]):
         return self._current_option_dict[key]
@@ -95,6 +103,17 @@ class MultiPageOptions:
 
     def __repr__(self) -> str:
         return self.string_from_all_pages()
+    
+    def download(self) -> bool:
+        if self._length != 1:
+            return False
+        
+        if self.database_object is None or self.page is None:
+            return False
+        
+        self.page.download(self.database_object)
+        
+        return True
 
 
 class Search(Download):
@@ -128,6 +147,17 @@ class Search(Download):
         mpo = MultiPageOptions(
             max_displayed_options=self.max_displayed_options,
             option_digits=self.option_digits
+        )
+        self._option_history.append(mpo)
+        self._current_option = mpo
+        return mpo
+    
+    def next_options_from_music_obj(self, database_obj: DatabaseObject, page: Type[Page]) -> MultiPageOptions:
+        mpo = MultiPageOptions(
+            max_displayed_options=self.max_displayed_options,
+            option_digits=self.option_digits,
+            database_object=database_obj,
+            page=page
         )
         self._option_history.append(mpo)
         self._current_option = mpo
@@ -172,8 +202,7 @@ class Search(Download):
         
         music_object = self.fetch_details(db_object)
         
-        mpo = self.next_options
-        mpo[page] = music_object.options
+        mpo = self.next_options_from_music_obj(music_object, page)
         
     def goto_previous(self):
         try:
@@ -195,3 +224,6 @@ class Search(Download):
         mpo[page] = new_object.options
         
         return True
+    
+    def download_chosen(self) -> bool:
+        return self._current_option.download()

@@ -43,4 +43,4 @@ def download_audio():
 
 
 if __name__ == "__main__":
-    download_audio()
+    music_kraken.cli()

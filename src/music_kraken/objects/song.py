@@ -533,7 +533,7 @@ class Artist(MainObject):
             is_split=True,
             albumsort=666,
             dynamic=True,
-            song_list=self.feature_song_collection.copy()
+            song_list=self.feature_song_collection.shallow_list
         )
 
     def get_all_songs(self) -> List[Song]:

@@ -281,6 +281,8 @@ class Page:
 
     @classmethod
     def download(cls, music_object: Union[Song, Album, Artist, Label], download_features: bool = True):
+        print("downloading")
+        print(music_object)
         if type(music_object) is Song:
             return cls.download_song(music_object)
         if type(music_object) is Album:
@@ -292,6 +294,7 @@ class Page:
         
     @classmethod
     def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False):
+        cls.fetch_details(label)
         for artist in label.current_artist_collection:
             cls.download_artist(artist, download_features=download_features, override_existing=override_existing)
         
@@ -300,22 +303,35 @@ class Page:
 
     @classmethod
     def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False):
+        cls.fetch_details(artist)
         for album in artist.main_album_collection:
             cls.download_album(album, override_existing=override_existing)
         
         if download_features:
-            for song in artist.feature_album:
+            for song in artist.feature_album.song_collection:
                 cls.download_song(song, override_existing=override_existing)
 
     @classmethod
     def download_album(cls, album: Album, override_existing: bool = False):
+        cls.fetch_details(album)
         for song in album.song_collection:
             cls.download_song(song, override_existing=override_existing)
 
     @classmethod
-    def download_song(cls, song: Song, override_existing: bool = False):
+    def download_song(cls, song: Song, override_existing: bool = False, create_target_on_demand: bool = True):
+        cls.fetch_details(song)
+        
         if song.target_collection.empty:
-            return
+            if create_target_on_demand and not song.main_artist_collection.empty and not song.album_collection.empty:
+                song.target_collection.append(
+                    Target(
+                            file=f"{song.title}.mp3",
+                            relative_to_music_dir=True,
+                            path=f"{song.main_artist_collection[0].name}/{song.album_collection[0].title}"
+                        )
+                )
+            else:
+                return
         
         target: Target
         if any(target.exists for target in song.target_collection) and not override_existing:
@@ -333,6 +349,8 @@ class Page:
         sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(sources) == 0:
             return
+        
+        print("great")
         
         temp_target: Target = Target(
             path=shared.TEMP_DIR,
