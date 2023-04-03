@@ -878,7 +878,8 @@ class Musify(Page):
         if cards_soup is not None:
             card_soup: BeautifulSoup
             for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
-                album.song_collection.append(cls.parse_song_card(card_soup))
+                new_song = cls.parse_song_card(card_soup)
+                album.song_collection.append(new_song)
         
         if stop_at_level > 1:
             song: Song
