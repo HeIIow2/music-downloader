@@ -22,6 +22,7 @@ from ..objects import (
 )
 from ..tagging import write_metadata_to_target
 from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, DEFAULT_VALUES
+from ..utils.string_processing import fit_to_file_system
 
 LOGGER = logging.getLogger("this shouldn't be used")
 
@@ -36,7 +37,7 @@ class DefaultTarget:
     def __setattr__(self, __name: str, __value: str) -> None:
         if __name in DEFAULT_VALUES:
             if self.__getattribute__(__name) == DEFAULT_VALUES[__name]:
-                super().__setattr__(__name, __value)
+                super().__setattr__(__name, fit_to_file_system(__value))
             return
             
         super().__setattr__(__name, __value)
