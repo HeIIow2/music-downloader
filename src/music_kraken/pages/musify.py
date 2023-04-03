@@ -890,6 +890,9 @@ class Musify(Page):
         
         album.update_tracksort()
 
+        print(album.song_collection)
+        print()
+
         return album
 
     @classmethod
