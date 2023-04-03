@@ -85,7 +85,7 @@ class Page:
             LOGGER.warning("to many tries. Aborting.")
             return None
 
-        return cls.get_request(url, accepted_response_codes, trie + 1)
+        return cls.get_request(url=url, stream=stream, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
     def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
@@ -109,7 +109,7 @@ class Page:
             LOGGER.warning("to many tries. Aborting.")
             return None
 
-        return cls.post_request(url, json, accepted_response_codes, trie + 1)
+        return cls.post_request(url=url, json=json, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
@@ -351,6 +351,8 @@ class Page:
         else:
             default_target = copy(default_target)
         default_target.artist = artist.name
+        if not artist.label_collection.empty:
+            default_target.label = artist.label_collection[0].name
         
         cls.fetch_details(artist)
         for album in artist.main_album_collection:
@@ -367,6 +369,10 @@ class Page:
         else:
             default_target = copy(default_target)
         default_target.album = album.title
+        if not album.artist_collection.empty:
+            default_target.artist = album.artist_collection[0].name
+        if not album.label_collection.empty:
+            default_target.label = album.label_collection[0].name
         
         cls.fetch_details(album)
         for song in album.song_collection:
@@ -379,6 +385,14 @@ class Page:
         else:
             default_target = copy(default_target)
         default_target.song = song.title
+        if not song.album_collection.empty:
+            default_target.album = song.album_collection[0].title
+        if not song.main_artist_collection.empty:
+            artist: Artist = song.main_artist_collection[0]
+            default_target.artist = artist.name
+            
+            if not artist.label_collection.empty:
+                default_target.label = artist.label_collection[0].name
         
         cls.fetch_details(song)
         

@@ -101,7 +101,7 @@ class Search(Download):
         db_object, page = self._current_option.choose_from_all_pages(index=index)
         
         music_object = self.fetch_details(db_object)
-        mpo = self.next_options_from_music_obj(music_object, page)
+        mpo = self.next_options(derive_from=music_object)
         
         mpo[page] = music_object.options
         
