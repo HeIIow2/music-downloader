@@ -143,3 +143,5 @@ class Search(Download):
             if page in self.audio_pages:
                 return page.download(music_object=self._current_option._derive_from)
 
+        return False
+
