@@ -3,6 +3,8 @@ from typing import Optional, Union, Type, Dict, List
 from bs4 import BeautifulSoup
 import requests
 import logging
+from dataclasses import dataclass
+from copy import copy
 
 from ..utils import shared
 from ..objects import (
@@ -19,9 +21,34 @@ from ..objects import (
     Label
 )
 from ..tagging import write_metadata_to_target
+from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, DEFAULT_VALUES
 
 LOGGER = logging.getLogger("this shouldn't be used")
 
+@dataclass
+class DefaultTarget:
+    genre: str = DEFAULT_VALUES["genre"]
+    label: str = DEFAULT_VALUES["label"]
+    artist: str = DEFAULT_VALUES["artist"]
+    album: str = DEFAULT_VALUES["album"]
+    song: str = DEFAULT_VALUES["song"]
+    
+    def __setattr__(self, __name: str, __value: str) -> None:
+        if __name in DEFAULT_VALUES:
+            if self.__getattribute__(__name) == DEFAULT_VALUES[__name]:
+                super().__setattr__(__name, __value)
+            return
+            
+        super().__setattr__(__name, __value)
+    
+    @property
+    def target(self) -> Target:
+        return Target(
+            relative_to_music_dir=True,
+            path=DOWNLOAD_PATH.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album, song=self.song),
+            file=DOWNLOAD_FILE.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album, song=self.song)
+        )
+    
 
 class Page:
     """
@@ -283,56 +310,80 @@ class Page:
         cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
-    def download(cls, music_object: Union[Song, Album, Artist, Label], download_features: bool = True):
-        print("downloading")
-        print(music_object)
+    def download(
+        cls, 
+        music_object: Union[Song, Album, Artist, Label], 
+        download_features: bool = True,
+        default_target: DefaultTarget = None
+    ):
+        if default_target is None:
+            default_target = DefaultTarget()
+        
         if type(music_object) is Song:
-            return cls.download_song(music_object)
+            return cls.download_song(music_object, default_target)
         if type(music_object) is Album:
-            return cls.download_album(music_object)
+            return cls.download_album(music_object, default_target)
         if type(music_object) is Artist:
-            return cls.download_artist(music_object, download_features=download_features)
+            return cls.download_artist(music_object, default_target)
         if type(music_object) is Label:
-            return cls.download_label(music_object, download_features=download_features)
+            return cls.download_label(music_object, download_features=download_features, default_target=default_target)
         
     @classmethod
-    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False):
+    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.label = label.name
+        
         cls.fetch_details(label)
         for artist in label.current_artist_collection:
-            cls.download_artist(artist, download_features=download_features, override_existing=override_existing)
+            cls.download_artist(artist, download_features=download_features, override_existing=override_existing, default_target=default_target)
         
         for album in label.album_collection:
-            cls.download_album(album, override_existing=override_existing)
+            cls.download_album(album, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False):
+    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.artist = artist.name
+        
         cls.fetch_details(artist)
         for album in artist.main_album_collection:
-            cls.download_album(album, override_existing=override_existing)
+            cls.download_album(album, override_existing=override_existing, default_target=default_target)
         
         if download_features:
             for song in artist.feature_album.song_collection:
-                cls.download_song(song, override_existing=override_existing)
+                cls.download_song(song, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_album(cls, album: Album, override_existing: bool = False):
+    def download_album(cls, album: Album, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.album = album.title
+        
         cls.fetch_details(album)
         for song in album.song_collection:
-            cls.download_song(song, override_existing=override_existing)
+            cls.download_song(song, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_song(cls, song: Song, override_existing: bool = False, create_target_on_demand: bool = True):
+    def download_song(cls, song: Song, override_existing: bool = False, create_target_on_demand: bool = True, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.song = song.title
+        
         cls.fetch_details(song)
         
         if song.target_collection.empty:
             if create_target_on_demand and not song.main_artist_collection.empty and not song.album_collection.empty:
-                song.target_collection.append(
-                    Target(
-                            file=f"{song.title}.mp3",
-                            relative_to_music_dir=True,
-                            path=f"{song.main_artist_collection[0].name}/{song.album_collection[0].title}"
-                        )
-                )
+                song.target_collection.append(default_target.target)
             else:
                 return
         

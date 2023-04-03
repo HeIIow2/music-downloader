@@ -10,8 +10,7 @@ from pathlib import Path
 import random
 
 from ..utils.shared import (
-    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER,
-    TEMP_FOLDER
+    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
 )
 
 from .abstract import Page
@@ -864,7 +863,7 @@ class Musify(Page):
         :param source:
         :return:
         """
-        album = Album(title="Hi :)")
+        album = Album(title="Hi :)", source_list=[source])
 
         url = cls.parse_url(source.url)
 
@@ -881,6 +880,14 @@ class Musify(Page):
             card_soup: BeautifulSoup
             for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
                 album.song_collection.append(cls.parse_song_card(card_soup))
+        
+        if stop_at_level > 1:
+            song: Song
+            for song in album.song_collection:
+                sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+                for source in sources:
+                    song.merge(cls._fetch_song_from_source(source=source))
+        
         album.update_tracksort()
 
         return album
