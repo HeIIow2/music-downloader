@@ -16,14 +16,21 @@ def fetch_artist():
         source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/ghost-bath-280348/")]
     )
 
-    artist = Musify.fetch_details(artist)
+    artist: objects.Artist = Musify.fetch_details(artist)
     print(artist.options)
+    print(artist.main_album_collection[0].source_collection)
 
 
 def fetch_album():
     album = objects.Album(
         source_list=[objects.Source(objects.SourcePages.MUSIFY,
                                     "https://musify.club/release/linkin-park-hybrid-theory-2000-188")]
+    )
+
+    album = objects.Album(
+        source_list=[
+            objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/release/ghost-bath-self-loather-2021-1554266")
+        ]
     )
 
     album: objects.Album = Musify.fetch_details(album)
@@ -37,4 +44,4 @@ def fetch_album():
             print(artist.id, artist.name)
 
 if __name__ == "__main__":
-    fetch_artist()
+    fetch_album()
