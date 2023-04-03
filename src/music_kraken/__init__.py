@@ -72,7 +72,7 @@ def cli():
                 print("The given url couldn't be downloaded")
             return
         
-        page = search.get_page_from_query(parsed)
+        page = search._get_page_from_query(parsed)
         if page is not None:
             search.choose_page(page)
             return
