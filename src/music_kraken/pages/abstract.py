@@ -3,6 +3,8 @@ from typing import Optional, Union, Type, Dict, List
 from bs4 import BeautifulSoup
 import requests
 import logging
+from dataclasses import dataclass
+from copy import copy
 
 from ..utils import shared
 from ..objects import (
@@ -19,9 +21,35 @@ from ..objects import (
     Label
 )
 from ..tagging import write_metadata_to_target
+from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, DEFAULT_VALUES
+from ..utils.string_processing import fit_to_file_system
 
 LOGGER = logging.getLogger("this shouldn't be used")
 
+@dataclass
+class DefaultTarget:
+    genre: str = DEFAULT_VALUES["genre"]
+    label: str = DEFAULT_VALUES["label"]
+    artist: str = DEFAULT_VALUES["artist"]
+    album: str = DEFAULT_VALUES["album"]
+    song: str = DEFAULT_VALUES["song"]
+    
+    def __setattr__(self, __name: str, __value: str) -> None:
+        if __name in DEFAULT_VALUES:
+            if self.__getattribute__(__name) == DEFAULT_VALUES[__name]:
+                super().__setattr__(__name, fit_to_file_system(__value))
+            return
+            
+        super().__setattr__(__name, __value)
+    
+    @property
+    def target(self) -> Target:
+        return Target(
+            relative_to_music_dir=True,
+            path=DOWNLOAD_PATH.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album, song=self.song),
+            file=DOWNLOAD_FILE.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album, song=self.song)
+        )
+    
 
 class Page:
     """
@@ -32,6 +60,7 @@ class Page:
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
     TRIES = 5
+    LOGGER = LOGGER
     
     SOURCE_TYPE: SourcePages
 
@@ -50,14 +79,14 @@ class Page:
             return r
 
         if not retry:
-            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
-            LOGGER.debug(r.content)
+            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
+            cls.LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
-            LOGGER.warning("to many tries. Aborting.")
+            cls.LOGGER.warning("to many tries. Aborting.")
             return None
 
-        return cls.get_request(url, accepted_response_codes, trie + 1)
+        return cls.get_request(url=url, stream=stream, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
     def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
@@ -74,14 +103,14 @@ class Page:
             return r
 
         if not retry:
-            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
-            LOGGER.debug(r.content)
+            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
+            cls.LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
-            LOGGER.warning("to many tries. Aborting.")
+            cls.LOGGER.warning("to many tries. Aborting.")
             return None
 
-        return cls.post_request(url, json, accepted_response_codes, trie + 1)
+        return cls.post_request(url=url, json=json, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
@@ -191,7 +220,7 @@ class Page:
             Album: Collection(element_type=Album),
             Song: Collection(element_type=Song)
         }
-
+        
         cls._clean_music_object(new_music_object, collections)
         
         music_object.merge(new_music_object)     
@@ -251,13 +280,11 @@ class Page:
             return
 
         for i, element in enumerate(collection):
-            r = collection_dict[collection.element_type].append(element)
-            if not r.was_in_collection:
-                cls._clean_music_object(r.current_element, collection_dict)
-                continue
-
+            r = collection_dict[collection.element_type].append(element, merge_into_existing=True)
             collection[i] = r.current_element
-            cls._clean_music_object(r.current_element, collection_dict)
+            
+            if not r.was_the_same:
+                cls._clean_music_object(r.current_element, collection_dict)
 
     @classmethod
     def _clean_label(cls, label: Label, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
@@ -283,56 +310,98 @@ class Page:
         cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
-    def download(cls, music_object: Union[Song, Album, Artist, Label], download_features: bool = True):
-        print("downloading")
-        print(music_object)
+    def download(
+        cls, 
+        music_object: Union[Song, Album, Artist, Label], 
+        download_features: bool = True,
+        default_target: DefaultTarget = None
+    ) ->  bool:
+        if default_target is None:
+            default_target = DefaultTarget()
+        
         if type(music_object) is Song:
-            return cls.download_song(music_object)
+            return cls.download_song(music_object, default_target)
         if type(music_object) is Album:
-            return cls.download_album(music_object)
+            return cls.download_album(music_object, default_target)
         if type(music_object) is Artist:
-            return cls.download_artist(music_object, download_features=download_features)
+            return cls.download_artist(music_object, default_target)
         if type(music_object) is Label:
-            return cls.download_label(music_object, download_features=download_features)
+            return cls.download_label(music_object, download_features=download_features, default_target=default_target)
+        
+        return False
         
     @classmethod
-    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False):
+    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.label = label.name
+        
         cls.fetch_details(label)
         for artist in label.current_artist_collection:
-            cls.download_artist(artist, download_features=download_features, override_existing=override_existing)
+            cls.download_artist(artist, download_features=download_features, override_existing=override_existing, default_target=default_target)
         
         for album in label.album_collection:
-            cls.download_album(album, override_existing=override_existing)
+            cls.download_album(album, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False):
+    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.artist = artist.name
+        if not artist.label_collection.empty:
+            default_target.label = artist.label_collection[0].name
+        
         cls.fetch_details(artist)
         for album in artist.main_album_collection:
-            cls.download_album(album, override_existing=override_existing)
+            cls.download_album(album, override_existing=override_existing, default_target=default_target)
         
         if download_features:
             for song in artist.feature_album.song_collection:
-                cls.download_song(song, override_existing=override_existing)
+                cls.download_song(song, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_album(cls, album: Album, override_existing: bool = False):
+    def download_album(cls, album: Album, override_existing: bool = False, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.album = album.title
+        if not album.artist_collection.empty:
+            default_target.artist = album.artist_collection[0].name
+        if not album.label_collection.empty:
+            default_target.label = album.label_collection[0].name
+        
         cls.fetch_details(album)
+        
+        album.update_tracksort()
         for song in album.song_collection:
-            cls.download_song(song, override_existing=override_existing)
+            cls.download_song(song, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_song(cls, song: Song, override_existing: bool = False, create_target_on_demand: bool = True):
+    def download_song(cls, song: Song, override_existing: bool = False, create_target_on_demand: bool = True, default_target: DefaultTarget = None):
+        if default_target is None:
+            default_target = DefaultTarget()
+        else:
+            default_target = copy(default_target)
+        default_target.song = song.title
+        if not song.album_collection.empty:
+            default_target.album = song.album_collection[0].title
+        if not song.main_artist_collection.empty:
+            artist: Artist = song.main_artist_collection[0]
+            default_target.artist = artist.name
+            
+            if not artist.label_collection.empty:
+                default_target.label = artist.label_collection[0].name
+        
         cls.fetch_details(song)
         
         if song.target_collection.empty:
             if create_target_on_demand and not song.main_artist_collection.empty and not song.album_collection.empty:
-                song.target_collection.append(
-                    Target(
-                            file=f"{song.title}.mp3",
-                            relative_to_music_dir=True,
-                            path=f"{song.main_artist_collection[0].name}/{song.album_collection[0].title}"
-                        )
-                )
+                song.target_collection.append(default_target.target)
             else:
                 return
         
@@ -348,20 +417,26 @@ class Page:
                     continue
                 
                 existing_target.copy_content(target)
+            return True
         
         sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(sources) == 0:
-            return
-        
-        print("great")
+            return False
         
         temp_target: Target = Target(
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
         )
         
-        cls._download_song_to_targets(source=sources[0], target=temp_target)
-        cls._post_process_targets(song, temp_target)
+        success = True
+        
+        if not cls._download_song_to_targets(source=sources[0], target=temp_target):
+            success = False
+        
+        if not cls._post_process_targets(song, temp_target):
+            success = False
+        
+        return success
     
     @classmethod
     def _post_process_targets(cls, song: Song, temp_target: Target):

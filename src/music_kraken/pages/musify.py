@@ -9,11 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 import random
 
-from ..utils.shared import (
-    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER,
-    TEMP_FOLDER
-)
-
 from .abstract import Page
 from ..objects import (
     DatabaseObject,
@@ -89,6 +84,8 @@ class Musify(Page):
     HOST = "https://musify.club"
 
     SOURCE_TYPE = SourcePages.MUSIFY
+    
+    LOGGER = LOGGER
 
     @classmethod
     def parse_url(cls, url: str) -> MusifyUrl:
@@ -568,10 +565,11 @@ class Musify(Page):
         for card_soup in soup.find_all("div", {"class": "card"}):
             new_album: Album = cls.parse_album_card(card_soup, artist_name)
             album_source: Source
+            
             if stop_at_level > 1:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
                     new_album.merge(cls._fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
-                    
+            
             discography.append(new_album)
 
         return discography
@@ -729,7 +727,7 @@ class Musify(Page):
 
         discography: List[Album] = cls.get_discography(url, artist.name)
         artist.main_album_collection.extend(discography)
-
+        
         return artist
 
     @classmethod
@@ -856,15 +854,15 @@ class Musify(Page):
         eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
 
         /html/musify/album_overview.html
-        [] tracklist
-        [] attributes
-        [] ratings
+        - [x] tracklist
+        - [ ] attributes
+        - [ ] ratings
 
         :param stop_at_level:
         :param source:
         :return:
         """
-        album = Album(title="Hi :)")
+        album = Album(title="Hi :)", source_list=[source])
 
         url = cls.parse_url(source.url)
 
@@ -881,6 +879,14 @@ class Musify(Page):
             card_soup: BeautifulSoup
             for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
                 album.song_collection.append(cls.parse_song_card(card_soup))
+        
+        if stop_at_level > 1:
+            song: Song
+            for song in album.song_collection:
+                sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+                for source in sources:
+                    song.merge(cls._fetch_song_from_source(source=source))
+        
         album.update_tracksort()
 
         return album

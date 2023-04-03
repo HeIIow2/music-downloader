@@ -63,17 +63,25 @@ class Target(DatabaseObject):
             with open(copy_to.file_path, "wb") as write_to:
                 write_to.write(read_from.read())
 
-    def stream_into(self, r: requests.Response):
+    def stream_into(self, r: requests.Response) -> bool:
+        if r is None:
+            return False
+        
         self.create_path()
         
         chunk_size = 1024
         total_size = int(r.headers.get('content-length'))
         initial_pos = 0
         
-        with open(self.file_path,'wb') as f:      
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                size = f.write(chunk) 
         
+        with open(self.file_path,'wb') as f:
+            try:
+                for chunk in r.iter_content(chunk_size=chunk_size):
+                    size = f.write(chunk) 
+            except requests.exceptions.Timeout:
+                shared.DOWNLOAD_LOGGER.error("Stream timed out.")
+                return False
+            
         """
         # doesn't work yet due to
         # https://github.com/tqdm/tqdm/issues/261
@@ -85,3 +93,5 @@ class Target(DatabaseObject):
                 size = f.write(chunk) 
                 pbar.update(size)
         """
+        
+        return True

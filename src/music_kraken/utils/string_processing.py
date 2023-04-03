@@ -6,4 +6,17 @@ def unify(string: str) -> str:
     """
     
     return string.lower()
+
+def fit_to_file_system(string: str) -> str:
+    string = string.strip()
+    
+    while string[0] == ".":
+        if len(string) == 0:
+            return string
+        
+        string = string[1:]
+        
+    string = string.replace("/", "|").replace("\\", "|")
+        
+    return string
     
