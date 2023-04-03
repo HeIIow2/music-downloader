@@ -60,6 +60,7 @@ class Page:
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
     TRIES = 5
+    LOGGER = LOGGER
     
     SOURCE_TYPE: SourcePages
 
@@ -78,11 +79,11 @@ class Page:
             return r
 
         if not retry:
-            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
-            LOGGER.debug(r.content)
+            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
+            cls.LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
-            LOGGER.warning("to many tries. Aborting.")
+            cls.LOGGER.warning("to many tries. Aborting.")
             return None
 
         return cls.get_request(url=url, stream=stream, accepted_response_codes=accepted_response_codes, trie=trie + 1)
@@ -102,11 +103,11 @@ class Page:
             return r
 
         if not retry:
-            LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
-            LOGGER.debug(r.content)
+            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
+            cls.LOGGER.debug(r.content)
 
         if trie >= cls.TRIES:
-            LOGGER.warning("to many tries. Aborting.")
+            cls.LOGGER.warning("to many tries. Aborting.")
             return None
 
         return cls.post_request(url=url, json=json, accepted_response_codes=accepted_response_codes, trie=trie + 1)
@@ -414,18 +415,26 @@ class Page:
                     continue
                 
                 existing_target.copy_content(target)
+            return True
         
         sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(sources) == 0:
-            return
+            return False
         
         temp_target: Target = Target(
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
         )
         
-        cls._download_song_to_targets(source=sources[0], target=temp_target)
-        cls._post_process_targets(song, temp_target)
+        success = True
+        
+        if not cls._download_song_to_targets(source=sources[0], target=temp_target):
+            success = False
+        
+        if not cls._post_process_targets(song, temp_target):
+            success = False
+        
+        return success
     
     @classmethod
     def _post_process_targets(cls, song: Song, temp_target: Target):

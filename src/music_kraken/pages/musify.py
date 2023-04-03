@@ -9,10 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 import random
 
-from ..utils.shared import (
-    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
-)
-
 from .abstract import Page
 from ..objects import (
     DatabaseObject,
@@ -88,6 +84,8 @@ class Musify(Page):
     HOST = "https://musify.club"
 
     SOURCE_TYPE = SourcePages.MUSIFY
+    
+    LOGGER = LOGGER
 
     @classmethod
     def parse_url(cls, url: str) -> MusifyUrl:
