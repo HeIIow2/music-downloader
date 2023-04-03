@@ -220,8 +220,10 @@ class Page:
             Album: Collection(element_type=Album),
             Song: Collection(element_type=Song)
         }
-
+        
         cls._clean_music_object(new_music_object, collections)
+        
+        print(collections[Album])
         
         music_object.merge(new_music_object)     
                
@@ -280,13 +282,11 @@ class Page:
             return
 
         for i, element in enumerate(collection):
-            r = collection_dict[collection.element_type].append(element)
-            if not r.was_in_collection:
-                cls._clean_music_object(r.current_element, collection_dict)
-                continue
-
+            r = collection_dict[collection.element_type].append(element, merge_into_existing=True)
             collection[i] = r.current_element
-            cls._clean_music_object(r.current_element, collection_dict)
+            
+            if not r.was_the_same:
+                cls._clean_music_object(r.current_element, collection_dict)
 
     @classmethod
     def _clean_label(cls, label: Label, collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):

@@ -565,10 +565,11 @@ class Musify(Page):
         for card_soup in soup.find_all("div", {"class": "card"}):
             new_album: Album = cls.parse_album_card(card_soup, artist_name)
             album_source: Source
+            
             if stop_at_level > 1:
                 for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
                     new_album.merge(cls._fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
-                    
+            
             discography.append(new_album)
 
         return discography
@@ -726,7 +727,7 @@ class Musify(Page):
 
         discography: List[Album] = cls.get_discography(url, artist.name)
         artist.main_album_collection.extend(discography)
-
+        
         return artist
 
     @classmethod

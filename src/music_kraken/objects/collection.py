@@ -9,6 +9,7 @@ from .parents import DatabaseObject
 class AppendResult:
     was_in_collection: bool
     current_element: DatabaseObject
+    was_the_same: bool
 
 
 class Collection:
@@ -81,13 +82,18 @@ class Collection:
         # if the element type has been defined in the initializer it checks if the type matches
         if self.element_type is not None and not isinstance(element, self.element_type):
             raise TypeError(f"{type(element)} is not the set type {self.element_type}")
+        
+        # return if the same instance of the object is in the list
+        for existing in self._data:
+            if element is existing:
+                return AppendResult(True, element, True)
 
         for name, value in element.indexing_values:
             if value in self._attribute_to_object_map[name]:
                 existing_object = self._attribute_to_object_map[name][value]
 
                 if not merge_on_conflict:
-                    return AppendResult(True, existing_object)
+                    return AppendResult(True, existing_object, False)
 
                 # if the object does already exist
                 # thus merging and don't add it afterwards
@@ -95,7 +101,7 @@ class Collection:
                     existing_object.merge(element)
                     # in case any relevant data has been added (e.g. it remaps the old object)
                     self.map_element(existing_object)
-                    return AppendResult(True, existing_object)
+                    return AppendResult(True, existing_object, False)
 
                 element.merge(existing_object)
 
@@ -104,12 +110,12 @@ class Collection:
 
                 self.unmap_element(existing_object)
                 self.map_element(element)
-                return AppendResult(True, existing_object)
+                return AppendResult(True, existing_object, False)
 
         self._data.append(element)
         self.map_element(element)
 
-        return AppendResult(False, element)
+        return AppendResult(False, element, False)
 
     def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True,
                merge_into_existing: bool = True):
