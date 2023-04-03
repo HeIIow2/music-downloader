@@ -317,7 +317,7 @@ class Page:
         music_object: Union[Song, Album, Artist, Label], 
         download_features: bool = True,
         default_target: DefaultTarget = None
-    ):
+    ) ->  bool:
         if default_target is None:
             default_target = DefaultTarget()
         
@@ -329,6 +329,8 @@ class Page:
             return cls.download_artist(music_object, default_target)
         if type(music_object) is Label:
             return cls.download_label(music_object, download_features=download_features, default_target=default_target)
+        
+        return False
         
     @classmethod
     def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False, default_target: DefaultTarget = None):
@@ -376,6 +378,8 @@ class Page:
             default_target.label = album.label_collection[0].name
         
         cls.fetch_details(album)
+        
+        album.update_tracksort()
         for song in album.song_collection:
             cls.download_song(song, override_existing=override_existing, default_target=default_target)
 
