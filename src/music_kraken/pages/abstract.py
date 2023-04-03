@@ -419,8 +419,6 @@ class Page:
         if len(sources) == 0:
             return
         
-        print("great")
-        
         temp_target: Target = Target(
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
