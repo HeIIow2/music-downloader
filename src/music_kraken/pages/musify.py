@@ -855,9 +855,9 @@ class Musify(Page):
         eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
 
         /html/musify/album_overview.html
-        [] tracklist
-        [] attributes
-        [] ratings
+        - [x] tracklist
+        - [ ] attributes
+        - [ ] ratings
 
         :param stop_at_level:
         :param source:
