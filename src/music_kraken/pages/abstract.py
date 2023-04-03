@@ -223,8 +223,6 @@ class Page:
         
         cls._clean_music_object(new_music_object, collections)
         
-        print(collections[Album])
-        
         music_object.merge(new_music_object)     
                
         music_object.compile(merge_into=True)
