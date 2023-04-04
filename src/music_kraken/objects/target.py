@@ -1,11 +1,11 @@
-from typing import Optional, List, Tuple
 from pathlib import Path
-from collections import defaultdict
+from typing import List, Tuple
+
 import requests
 from tqdm import tqdm
 
-from ..utils import shared
 from .parents import DatabaseObject
+from ..utils import shared
 
 
 class Target(DatabaseObject):
@@ -82,21 +82,8 @@ class Target(DatabaseObject):
                     for chunk in r.iter_content(chunk_size=shared.CHUNK_SIZE):
                         size = f.write(chunk)
                         t.update(size)
+                return True
 
             except requests.exceptions.Timeout:
                 shared.DOWNLOAD_LOGGER.error("Stream timed out.")
                 return False
-
-        """
-        # doesn't work yet due to
-        # https://github.com/tqdm/tqdm/issues/261
-        
-        
-        with open(self.file_path,'wb') as f, \
-        tqdm(desc=self._file, total=total_size, unit='iB', unit_scale=True, unit_divisor=chunk_size) as pbar:      
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                size = f.write(chunk) 
-                pbar.update(size)
-        """
-
-        return True

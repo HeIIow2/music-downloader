@@ -489,17 +489,12 @@ class Page:
             file=str(random.randint(0, 999999))
         )
 
-        success = True
+        r = cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
 
-        if not cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title):
-            success = False
+        if not r.fatal_error:
+            cls._post_process_targets(song, temp_target)
 
-        if not cls._post_process_targets(song, temp_target):
-            success = False
-
-        if success:
-            return DownloadResult(total=1, fail=0)
-        return DownloadResult(error_message=f"Error in the downloading of {song.title}.")
+        return r
 
     @classmethod
     def _post_process_targets(cls, song: Song, temp_target: Target):
@@ -530,5 +525,5 @@ class Page:
         return None
 
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> bool:
-        return False
+    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
+        return DownloadResult()

@@ -1,17 +1,15 @@
 from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum
 from typing import List, Optional, Type, Union
+from urllib.parse import urlparse
+
+import pycountry
 import requests
 from bs4 import BeautifulSoup
-import pycountry
-from urllib.parse import urlparse
-from enum import Enum
-from dataclasses import dataclass
-from pathlib import Path
-import random
 
 from .abstract import Page
 from ..objects import (
-    DatabaseObject,
     Artist,
     Source,
     SourcePages,
@@ -25,13 +23,8 @@ from ..objects import (
     AlbumStatus,
     Target
 )
-from ..utils import (
-    string_processing,
-    shared
-)
-from ..utils.shared import (
-    MUSIFY_LOGGER as LOGGER
-)
+from ..utils import string_processing, shared
+from .support_classes.download_result import DownloadResult
 
 """
 https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
@@ -86,7 +79,7 @@ class Musify(Page):
 
     SOURCE_TYPE = SourcePages.MUSIFY
     
-    LOGGER = LOGGER
+    LOGGER = shared.MUSIFY_LOGGER
 
     @classmethod
     def parse_url(cls, url: str) -> MusifyUrl:
@@ -101,7 +94,7 @@ class Musify(Page):
         try:
             type_enum = MusifyTypes(path[1])
         except ValueError as e:
-            LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
+            cls.LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
             raise e
 
         return MusifyUrl(
@@ -256,7 +249,7 @@ class Musify(Page):
                 track_count_soup: BeautifulSoup = small_list[1]
                 rating_soup: BeautifulSoup = small_list[2]
             else:
-                LOGGER.warning("got an unequal ammount than 3 small elements")
+                cls.LOGGER.warning("got an unequal ammount than 3 small elements")
 
         return Album(
             _id=_id,
@@ -329,8 +322,8 @@ class Musify(Page):
                     source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
 
             else:
-                LOGGER.warning("there are not enough anchors (2) for artist and track")
-                LOGGER.warning(str(artist_list))
+                cls.LOGGER.debug("there are not enough anchors (2) for artist and track")
+                cls.LOGGER.debug(str(artist_list))
 
         """
         artist_name = playlist_item_soup.get("data-artist")
@@ -496,7 +489,7 @@ class Musify(Page):
 
                 image_url = thumbnail.get("src")
         else:
-            LOGGER.debug("the card has no thumbnail or url")
+            cls.LOGGER.debug("the card has no thumbnail or url")
 
         card_body = album_card.find("div", {"class": "card-body"})
         if card_body is not None:
@@ -524,13 +517,13 @@ class Musify(Page):
         # parse small date
         card_footer_list = album_card.find_all("div", {"class": "card-footer"})
         if len(card_footer_list) != 3:
-            LOGGER.debug("there are not exactly 3 card footers in a card")
+            cls.LOGGER.debug("there are not exactly 3 card footers in a card")
 
         if len(card_footer_list) > 0:
             for any_small_soup in card_footer_list[-1].find_all("small"):
                 parse_small_date(any_small_soup)
         else:
-            LOGGER.debug("there is not even 1 footer in the album card")
+            cls.LOGGER.debug("there is not even 1 footer in the album card")
 
         return Album(
             _id=_id,
@@ -633,7 +626,7 @@ class Musify(Page):
             if len(breadcrumb_list) == 3:
                 name = breadcrumb_list[-1].get_text(strip=True)
             else:
-                LOGGER.debug("breadcrumb layout on artist page changed")
+                cls.LOGGER.debug("breadcrumb layout on artist page changed")
 
         nav_tabs: BeautifulSoup = soup.find("ul", {"class": "nav-tabs"})
         if nav_tabs is not None:
@@ -671,7 +664,7 @@ class Musify(Page):
 
                 country_set: set = classes.difference(style_classes)
                 if len(country_set) != 1:
-                    LOGGER.debug("the country set contains multiple values")
+                    cls.LOGGER.debug("the country set contains multiple values")
                 if len(country_set) != 0:
                     """
                     This is the css file, where all flags that can be used on musify
@@ -963,7 +956,7 @@ class Musify(Page):
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> bool:
+    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
@@ -971,8 +964,14 @@ class Musify(Page):
 
         url: MusifyUrl = cls.parse_url(source.url)
         if url.source_type != MusifyTypes.SONG:
-            return False
+            return DownloadResult(error_message=f"The url is not of the type Song: {source.url}")
         
         endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
 
-        return target.stream_into(cls.get_request(endpoint, stream=True), desc=desc)
+        r = cls.get_request(endpoint, stream=True)
+        if r is None:
+            return DownloadResult(error_message=f"couldn't connect to {endpoint}")
+
+        if target.stream_into(r, desc=desc):
+            return DownloadResult(total=1)
+        return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
