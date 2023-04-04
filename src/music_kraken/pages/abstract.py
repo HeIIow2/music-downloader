@@ -513,5 +513,5 @@ class Page:
         return None
 
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target) -> Target:
+    def _download_song_to_targets(cls, source: Source, target: Target) -> bool:
         return False
