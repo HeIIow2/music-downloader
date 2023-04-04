@@ -16,6 +16,10 @@ def fetch_artist():
         source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/ghost-bath-280348/")]
     )
 
+    artist = objects.Artist(
+        source_list=[objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/lana-del-rey-124788/releases")]
+    )
+
     artist: objects.Artist = Musify.fetch_details(artist)
     print(artist.options)
     print(artist.main_album_collection[0].source_collection)
@@ -44,4 +48,4 @@ def fetch_album():
             print(artist.id, artist.name)
 
 if __name__ == "__main__":
-    fetch_album()
+    fetch_artist()

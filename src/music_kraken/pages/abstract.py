@@ -62,6 +62,7 @@ class Page:
     API_SESSION: requests.Session = requests.Session()
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
+    POST_TIMEOUT = TIMEOUT
     TRIES = 5
     LOGGER = LOGGER
 
@@ -75,8 +76,10 @@ class Page:
         try:
             r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT, stream=stream)
         except requests.exceptions.Timeout:
+            cls.LOGGER.warning(f"request timed out at \"{url}\": ({trie}-{cls.TRIES})")
             retry = True
         except requests.exceptions.ConnectionError:
+            cls.LOGGER.warning(f"couldn't connect to \"{url}\": ({trie}-{cls.TRIES})")
             retry = True
 
         if not retry and r.status_code in accepted_response_codes:
@@ -97,10 +100,12 @@ class Page:
         requests.Response]:
         retry = False
         try:
-            r = cls.API_SESSION.post(url, json=json, timeout=cls.TIMEOUT)
+            r = cls.API_SESSION.post(url, json=json, timeout=cls.POST_TIMEOUT)
         except requests.exceptions.Timeout:
+            cls.LOGGER.warning(f"request timed out at \"{url}\": ({trie}-{cls.TRIES})")
             retry = True
         except requests.exceptions.ConnectionError:
+            cls.LOGGER.warning(f"couldn't connect to \"{url}\": ({trie}-{cls.TRIES})")
             retry = True
 
         if not retry and r.status_code in accepted_response_codes:
@@ -114,6 +119,7 @@ class Page:
             cls.LOGGER.warning("to many tries. Aborting.")
             return None
 
+        cls.LOGGER.warning(f"payload: {json}")
         return cls.post_request(url=url, json=json, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
