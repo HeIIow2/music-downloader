@@ -343,20 +343,23 @@ class Page:
             return cls.download_song(
                 music_object,
                 override_existing=override_existing,
-                create_target_on_demand=create_target_on_demand
+                create_target_on_demand=create_target_on_demand,
+                genre=genre
             )
         if type(music_object) is Album:
             return cls.download_album(
                 music_object,
                 default_target=default_target,
-                override_existing=override_existing
+                override_existing=override_existing,
+                genre=genre
             )
         if type(music_object) is Artist:
             return cls.download_artist(
                 music_object,
                 default_target=default_target,
                 download_features=download_features,
-                exclude_album_type=exclude_album_type
+                exclude_album_type=exclude_album_type,
+                genre=genre
             )
         if type(music_object) is Label:
             return cls.download_label(

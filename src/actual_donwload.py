@@ -50,4 +50,4 @@ def real_download():
 
 
 if __name__ == "__main__":
-    real_download()
+    music_kraken.cli()
