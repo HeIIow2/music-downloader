@@ -80,7 +80,7 @@ class Musify(Page):
     }
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 7
-    POST_TIMEOUT = 10
+    POST_TIMEOUT = 15
     TRIES = 5
     HOST = "https://musify.club"
 
@@ -417,6 +417,7 @@ class Musify(Page):
             9: AlbumType.DEMO,
             10: AlbumType.MIXTAPE,              # DJ Mixes
             11: AlbumType.COMPILATION_ALBUM,    # compilation of only this artist
+            12: AlbumType.STUDIO_ALBUM,         # split
             13: AlbumType.COMPILATION_ALBUM,    # unofficial
             14: AlbumType.MIXTAPE               # "Soundtracks"
         })
