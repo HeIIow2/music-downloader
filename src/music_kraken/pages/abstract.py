@@ -1,5 +1,5 @@
 import random
-from typing import Optional, Union, Type, Dict, List
+from typing import Optional, Union, Type, Dict, List, Set
 from bs4 import BeautifulSoup
 import requests
 import logging
@@ -18,7 +18,8 @@ from ..objects import (
     Options,
     SourcePages,
     Collection,
-    Label
+    Label,
+    AlbumType
 )
 from ..tagging import write_metadata_to_target
 from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, DEFAULT_VALUES
@@ -332,24 +333,33 @@ class Page:
             cls,
             music_object: Union[Song, Album, Artist, Label],
             download_features: bool = True,
-            default_target: DefaultTarget = None
+            default_target: DefaultTarget = None,
+            download_all: bool = False,
+            exclude_album_type: Set[AlbumType] = {
+                AlbumType.COMPILATION_ALBUM,
+                AlbumType.LIVE_ALBUM,
+                AlbumType.MIXTAPE
+            }
     ) -> bool:
         if default_target is None:
             default_target = DefaultTarget()
+            
+        if download_all:
+            exclude_album_types: Set[AlbumType] = set()
 
         if type(music_object) is Song:
             return cls.download_song(music_object, default_target)
         if type(music_object) is Album:
             return cls.download_album(music_object, default_target)
         if type(music_object) is Artist:
-            return cls.download_artist(music_object, default_target)
+            return cls.download_artist(music_object, default_target, exclude_album_type=exclude_album_type)
         if type(music_object) is Label:
-            return cls.download_label(music_object, download_features=download_features, default_target=default_target)
+            return cls.download_label(music_object, download_features=download_features, default_target=default_target, exclude_album_type=exclude_album_type)
 
         return False
 
     @classmethod
-    def download_label(cls, label: Label, download_features: bool = True, override_existing: bool = False,
+    def download_label(cls, label: Label, exclude_album_type: Set[AlbumType], download_features: bool = True, override_existing: bool = False,
                        default_target: DefaultTarget = None):
         if default_target is None:
             default_target = DefaultTarget()
@@ -360,13 +370,18 @@ class Page:
         cls.fetch_details(label)
         for artist in label.current_artist_collection:
             cls.download_artist(artist, download_features=download_features, override_existing=override_existing,
-                                default_target=default_target)
+                                default_target=default_target, exclude_album_type=exclude_album_type)
 
+        cls.fetch_details(album)
+        album: Album
         for album in label.album_collection:
+            if album.album_type in exclude_album_type:
+                continue
+            
             cls.download_album(album, override_existing=override_existing, default_target=default_target)
 
     @classmethod
-    def download_artist(cls, artist: Artist, download_features: bool = True, override_existing: bool = False,
+    def download_artist(cls, artist: Artist, exclude_album_type: Set[AlbumType], download_features: bool = True, override_existing: bool = False,
                         default_target: DefaultTarget = None):
         if default_target is None:
             default_target = DefaultTarget()
@@ -377,7 +392,11 @@ class Page:
             default_target.label = artist.label_collection[0].name
 
         cls.fetch_details(artist)
+        album: Album
         for album in artist.main_album_collection:
+            if album.album_type in exclude_album_type:
+                continue
+            
             cls.download_album(album, override_existing=override_existing, default_target=default_target)
 
         if download_features:
