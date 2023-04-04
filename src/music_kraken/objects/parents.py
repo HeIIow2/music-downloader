@@ -1,15 +1,11 @@
-from collections import defaultdict
-from typing import Optional, Dict, Type, Tuple, List, TYPE_CHECKING
-import uuid
 import random
+import uuid
+from collections import defaultdict
+from typing import Optional, Dict, Tuple, List
 
-from ..utils.shared import (
-    SONG_LOGGER as LOGGER
-)
 from .metadata import Metadata
 from .option import Options
-if TYPE_CHECKING:
-    from .collection import Collection
+from ..utils.shared import OBJECT_LOGGER as LOGGER
 
 
 class DatabaseObject:

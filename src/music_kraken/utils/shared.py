@@ -44,20 +44,16 @@ logging.basicConfig(
     ]
 )
 
-SONG_LOGGER = logging.getLogger("song-obj")
-SEARCH_LOGGER = logging.getLogger("mb-cli")
-INIT_PATH_LOGGER = logging.getLogger("init_path")
+OBJECT_LOGGER = logging.getLogger("objects")
+TARGET_LOGGER = logging.getLogger("target")
 DATABASE_LOGGER = logging.getLogger("database")
-METADATA_DOWNLOAD_LOGGER = logging.getLogger("metadata")
-URL_DOWNLOAD_LOGGER = logging.getLogger("AudioSource")
-TAGGING_LOGGER = logging.getLogger("tagging")
+
 YOUTUBE_LOGGER = logging.getLogger("Youtube")
 MUSIFY_LOGGER = logging.getLogger("Musify")
-PATH_LOGGER = logging.getLogger("create-paths")
-DOWNLOAD_LOGGER = logging.getLogger("download")
-LYRICS_LOGGER = logging.getLogger("lyrics")
 GENIUS_LOGGER = logging.getLogger("genius")
 ENCYCLOPAEDIA_METALLUM_LOGGER = logging.getLogger("ma")
+
+DOWNLOAD_LOGGER = logging.getLogger("download")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = Path(os.path.expanduser("~"), "Music")

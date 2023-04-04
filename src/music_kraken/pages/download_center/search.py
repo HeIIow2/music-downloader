@@ -1,13 +1,11 @@
-from collections import defaultdict
-from typing import Tuple, List, Set, Dict, Type, Union, Optional
+from typing import Tuple, List, Set, Type, Optional
 
 from . import page_attributes
 from .download import Download
 from .multiple_options import MultiPageOptions
 from ..abstract import Page
-from ...objects import Options, DatabaseObject, Source
-from ...utils.shared import DOWNLOAD_LOGGER as LOGGER
 from ..support_classes.download_result import DownloadResult
+from ...objects import DatabaseObject, Source
 
 
 class Search(Download):
