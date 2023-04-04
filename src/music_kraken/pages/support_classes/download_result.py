@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD
+from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD, DOWNLOAD_LOGGER as LOGGER
 
 
 @dataclass
@@ -30,6 +30,7 @@ class DownloadResult:
 
     def merge(self, other: "DownloadResult"):
         if other.fatal_error:
+            LOGGER.debug(other.error_message)
             self._error_message_list.append(other.error_message)
             self.total += 1
             self.fail += 1
