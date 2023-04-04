@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple
 from pathlib import Path
 from collections import defaultdict
 import requests
-# from tqdm import tqdm
+from tqdm import tqdm
 
 from ..utils import shared
 from .parents import DatabaseObject
@@ -71,13 +71,19 @@ class Target(DatabaseObject):
         
         chunk_size = 1024
         total_size = int(r.headers.get('content-length'))
+        print(total_size)
         initial_pos = 0
         
         
         with open(self.file_path,'wb') as f:
             try:
-                for chunk in r.iter_content(chunk_size=chunk_size):
-                    size = f.write(chunk) 
+                """
+                https://en.wikipedia.org/wiki/Kilobyte
+                > The internationally recommended unit symbol for the kilobyte is kB.
+                """
+                for chunk in tqdm(r.iter_content(chunk_size=chunk_size), unit_scale=True, unit="B", total=total_size):
+                    size = f.write(chunk)
+                    
             except requests.exceptions.Timeout:
                 shared.DOWNLOAD_LOGGER.error("Stream timed out.")
                 return False
