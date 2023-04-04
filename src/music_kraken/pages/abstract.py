@@ -352,7 +352,7 @@ class Page:
         if type(music_object) is Album:
             return cls.download_album(music_object, default_target)
         if type(music_object) is Artist:
-            return cls.download_artist(music_object, default_target, exclude_album_type=exclude_album_type)
+            return cls.download_artist(music_object, default_target=default_target, download_features=download_features, exclude_album_type=exclude_album_type)
         if type(music_object) is Label:
             return cls.download_label(music_object, download_features=download_features, default_target=default_target, exclude_album_type=exclude_album_type)
 
