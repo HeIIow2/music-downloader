@@ -1,11 +1,11 @@
 import mutagen
 from mutagen.id3 import ID3, Frame
-
+from pathlib import Path
 from typing import List
 import logging
 
 from ..utils.shared import (
-    TAGGING_LOGGER as logger
+    TAGGING_LOGGER as LOGGER
 )
 from ..objects import Song, Target, Metadata
 
@@ -18,7 +18,7 @@ class AudioMetadata:
 
         if file_location is not None:
             self.file_location = file_location
-            
+
     def add_metadata(self, metadata: Metadata):
         for value in metadata:
             """
@@ -29,10 +29,9 @@ class AudioMetadata:
     def add_song_metadata(self, song: Song):
         self.add_metadata(song.metadata)
 
+    def save(self, file_location: Path = None):
+        LOGGER.debug(f"saving following frames: {self.frames.pprint()}")
 
-    def save(self, file_location: str = None):
-        print("saving")
-        print(self.frames.pprint())
         if file_location is not None:
             self.file_location = file_location
 
@@ -40,24 +39,26 @@ class AudioMetadata:
             raise Exception("no file target provided to save the data to")
         self.frames.save(self.file_location, v2_version=4)
 
-    def set_file_location(self, file_location):
+    def set_file_location(self, file_location: Path):
         # try loading the data from the given file. if it doesn't succeed the frame remains empty
         try:
             self.frames.load(file_location, v2_version=4)
-            logger.info(f"loaded following from \"{file_location}\"\n{self.frames.pprint()}")
+            LOGGER.debug(f"loaded following from \"{file_location}\"\n{self.frames.pprint()}")
         except mutagen.MutagenError:
-            logger.warning(f"couldn't find any metadata at: \"{self.file_location}\"")
+            LOGGER.warning(f"couldn't find any metadata at: \"{self.file_location}\"")
         self._file_location = file_location
 
     file_location = property(fget=lambda self: self._file_location, fset=set_file_location)
 
+
 def write_metadata_to_target(metadata: Metadata, target: Target):
     if not target.exists:
         return
-    
+
     id3_object = AudioMetadata(file_location=target.file_path)
     id3_object.add_metadata(metadata)
     id3_object.save()
+
 
 def write_metadata(song: Song, ignore_file_not_found: bool = True):
     target: Target
