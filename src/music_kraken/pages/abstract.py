@@ -309,17 +309,15 @@ class Page:
             music_object: Union[Song, Album, Artist, Label],
             download_features: bool = True,
             default_target: DefaultTarget = None,
+            genre: str = None,
             override_existing: bool = False,
             create_target_on_demand: bool = True,
             download_all: bool = False,
-            exclude_album_type: Set[AlbumType] = {
-                AlbumType.COMPILATION_ALBUM,
-                AlbumType.LIVE_ALBUM,
-                AlbumType.MIXTAPE
-            }
+            exclude_album_type: Set[AlbumType] = None
     ) -> DownloadResult:
         """
 
+        :param genre: The downloader will download to THIS folder (set the value of default_target.genre to genre)
         :param music_object:
         :param download_features:
         :param default_target:
@@ -331,9 +329,15 @@ class Page:
         """
         if default_target is None:
             default_target = DefaultTarget()
-            
+
         if download_all:
-            exclude_album_types: Set[AlbumType] = set()
+            exclude_album_type: Set[AlbumType] = set()
+        elif exclude_album_type is None:
+            exclude_album_type = {
+                AlbumType.COMPILATION_ALBUM,
+                AlbumType.LIVE_ALBUM,
+                AlbumType.MIXTAPE
+            }
 
         if type(music_object) is Song:
             return cls.download_song(
@@ -342,11 +346,26 @@ class Page:
                 create_target_on_demand=create_target_on_demand
             )
         if type(music_object) is Album:
-            return cls.download_album(music_object, default_target=default_target, override_existing=override_existing)
+            return cls.download_album(
+                music_object,
+                default_target=default_target,
+                override_existing=override_existing
+            )
         if type(music_object) is Artist:
-            return cls.download_artist(music_object, default_target=default_target, download_features=download_features, exclude_album_type=exclude_album_type)
+            return cls.download_artist(
+                music_object,
+                default_target=default_target,
+                download_features=download_features,
+                exclude_album_type=exclude_album_type
+            )
         if type(music_object) is Label:
-            return cls.download_label(music_object, download_features=download_features, default_target=default_target, exclude_album_type=exclude_album_type)
+            return cls.download_label(
+                music_object,
+                download_features=download_features,
+                default_target=default_target,
+                exclude_album_type=exclude_album_type,
+                genre=genre
+            )
 
         return DownloadResult(error_message=f"{type(music_object)} can't be downloaded.")
 
@@ -357,7 +376,8 @@ class Page:
             exclude_album_type: Set[AlbumType],
             download_features: bool = True,
             override_existing: bool = False,
-            default_target: DefaultTarget = None
+            default_target: DefaultTarget = None,
+            genre: str = None
     ) -> DownloadResult:
 
         default_target = DefaultTarget() if default_target is None else copy(default_target)
@@ -372,7 +392,8 @@ class Page:
                 download_features=download_features,
                 override_existing=override_existing,
                 default_target=default_target,
-                exclude_album_type=exclude_album_type
+                exclude_album_type=exclude_album_type,
+                genre=genre
             ))
 
         album: Album
@@ -387,7 +408,8 @@ class Page:
             r.merge(cls.download_album(
                 album,
                 override_existing=override_existing,
-                default_target=default_target
+                default_target=default_target,
+                genre=genre
             ))
 
         return r
@@ -399,7 +421,8 @@ class Page:
             exclude_album_type: Set[AlbumType],
             download_features: bool = True,
             override_existing: bool = False,
-            default_target: DefaultTarget = None
+            default_target: DefaultTarget = None,
+            genre: str = None
     ) -> DownloadResult:
 
         default_target = DefaultTarget() if default_target is None else copy(default_target)
@@ -415,11 +438,21 @@ class Page:
                 cls.LOGGER.info(f"Skipping {album.option_string} due to the filter. ({album.album_type})")
                 continue
             
-            r.merge(cls.download_album(album, override_existing=override_existing, default_target=default_target))
+            r.merge(cls.download_album(
+                album,
+                override_existing=override_existing,
+                default_target=default_target,
+                genre=genre
+            ))
 
         if download_features:
             for song in artist.feature_album.song_collection:
-                r.merge(cls.download_song(song, override_existing=override_existing, default_target=default_target))
+                r.merge(cls.download_song(
+                    song,
+                    override_existing=override_existing,
+                    default_target=default_target,
+                    genre=genre
+                ))
 
         return r
 
@@ -428,7 +461,8 @@ class Page:
             cls,
             album: Album,
             override_existing: bool = False,
-            default_target: DefaultTarget = None
+            default_target: DefaultTarget = None,
+            genre: str = None
        ) -> DownloadResult:
 
         default_target = DefaultTarget() if default_target is None else copy(default_target)
@@ -442,7 +476,12 @@ class Page:
 
         cls.LOGGER.info(f"downloading album: {album.title}")
         for song in album.song_collection:
-            r.merge(cls.download_song(song, override_existing=override_existing, default_target=default_target))
+            r.merge(cls.download_song(
+                song,
+                override_existing=override_existing,
+                default_target=default_target,
+                genre=genre
+            ))
 
         return r
 
@@ -452,8 +491,11 @@ class Page:
             song: Song,
             override_existing: bool = False,
             create_target_on_demand: bool = True,
-            default_target: DefaultTarget = None
+            default_target: DefaultTarget = None,
+            genre: str = None
     ) -> DownloadResult:
+        cls.LOGGER.debug(f"Setting genre of {song.option_string} to {genre}")
+        song.genre = genre
 
         default_target = DefaultTarget() if default_target is None else copy(default_target)
         default_target.song_object(song)

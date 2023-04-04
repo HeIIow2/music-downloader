@@ -40,6 +40,7 @@ class DefaultTarget:
 
     def song_object(self, song: Song):
         self.song = song.title
+        self.genre = song.genre
 
         if not song.album_collection.empty:
             self.album_object(song.album_collection[0])
