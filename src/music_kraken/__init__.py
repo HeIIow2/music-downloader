@@ -24,7 +24,7 @@ gc.set_threshold(allocs, gen1, gen2)
 logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
 musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")
 
-URL_REGGEX = 'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+URL_REGEX = 'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
 DOWNLOAD_COMMANDS = {
     "ok",
     "download",
@@ -70,7 +70,7 @@ def cli():
 
             return not r.is_mild_failure
 
-        url = re.match(URL_REGGEX, query)
+        url = re.match(URL_REGEX, query)
         if url is not None:
             if not _search.search_url(url.string):
                 print("The given url couldn't be found.")
