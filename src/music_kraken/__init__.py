@@ -39,9 +39,9 @@ EXIT_COMMANDS = {
 
 
 def cli():
-    def next_search(search: pages.Search, query: str) -> bool:
+    def next_search(_search: pages.Search, query: str) -> bool:
         """
-        :param search:
+        :param _search:
         :param query:
         :return exit in the next step:
         """
@@ -54,15 +54,15 @@ def cli():
         if parsed == ".":
             return False
         if parsed == "..":
-            search.goto_previous()
+            _search.goto_previous()
             return False
         
         if parsed.isdigit():
-            search.choose_index(int(parsed))
+            _search.choose_index(int(parsed))
             return False
         
         if parsed in DOWNLOAD_COMMANDS:
-            r = search.download_chosen()
+            r = _search.download_chosen()
 
             print()
             print(r)
@@ -72,17 +72,17 @@ def cli():
 
         url = re.match(URL_REGGEX, query)
         if url is not None:
-            if not search.search_url(url.string):
+            if not _search.search_url(url.string):
                 print("The given url couldn't be found.")
             return False
         
-        page = search.get_page_from_query(parsed)
+        page = _search.get_page_from_query(parsed)
         if page is not None:
-            search.choose_page(page)
+            _search.choose_page(page)
             return False
         
         # if everything else is not valid search
-        search.search(query)
+        _search.search(query)
         return False
 
     search = pages.Search()
