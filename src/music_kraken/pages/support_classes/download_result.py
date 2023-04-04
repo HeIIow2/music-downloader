@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List
 
+from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD
+
 
 @dataclass
 class DownloadResult:
@@ -19,6 +21,10 @@ class DownloadResult:
         return self.success / self.total
 
     @property
+    def failure_percentage(self) -> float:
+        return self.fail / self.total
+
+    @property
     def fatal_error(self) -> bool:
         return self.error_message is not None
 
@@ -32,7 +38,14 @@ class DownloadResult:
             self.fail += other.fail
             self._error_message_list.extend(other._error_message_list)
 
-    def __repr__(self):
+    def __str__(self):
         if self.fatal_error:
             return self.error_message
-        return f"({int(self.success_percentage*100)}%) {self.fail} from {self.total} downloads failed."
+        head = f"({int(self.success_percentage*100)}%) {self.fail} from {self.total} downloads failed."
+
+        if self.failure_percentage <= SHOW_DOWNLOAD_ERRORS_THRESHOLD:
+            return head
+
+        _lines = [head]
+        _lines.extend(self._error_message_list)
+        return "\n".join(_lines)

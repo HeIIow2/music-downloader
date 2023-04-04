@@ -109,3 +109,8 @@ DEFAULT_VALUES = {
 
 # size of the chunks that are streamed
 CHUNK_SIZE = 1024
+# this is a percentage describing the percentage of failed downloads,
+# relative to the total downloads.
+# If the percentage goes over this threshold DownloadResult returns the download errors
+# in the __str__ method
+SHOW_DOWNLOAD_ERRORS_THRESHOLD = 0.3
