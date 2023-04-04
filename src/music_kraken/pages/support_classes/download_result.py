@@ -16,8 +16,12 @@ class DownloadResult:
         return self.error_message is not None
 
     def merge(self, other: "DownloadResult"):
-        self.total += other.total
-        self.fail += other.fail
+        if other.fatal_error:
+            self.total += 1
+            self.fail += 1
+        else:
+            self.total += other.total
+            self.fail += other.fail
 
     def __repr__(self):
         if self.fatal_error:

@@ -7,6 +7,7 @@ from .multiple_options import MultiPageOptions
 from ..abstract import Page
 from ...objects import Options, DatabaseObject, Source
 from ...utils.shared import DOWNLOAD_LOGGER as LOGGER
+from ..support_classes.download_result import DownloadResult
 
 
 class Search(Download):
@@ -83,7 +84,7 @@ class Search(Download):
         
         mpo[page] = prev_mpo[page]
         
-    def _get_page_from_query(self, query: str) -> Optional[Type[Page]]:
+    def get_page_from_query(self, query: str) -> Optional[Type[Page]]:
         """
         query can be for example:
         "a" or "EncyclopaediaMetallum" to choose a page
@@ -131,10 +132,9 @@ class Search(Download):
         
         return True
     
-    def download_chosen(self) -> bool:
+    def download_chosen(self) -> DownloadResult:
         if self._current_option._derive_from is None:
-            LOGGER.warning(f"No option has been chosen yet.")
-            return False
+            return DownloadResult(error_message="No option has been chosen yet.")
         
         source: Source
         for source in self._current_option._derive_from.source_collection:
@@ -143,7 +143,5 @@ class Search(Download):
             if page in self.audio_pages:
                 return page.download(music_object=self._current_option._derive_from)
 
-            LOGGER.warning(f"Page is no audio page.")
-
-        return False
+        return DownloadResult(error_message=f"Didn't find a source for {self._current_option._derive_from.option_string}.")
 
