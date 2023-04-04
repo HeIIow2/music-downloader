@@ -514,4 +514,4 @@ class Page:
 
     @classmethod
     def _download_song_to_targets(cls, source: Source, target: Target) -> Target:
-        return Target()
+        return False
