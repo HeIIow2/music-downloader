@@ -15,6 +15,10 @@ class DownloadResult:
         return self.total - self.fail
 
     @property
+    def success_percentage(self) -> float:
+        return self.success / self.total
+
+    @property
     def fatal_error(self) -> bool:
         return self.error_message is not None
 
@@ -31,4 +35,4 @@ class DownloadResult:
     def __repr__(self):
         if self.fatal_error:
             return self.error_message
-        return f"{self.fail} from {self.total} downloads failed."
+        return f"({int(self.success_percentage*100)}%) {self.fail} from {self.total} downloads failed."
