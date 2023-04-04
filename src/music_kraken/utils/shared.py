@@ -1,14 +1,36 @@
-import musicbrainzngs
+from typing import List
 import logging
 import tempfile
 import os
 import configparser
 from sys import platform as current_os
 from pathlib import Path
+import random
+
+"""
+I will now and then use those messages in the programm.
+But I won't overuse them dw.
+
+I will keep those messages, if you disagree with me on the messages,
+feel free to fork the programm and edit them, or just edit them in the config
+file once I implemented it.
+"""
+HAPPY_MESSAGES: List[str] = [
+    "Support the artist.",
+    "Star Me: https://github.com/HeIIow2/music-downloader",
+    "🏳️‍⚧️🏳️‍⚧️ Trans rights are human rights. 🏳️‍⚧️🏳️‍⚧️",
+    "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
+    "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
+    "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
+    "Gotta love BPJM!! :/"
+]
+
+
+def get_random_message() -> str:
+    return random.choice(HAPPY_MESSAGES)
 
 
 LOG_FILE = "download_logs.log"
-TEMP_DATABASE_FILE = "metadata.db"
 TEMP_DIR = Path(tempfile.gettempdir(), "music-downloader")
 TEMP_DIR.mkdir(exist_ok=True)
 
@@ -52,19 +74,18 @@ if current_os == "linux":
         config.read_string(data)
         xdg_config = config['XDG_USER_DIRS']
         MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
-    
+
     except (FileNotFoundError, KeyError) as E:
         logger.warning(
-                f"Missing file or No entry found for \"xdg_music_dir\" in: \"{XDG_USER_DIRS_FILE}\".\n" \
-                f"Will fallback on default \"$HOME/Music\"."
-            )
-        
+            f"Missing file or No entry found for \"xdg_music_dir\" in: \"{XDG_USER_DIRS_FILE}\".\n" \
+            f"Will fallback on default \"$HOME/Music\"."
+        )
+
 TOR = False
 proxies = {
     'http': 'socks5h://127.0.0.1:9150',
     'https': 'socks5h://127.0.0.1:9150'
 } if TOR else {}
-
 
 """
 available variables:

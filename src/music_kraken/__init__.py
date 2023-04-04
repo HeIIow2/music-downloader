@@ -1,20 +1,10 @@
 import gc
-from pathlib import Path
-from typing import List
 import musicbrainzngs
 import logging
 import re
 
-from . import (
-    objects,
-    pages
-)
-
-
-from .utils.shared import (
-    MUSIC_DIR,
-    NOT_A_GENRE
-)
+from . import objects, pages
+from .utils.shared import MUSIC_DIR, NOT_A_GENRE, get_random_message
 
 
 """
@@ -42,49 +32,62 @@ DOWNLOAD_COMMANDS = {
     "hs"
 }
 
+EXIT_COMMANDS = {
+    "exit",
+    "quit"
+}
+
 
 def cli():
-    def next_search(search: pages.Search, query: str):
+    def next_search(search: pages.Search, query: str) -> bool:
+        """
+        :param search:
+        :param query:
+        :return exit in the next step:
+        """
         query: str = query.strip()
         parsed: str = query.lower()
+
+        if parsed in EXIT_COMMANDS:
+            return True
         
         if parsed == ".":
-            return
+            return False
         if parsed == "..":
             search.goto_previous()
-            return
+            return False
         
         if parsed.isdigit():
             search.choose_index(int(parsed))
-            return
+            return False
         
         if parsed in DOWNLOAD_COMMANDS:
-            print(search.download_chosen())
+            r = search.download_chosen()
+            print()
+            print(r)
+            return True
 
         url = re.match(URL_REGGEX, query)
         if url is not None:
             if not search.search_url(url.string):
-                print("The given url couldn't be downloaded")
-            return
+                print("The given url couldn't be found.")
+            return False
         
         page = search.get_page_from_query(parsed)
         if page is not None:
             search.choose_page(page)
-            return
+            return False
         
         # if everything else is not valid search
         search.search(query)
-    
+        return False
+
     search = pages.Search()
 
     while True:
-        next_input = input(">> ")
-        if next_input in {
-            "exit",
-            "quit"
-        }:
-            print("byeeee UwU")
+        if next_search(search, input(">> ")):
             break
-        next_search(search, next_input)
         print(search)
-        
+
+    print()
+    print(get_random_message())
