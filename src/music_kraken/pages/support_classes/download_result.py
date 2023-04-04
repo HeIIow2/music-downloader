@@ -42,7 +42,9 @@ class DownloadResult:
     def __str__(self):
         if self.fatal_error:
             return self.error_message
-        head = f"({int(self.success_percentage*100)}%) {self.fail} from {self.total} downloads failed."
+        head = f"{self.fail} from {self.total} downloads failed:\n" \
+               f"successrate:\t{int(self.success_percentage*100)}%\n" \
+               f"failrate:\t\t{int(self.failure_percentage*100)}%"
 
         if self.failure_percentage <= SHOW_DOWNLOAD_ERRORS_THRESHOLD:
             return head
