@@ -133,7 +133,7 @@ class Search(Download):
     
     def download_chosen(self) -> bool:
         if self._current_option._derive_from is None:
-            LOGGER.warning(f"can't download from an non choosen stuff")
+            LOGGER.warning(f"No option has been chosen yet.")
             return False
         
         source: Source
@@ -142,6 +142,8 @@ class Search(Download):
             
             if page in self.audio_pages:
                 return page.download(music_object=self._current_option._derive_from)
+
+            LOGGER.warning(f"Page is no audio page.")
 
         return False
 
