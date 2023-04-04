@@ -73,8 +73,9 @@ available variables:
 - artist
 - album
 - song
+- album_type
 """
-DOWNLOAD_PATH = "{genre}/{artist}/{album}"
+DOWNLOAD_PATH = "{genre}/{artist}/{album_type}/{album}"
 DOWNLOAD_FILE = "{song}.mp3"
 DEFAULT_VALUES = {
     "genre": "Various Genre",
@@ -82,4 +83,5 @@ DEFAULT_VALUES = {
     "artist": "Various Artists",
     "album": "Various Album",
     "song": "Various Song",
+    "album_type": "Other"
 }

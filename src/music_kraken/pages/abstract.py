@@ -34,6 +34,7 @@ class DefaultTarget:
     label: str = DEFAULT_VALUES["label"]
     artist: str = DEFAULT_VALUES["artist"]
     album: str = DEFAULT_VALUES["album"]
+    album_type: str = DEFAULT_VALUES["album_type"]
     song: str = DEFAULT_VALUES["song"]
 
     def __setattr__(self, __name: str, __value: str) -> None:
@@ -49,9 +50,9 @@ class DefaultTarget:
         return Target(
             relative_to_music_dir=True,
             path=DOWNLOAD_PATH.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album,
-                                      song=self.song),
+                                      song=self.song, album_type=self.album_type),
             file=DOWNLOAD_FILE.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album,
-                                      song=self.song)
+                                      song=self.song, album_type=self.album_type)
         )
 
 
@@ -376,6 +377,7 @@ class Page:
         album: Album
         for album in label.album_collection:
             if album.album_type in exclude_album_type:
+                cls.LOGGER.info(f"skipping {album.option_string} die to the filter")
                 continue
             
             cls.download_album(album, override_existing=override_existing, default_target=default_target)
@@ -395,6 +397,7 @@ class Page:
         album: Album
         for album in artist.main_album_collection:
             if album.album_type in exclude_album_type:
+                cls.LOGGER.info(f"skipping {album.option_string} die to the filter")
                 continue
             
             cls.download_album(album, override_existing=override_existing, default_target=default_target)
@@ -410,6 +413,7 @@ class Page:
         else:
             default_target = copy(default_target)
         default_target.album = album.title
+        default_target.album_type = album.album_type.value
         if not album.artist_collection.empty:
             default_target.artist = album.artist_collection[0].name
         if not album.label_collection.empty:
@@ -431,6 +435,7 @@ class Page:
         default_target.song = song.title
         if not song.album_collection.empty:
             default_target.album = song.album_collection[0].title
+            default_target.album_type = song.album.album_type.value
         if not song.main_artist_collection.empty:
             artist: Artist = song.main_artist_collection[0]
             default_target.artist = artist.name
