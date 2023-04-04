@@ -77,7 +77,7 @@ if current_os == "linux":
 
     except (FileNotFoundError, KeyError) as E:
         logger.warning(
-            f"Missing file or No entry found for \"xdg_music_dir\" in: \"{XDG_USER_DIRS_FILE}\".\n" \
+            f"Missing file or No entry found for \"xdg_music_dir\" in: \"{XDG_USER_DIRS_FILE}\".\n"
             f"Will fallback on default \"$HOME/Music\"."
         )
 
