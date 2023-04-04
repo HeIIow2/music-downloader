@@ -1,34 +1,21 @@
-import os
 from typing import List, Optional, Dict, Tuple
-import pycountry
-from collections import defaultdict
 
+import pycountry
+
+from .album import AlbumType, AlbumStatus
+from .collection import Collection
+from .formatted_text import FormattedText
+from .lyrics import Lyrics
 from .metadata import (
     Mapping as id3Mapping,
     ID3Timestamp,
     Metadata
 )
-from ..utils.shared import (
-    MUSIC_DIR,
-    DATABASE_LOGGER as LOGGER
-)
-from ..utils.string_processing import unify
-from .parents import (
-    DatabaseObject,
-    MainObject
-)
-from .source import (
-    Source,
-    SourceTypes,
-    SourcePages,
-    SourceCollection
-)
-from .formatted_text import FormattedText
-from .collection import Collection
-from .album import AlbumType, AlbumStatus
-from .lyrics import Lyrics
-from .target import Target
 from .option import Options
+from .parents import MainObject
+from .source import Source, SourceCollection
+from .target import Target
+from ..utils.string_processing import unify
 
 """
 All Objects dependent 
