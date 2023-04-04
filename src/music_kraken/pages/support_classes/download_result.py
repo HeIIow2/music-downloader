@@ -18,10 +18,14 @@ class DownloadResult:
 
     @property
     def success_percentage(self) -> float:
+        if self.total == 0:
+            return 0
         return self.success / self.total
 
     @property
     def failure_percentage(self) -> float:
+        if self.total == 0:
+            return 1
         return self.fail / self.total
 
     @property
@@ -30,6 +34,9 @@ class DownloadResult:
 
     @property
     def is_mild_failure(self) -> bool:
+        if self.is_fatal_error:
+            return True
+
         return self.failure_percentage > SHOW_DOWNLOAD_ERRORS_THRESHOLD
 
     def merge(self, other: "DownloadResult"):
