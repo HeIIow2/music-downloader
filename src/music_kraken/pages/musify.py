@@ -79,7 +79,8 @@ class Musify(Page):
         "Referer": "https://musify.club/"
     }
     API_SESSION.proxies = shared.proxies
-    TIMEOUT = 5
+    TIMEOUT = 7
+    POST_TIMEOUT = 10
     TRIES = 5
     HOST = "https://musify.club"
 
