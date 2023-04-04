@@ -55,6 +55,31 @@ class DefaultTarget:
                                       song=self.song, album_type=self.album_type)
         )
 
+    def song_object(self, song: Song):
+        self.song = song.title
+
+        if not song.album_collection.empty:
+            self.album_object(song.album_collection[0])
+        if not song.main_artist_collection.empty:
+            self.artist_object(song.main_artist_collection[0])
+
+    def album_object(self, album: Album):
+        self.album = album.title
+        self.album_type = album.album_type.value
+
+        if not album.artist_collection.empty:
+            self.artist_object(album.artist_collection[0])
+        if not album.label_collection.empty:
+            self.label_object(album.label_collection[0])
+
+    def artist_object(self, artist: Artist):
+        self.artist = artist.name
+
+        if not artist.label_collection.empty:
+            self.label_object(artist.label_collection[0])
+
+    def label_object(self, label: Label):
+        self.label = label.name
 
 @dataclass
 class DownloadResult:
@@ -95,9 +120,14 @@ class Page:
     SOURCE_TYPE: SourcePages
 
     @classmethod
-    def get_request(cls, url: str, stream: bool = False, accepted_response_codes: set = set((200,)), trie: int = 0) -> \
-    Optional[
-        requests.Response]:
+    def get_request(
+            cls,
+            url: str,
+            stream: bool = False,
+            accepted_response_codes: set = {200},
+            trie: int = 0
+    ) -> Optional[requests.Response]:
+
         retry = False
         try:
             r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT, stream=stream)
@@ -122,7 +152,7 @@ class Page:
         return cls.get_request(url=url, stream=stream, accepted_response_codes=accepted_response_codes, trie=trie + 1)
 
     @classmethod
-    def post_request(cls, url: str, json: dict, accepted_response_codes: set = set((200,)), trie: int = 0) -> Optional[
+    def post_request(cls, url: str, json: dict, accepted_response_codes: set = {200}, trie: int = 0) -> Optional[
         requests.Response]:
         retry = False
         try:
@@ -409,11 +439,9 @@ class Page:
             override_existing: bool = False,
             default_target: DefaultTarget = None
     ) -> DownloadResult:
-        if default_target is None:
-            default_target = DefaultTarget()
-        else:
-            default_target = copy(default_target)
-        default_target.label = label.name
+
+        default_target = DefaultTarget() if default_target is None else copy(default_target)
+        default_target.label_object(label)
 
         r = DownloadResult()
 
@@ -453,13 +481,9 @@ class Page:
             override_existing: bool = False,
             default_target: DefaultTarget = None
     ) -> DownloadResult:
-        if default_target is None:
-            default_target = DefaultTarget()
-        else:
-            default_target = copy(default_target)
-        default_target.artist = artist.name
-        if not artist.label_collection.empty:
-            default_target.label = artist.label_collection[0].name
+
+        default_target = DefaultTarget() if default_target is None else copy(default_target)
+        default_target.artist_object(artist)
 
         r = DownloadResult()
 
@@ -486,16 +510,9 @@ class Page:
             override_existing: bool = False,
             default_target: DefaultTarget = None
        ) -> DownloadResult:
-        if default_target is None:
-            default_target = DefaultTarget()
-        else:
-            default_target = copy(default_target)
-        default_target.album = album.title
-        default_target.album_type = album.album_type.value
-        if not album.artist_collection.empty:
-            default_target.artist = album.artist_collection[0].name
-        if not album.label_collection.empty:
-            default_target.label = album.label_collection[0].name
+
+        default_target = DefaultTarget() if default_target is None else copy(default_target)
+        default_target.album_object(album)
 
         r = DownloadResult()
 
@@ -517,20 +534,9 @@ class Page:
             create_target_on_demand: bool = True,
             default_target: DefaultTarget = None
     ) -> DownloadResult:
-        if default_target is None:
-            default_target = DefaultTarget()
-        else:
-            default_target = copy(default_target)
-        default_target.song = song.title
-        if not song.album_collection.empty:
-            default_target.album = song.album_collection[0].title
-            default_target.album_type = song.album_collection[0].album_type.value
-        if not song.main_artist_collection.empty:
-            artist: Artist = song.main_artist_collection[0]
-            default_target.artist = artist.name
 
-            if not artist.label_collection.empty:
-                default_target.label = artist.label_collection[0].name
+        default_target = DefaultTarget() if default_target is None else copy(default_target)
+        default_target.song_object(song)
 
         cls.fetch_details(song)
 
