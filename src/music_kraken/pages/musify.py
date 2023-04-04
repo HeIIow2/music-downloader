@@ -964,7 +964,7 @@ class Musify(Page):
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target) -> bool:
+    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> bool:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
@@ -975,5 +975,5 @@ class Musify(Page):
             return False
         
         endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
-        print(endpoint)
-        return target.stream_into(cls.get_request(endpoint, stream=True))
+
+        return target.stream_into(cls.get_request(endpoint, stream=True), desc=desc)

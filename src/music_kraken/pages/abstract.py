@@ -476,7 +476,7 @@ class Page:
 
         success = True
 
-        if not cls._download_song_to_targets(source=sources[0], target=temp_target):
+        if not cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title):
             success = False
 
         if not cls._post_process_targets(song, temp_target):
@@ -513,5 +513,5 @@ class Page:
         return None
 
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target) -> bool:
+    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> bool:
         return False

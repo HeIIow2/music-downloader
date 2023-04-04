@@ -63,13 +63,11 @@ class Target(DatabaseObject):
             with open(copy_to.file_path, "wb") as write_to:
                 write_to.write(read_from.read())
 
-    def stream_into(self, r: requests.Response) -> bool:
+    def stream_into(self, r: requests.Response, desc: str = None) -> bool:
         if r is None:
             return False
 
         self.create_path()
-
-        chunk_size = 1024
 
         total_size = int(r.headers.get('content-length'))
 
@@ -79,8 +77,9 @@ class Target(DatabaseObject):
                 https://en.wikipedia.org/wiki/Kilobyte
                 > The internationally recommended unit symbol for the kilobyte is kB.
                 """
-                with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024) as t:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
+                with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024, desc=desc) as t:
+
+                    for chunk in r.iter_content(chunk_size=shared.CHUNK_SIZE):
                         size = f.write(chunk)
                         t.update(size)
 

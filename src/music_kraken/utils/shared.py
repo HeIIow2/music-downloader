@@ -85,3 +85,6 @@ DEFAULT_VALUES = {
     "song": "Various Song",
     "album_type": "Other"
 }
+
+# size of the chunks that are streamed
+CHUNK_SIZE = 1024
