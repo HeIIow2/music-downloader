@@ -22,6 +22,9 @@ class DefaultTarget:
 
     def __setattr__(self, __name: str, __value: str) -> None:
         if __name in DEFAULT_VALUES:
+            if type(__value) != str:
+                return
+
             if self.__getattribute__(__name) == DEFAULT_VALUES[__name]:
                 super().__setattr__(__name, fit_to_file_system(__value))
             return
