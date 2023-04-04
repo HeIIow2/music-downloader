@@ -491,7 +491,7 @@ class Page:
 
         r = cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
 
-        if not r.fatal_error:
+        if not r.is_fatal_error:
             cls._post_process_targets(song, temp_target)
 
         return r

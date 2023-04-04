@@ -22,7 +22,7 @@ HAPPY_MESSAGES: List[str] = [
     "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
     "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
     "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
-    "Gotta love BPJM!! :/"
+    "Gotta love the BPJM!! :/"
 ]
 
 
@@ -54,6 +54,7 @@ GENIUS_LOGGER = logging.getLogger("genius")
 ENCYCLOPAEDIA_METALLUM_LOGGER = logging.getLogger("ma")
 
 DOWNLOAD_LOGGER = logging.getLogger("download")
+TAGGING_LOGGER = logging.getLogger("tagging")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR = Path(os.path.expanduser("~"), "Music")

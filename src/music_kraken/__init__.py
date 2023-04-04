@@ -63,9 +63,12 @@ def cli():
         
         if parsed in DOWNLOAD_COMMANDS:
             r = search.download_chosen()
+
             print()
             print(r)
-            return True
+            print()
+
+            return not r.is_mild_failure
 
         url = re.match(URL_REGGEX, query)
         if url is not None:

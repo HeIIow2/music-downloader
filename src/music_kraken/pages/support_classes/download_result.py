@@ -25,11 +25,15 @@ class DownloadResult:
         return self.fail / self.total
 
     @property
-    def fatal_error(self) -> bool:
+    def is_fatal_error(self) -> bool:
         return self.error_message is not None
 
+    @property
+    def is_mild_failure(self) -> bool:
+        return self.failure_percentage > SHOW_DOWNLOAD_ERRORS_THRESHOLD
+
     def merge(self, other: "DownloadResult"):
-        if other.fatal_error:
+        if other.is_fatal_error:
             LOGGER.debug(other.error_message)
             self._error_message_list.append(other.error_message)
             self.total += 1
@@ -40,13 +44,13 @@ class DownloadResult:
             self._error_message_list.extend(other._error_message_list)
 
     def __str__(self):
-        if self.fatal_error:
+        if self.is_fatal_error:
             return self.error_message
         head = f"{self.fail} from {self.total} downloads failed:\n" \
                f"successrate:\t{int(self.success_percentage*100)}%\n" \
-               f"failrate:\t\t{int(self.failure_percentage*100)}%"
+               f"failrate:\t{int(self.failure_percentage*100)}%"
 
-        if self.failure_percentage <= SHOW_DOWNLOAD_ERRORS_THRESHOLD:
+        if not self.is_mild_failure:
             return head
 
         _lines = [head]
