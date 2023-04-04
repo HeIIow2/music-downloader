@@ -65,6 +65,7 @@ def cli():
             r = search.download_chosen()
             print()
             print(r)
+            print(r._error_message_list)
             return True
 
         url = re.match(URL_REGGEX, query)
