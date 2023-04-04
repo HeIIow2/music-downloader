@@ -46,18 +46,18 @@ class Target(DatabaseObject):
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [('filepath', self.file_path)]
-    
+
     @property
     def exists(self) -> bool:
         return self.file_path.is_file()
-    
+
     def create_path(self):
         self._path.mkdir(parents=True, exist_ok=True)
-        
+
     def copy_content(self, copy_to: "Target"):
         if not self.exists:
             return
-        
+
         with open(self.file_path, "rb") as read_from:
             copy_to.create_path()
             with open(copy_to.file_path, "wb") as write_to:
@@ -66,28 +66,28 @@ class Target(DatabaseObject):
     def stream_into(self, r: requests.Response) -> bool:
         if r is None:
             return False
-        
+
         self.create_path()
-        
+
         chunk_size = 1024
+
         total_size = int(r.headers.get('content-length'))
-        print(total_size)
-        initial_pos = 0
-        
-        
-        with open(self.file_path,'wb') as f:
+
+        with open(self.file_path, 'wb') as f:
             try:
                 """
                 https://en.wikipedia.org/wiki/Kilobyte
                 > The internationally recommended unit symbol for the kilobyte is kB.
                 """
-                for chunk in tqdm(r.iter_content(chunk_size=chunk_size), unit_scale=True, unit="B", total=total_size):
-                    size = f.write(chunk)
-                    
+                with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024) as t:
+                    for chunk in r.iter_content(chunk_size=chunk_size):
+                        size = f.write(chunk)
+                        t.update(size)
+
             except requests.exceptions.Timeout:
                 shared.DOWNLOAD_LOGGER.error("Stream timed out.")
                 return False
-            
+
         """
         # doesn't work yet due to
         # https://github.com/tqdm/tqdm/issues/261
@@ -99,5 +99,5 @@ class Target(DatabaseObject):
                 size = f.write(chunk) 
                 pbar.update(size)
         """
-        
+
         return True
