@@ -28,7 +28,7 @@ URL_REGEX = 'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
 DOWNLOAD_COMMANDS = {
     "ok",
     "download",
-    "\d",
+    "\\d",
     "hs"
 }
 
