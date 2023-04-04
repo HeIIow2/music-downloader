@@ -29,7 +29,7 @@ class Search(Download):
 
         self._option_history: List[MultiPageOptions] = []
 
-        self._current_option: MultiPageOptions = self.next_options
+        self._current_option: MultiPageOptions = self.next_options()
 
 
     def __repr__(self):

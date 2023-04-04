@@ -848,6 +848,61 @@ class Musify(Page):
         )
 
     @classmethod
+    def _parse_album(cls, soup: BeautifulSoup) -> Album:
+        name: str = None
+        source_list: List[Source] = []
+        artist_list: List[Artist] = []
+
+        """
+        if breadcrumb list has 4 elements, then
+        the -2 is the artist link,
+        the -1 is the album
+        """
+        breadcrumb_soup: BeautifulSoup = soup.find("ol", {"class", "breadcrumb"})
+        breadcrumb_elements: List[BeautifulSoup] = breadcrumb_soup.find_all("li", {"class": "breadcrumb-item"})
+        if len(breadcrumb_elements) == 4:
+            # album
+            album_crumb: BeautifulSoup = breadcrumb_elements[-1]
+            name = album_crumb.text.strip()
+
+            # artist
+            artist_crumb: BeautifulSoup = breadcrumb_elements[-2]
+            anchor: BeautifulSoup = artist_crumb.find("a")
+            if anchor is not None:
+                href = anchor.get("href")
+                artist_source_list: List[Source] = []
+
+                if href is not None:
+                    artist_source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href.strip()))
+
+                span: BeautifulSoup = anchor.find("span")
+                if span is not None:
+                    artist_list.append(Artist(
+                        name=span.get_text(strip=True),
+                        source_list=artist_source_list
+                    ))
+        else:
+            cls.LOGGER.debug("there are not 4 breadcrumb items, which shouldn't be the case")
+
+        meta_url: BeautifulSoup = soup.find("meta", {"itemprop": "url"})
+        if meta_url is not None:
+            url = meta_url.get("content")
+            if url is not None:
+                source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + url))
+
+        meta_name: BeautifulSoup = soup.find("meta", {"itemprop": "name"})
+        if meta_name is not None:
+            _name = meta_name.get("content")
+            if _name is not None:
+                name = _name
+
+        return Album(
+            title=name,
+            source_list=source_list,
+            artist_list=artist_list
+        )
+
+    @classmethod
     def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
         """
         fetches album from source:
@@ -862,16 +917,18 @@ class Musify(Page):
         :param source:
         :return:
         """
-        album = Album(title="Hi :)", source_list=[source])
 
         url = cls.parse_url(source.url)
 
         endpoint = cls.HOST + "/release/" + url.name_with_id
         r = cls.get_request(endpoint)
         if r is None:
-            return album
+            return Album()
 
         soup = BeautifulSoup(r.content, "html.parser")
+
+        album = cls._parse_album(soup)
+        print(album)
 
         # <div class="card"><div class="card-body">...</div></div>
         cards_soup: BeautifulSoup = soup.find("div", {"class": "card-body"})
@@ -905,17 +962,16 @@ class Musify(Page):
         return None
     
     @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target) -> Path:
+    def _download_song_to_targets(cls, source: Source, target: Target) -> bool:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
         """
+
         url: MusifyUrl = cls.parse_url(source.url)
         if url.source_type != MusifyTypes.SONG:
-            return
-        
-
+            return False
         
         endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
         print(endpoint)
-        target.stream_into(cls.get_request(endpoint, stream=True))
+        return target.stream_into(cls.get_request(endpoint, stream=True))

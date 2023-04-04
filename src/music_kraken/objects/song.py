@@ -331,6 +331,9 @@ class Album(MainObject):
         :return:
         """
 
+        if self.song_collection.empty:
+            return
+
         tracksort_map: Dict[int, Song] = {
             song.tracksort: song for song in self.song_collection if song.tracksort is not None
         }
@@ -343,7 +346,22 @@ class Album(MainObject):
             I ONLY modify the `Collection._data` attribute directly, 
             to bypass the mapping of the attributes, because I will add the item in the next step
             """
-            self.song_collection._data.remove(song)
+
+            """
+            but for some reason, neither 
+            `self.song_collection._data.index(song)`
+            `self.song_collection._data.remove(song)`
+            get the right object.
+            
+            I have NO FUCKING CLUE why xD
+            But I just implemented it myself.
+            """
+            for old_index, temp_song in enumerate(self.song_collection._data):
+                if song is temp_song:
+                    break
+
+            # the list can't be empty
+            del self.song_collection._data[old_index]
             self.song_collection._data.insert(index, song)
 
         # fill in the empty tracksort attributes
