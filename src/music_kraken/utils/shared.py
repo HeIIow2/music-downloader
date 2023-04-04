@@ -7,6 +7,11 @@ from sys import platform as current_os
 from pathlib import Path
 import random
 
+# modifies the garbage collector to speed up the program
+# https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
+# https://web.archive.org/web/20221124122222/https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
+MODIFY_GC: bool = True
+
 """
 I will now and then use those messages in the programm.
 But I won't overuse them dw.
@@ -22,7 +27,7 @@ HAPPY_MESSAGES: List[str] = [
     "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
     "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
     "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
-    "Gotta love the BPJM!! :/"
+    "Gotta love the BPJM!! >:("
 ]
 
 
