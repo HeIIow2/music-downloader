@@ -422,6 +422,8 @@ class Page:
         cls.fetch_details(album)
 
         album.update_tracksort()
+
+        cls.LOGGER.info(f"downloading album: {album.title}")
         for song in album.song_collection:
             cls.download_song(song, override_existing=override_existing, default_target=default_target)
 

@@ -930,7 +930,6 @@ class Musify(Page):
         soup = BeautifulSoup(r.content, "html.parser")
 
         album = cls._parse_album(soup)
-        print(album)
 
         # <div class="card"><div class="card-body">...</div></div>
         cards_soup: BeautifulSoup = soup.find("div", {"class": "card-body"})
