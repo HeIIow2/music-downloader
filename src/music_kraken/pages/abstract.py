@@ -435,7 +435,7 @@ class Page:
         default_target.song = song.title
         if not song.album_collection.empty:
             default_target.album = song.album_collection[0].title
-            default_target.album_type = song.album.album_type.value
+            default_target.album_type = song.album_collection[0].album_type.value
         if not song.main_artist_collection.empty:
             artist: Artist = song.main_artist_collection[0]
             default_target.artist = artist.name
