@@ -63,7 +63,10 @@ DOWNLOAD_LOGGER = logging.getLogger("download")
 TAGGING_LOGGER = logging.getLogger("tagging")
 
 NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
-MUSIC_DIR = Path(os.path.expanduser("~"), "Music")
+MUSIC_DIR: Path = Path(os.path.expanduser("~"), "Music")
+NOT_A_GENRE_REGEX: List[str] = (
+    r'^\.',     # is hidden/starts with a "."
+)
 
 if current_os == "linux":
     # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
@@ -76,7 +79,7 @@ if current_os == "linux":
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(data)
         xdg_config = config['XDG_USER_DIRS']
-        MUSIC_DIR = os.path.expandvars(xdg_config['xdg_music_dir'].strip('"'))
+        MUSIC_DIR: Path = Path(os.path.expandvars(xdg_config['xdg_music_dir'].strip('"')))
 
     except (FileNotFoundError, KeyError) as E:
         logger.warning(
@@ -84,7 +87,7 @@ if current_os == "linux":
             f"Will fallback on default \"$HOME/Music\"."
         )
 
-TOR = False
+TOR: bool = False
 proxies = {
     'http': 'socks5h://127.0.0.1:9150',
     'https': 'socks5h://127.0.0.1:9150'

@@ -3,9 +3,12 @@ import musicbrainzngs
 import logging
 import re
 import os
+from pathlib import Path
+from typing import List
 
 from . import objects, pages
-from .utils.shared import MUSIC_DIR, NOT_A_GENRE, MODIFY_GC, get_random_message
+from .utils.string_processing import fit_to_file_system
+from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
 
 if MODIFY_GC:
     """
@@ -39,31 +42,53 @@ EXIT_COMMANDS = {
 }
 
 
+
+
+
 def cli():
+    def get_existing_genre() -> List[str]:
+        """
+        gets the name of all subdirectories of shared.MUSIC_DIR,
+        but filters out all directories, where the name matches with any patern
+        from shared.NOT_A_GENRE_REGEX.
+        """
+        existing_genres: List[str] = []
+        
+        # get all subdirectories of MUSIC_DIR, not the files in the dir.
+        existing_subdirectories: List[Path] = [f for f in MUSIC_DIR.iterdir() if f.is_dir()]
+        
+        for subdirectory in existing_subdirectories:
+            name: str = subdirectory.name
+                    
+            if not any(re.match(regex_pattern, name) for regex_pattern in NOT_A_GENRE_REGEX):
+                existing_genres.append(name)
+            
+        return existing_genres
+    
     def get_genre():
-        def get_existing_genre():
-            valid_directories = []
-            for elem in os.listdir(MUSIC_DIR):
-                if elem not in NOT_A_GENRE:
-                    valid_directories.append(elem)
-
-            return valid_directories
-
         existing_genres = get_existing_genre()
-        print("Available genres:")
         for i, genre_option in enumerate(existing_genres):
-            print(f"{i}: {genre_option}")
+            print(f"{i+1:0>2}: {genre_option}")
 
-        genre = input("Input the ID for an existing genre or text for a new one: ")
+        
+        while True:
+            genre = input("id or new genre: ")
 
-        if genre.isdigit():
-            genre_id = int(genre)
-            if genre_id >= len(existing_genres):
-                logging.warning("An invalid genre id has been given")
-                return get_genre()
-            return existing_genres[genre_id]
+            if genre.isdigit():
+                genre_id = int(genre) - 1
+                if genre_id >= len(existing_genres):
+                    print(f"no genre under the id {genre_id+1}")
+                    continue
+                
+                return existing_genres[genre_id]
 
-        return genre
+            new_genre = fit_to_file_system(genre)
+            
+            agree_inputs = {"y", "yes", "ok"}
+            verification = input(f"create new genre \"{new_genre}\"? (Y/N): ").lower()
+            if verification in agree_inputs:
+                return new_genre
+            
 
     def next_search(_search: pages.Search, query: str, genre: str) -> bool:
         """
