@@ -1,40 +1,41 @@
 # Summary
 
-Date : 2023-02-06 10:33:12
+Date : 2023-04-05 09:31:17
 
 Directory /home/lars/Projects/music-downloader/src
 
-Total : 50 files,  3575 codes, 775 comments, 1028 blanks, all 5378 lines
+Total : 66 files,  5256 codes, 1000 comments, 1543 blanks, all 7799 lines
 
 Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
 
 ## Languages
 | language | files | code | comment | blank | total |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Python | 47 | 3,277 | 775 | 1,007 | 5,059 |
+| Python | 64 | 5,049 | 1,000 | 1,523 | 7,572 |
 | SQLite | 2 | 207 | 0 | 20 | 227 |
-| Database | 1 | 91 | 0 | 1 | 92 |
 
 ## Directories
 | path | files | code | comment | blank | total |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| . | 50 | 3,575 | 775 | 1,028 | 5,378 |
-| . (Files) | 8 | 337 | 117 | 99 | 553 |
-| music_kraken | 42 | 3,238 | 658 | 929 | 4,825 |
-| music_kraken (Files) | 2 | 66 | 28 | 36 | 130 |
-| music_kraken/database | 10 | 1,275 | 347 | 358 | 1,980 |
-| music_kraken/database (Files) | 3 | 459 | 112 | 124 | 695 |
-| music_kraken/database/objects | 7 | 816 | 235 | 234 | 1,285 |
+| . | 66 | 5,256 | 1,000 | 1,543 | 7,799 |
+| . (Files) | 7 | 169 | 0 | 55 | 224 |
+| music_kraken | 54 | 4,800 | 982 | 1,409 | 7,191 |
+| music_kraken (Files) | 2 | 89 | 12 | 31 | 132 |
+| music_kraken/database | 3 | 226 | 71 | 91 | 388 |
 | music_kraken/not_used_anymore | 14 | 1,063 | 117 | 322 | 1,502 |
 | music_kraken/not_used_anymore (Files) | 3 | 129 | 13 | 39 | 181 |
 | music_kraken/not_used_anymore/metadata | 5 | 561 | 70 | 153 | 784 |
 | music_kraken/not_used_anymore/metadata (Files) | 3 | 516 | 64 | 139 | 719 |
 | music_kraken/not_used_anymore/metadata/sources | 2 | 45 | 6 | 14 | 65 |
 | music_kraken/not_used_anymore/sources | 6 | 373 | 34 | 130 | 537 |
-| music_kraken/pages | 4 | 401 | 144 | 114 | 659 |
+| music_kraken/objects | 12 | 1,208 | 317 | 360 | 1,885 |
+| music_kraken/pages | 13 | 1,795 | 426 | 510 | 2,731 |
+| music_kraken/pages (Files) | 5 | 1,474 | 402 | 386 | 2,262 |
+| music_kraken/pages/download_center | 5 | 215 | 24 | 93 | 332 |
+| music_kraken/pages/support_classes | 3 | 106 | 0 | 31 | 137 |
 | music_kraken/static_files | 2 | 207 | 0 | 20 | 227 |
-| music_kraken/tagging | 2 | 59 | 4 | 22 | 85 |
-| music_kraken/target | 2 | 41 | 7 | 20 | 68 |
-| music_kraken/utils | 6 | 126 | 11 | 37 | 174 |
+| music_kraken/tagging | 2 | 65 | 4 | 26 | 95 |
+| music_kraken/utils | 6 | 147 | 35 | 49 | 231 |
+| tests | 5 | 287 | 18 | 79 | 384 |
 
 Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-details.md)

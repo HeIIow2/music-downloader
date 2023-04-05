@@ -35,16 +35,17 @@ def get_random_message() -> str:
     return random.choice(HAPPY_MESSAGES)
 
 
-LOG_FILE = "download_logs.log"
 TEMP_DIR = Path(tempfile.gettempdir(), "music-downloader")
 TEMP_DIR.mkdir(exist_ok=True)
+LOG_PATH = Path(TEMP_DIR, "download_logs.log")
+
 
 # configure logger default
 logging.basicConfig(
     level=logging.INFO,
     format=logging.BASIC_FORMAT,
     handlers=[
-        logging.FileHandler(os.path.join(TEMP_DIR, LOG_FILE)),
+        logging.FileHandler(Path(TEMP_DIR, LOG_PATH)),
         logging.StreamHandler()
     ]
 )
