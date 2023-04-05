@@ -50,4 +50,4 @@ def real_download():
 
 
 if __name__ == "__main__":
-    music_kraken.cli(genre="test")
+    music_kraken.cli(genre=None)

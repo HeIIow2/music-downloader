@@ -60,6 +60,8 @@ def cli(genre: str = None, download_all: bool = False):
             if not any(re.match(regex_pattern, name) for regex_pattern in NOT_A_GENRE_REGEX):
                 existing_genres.append(name)
             
+        existing_genres.sort()
+            
         return existing_genres
     
     def get_genre():
@@ -147,7 +149,7 @@ def cli(genre: str = None, download_all: bool = False):
     search = pages.Search()
 
     while True:
-        if next_search(search, input(">> "), genre, download_all):
+        if next_search(search, input(">> ")):
             break
         print(search)
 
