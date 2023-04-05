@@ -42,9 +42,6 @@ EXIT_COMMANDS = {
 }
 
 
-
-
-
 def cli(genre: str = None, download_all: bool = False):
     def get_existing_genre() -> List[str]:
         """
