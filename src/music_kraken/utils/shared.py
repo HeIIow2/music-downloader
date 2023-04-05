@@ -62,8 +62,8 @@ ENCYCLOPAEDIA_METALLUM_LOGGER = logging.getLogger("ma")
 
 DOWNLOAD_LOGGER = logging.getLogger("download")
 TAGGING_LOGGER = logging.getLogger("tagging")
+CODEX_LOGGER = logging.getLogger("codex")
 
-NOT_A_GENRE = ".", "..", "misc_scripts", "Music", "script", ".git", ".idea"
 MUSIC_DIR: Path = Path(os.path.expanduser("~"), "Music")
 NOT_A_GENRE_REGEX: List[str] = (
     r'^\.',     # is hidden/starts with a "."
