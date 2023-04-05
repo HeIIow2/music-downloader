@@ -113,6 +113,8 @@ DEFAULT_VALUES = {
     "song": "Various Song",
     "album_type": "Other"
 }
+# kB per second
+BITRATE = 100
 
 # size of the chunks that are streamed
 CHUNK_SIZE = 1024

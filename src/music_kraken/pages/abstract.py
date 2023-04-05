@@ -21,7 +21,7 @@ from ..objects import (
     Label,
     AlbumType
 )
-from ..tagging import write_metadata_to_target
+from ..audio import write_metadata_to_target
 from ..utils import shared
 
 
