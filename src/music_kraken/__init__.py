@@ -45,7 +45,7 @@ EXIT_COMMANDS = {
 
 
 
-def cli(genre: str = None):
+def cli(genre: str = None, download_all: bool = False):
     def get_existing_genre() -> List[str]:
         """
         gets the name of all subdirectories of shared.MUSIC_DIR,
@@ -89,12 +89,15 @@ def cli(genre: str = None):
             if verification in agree_inputs:
                 return new_genre
             
-    def next_search(_search: pages.Search, query: str, genre: str) -> bool:
+    def next_search(_search: pages.Search, query: str) -> bool:
         """
         :param _search:
         :param query:
         :return exit in the next step:
         """
+        nonlocal genre
+        nonlocal download_all
+        
         query: str = query.strip()
         parsed: str = query.lower()
 
@@ -112,7 +115,7 @@ def cli(genre: str = None):
             return False
 
         if parsed in DOWNLOAD_COMMANDS:
-            r = _search.download_chosen(genre=genre)
+            r = _search.download_chosen(genre=genre, download_all=download_all)
 
             print()
             print(r)
@@ -138,6 +141,7 @@ def cli(genre: str = None):
     if genre is None:
         genre = get_genre()
         print()
+        
     print(get_random_message())
     print()
     print(f"Downloading to: \"{genre}\"")
@@ -146,9 +150,10 @@ def cli(genre: str = None):
     search = pages.Search()
 
     while True:
-        if next_search(search, input(">> "), genre):
+        if next_search(search, input(">> "), genre, download_all):
             break
         print(search)
 
     print()
     print(get_random_message())
+    print("Have fun with your music. :3")
