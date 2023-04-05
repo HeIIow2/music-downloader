@@ -12,3 +12,4 @@ SQLAlchemy
 setuptools~=60.2.0
 tqdm~=4.65.0
 peewee~=3.15.4
+ffmpeg-python~=0.2.0

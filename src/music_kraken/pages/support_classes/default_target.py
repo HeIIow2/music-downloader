@@ -19,6 +19,7 @@ class DefaultTarget:
     album: str = DEFAULT_VALUES["album"]
     album_type: str = DEFAULT_VALUES["album_type"]
     song: str = DEFAULT_VALUES["song"]
+    audio_format: str = DEFAULT_VALUES["audio_format"]
 
     def __setattr__(self, __name: str, __value: str) -> None:
         if __name in DEFAULT_VALUES:
@@ -36,9 +37,9 @@ class DefaultTarget:
         return Target(
             relative_to_music_dir=True,
             path=DOWNLOAD_PATH.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album,
-                                      song=self.song, album_type=self.album_type),
+                                      song=self.song, album_type=self.album_type, audio_format=self.audio_format),
             file=DOWNLOAD_FILE.format(genre=self.genre, label=self.label, artist=self.artist, album=self.album,
-                                      song=self.song, album_type=self.album_type)
+                                      song=self.song, album_type=self.album_type, audio_format=self.audio_format)
         )
 
     def song_object(self, song: Song):

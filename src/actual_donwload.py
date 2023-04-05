@@ -43,6 +43,7 @@ def download_audio():
 
     pages.Musify.download_song(song)
 
+
 def real_download():
     search = pages.Search()
     search.search_url("https://musify.club/release/children-of-the-night-2018-1079829")
@@ -50,4 +51,4 @@ def real_download():
 
 
 if __name__ == "__main__":
-    music_kraken.cli(genre="test")
+    music_kraken.cli(genre="dsbm")

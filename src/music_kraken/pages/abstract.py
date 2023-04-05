@@ -21,7 +21,7 @@ from ..objects import (
     Label,
     AlbumType
 )
-from ..audio import write_metadata_to_target
+from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
 
 
@@ -541,6 +541,7 @@ class Page:
 
     @classmethod
     def _post_process_targets(cls, song: Song, temp_target: Target) -> DownloadResult:
+        correct_codec(temp_target)
         write_metadata_to_target(song.metadata, temp_target)
 
         r = DownloadResult()
