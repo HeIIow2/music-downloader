@@ -513,17 +513,15 @@ class Page:
 
         target: Target
         if any(target.exists for target in song.target_collection) and not override_existing:
+            r = DownloadResult(total=1, fail=0)
+            
             existing_target: Target
             for existing_target in song.target_collection:
                 if existing_target.exists:
+                    r.merge(cls._post_process_targets(song=song, temp_target=existing_target))
                     break
-
-            for target in song.target_collection:
-                if target is existing_target:
-                    continue
-
-                existing_target.copy_content(target)
-            return DownloadResult(total=1, fail=0)
+  
+            return r
 
         sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
         if len(sources) == 0:
@@ -537,20 +535,23 @@ class Page:
         r = cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
 
         if not r.is_fatal_error:
-            cls._post_process_targets(song, temp_target)
-
-        for target in song.target_collection:
-            r.add_target(target)
+            r.merge(cls._post_process_targets(song, temp_target))
 
         return r
 
     @classmethod
-    def _post_process_targets(cls, song: Song, temp_target: Target):
+    def _post_process_targets(cls, song: Song, temp_target: Target) -> DownloadResult:
         write_metadata_to_target(song.metadata, temp_target)
+
+        r = DownloadResult()
 
         target: Target
         for target in song.target_collection:
-            temp_target.copy_content(target)
+            if temp_target is not target:
+                temp_target.copy_content(target)
+            r.add_target(target)
+        
+        return r
 
     @classmethod
     def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:

@@ -1,8 +1,12 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Tuple
 
 from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD, DOWNLOAD_LOGGER as LOGGER
 from ...objects import Target
+
+
+UNIT_PREFIXES: List[str] = ["", "k", "m", "g", "t"]
+UNIT_DIVISOR=1024
 
 
 @dataclass
@@ -41,9 +45,18 @@ class DownloadResult:
 
         return self.failure_percentage > SHOW_DOWNLOAD_ERRORS_THRESHOLD
     
+    def _size_val_unit_pref_ind(self, val: float, ind: int) -> Tuple[float, int]:
+        if val < UNIT_DIVISOR:
+            return val, ind
+        if ind >= len(UNIT_PREFIXES):
+            return val, ind
+        
+        return self._size_val_unit_pref_ind(val=val/UNIT_DIVISOR, ind=ind+1)
+    
     @property
     def formated_size(self) -> str:
-        return f"{self.total_size}B"
+        total_size, prefix_index = self._size_val_unit_pref_ind(self.total_size, 0)
+        return f"{total_size:.{2}f} {UNIT_PREFIXES[prefix_index]}B"
     
     def add_target(self, target: Target):
         self.total_size += target.size
