@@ -5,10 +5,8 @@ from bs4 import BeautifulSoup
 import pycountry
 from urllib.parse import urlparse
 
-from ..utils.shared import (
-    ENCYCLOPAEDIA_METALLUM_LOGGER as LOGGER
-)
-
+from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER
+from ..utils import string_processing
 from .abstract import Page
 from ..objects import (
     Lyrics,
@@ -23,9 +21,6 @@ from ..objects import (
     Options,
     AlbumType
 )
-from ..utils import (
-    string_processing
-)
 
 
 class EncyclopaediaMetallum(Page):
@@ -38,10 +33,16 @@ class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
 
     ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
-        "EP": AlbumType.EP,
         "Full-length": AlbumType.STUDIO_ALBUM,
-        "Single": AlbumType.SINGLE
+        "Single": AlbumType.SINGLE,
+        "EP": AlbumType.EP,
+        "Demo": AlbumType.DEMO,
+        "Video": AlbumType.OTHER,
+        "Live album": AlbumType.LIVE_ALBUM,
+        "Compilation": AlbumType.COMPILATION_ALBUM
     })
+    
+    LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
 
     @classmethod
     def search_by_query(cls, query: str) -> Options:
@@ -68,9 +69,9 @@ class EncyclopaediaMetallum(Page):
                    "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
                    "=1674550595663"
 
-        r = cls.API_SESSION.get(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
+        r = cls.get_request(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
-            LOGGER.warning(
+            cls.LOGGER.warning(
                 f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
             return []
 
@@ -90,16 +91,16 @@ class EncyclopaediaMetallum(Page):
                    "=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns" \
                    "=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
 
-        r = cls.API_SESSION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
+        r = cls.get_request(endpoint.format(artist=query.artist_str, album=query.album_str))
         if r.status_code != 200:
-            LOGGER.warning(
+            cls.LOGGER.warning(
                 f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
             return []
 
         return [cls.get_album_from_json(
             artist_html=raw_album[0],
             album_html=raw_album[1],
-            release_type=[2]
+            release_type=raw_album[2]
         ) for raw_album in r.json()['aaData']]
 
     @classmethod
@@ -109,7 +110,10 @@ class EncyclopaediaMetallum(Page):
                    "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
                    "&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
 
-        r = cls.API_SESSION.get(endpoint.format(artist=query.artist))
+        r = cls.get_request(endpoint.format(artist=query.artist))
+
+        if r is None:
+            return []
 
         data_key = 'aaData'
         parsed_data = r.json()
@@ -129,9 +133,8 @@ class EncyclopaediaMetallum(Page):
         """
         endpoint = "https://www.metal-archives.com/search/ajax-band-search/?field=name&query={query}&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2"
 
-        r = cls.API_SESSION.get(endpoint.format(query=query))
-        if r.status_code != 200:
-            LOGGER.warning(f"code {r.status_code} at {endpoint.format(query=query.query)}")
+        r = cls.get_request(endpoint.format(query=query))
+        if r is None:
             return []
 
         return [
@@ -152,23 +155,17 @@ class EncyclopaediaMetallum(Page):
         artist_url = anchor.get('href')
         artist_id = artist_url.split("/")[-1]
 
-        notes = f"{artist_name} is a {genre} band from {country}"
-
         anchor.decompose()
         strong = soup.find('strong')
         if strong is not None:
             strong.decompose()
             akronyms_ = soup.text[2:-2].split(', ')
-            notes += f"aka {akronyms_}"
-        notes += "."
 
         return Artist(
-            id_=artist_id,
             name=artist_name,
             source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
-            ],
-            notes=FormattedText(plaintext=notes)
+            ]
         )
 
     @classmethod
@@ -180,13 +177,12 @@ class EncyclopaediaMetallum(Page):
         album_name = anchor.text
         album_url = anchor.get('href')
         album_id = album_url.split("/")[-1]
-
-        """
-        TODO implement release type
-        """
+        
+        album_type = cls.ALBUM_TYPE_MAP[release_type.strip()]
+        
         return Album(
-            id_=album_id,
             title=album_name,
+            album_type=album_type,
             source_list=[
                 Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
             ],
@@ -206,7 +202,6 @@ class EncyclopaediaMetallum(Page):
             song_id = raw_song_id.replace("lyricsLink_", "")
 
         return Song(
-            id_=song_id,
             title=title,
             main_artist_list=[
                 cls.get_artist_from_json(artist_html=artist_html)
@@ -249,7 +244,6 @@ class EncyclopaediaMetallum(Page):
 
             discography.append(
                 Album(
-                    id_=album_id,
                     title=album_name,
                     date=date_obj,
                     album_type=cls.ALBUM_TYPE_MAP[raw_album_type],
@@ -312,7 +306,7 @@ class EncyclopaediaMetallum(Page):
             if title_text.count(bad_name_substring) == 1:
                 name = title_text.replace(bad_name_substring, "")
             else:
-                LOGGER.debug(f"the title of the page is \"{title_text}\"")
+                cls.LOGGER.debug(f"the title of the page is \"{title_text}\"")
 
         """
         TODO
@@ -528,7 +522,7 @@ class EncyclopaediaMetallum(Page):
                 album_name = anchor.get_text(strip=True)
                 
             elif len(album_soup_list) > 1:
-                LOGGER.debug("there are more than 1 album soups")
+                cls.LOGGER.debug("there are more than 1 album soups")
                 
             
             artist_soup_list = album_info_soup.find_all("h2", {"class": "band_name"})
@@ -548,7 +542,7 @@ class EncyclopaediaMetallum(Page):
                     ))
                 
             elif len(artist_soup_list) > 1:
-                LOGGER.debug("there are more than 1 artist soups")
+                cls.LOGGER.debug("there are more than 1 artist soups")
         
         _parse_album_info(album_info_soup=album_soup.find(id="album_info"))
         
