@@ -45,7 +45,7 @@ EXIT_COMMANDS = {
 
 
 
-def cli():
+def cli(genre: str = None):
     def get_existing_genre() -> List[str]:
         """
         gets the name of all subdirectories of shared.MUSIC_DIR,
@@ -72,12 +72,12 @@ def cli():
 
         
         while True:
-            genre = input("id or new genre: ")
+            genre = input("Id or new genre: ")
 
             if genre.isdigit():
                 genre_id = int(genre) - 1
                 if genre_id >= len(existing_genres):
-                    print(f"no genre under the id {genre_id+1}")
+                    print(f"No genre under the id {genre_id+1}.")
                     continue
                 
                 return existing_genres[genre_id]
@@ -89,7 +89,6 @@ def cli():
             if verification in agree_inputs:
                 return new_genre
             
-
     def next_search(_search: pages.Search, query: str, genre: str) -> bool:
         """
         :param _search:
@@ -136,8 +135,13 @@ def cli():
         _search.search(query)
         return False
 
-    genre = get_genre()
-    print(f"Selected: {genre}\n")
+    if genre is None:
+        genre = get_genre()
+        print()
+        print(get_random_message())
+        print()
+        print(f"Downloading to: \"{genre}\"")
+        print()
 
     search = pages.Search()
 
