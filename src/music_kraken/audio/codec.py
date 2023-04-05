@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import ffmpeg
 
 from ..utils.shared import BITRATE, AUDIO_FORMAT, CODEX_LOGGER as LOGGER
