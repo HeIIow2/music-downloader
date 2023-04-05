@@ -50,6 +50,17 @@ class Target(DatabaseObject):
     @property
     def exists(self) -> bool:
         return self.file_path.is_file()
+    
+    @property
+    def size(self) -> int:
+        """
+        returns the size the downloaded autio takes up in bytes
+        returns 0 if the file doesn't exsit
+        """
+        if not self.exists:
+            return 0
+        
+        return self.file_path.stat().st_size
 
     def create_path(self):
         self._path.mkdir(parents=True, exist_ok=True)

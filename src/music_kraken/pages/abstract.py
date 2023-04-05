@@ -539,6 +539,9 @@ class Page:
         if not r.is_fatal_error:
             cls._post_process_targets(song, temp_target)
 
+        for target in song.target_collection:
+            r.add_target(target)
+
         return r
 
     @classmethod

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD, DOWNLOAD_LOGGER as LOGGER
+from ...objects import Target
 
 
 @dataclass
@@ -9,6 +10,7 @@ class DownloadResult:
     total: int = 0
     fail: int = 0
     error_message: str = None
+    total_size = 0
 
     _error_message_list: List[str] = field(default_factory=list)
 
@@ -38,6 +40,13 @@ class DownloadResult:
             return True
 
         return self.failure_percentage > SHOW_DOWNLOAD_ERRORS_THRESHOLD
+    
+    @property
+    def formated_size(self) -> str:
+        return f"{self.total_size}B"
+    
+    def add_target(self, target: Target):
+        self.total_size += target.size
 
     def merge(self, other: "DownloadResult"):
         if other.is_fatal_error:
@@ -49,13 +58,16 @@ class DownloadResult:
             self.total += other.total
             self.fail += other.fail
             self._error_message_list.extend(other._error_message_list)
+        
+        self.total_size += other.total_size
 
     def __str__(self):
         if self.is_fatal_error:
             return self.error_message
         head = f"{self.fail} from {self.total} downloads failed:\n" \
                f"successrate:\t{int(self.success_percentage*100)}%\n" \
-               f"failrate:\t{int(self.failure_percentage*100)}%"
+               f"failrate:\t{int(self.failure_percentage*100)}%\n" \
+               f"total size:\t{self.formated_size}"
 
         if not self.is_mild_failure:
             return head
