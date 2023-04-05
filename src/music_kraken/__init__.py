@@ -138,10 +138,10 @@ def cli(genre: str = None):
     if genre is None:
         genre = get_genre()
         print()
-        print(get_random_message())
-        print()
-        print(f"Downloading to: \"{genre}\"")
-        print()
+    print(get_random_message())
+    print()
+    print(f"Downloading to: \"{genre}\"")
+    print()
 
     search = pages.Search()
 

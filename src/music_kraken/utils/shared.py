@@ -27,7 +27,8 @@ HAPPY_MESSAGES: List[str] = [
     "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
     "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
     "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
-    "Gotta love the BPJM!! >:("
+    "Gotta love the BPJM!! >:(",
+    "🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️"
 ]
 
 
