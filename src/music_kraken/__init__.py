@@ -47,7 +47,7 @@ def print_cute_message():
     try:
         print(message)
     except UnicodeEncodeError:
-        print((c for c in message if 0 < ord(c) < 127))
+        print(str(c for c in message if 0 < ord(c) < 127))
 
 
 def cli(genre: str = None, download_all: bool = False):
