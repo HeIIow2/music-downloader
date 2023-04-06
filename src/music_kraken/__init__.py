@@ -41,6 +41,12 @@ EXIT_COMMANDS = {
     "quit"
 }
 
+def print_cute_message():
+    message = get_random_message()
+    try:
+        print(message)
+    except UnicodeDecodeError:
+        print((c for c in message if 0 < ord(c) < 127))
 
 def cli(genre: str = None, download_all: bool = False):
     def get_existing_genre() -> List[str]:
@@ -141,7 +147,7 @@ def cli(genre: str = None, download_all: bool = False):
         genre = get_genre()
         print()
         
-    print(get_random_message())
+    print_cute_message()
     print()
     print(f"Downloading to: \"{genre}\"")
     print()
@@ -154,5 +160,5 @@ def cli(genre: str = None, download_all: bool = False):
         print(search)
 
     print()
-    print(get_random_message())
+    print_cute_message()
     print("Have fun with your music. :3")
