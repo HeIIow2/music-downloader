@@ -41,12 +41,14 @@ EXIT_COMMANDS = {
     "quit"
 }
 
+
 def print_cute_message():
     message = get_random_message()
     try:
         print(message)
-    except UnicodeDecodeError:
+    except UnicodeEncodeError:
         print((c for c in message if 0 < ord(c) < 127))
+
 
 def cli(genre: str = None, download_all: bool = False):
     def get_existing_genre() -> List[str]:
@@ -56,44 +58,43 @@ def cli(genre: str = None, download_all: bool = False):
         from shared.NOT_A_GENRE_REGEX.
         """
         existing_genres: List[str] = []
-        
+
         # get all subdirectories of MUSIC_DIR, not the files in the dir.
         existing_subdirectories: List[Path] = [f for f in MUSIC_DIR.iterdir() if f.is_dir()]
-        
+
         for subdirectory in existing_subdirectories:
             name: str = subdirectory.name
-                    
+
             if not any(re.match(regex_pattern, name) for regex_pattern in NOT_A_GENRE_REGEX):
                 existing_genres.append(name)
-            
+
         existing_genres.sort()
-            
+
         return existing_genres
-    
+
     def get_genre():
         existing_genres = get_existing_genre()
         for i, genre_option in enumerate(existing_genres):
-            print(f"{i+1:0>2}: {genre_option}")
+            print(f"{i + 1:0>2}: {genre_option}")
 
-        
         while True:
             genre = input("Id or new genre: ")
 
             if genre.isdigit():
                 genre_id = int(genre) - 1
                 if genre_id >= len(existing_genres):
-                    print(f"No genre under the id {genre_id+1}.")
+                    print(f"No genre under the id {genre_id + 1}.")
                     continue
-                
+
                 return existing_genres[genre_id]
 
             new_genre = fit_to_file_system(genre)
-            
+
             agree_inputs = {"y", "yes", "ok"}
             verification = input(f"create new genre \"{new_genre}\"? (Y/N): ").lower()
             if verification in agree_inputs:
                 return new_genre
-            
+
     def next_search(_search: pages.Search, query: str) -> bool:
         """
         :param _search:
@@ -102,7 +103,7 @@ def cli(genre: str = None, download_all: bool = False):
         """
         nonlocal genre
         nonlocal download_all
-        
+
         query: str = query.strip()
         parsed: str = query.lower()
 
@@ -146,7 +147,7 @@ def cli(genre: str = None, download_all: bool = False):
     if genre is None:
         genre = get_genre()
         print()
-        
+
     print_cute_message()
     print()
     print(f"Downloading to: \"{genre}\"")
