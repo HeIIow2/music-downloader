@@ -87,7 +87,7 @@ class Song(MainObject):
         if build_version == self.build_version:
             return
         self.build_version = build_version
-        
+
         album: Album
         for album in self.album_collection:
             album.song_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
@@ -178,7 +178,7 @@ class Song(MainObject):
         """
         if len(self.album_collection) == 0:
             return f"{self.tracksort}"
-        
+
         return f"{self.tracksort}/{len(self.album_collection[0].song_collection) or 1}"
 
 
@@ -255,17 +255,17 @@ class Album(MainObject):
         if build_version == self.build_version:
             return
         self.build_version = build_version
-        
+
         song: Song
         for song in self.song_collection:
             song.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             song._build_recursive_structures(build_version=build_version, merge=merge)
-        
+
         artist: Artist
         for artist in self.artist_collection:
             artist.main_album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             artist._build_recursive_structures(build_version=build_version, merge=merge)
-            
+
         label: Label
         for label in self.label_collection:
             label.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
@@ -391,7 +391,11 @@ All objects dependent on Artist
 
 class Artist(MainObject):
     COLLECTION_ATTRIBUTES = (
-    "feature_song_collection", "main_album_collection", "label_collection", "source_collection")
+        "feature_song_collection",
+        "main_album_collection",
+        "label_collection",
+        "source_collection"
+    )
     SIMPLE_ATTRIBUTES = {
         "name": None,
         "unified_name": None,
@@ -453,17 +457,17 @@ class Artist(MainObject):
         if build_version == self.build_version:
             return
         self.build_version = build_version
-        
+
         song: Song
         for song in self.feature_song_collection:
             song.feature_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             song._build_recursive_structures(build_version=build_version, merge=merge)
-            
+
         album: Album
         for album in self.main_album_collection:
             album.artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             album._build_recursive_structures(build_version=build_version, merge=merge)
-            
+
         label: Label
         for label in self.label_collection:
             label.current_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
@@ -601,14 +605,14 @@ class Label(MainObject):
         if build_version == self.build_version:
             return
         self.build_version = build_version
-        
+
         album: Album
         for album in self.album_collection:
             album.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             album._build_recursive_structures(build_version=build_version, merge=merge)
 
         artist: Artist
-        for artist in self.current_artist_collection:            
+        for artist in self.current_artist_collection:
             artist.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             artist._build_recursive_structures(build_version=build_version, merge=merge)
 
