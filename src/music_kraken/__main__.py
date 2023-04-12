@@ -34,6 +34,11 @@ if __name__ == "__main__":
              "For example weird compilations from musify."
     )
 
+    parser.add_argument(
+        '-u', '--url',
+        help="Downloads the content of given url."
+    )
+
     arguments = parser.parse_args()
 
     if arguments.verbose or arguments.test:
@@ -46,4 +51,8 @@ if __name__ == "__main__":
     if arguments.test:
         genre = "test"
 
-    music_kraken.cli(genre=genre, download_all=arguments.all)
+    music_kraken.cli(
+        genre=genre,
+        download_all=arguments.all,
+        direct_download_url=arguments.url
+    )

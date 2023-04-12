@@ -51,7 +51,13 @@ def print_cute_message():
         print(message)
 
 
-def cli(genre: str = None, download_all: bool = False):
+def exit_message():
+    print()
+    print_cute_message()
+    print("Have fun with your music. :3")
+
+
+def cli(genre: str = None, download_all: bool = False, direct_download_url: str = None):
     def get_existing_genre() -> List[str]:
         """
         gets the name of all subdirectories of shared.MUSIC_DIR,
@@ -156,11 +162,22 @@ def cli(genre: str = None, download_all: bool = False):
 
     search = pages.Search()
 
+    # directly download url
+    if direct_download_url is not None:
+        if search.search_url(direct_download_url):
+            r = search.download_chosen(genre=genre, download_all=download_all)
+            print()
+            print(r)
+            print()
+        else:
+            print(f"Sorry, could not download the url: {direct_download_url}")
+
+        exit_message()
+        return
+
     while True:
         if next_search(search, input(">> ")):
             break
         print(search)
 
-    print()
-    print_cute_message()
-    print("Have fun with your music. :3")
+    exit_message()
