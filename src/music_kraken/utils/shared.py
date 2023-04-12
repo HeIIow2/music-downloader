@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Tuple
 import logging
 import tempfile
 import os
@@ -35,6 +35,9 @@ HAPPY_MESSAGES: List[str] = [
 def get_random_message() -> str:
     return random.choice(HAPPY_MESSAGES)
 
+
+ID_BITS: int = 64
+ID_RANGE: Tuple[int] = 0, 2**ID_BITS
 
 TEMP_DIR = Path(tempfile.gettempdir(), "music-downloader")
 TEMP_DIR.mkdir(exist_ok=True)

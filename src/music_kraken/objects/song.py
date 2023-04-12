@@ -46,7 +46,7 @@ class Song(MainObject):
 
     def __init__(
             self,
-            _id: str = None,
+            _id: int = None,
             dynamic: bool = False,
             title: str = None,
             unified_title: str = None,
@@ -203,7 +203,7 @@ class Album(MainObject):
 
     def __init__(
             self,
-            _id: str = None,
+            _id: int = None,
             title: str = None,
             unified_title: str = None,
             language: pycountry.Languages = None,
@@ -408,7 +408,7 @@ class Artist(MainObject):
 
     def __init__(
             self,
-            _id: str = None,
+            _id: int = None,
             dynamic: bool = False,
             name: str = None,
             unified_name: str = None,
@@ -579,7 +579,7 @@ class Label(MainObject):
 
     def __init__(
             self,
-            _id: str = None,
+            _id: int = None,
             dynamic: bool = False,
             name: str = None,
             unified_name: str = None,

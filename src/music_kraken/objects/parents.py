@@ -1,31 +1,31 @@
 import random
-import uuid
 from collections import defaultdict
 from typing import Optional, Dict, Tuple, List
 
 from .metadata import Metadata
 from .option import Options
-from ..utils.shared import OBJECT_LOGGER as LOGGER
+from ..utils.shared import ID_RANGE, OBJECT_LOGGER as LOGGER
 
 
 class DatabaseObject:
     COLLECTION_ATTRIBUTES: tuple = tuple()
     SIMPLE_ATTRIBUTES: dict = dict()
 
-    def __init__(self, _id: str = None, dynamic: bool = False, **kwargs) -> None:
+    def __init__(self, _id: int = None, dynamic: bool = False, **kwargs) -> None:
         self.automatic_id: bool = False
 
         if _id is None and not dynamic:
             """
-            generates a random UUID
-            https://docs.python.org/3/library/uuid.html
+            generates a random integer id
+            64 bit integer, but this is defined in shared.py in ID_BITS
+            the range is defined in the Tuple ID_RANGE
             """
-            _id = str(uuid.uuid4())
+            _id = random.randint(*ID_RANGE)
             self.automatic_id = True
-            LOGGER.debug(f"id for {type(self).__name__} isn't set. Setting to {_id}")
+            LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
-        self.id: Optional[str] = _id
+        self.id: Optional[int] = _id
 
         self.dynamic = dynamic
         
@@ -34,6 +34,10 @@ class DatabaseObject:
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
+
+        # add the checks for dynamic, to not throw an exception
+        if not self.dynamic and not other.dynamic and self.id == other.id:
+            return True
 
         temp_attribute_map: Dict[str, set] = defaultdict(set)
 
@@ -117,7 +121,7 @@ class MainObject(DatabaseObject):
     but also some added functions as well.
     """
 
-    def __init__(self, _id: str = None, dynamic: bool = False, **kwargs):
+    def __init__(self, _id: int = None, dynamic: bool = False, **kwargs):
         DatabaseObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
 
         self.additional_arguments: dict = kwargs
