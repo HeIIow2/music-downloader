@@ -57,7 +57,12 @@ def exit_message():
     print("Have fun with your music. :3")
 
 
-def cli(genre: str = None, download_all: bool = False, direct_download_url: str = None):
+def cli(
+        genre: str = None,
+        download_all: bool = False,
+        direct_download_url: str = None,
+        command_list: List[str] = None
+):
     def get_existing_genre() -> List[str]:
         """
         gets the name of all subdirectories of shared.MUSIC_DIR,
@@ -175,6 +180,18 @@ def cli(genre: str = None, download_all: bool = False, direct_download_url: str 
         exit_message()
         return
 
+    # run one command after another from the command list
+    if command_list is not None:
+        for command in command_list:
+            print(f">> {command}")
+            if next_search(search, command):
+                break
+            print(search)
+
+        exit_message()
+        return
+
+    # the actual cli
     while True:
         if next_search(search, input(">> ")):
             break

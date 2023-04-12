@@ -5,7 +5,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="A simple cli to easily test music_kraken. The full cli is in the making."
+        description="A simple yet powerful cli to download music with music-kraken.",
+        epilog="This is a cli for the developers, and it is shipped with music-krakens core.\n"
+               "While it is a nice and solid cli it will lack some features.\n"
+               "The proper cli and other frontends will be made or already have been made.\n"
+               "To see all current frontends check the docs at: https://github.com/HeIIow2/music-downloader"
     )
 
     # arguments for debug purposes
@@ -23,15 +27,15 @@ if __name__ == "__main__":
 
     # general arguments
     parser.add_argument(
-        '-g', '--genre',
-        help="Specifies the genre. (Will be overwritten by -t)"
-    )
-
-    parser.add_argument(
         '-a', '--all',
         action="store_true",
         help="If set it will download EVERYTHING the music downloader can find.\n"
              "For example weird compilations from musify."
+    )
+
+    parser.add_argument(
+        '-g', '--genre',
+        help="Specifies the genre. (Will be overwritten by -t)"
     )
 
     parser.add_argument(
