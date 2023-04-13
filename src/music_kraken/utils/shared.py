@@ -47,13 +47,12 @@ logging.basicConfig(
     level=logging.INFO,
     format=logging.BASIC_FORMAT,
     handlers=[
-        logging.FileHandler(Path(TEMP_DIR, LOG_PATH)),
+        logging.FileHandler(LOG_PATH),
         logging.StreamHandler()
     ]
 )
 
 OBJECT_LOGGER = logging.getLogger("objects")
-TARGET_LOGGER = logging.getLogger("target")
 DATABASE_LOGGER = logging.getLogger("database")
 
 YOUTUBE_LOGGER = logging.getLogger("Youtube")
