@@ -37,11 +37,13 @@ def get_random_message() -> str:
 
 
 ID_BITS: int = 64
-ID_RANGE: Tuple[int] = 0, 2**ID_BITS
+ID_RANGE: Tuple[int, int] = (0, int(2**ID_BITS))
 
 TEMP_DIR = Path(tempfile.gettempdir(), "music-downloader")
 TEMP_DIR.mkdir(exist_ok=True)
 LOG_PATH = Path(TEMP_DIR, "download_logs.log")
+
+MUSIC_DIR: Path = Path(os.path.expanduser("~"), "Music")
 
 
 # configure logger default
@@ -67,8 +69,7 @@ DOWNLOAD_LOGGER = logging.getLogger("download")
 TAGGING_LOGGER = logging.getLogger("tagging")
 CODEX_LOGGER = logging.getLogger("codex")
 
-MUSIC_DIR: Path = Path(os.path.expanduser("~"), "Music")
-NOT_A_GENRE_REGEX: List[str] = (
+NOT_A_GENRE_REGEX: Tuple[str] = (
     r'^\.',     # is hidden/starts with a "."
 )
 
