@@ -7,6 +7,8 @@ from sys import platform as current_os
 from pathlib import Path
 import random
 
+from .path_manager import LOCATIONS
+
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
 # https://web.archive.org/web/20221124122222/https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
@@ -39,11 +41,9 @@ def get_random_message() -> str:
 ID_BITS: int = 64
 ID_RANGE: Tuple[int, int] = (0, int(2**ID_BITS))
 
-TEMP_DIR = Path(tempfile.gettempdir(), "music-downloader")
-TEMP_DIR.mkdir(exist_ok=True)
-LOG_PATH = Path(TEMP_DIR, "download_logs.log")
-
-MUSIC_DIR: Path = Path(os.path.expanduser("~"), "Music")
+TEMP_DIR = LOCATIONS.TEMP_DIRECTORY
+LOG_PATH = LOCATIONS.get_log_file("download_logs.log")
+MUSIC_DIR: Path = LOCATIONS.MUSIC_DIRECTORY
 
 
 # configure logger default
@@ -72,25 +72,6 @@ CODEX_LOGGER = logging.getLogger("codex")
 NOT_A_GENRE_REGEX: Tuple[str] = (
     r'^\.',     # is hidden/starts with a "."
 )
-
-if current_os == "linux":
-    # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
-    XDG_USER_DIRS_FILE = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
-    logger = logging.getLogger("init_path")
-    logger.setLevel(logging.WARNING)
-    try:
-        with open(XDG_USER_DIRS_FILE, 'r') as f:
-            data = "[XDG_USER_DIRS]\n" + f.read()
-        config = configparser.ConfigParser(allow_no_value=True)
-        config.read_string(data)
-        xdg_config = config['XDG_USER_DIRS']
-        MUSIC_DIR: Path = Path(os.path.expandvars(xdg_config['xdg_music_dir'].strip('"')))
-
-    except (FileNotFoundError, KeyError) as E:
-        logger.warning(
-            f"Missing file or No entry found for \"xdg_music_dir\" in: \"{XDG_USER_DIRS_FILE}\".\n"
-            f"Will fallback on default \"$HOME/Music\"."
-        )
 
 TOR: bool = False
 proxies = {
