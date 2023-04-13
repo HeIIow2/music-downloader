@@ -9,6 +9,14 @@ DEFAULT_MUSIC_DIRECTORY = Path(Path.home(), "Music")
 
 
 def get_xdg_music_directory() -> Path:
+    """
+    gets the xdg music directory, for all the linux or bsd folks!
+    Thanks to Distant Thunder, as well as Kevin Gruber for making that pull request:
+    https://github.com/HeIIow2/music-downloader/pull/6
+
+    :return:
+    """
+
     # XDG_USER_DIRS_FILE reference: https://freedesktop.org/wiki/Software/xdg-user-dirs/
     xdg_user_dirs_file = Path(Path.home(), ".config", "user-dirs.dirs")
 
