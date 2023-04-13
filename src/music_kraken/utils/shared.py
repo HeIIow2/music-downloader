@@ -1,11 +1,7 @@
-from typing import List, Set, Tuple
 import logging
-import tempfile
-import os
-import configparser
-from sys import platform as current_os
-from pathlib import Path
 import random
+from pathlib import Path
+from typing import List, Set, Tuple
 
 from .path_manager import LOCATIONS
 
