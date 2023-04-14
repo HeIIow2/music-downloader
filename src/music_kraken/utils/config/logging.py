@@ -44,7 +44,8 @@ class LoggingSection(Section):
     def __init__(self):
         self.FORMAT = StringAttribute(
             name="logging_format",
-            description="Reference for the logging formats: https://docs.python.org/3/library/logging.html#logrecord-attributes",
+            description="Reference for the logging formats: "
+                        "https://docs.python.org/3/library/logging.html#logrecord-attributes",
             value=logging.BASIC_FORMAT
         )
         self.LOG_LEVEL = LogLevelAttribute(
