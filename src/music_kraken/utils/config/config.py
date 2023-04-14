@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, List, Union
 
-COMMENT_PREFIX = "// "
+COMMENT_PREFIX = "# "
 
 
 @dataclass
@@ -31,7 +31,7 @@ class SingleAttribute(Attribute):
 class StringAttribute(SingleAttribute):
     @property
     def object_from_value(self) -> str:
-        return self.value
+        return self.value.strip()
 
 
 class IntAttribute(SingleAttribute):
@@ -41,6 +41,7 @@ class IntAttribute(SingleAttribute):
             raise ValueError(f"The value of {self.name} needs to be an integer, not {self.value}")
 
         return int(self.value)
+
 
 class FloatAttribute(SingleAttribute):
     @property
@@ -71,6 +72,9 @@ class Description:
 class EmptyLine(Description):
     def __init__(self):
         self.description = "\n"
+
+    def __str__(self):
+        return self.description
 
 
 class Section:

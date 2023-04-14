@@ -47,8 +47,8 @@ class AudioSection(Section):
 
         self.AUDIO_FORMAT = AudioFormatAttribute(name="audio_format", value="mp3", description=f"""
 Music Kraken will stream the audio into this format.
-You can use Audio formats which support ID3.2 and ID3.1,\n
-but you will have cleaner Metadata using ID3.2.\n
+You can use Audio formats which support ID3.2 and ID3.1,
+but you will have cleaner Metadata using ID3.2.
 ID3.2: {', '.join(_sorted_id3_2_formats)}
 ID3.1: {', '.join(_sorted_id3_1_formats)}
         """.strip())
@@ -65,9 +65,62 @@ ID3.1: {', '.join(_sorted_id3_1_formats)}
             description="The filename of the audio file."
         )
 
+        self.DEFAULT_GENRE = StringAttribute(
+            name="default_genre",
+            value="Various Genre",
+            description="The default value for the genre field."
+        )
+
+        self.DEFAULT_LABEL = StringAttribute(
+            name="default_label",
+            value="Various Labels",
+            description="The Label refers to a lable that signs artists."
+        )
+
+        self.DEFAULT_ARTIST = StringAttribute(
+            name="default_artist",
+            value="Various Artists",
+            description="You know Various Artist."
+        )
+
+        self.DEFAULT_ALBUM = StringAttribute(
+            name="default_album",
+            value="Various Album",
+            description="This value will hopefully not be used."
+        )
+
+        self.DEFAULT_SONG = StringAttribute(
+            name="default_song",
+            value="Various Song",
+            description="If it has to fall back to this value, something did go really wrong."
+        )
+
+        self.DEFAULT_ALBUM_TYPE = StringAttribute(
+            name="default_album_type",
+            value="Other",
+            description="Weirdly enough I barely see this used in file systems."
+        )
+
         self.attribute_list = [
+            EmptyLine(),
             self.BITRATE,
-            self.AUDIO_FORMAT
+            self.AUDIO_FORMAT,
+            Description("""
+There are multiple fields, you can use for the path and file name:
+- genre
+- label
+- artist
+- album
+- song
+- album_type
+            """.strip()),
+            self.DOWNLOAD_PATH,
+            self.DOWNLOAD_FILE,
+            self.DEFAULT_ALBUM_TYPE,
+            self.DEFAULT_ARTIST,
+            self.DEFAULT_GENRE,
+            self.DEFAULT_LABEL,
+            self.DEFAULT_SONG
         ]
 
 
