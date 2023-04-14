@@ -42,6 +42,15 @@ class IntAttribute(SingleAttribute):
 
         return int(self.value)
 
+class FloatAttribute(SingleAttribute):
+    @property
+    def object_from_value(self) -> float:
+        if not self.value.isnumeric():
+            raise ValueError(f"The value of {self.name} needs to be a number, not {self.value}")
+
+        return float(self.value)
+
+
 class ListAttribute(Attribute):
     value: List[str]
 

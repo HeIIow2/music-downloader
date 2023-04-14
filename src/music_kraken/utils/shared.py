@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Set, Tuple
 
 from .path_manager import LOCATIONS
-from .config import LOGGING_SECTION
+from .config import LOGGING_SECTION, AUDIO_SECTION
 
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
@@ -65,6 +65,10 @@ DOWNLOAD_LOGGER = LOGGING_SECTION.DOWNLOAD_LOGGER.object_from_value
 TAGGING_LOGGER = LOGGING_SECTION.TAGGING_LOGGER.object_from_value
 CODEX_LOGGER = LOGGING_SECTION.CODEX_LOGGER.object_from_value
 
+# kB per second
+BITRATE = AUDIO_SECTION.BITRATE.object_from_value
+AUDIO_FORMAT = AUDIO_SECTION.AUDIO_FORMAT.object_from_value
+
 NOT_A_GENRE_REGEX: Tuple[str] = (
     r'^\.',     # is hidden/starts with a "."
 )
@@ -76,27 +80,6 @@ proxies = {
 } if TOR else {}
 
 
-# Only the formats with id3 metadata can be used
-# https://www.audioranger.com/audio-formats.php
-# https://web.archive.org/web/20230322234434/https://www.audioranger.com/audio-formats.php
-ALLOWED_FILE_FORMATS: Set[str] = {
-    "mp3", "mp2", "mp1",    # MPEG-1                ID3.2
-    "wav", "wave", "rmi",   # RIFF (including WAV)  ID3.2
-    "aiff", "aif", "aifc",  # AIFF                  ID3.2
-    "aac", "aacp",          # Raw AAC	            ID3.2
-    "tta",                  # True Audio            ID3.2
-    "ape",                  # Monkey's Audio        ID3.1
-    "mpc", "mpp", "mp+",    # MusePack              ID3.1
-    "wv",                   # WavPack               ID3.1
-    "ofr", "ofs"            # OptimFrog             ID3.1
-}
-
-# kB per second
-BITRATE = 125
-AUDIO_FORMAT = "mp3"
-if AUDIO_FORMAT not in ALLOWED_FILE_FORMATS:
-    raise ValueError(f"The Audio Format is not in {ALLOWED_FILE_FORMATS} ({AUDIO_FORMAT}).")
-
 """
 available variables:
 - genre
@@ -106,8 +89,8 @@ available variables:
 - song
 - album_type
 """
-DOWNLOAD_PATH = "{genre}/{artist}/{album_type}/{album}"
-DOWNLOAD_FILE = "{song}.{audio_format}"
+DOWNLOAD_PATH = AUDIO_SECTION.DOWNLOAD_PATH.object_from_value
+DOWNLOAD_FILE = AUDIO_SECTION.DOWNLOAD_FILE.object_from_value
 DEFAULT_VALUES = {
     "genre": "Various Genre",
     "label": "Various Labels",
