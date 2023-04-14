@@ -118,5 +118,7 @@ class LoggingSection(Section):
             self.GENIUS_LOGGER
         ]
 
+        super().__init__()
+
 
 LOGGING_SECTION = LoggingSection()

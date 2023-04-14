@@ -1,9 +1,9 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 import logging
 import os
 
 from ..path_manager import LOCATIONS
-from .base_classes import Description, Attribute, Section, EmptyLine
+from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PREFIX
 from .audio import AUDIO_SECTION
 from .logging import LOGGING_SECTION
 
@@ -26,9 +26,51 @@ class Config:
             EmptyLine()
         )
 
+        self._name_section_map: Dict[str, Section] = dict()
+
+        for element in self.config_elements:
+            if not isinstance(element, Section):
+                continue
+
+            for name in element.name_attribute_map:
+                if name in self._name_section_map:
+                    raise ValueError(f"Two sections have the same name: "
+                                     f"{name}: "
+                                     f"{element.__class__.__name__} {self._name_section_map[name].__class__.__name__}")
+
+                self._name_section_map[name] = element
+
+    def set_name_to_value(self, name: str, value: str):
+        if name not in self._name_section_map:
+            raise KeyError(f"There is no such setting, as: {name}")
+
+        self._name_section_map[name][name] = value
+
     @property
     def config_string(self) -> str:
         return "\n\n".join(str(element) for element in self.config_elements)
+
+    def _parse_conf_line(self, line: str, index: int):
+        line = line.strip()
+        if line.startswith(COMMENT_PREFIX):
+            return
+
+        if line == "":
+            return
+
+        if "=" not in line:
+            raise ValueError(f"Couldn't find the '=' in line {index}.")
+
+        line_segments = line.split("=")
+        name = line_segments[0]
+        value = "=".join(line_segments[1:])
+
+        self.set_name_to_value(name, value)
+
+    def read_from_config_file(self, path: os.PathLike):
+        with open(path, "r") as conf_file:
+            for i, line in enumerate(conf_file):
+                self._parse_conf_line(line, i+1)
 
     def write_to_config_file(self, path: os.PathLike):
         with open(path, "w") as conf_file:
@@ -39,7 +81,9 @@ config = Config()
 
 
 def read():
-    pass
+    if not LOCATIONS.CONFIG_FILE.is_file():
+        write()
+    config.read_from_config_file(LOCATIONS.CONFIG_FILE)
 
 
 def write():

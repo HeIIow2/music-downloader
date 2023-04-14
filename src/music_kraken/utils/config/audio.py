@@ -122,6 +122,7 @@ There are multiple fields, you can use for the path and file name:
             self.DEFAULT_LABEL,
             self.DEFAULT_SONG
         ]
+        super().__init__()
 
 
 AUDIO_SECTION = AudioSection()
