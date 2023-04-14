@@ -1,4 +1,4 @@
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, Iterable
 import logging
 import os
 
@@ -22,16 +22,17 @@ class Config:
                         "If you found a bug, and wan't to report it, please set the Logging level to 0,\n"
                         "reproduce the bug, and attach the logfile in the bugreport. ^w^"),
             LOGGING_SECTION,
-            Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️"),
-            EmptyLine()
+            Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
         )
 
+        self._section_list: List[Section] = []
         self._name_section_map: Dict[str, Section] = dict()
 
         for element in self.config_elements:
             if not isinstance(element, Section):
                 continue
 
+            self._section_list.append(element)
             for name in element.name_attribute_map:
                 if name in self._name_section_map:
                     raise ValueError(f"Two sections have the same name: "
@@ -75,6 +76,11 @@ class Config:
     def write_to_config_file(self, path: os.PathLike):
         with open(path, "w") as conf_file:
             conf_file.write(self.config_string)
+
+    def __iter__(self) -> Iterable[Attribute]:
+        for section in self._section_list:
+            for name, attribute in section.name_attribute_map.items():
+                yield attribute
 
 
 config = Config()
