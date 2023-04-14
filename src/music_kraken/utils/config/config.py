@@ -34,6 +34,14 @@ class StringAttribute(SingleAttribute):
         return self.value
 
 
+class IntAttribute(SingleAttribute):
+    @property
+    def object_from_value(self) -> int:
+        if not self.value.isdigit():
+            raise ValueError(f"The value of {self.name} needs to be an integer, not {self.value}")
+
+        return int(self.value)
+
 class ListAttribute(Attribute):
     value: List[str]
 
@@ -47,7 +55,8 @@ class Description:
     description: str
 
     def __str__(self):
-        return f"\n{self.description}"
+        lines = self.description.split("\n")
+        return "\n".join(f"{COMMENT_PREFIX}{line}" for line in lines)
 
 
 class EmptyLine(Description):
