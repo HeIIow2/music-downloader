@@ -54,7 +54,7 @@ def print_cute_message():
 def exit_message():
     print()
     print_cute_message()
-    print("Have fun with your music. :3")
+    print("See you soon! :3")
 
 
 def cli(

@@ -1,7 +1,7 @@
 import logging
 from typing import Callable
 
-from .config import SingleAttribute, ListAttribute, StringAttribute, Section
+from .config import SingleAttribute, StringAttribute, Section, Description, EmptyLine
 
 LOG_LEVELS = {
     "CRITICAL": 50,
@@ -99,3 +99,22 @@ class LoggingSection(Section):
             description="The logger for the genius scraper",
             value="genius"
         )
+
+        self.attribute_list = [
+            Description("Logging settings for the actual logging:"),
+            self.FORMAT,
+            self.LOG_LEVEL,
+            Description("Just the names for different logger, for different parts of the programm:"),
+            self.DOWNLOAD_LOGGER,
+            self.TAGGING_LOGGER,
+            self.CODEX_LOGGER,
+            self.OBJECT_LOGGER,
+            self.DATABASE_LOGGER,
+            self.MUSIFY_LOGGER,
+            self.YOUTUBE_LOGGER,
+            self.ENCYCLOPAEDIA_METALLUM_LOGGER,
+            self.GENIUS_LOGGER
+        ]
+
+
+LOGGING_SECTION = LoggingSection()

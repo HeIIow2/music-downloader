@@ -55,8 +55,12 @@ if __name__ == "__main__":
     if arguments.test:
         genre = "test"
 
-    music_kraken.cli(
-        genre=genre,
-        download_all=arguments.all,
-        direct_download_url=arguments.url
-    )
+    try:
+        music_kraken.cli(
+            genre=genre,
+            download_all=arguments.all,
+            direct_download_url=arguments.url
+        )
+    except KeyboardInterrupt:
+        print("\n\nRaise an issue if I fucked up:\nhttps://github.com/HeIIow2/music-downloader/issues")
+        music_kraken.exit_message()

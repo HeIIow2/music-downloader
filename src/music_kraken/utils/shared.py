@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Set, Tuple
 
 from .path_manager import LOCATIONS
+from .config import LOGGING_SECTION
 
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
@@ -44,25 +45,25 @@ MUSIC_DIR: Path = LOCATIONS.MUSIC_DIRECTORY
 
 # configure logger default
 logging.basicConfig(
-    level=logging.INFO,
-    format=logging.BASIC_FORMAT,
+    level=LOGGING_SECTION.LOG_LEVEL.object_from_value,
+    format=LOGGING_SECTION.FORMAT.object_from_value,
     handlers=[
         logging.FileHandler(LOG_PATH),
         logging.StreamHandler()
     ]
 )
 
-OBJECT_LOGGER = logging.getLogger("objects")
-DATABASE_LOGGER = logging.getLogger("database")
+OBJECT_LOGGER = LOGGING_SECTION.OBJECT_LOGGER.object_from_value
+DATABASE_LOGGER = LOGGING_SECTION.DATABASE_LOGGER.object_from_value
 
-YOUTUBE_LOGGER = logging.getLogger("Youtube")
-MUSIFY_LOGGER = logging.getLogger("Musify")
-GENIUS_LOGGER = logging.getLogger("genius")
-ENCYCLOPAEDIA_METALLUM_LOGGER = logging.getLogger("ma")
+YOUTUBE_LOGGER = LOGGING_SECTION.YOUTUBE_LOGGER.object_from_value
+MUSIFY_LOGGER = LOGGING_SECTION.MUSIFY_LOGGER.object_from_value
+GENIUS_LOGGER = LOGGING_SECTION.GENIUS_LOGGER
+ENCYCLOPAEDIA_METALLUM_LOGGER = LOGGING_SECTION.ENCYCLOPAEDIA_METALLUM_LOGGER.object_from_value
 
-DOWNLOAD_LOGGER = logging.getLogger("download")
-TAGGING_LOGGER = logging.getLogger("tagging")
-CODEX_LOGGER = logging.getLogger("codex")
+DOWNLOAD_LOGGER = LOGGING_SECTION.DOWNLOAD_LOGGER.object_from_value
+TAGGING_LOGGER = LOGGING_SECTION.TAGGING_LOGGER.object_from_value
+CODEX_LOGGER = LOGGING_SECTION.CODEX_LOGGER.object_from_value
 
 NOT_A_GENRE_REGEX: Tuple[str] = (
     r'^\.',     # is hidden/starts with a "."
