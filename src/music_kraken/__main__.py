@@ -1,6 +1,3 @@
-import music_kraken
-
-
 if __name__ == "__main__":
     import argparse
 
@@ -49,6 +46,8 @@ if __name__ == "__main__":
         import logging
         print("Setting logging-level to DEBUG")
         logging.getLogger().setLevel(logging.DEBUG)
+
+    import music_kraken
 
     # getting the genre
     genre: str = arguments.genre

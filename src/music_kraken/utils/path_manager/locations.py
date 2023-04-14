@@ -16,6 +16,7 @@ class Locations:
 
         self.CONFIG_DIRECTORY = get_config_directory(str(application_name))
         self.CONFIG_DIRECTORY.mkdir(exist_ok=True)
+        self.CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
 
     def get_log_file(self, file_name: os.PathLike) -> Path:
         return Path(self.TEMP_DIRECTORY, file_name)

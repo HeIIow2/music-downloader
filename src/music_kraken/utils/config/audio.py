@@ -1,6 +1,6 @@
 import logging
 
-from .config import SingleAttribute, FloatAttribute, StringAttribute, IntAttribute, Section, Description, EmptyLine
+from .base_classes import SingleAttribute, FloatAttribute, StringAttribute, IntAttribute, Section, Description, EmptyLine
 
 # Only the formats with id3 metadata can be used
 # https://www.audioranger.com/audio-formats.php
@@ -40,8 +40,8 @@ class AudioSection(Section):
     def __init__(self):
         self.BITRATE = FloatAttribute(
             name="bitrate",
-            description="Streams the audio with this bitrate (kB/s). Can't get more bitrate than the audio source "
-                        "though.",
+            description="Streams the audio with given bitrate [kB/s]. "
+                        "Can't stream with a higher Bitrate, than the audio source provides.",
             value="125"
         )
 
@@ -102,9 +102,9 @@ ID3.1: {', '.join(_sorted_id3_1_formats)}
         )
 
         self.attribute_list = [
-            EmptyLine(),
             self.BITRATE,
             self.AUDIO_FORMAT,
+            EmptyLine(),
             Description("""
 There are multiple fields, you can use for the path and file name:
 - genre

@@ -1,7 +1,7 @@
 import logging
 from typing import Callable
 
-from .config import SingleAttribute, StringAttribute, Section, Description, EmptyLine
+from .base_classes import SingleAttribute, StringAttribute, Section, Description, EmptyLine
 
 LOG_LEVELS = {
     "CRITICAL": 50,
@@ -104,6 +104,7 @@ class LoggingSection(Section):
             Description("Logging settings for the actual logging:"),
             self.FORMAT,
             self.LOG_LEVEL,
+            EmptyLine(),
             Description("Just the names for different logger, for different parts of the programm:"),
             self.DOWNLOAD_LOGGER,
             self.TAGGING_LOGGER,
