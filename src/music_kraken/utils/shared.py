@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 from .path_manager import LOCATIONS
-from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION
+from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
 
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
@@ -29,13 +29,11 @@ def get_random_message() -> str:
     return random.choice(HAPPY_MESSAGES)
 
 
-TEMP_DIR = LOCATIONS.TEMP_DIRECTORY
-LOG_PATH = LOCATIONS.get_log_file("download_logs.log")
-MUSIC_DIR: Path = LOCATIONS.MUSIC_DIRECTORY
+TEMP_DIR = PATHS_SECTION.TEMP_DIRECTORY.object_from_value
+LOG_PATH = PATHS_SECTION.LOG_PATH.object_from_value
+MUSIC_DIR: Path = PATHS_SECTION.MUSIC_DIRECTORY.object_from_value
 
-NOT_A_GENRE_REGEX: Tuple[str] = (
-    r'^\.',  # is hidden/starts with a "."
-)
+NOT_A_GENRE_REGEX: Tuple[str] = PATHS_SECTION.NOT_A_GENRE_REGEX.object_from_value
 
 # configure logger default
 logging.basicConfig(

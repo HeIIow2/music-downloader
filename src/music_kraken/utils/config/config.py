@@ -9,6 +9,7 @@ from .audio import AUDIO_SECTION
 from .logging import LOGGING_SECTION
 from .connection import CONNECTION_SECTION
 from .misc import MISC_SECTION
+from .paths import PATHS_SECTION
 
 
 LOGGER = logging.getLogger("config")
@@ -26,6 +27,8 @@ class Config:
             AUDIO_SECTION,
             Description("Modify how Music-Kraken connects to the internet:"),
             CONNECTION_SECTION,
+            Description("Modify all your paths, except your config file..."),
+            PATHS_SECTION,
             Description("For all your Logging needs.\n"
                         "If you found a bug, and wan't to report it, please set the Logging level to 0,\n"
                         "reproduce the bug, and attach the logfile in the bugreport. ^w^"),
