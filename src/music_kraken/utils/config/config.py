@@ -63,7 +63,7 @@ class Config:
         if name not in self._name_section_map:
             raise SettingNotFound(setting_name=name)
 
-        print(f"setting: {name} value: {value}")
+        LOGGER.debug(f"setting: {name} value: {value}")
 
         self._name_section_map[name].modify_setting(setting_name=name, new_value=value)
 
