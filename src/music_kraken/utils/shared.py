@@ -1,18 +1,18 @@
 import logging
 import random
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Tuple
 
 from .path_manager import LOCATIONS
-from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION
+from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION
 
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
 # https://web.archive.org/web/20221124122222/https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
-MODIFY_GC: bool = True
+MODIFY_GC: bool = MISC_SECTION.MODIFY_GC.object_from_value
 
-ID_BITS: int = 64
-ID_RANGE: Tuple[int, int] = (0, int(2**ID_BITS))
+ID_BITS: int = MISC_SECTION.ID_BITS.object_from_value
+ID_RANGE: Tuple[int, int] = (0, int(2 ** ID_BITS))
 
 """
 I will now and then use those messages in the programm.
@@ -20,18 +20,9 @@ But I won't overuse them dw.
 
 I will keep those messages, if you disagree with me on the messages,
 feel free to fork the programm and edit them, or just edit them in the config
-file once I implemented it.
+file once I implemented it. (I did it is in ~/.config/music-kraken/music-kraken.conf)
 """
-HAPPY_MESSAGES: List[str] = [
-    "Support the artist.",
-    "Star Me: https://github.com/HeIIow2/music-downloader",
-    "🏳️‍⚧️🏳️‍⚧️ Trans rights are human rights. 🏳️‍⚧️🏳️‍⚧️",
-    "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
-    "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
-    "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
-    "Gotta love the BPJM!! >:(",
-    "🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️"
-]
+HAPPY_MESSAGES: List[str] = MISC_SECTION.HAPPY_MESSAGES.object_from_value
 
 
 def get_random_message() -> str:
@@ -43,9 +34,8 @@ LOG_PATH = LOCATIONS.get_log_file("download_logs.log")
 MUSIC_DIR: Path = LOCATIONS.MUSIC_DIRECTORY
 
 NOT_A_GENRE_REGEX: Tuple[str] = (
-    r'^\.',     # is hidden/starts with a "."
+    r'^\.',  # is hidden/starts with a "."
 )
-
 
 # configure logger default
 logging.basicConfig(
@@ -73,7 +63,6 @@ CODEX_LOGGER = LOGGING_SECTION.CODEX_LOGGER.object_from_value
 BITRATE = AUDIO_SECTION.BITRATE.object_from_value
 AUDIO_FORMAT = AUDIO_SECTION.AUDIO_FORMAT.object_from_value
 
-
 DOWNLOAD_PATH = AUDIO_SECTION.DOWNLOAD_PATH.object_from_value
 DOWNLOAD_FILE = AUDIO_SECTION.DOWNLOAD_FILE.object_from_value
 DEFAULT_VALUES = {
@@ -86,12 +75,19 @@ DEFAULT_VALUES = {
     "audio_format": AUDIO_FORMAT
 }
 
-
 TOR: bool = CONNECTION_SECTION.USE_TOR.object_from_value
-proxies = {
-    'http': 'socks5h://127.0.0.1:9150',
-    'https': 'socks5h://127.0.0.1:9150'
-} if TOR else {}
+proxies = {}
+if len(CONNECTION_SECTION.PROXIES) > 0:
+    """
+    TODO
+    rotating proxies
+    """
+    proxies = CONNECTION_SECTION.PROXIES.object_from_value[0]
+if TOR:
+    proxies = {
+        'http': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}',
+        'https': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}'
+    }
 
 # size of the chunks that are streamed
 CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value

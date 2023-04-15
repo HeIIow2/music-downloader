@@ -8,6 +8,10 @@ from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PR
 from .audio import AUDIO_SECTION
 from .logging import LOGGING_SECTION
 from .connection import CONNECTION_SECTION
+from .misc import MISC_SECTION
+
+
+LOGGER = logging.getLogger("config")
 
 
 class Config:
@@ -26,6 +30,8 @@ class Config:
                         "If you found a bug, and wan't to report it, please set the Logging level to 0,\n"
                         "reproduce the bug, and attach the logfile in the bugreport. ^w^"),
             LOGGING_SECTION,
+            Description("If there are stupid settings, they are here."),
+            MISC_SECTION,
             Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
         )
 
@@ -57,6 +63,8 @@ class Config:
         if name not in self._name_section_map:
             raise SettingNotFound(setting_name=name)
 
+        print(f"setting: {name} value: {value}")
+
         self._name_section_map[name].modify_setting(setting_name=name, new_value=value)
 
     def __len__(self):
@@ -81,6 +89,10 @@ class Config:
             return
 
         if "=" not in line:
+            """
+            TODO
+            No value error but custom conf error
+            """
             raise ValueError(f"Couldn't find the '=' in line {index}.")
 
         line_segments = line.split("=")
@@ -91,6 +103,9 @@ class Config:
 
     def read_from_config_file(self, path: os.PathLike):
         with open(path, "r") as conf_file:
+            for section in self._section_list:
+                section.reset_list_attribute()
+
             for i, line in enumerate(conf_file):
                 self._parse_conf_line(line, i+1)
 

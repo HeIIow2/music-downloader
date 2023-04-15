@@ -55,6 +55,8 @@ if __name__ == "__main__":
 
     import music_kraken
 
+    music_kraken.read()
+
     if arguments.settings:
         music_kraken.settings()
         exit()

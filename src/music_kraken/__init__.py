@@ -1,16 +1,16 @@
-import gc
-import musicbrainzngs
 import logging
 import re
-import os
 from pathlib import Path
 from typing import List
 
+import gc
+import musicbrainzngs
+
 from . import objects, pages
-from .utils.config import config, read, write
-from .utils.string_processing import fit_to_file_system
-from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
 from .utils import exception
+from .utils.config import config, read, write
+from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
+from .utils.string_processing import fit_to_file_system
 
 if MODIFY_GC:
     """

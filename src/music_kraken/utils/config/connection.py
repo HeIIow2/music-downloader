@@ -1,15 +1,35 @@
-import logging
-from typing import Callable
+from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute
 
-from .base_classes import SingleAttribute, StringAttribute, Section, FloatAttribute, Description, IntAttribute, EmptyLine, BoolAttribute
+
+class ProxAttribute(ListAttribute):
+    def single_object_from_element(self, value) -> dict:
+        return {
+            'http': value,
+            'https': value,
+            'ftp': value
+        }
 
 
 class ConnectionSection(Section):
     def __init__(self):
+        self.PROXIES = ProxAttribute(
+            name="proxies",
+            description="Set your proxies.\n"
+                        "Must be valid for http, as well as https.",
+            value=[]
+        )
+
         self.USE_TOR = BoolAttribute(
             name="tor",
-            description="Route ALL traffic through Tor.\nNo guarantee though!",
+            description="Route ALL traffic through Tor.\n"
+                        "If you use Tor, make sure the Tor browser is installed, and running."
+                        "I can't guarantee maximum security though!",
             value="false"
+        )
+        self.TOR_PORT = IntAttribute(
+            name="tor_port",
+            description="The port, tor is listening. If tor is already working, don't change it.",
+            value="9150"
         )
         self.CHUNK_SIZE = IntAttribute(
             name="chunk_size",
@@ -25,6 +45,7 @@ class ConnectionSection(Section):
 
         self.attribute_list = [
             self.USE_TOR,
+            self.TOR_PORT,
             self.CHUNK_SIZE,
             self.SHOW_DOWNLOAD_ERRORS_THRESHOLD
         ]

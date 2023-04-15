@@ -4,6 +4,9 @@ from typing import Optional, List, Union, Dict
 
 from ..exception.config import SettingNotFound, SettingValueError
 
+
+LOGGER = logging.getLogger("config")
+
 COMMENT_PREFIX = "#"
 
 
@@ -83,7 +86,7 @@ class IntAttribute(SingleAttribute):
 
     @property
     def object_from_value(self) -> int:
-        if not self.value.isdigit():
+        if self.value.isdigit():
             return int(self.value)
 
 
@@ -123,6 +126,9 @@ class ListAttribute(Attribute):
 
     has_default_values: bool = True
 
+    def __len__(self):
+        return len(self.value)
+
     def set_value(self, value: str):
         """
         Due to lists being represented as multiple lines with the same key,
@@ -137,6 +143,7 @@ class ListAttribute(Attribute):
         # resetting the list to an empty list, if this is the first config line to load
         if self.has_default_values:
             self.value = []
+            self.has_default_values = False
 
         self.value.append(value)
 
@@ -150,8 +157,8 @@ class ListAttribute(Attribute):
     @property
     def object_from_value(self) -> list:
         """
-        THIS IS NOT THE PROPERTY TO OVERRIDE WHEN INHERETING ListAttribute
-
+        THIS IS NOT THE PROPERTY TO OVERRIDE WHEN INHERITING ListAttribute
+        single_object_from_element
         :return:
         """
 
@@ -216,3 +223,10 @@ class Section:
             )
 
         self.name_attribute_map[setting_name].set_value(new_value)
+
+    def reset_list_attribute(self):
+        for attribute in self.attribute_list:
+            if not isinstance(attribute, ListAttribute):
+                continue
+
+            attribute.has_default_values = True
