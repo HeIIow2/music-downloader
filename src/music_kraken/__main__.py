@@ -46,6 +46,13 @@ if __name__ == "__main__":
         action="store_true"
     )
 
+    parser.add_argument(
+        "--paths",
+        "-p",
+        help="Prints an overview over all music-kraken paths.",
+        action="store_true"
+    )
+
     arguments = parser.parse_args()
 
     if arguments.verbose or arguments.test:
@@ -59,6 +66,10 @@ if __name__ == "__main__":
 
     if arguments.settings:
         music_kraken.settings()
+        exit()
+
+    if arguments.paths:
+        music_kraken.paths()
         exit()
 
     # getting the genre

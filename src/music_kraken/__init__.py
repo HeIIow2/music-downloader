@@ -7,8 +7,8 @@ import gc
 import musicbrainzngs
 
 from . import objects, pages
-from .utils import exception
-from .utils.config import config, read, write
+from .utils import exception, shared
+from .utils.config import config, read, write, PATHS_SECTION
 from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
 from .utils.string_processing import fit_to_file_system
 
@@ -57,6 +57,15 @@ def exit_message():
     print()
     print_cute_message()
     print("See you soon! :3")
+
+
+def paths():
+    print(f"Temp dir:\t{shared.TEMP_DIR}\n"
+          f"Music dir:\t{shared.MUSIC_DIR}\n"
+          f"Log file:\t{shared.LOG_PATH}")
+    print()
+    print_cute_message()
+    print()
 
 
 def settings(
