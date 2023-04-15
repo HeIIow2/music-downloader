@@ -102,7 +102,12 @@ def settings(
         return True
 
     if name is not None and value is not None:
-        modify_setting(name, value, invalid_ok=False)
+        modify_setting(name, value, invalid_ok=True)
+
+        print()
+        print_cute_message()
+        print()
+        return
 
     while True:
         print_settings()
@@ -111,6 +116,9 @@ def settings(
         print()
         if input_.isdigit() and int(input_) < len(config):
             if modify_setting_by_index(int(input_)):
+                print()
+                print_cute_message()
+                print()
                 return
         else:
             print("Please input a valid ID.")

@@ -47,6 +47,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-s',
+        '--setting',
+        help="Modifies a setting  directly.",
+        nargs=2
+    )
+
+    parser.add_argument(
         "--paths",
         "-p",
         help="Prints an overview over all music-kraken paths.",
@@ -63,6 +70,10 @@ if __name__ == "__main__":
     import music_kraken
 
     music_kraken.read()
+
+    if arguments.setting is not None:
+        music_kraken.settings(*arguments.setting)
+        exit()
 
     if arguments.settings:
         music_kraken.settings()
