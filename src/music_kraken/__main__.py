@@ -40,6 +40,12 @@ if __name__ == "__main__":
         help="Downloads the content of given url."
     )
 
+    parser.add_argument(
+        '--settings',
+        help="Opens a menu to modify the settings",
+        action="store_true"
+    )
+
     arguments = parser.parse_args()
 
     if arguments.verbose or arguments.test:
@@ -48,6 +54,10 @@ if __name__ == "__main__":
         logging.getLogger().setLevel(logging.DEBUG)
 
     import music_kraken
+
+    if arguments.settings:
+        music_kraken.settings()
+        exit()
 
     # getting the genre
     genre: str = arguments.genre

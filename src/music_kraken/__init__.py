@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List
 
 from . import objects, pages
+from .utils.config import config, read, write
 from .utils.string_processing import fit_to_file_system
 from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
 
@@ -55,6 +56,64 @@ def exit_message():
     print()
     print_cute_message()
     print("See you soon! :3")
+
+
+def settings(
+        name: str = None,
+        value: str = None,
+):
+    def modify_setting(_name: str, _value: str, invalid_ok: bool = True) -> bool:
+        try:
+            config.set_name_to_value(_name, _value)
+        except ValueError as e:
+            if invalid_ok:
+                print()
+                print(e.args[0])
+                return False
+            else:
+                raise e
+        except KeyError as e:
+            if invalid_ok:
+                print(f"There is no such setting as: {_name}")
+                return False
+            else:
+                raise e
+
+        write()
+        return True
+
+    def print_settings():
+        for i, attribute in enumerate(config):
+            print(f"{i:0>2}: {attribute.name}={attribute.value}")
+
+    def modify_setting_by_index(index: int, recursive: bool = True) -> bool:
+        attribute = list(config)[index]
+
+        print()
+        print(attribute)
+
+        input__ = input("New value: ")
+        if not modify_setting(attribute.name, input__.strip()):
+            if recursive:
+                return modify_setting_by_index(index)
+            else:
+                return False
+        return True
+
+    if name is not None and value is not None:
+        modify_setting(name, value, invalid_ok=False)
+
+    while True:
+        print_settings()
+
+        input_ = input("Id of setting to modify: ")
+        print()
+        if input_.isdigit() and int(input_) < len(config):
+            if modify_setting_by_index(int(input_)):
+                return
+        else:
+            print("Please input a valid ID.")
+            print()
 
 
 def cli(

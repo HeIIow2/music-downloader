@@ -1,4 +1,4 @@
-from typing import Union, Tuple, Dict, Iterable
+from typing import Union, Tuple, Dict, Iterable, List
 import logging
 import os
 
@@ -25,6 +25,7 @@ class Config:
             Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
         )
 
+        self._length = 0
         self._section_list: List[Section] = []
         self._name_section_map: Dict[str, Section] = dict()
 
@@ -40,12 +41,16 @@ class Config:
                                      f"{element.__class__.__name__} {self._name_section_map[name].__class__.__name__}")
 
                 self._name_section_map[name] = element
+                self._length += 1
 
     def set_name_to_value(self, name: str, value: str):
         if name not in self._name_section_map:
             raise KeyError(f"There is no such setting, as: {name}")
 
         self._name_section_map[name][name] = value
+
+    def __len__(self):
+        return self._length
 
     @property
     def config_string(self) -> str:
