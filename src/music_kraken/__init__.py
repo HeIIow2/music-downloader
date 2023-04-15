@@ -10,6 +10,7 @@ from . import objects, pages
 from .utils.config import config, read, write
 from .utils.string_processing import fit_to_file_system
 from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
+from .utils import exception
 
 if MODIFY_GC:
     """
@@ -65,16 +66,9 @@ def settings(
     def modify_setting(_name: str, _value: str, invalid_ok: bool = True) -> bool:
         try:
             config.set_name_to_value(_name, _value)
-        except ValueError as e:
+        except exception.config.SettingException as e:
             if invalid_ok:
-                print()
-                print(e.args[0])
-                return False
-            else:
-                raise e
-        except KeyError as e:
-            if invalid_ok:
-                print(f"There is no such setting as: {_name}")
+                print(e)
                 return False
             else:
                 raise e
@@ -86,18 +80,16 @@ def settings(
         for i, attribute in enumerate(config):
             print(f"{i:0>2}: {attribute.name}={attribute.value}")
 
-    def modify_setting_by_index(index: int, recursive: bool = True) -> bool:
+    def modify_setting_by_index(index: int) -> bool:
         attribute = list(config)[index]
 
         print()
         print(attribute)
 
-        input__ = input("New value: ")
+        input__ = input(f"{attribute.name}=")
         if not modify_setting(attribute.name, input__.strip()):
-            if recursive:
-                return modify_setting_by_index(index)
-            else:
-                return False
+            return modify_setting_by_index(index)
+
         return True
 
     if name is not None and value is not None:

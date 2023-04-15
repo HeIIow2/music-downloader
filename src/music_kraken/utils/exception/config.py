@@ -25,4 +25,4 @@ class SettingValueError(SettingException):
         self.rule = rule
 
     def __str__(self):
-        return f"{self.setting_name} {self.rule}, not '{self.setting_value}'"
+        return f"{self.setting_name} {self.rule}, not '{self.setting_value}'."
