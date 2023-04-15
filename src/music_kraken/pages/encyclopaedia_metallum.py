@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import pycountry
 from urllib.parse import urlparse
 
-from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER
+from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER, proxies
 from ..utils import string_processing
 from .abstract import Page
 from ..objects import (
@@ -25,6 +25,7 @@ from ..objects import (
 
 class EncyclopaediaMetallum(Page):
     API_SESSION: requests.Session = requests.Session()
+    API_SESSION.proxies = proxies
     API_SESSION.headers = {
         "Host": "www.metal-archives.com",
         "Connection": "keep-alive"

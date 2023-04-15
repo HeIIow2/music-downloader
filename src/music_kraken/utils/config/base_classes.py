@@ -87,9 +87,25 @@ class IntAttribute(SingleAttribute):
             return int(self.value)
 
 
+class BoolAttribute(SingleAttribute):
+    def validate(self, value: str):
+        if value.lower().strip() not in {"true", "false"}:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=value,
+                rule="has to be a bool (true/false)"
+            )
+
+    @property
+    def object_from_value(self) -> bool:
+        return self.value.lower().strip() in {"yes", "y", "t", "true"}
+
+
 class FloatAttribute(SingleAttribute):
     def validate(self, value: str):
-        if not value.isnumeric():
+        try:
+            float(value)
+        except ValueError:
             raise SettingValueError(
                 setting_name=self.name,
                 setting_value=value,

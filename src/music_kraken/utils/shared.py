@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Set, Tuple
 
 from .path_manager import LOCATIONS
-from .config import LOGGING_SECTION, AUDIO_SECTION
+from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION
 
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
@@ -87,16 +87,16 @@ DEFAULT_VALUES = {
 }
 
 
-TOR: bool = False
+TOR: bool = CONNECTION_SECTION.USE_TOR.object_from_value
 proxies = {
     'http': 'socks5h://127.0.0.1:9150',
     'https': 'socks5h://127.0.0.1:9150'
 } if TOR else {}
 
 # size of the chunks that are streamed
-CHUNK_SIZE = 1024
+CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value
 # this is a percentage describing the percentage of failed downloads,
 # relative to the total downloads.
 # If the percentage goes over this threshold DownloadResult returns the download errors
 # in the __str__ method
-SHOW_DOWNLOAD_ERRORS_THRESHOLD = 0.3
+SHOW_DOWNLOAD_ERRORS_THRESHOLD = CONNECTION_SECTION.SHOW_DOWNLOAD_ERRORS_THRESHOLD.object_from_value

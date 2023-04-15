@@ -7,6 +7,7 @@ from ..path_manager import LOCATIONS
 from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PREFIX
 from .audio import AUDIO_SECTION
 from .logging import LOGGING_SECTION
+from .connection import CONNECTION_SECTION
 
 
 class Config:
@@ -19,6 +20,8 @@ class Config:
                         "If you, for some reason wanna fill your drive real quickly, I mean enjoy HIFI music,\n"
                         "feel free to tinker with the Bitrate or smth. :)"),
             AUDIO_SECTION,
+            Description("Modify how Music-Kraken connects to the internet:"),
+            CONNECTION_SECTION,
             Description("For all your Logging needs.\n"
                         "If you found a bug, and wan't to report it, please set the Logging level to 0,\n"
                         "reproduce the bug, and attach the logfile in the bugreport. ^w^"),
