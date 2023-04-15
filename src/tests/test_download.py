@@ -19,7 +19,7 @@ class TestPageSelection(unittest.TestCase):
     
     def test_excluding(self):
         search = download_center.Download(
-            exclude_pages=set((pages.EncyclopaediaMetallum,))
+            exclude_pages={pages.EncyclopaediaMetallum}
         )
         
         for page in search.pages:
