@@ -2,6 +2,7 @@ from typing import Union, Tuple, Dict, Iterable, List
 import logging
 import os
 
+from ..exception.config import SettingNotFound, SettingValueError
 from ..path_manager import LOCATIONS
 from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PREFIX
 from .audio import AUDIO_SECTION
@@ -44,10 +45,16 @@ class Config:
                 self._length += 1
 
     def set_name_to_value(self, name: str, value: str):
+        """
+        :raises SettingValueError, SettingNotFound:
+        :param name:
+        :param value:
+        :return:
+        """
         if name not in self._name_section_map:
-            raise KeyError(f"There is no such setting, as: {name}")
+            raise SettingNotFound(setting_name=name)
 
-        self._name_section_map[name][name] = value
+        self._name_section_map[name].modify_setting(setting_name=name, new_value=value)
 
     def __len__(self):
         return self._length
@@ -57,6 +64,12 @@ class Config:
         return "\n\n".join(str(element) for element in self.config_elements)
 
     def _parse_conf_line(self, line: str, index: int):
+        """
+        :raises SettingValueError, SettingNotFound:
+        :param line:
+        :param index:
+        :return:
+        """
         line = line.strip()
         if line.startswith(COMMENT_PREFIX):
             return

@@ -6,6 +6,9 @@ class SettingNotFound(SettingException):
     def __init__(self, setting_name: str):
         self.setting_name = setting_name
 
+    def __str__(self):
+        return f"Setting '{self.setting_name}' not found."
+
 
 class SettingValueError(SettingException):
     def __init__(self, setting_name: str, setting_value: str, rule: str):
