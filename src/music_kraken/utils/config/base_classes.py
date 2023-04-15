@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, List, Union, Dict
 
+from ..exception.config import SettingNotFound, SettingValueError
+
 COMMENT_PREFIX = "#"
 
 
@@ -28,16 +30,25 @@ class Attribute:
     description: Optional[str]
     value: Union[str, List[str]]
 
-    rule: str = "The setting {name} can't be {value}."
+    def validate(self, value: str):
+        """
+        This function validates a new value without setting it.
+
+        :raise SettingValueError:
+        :param value:
+        :return:
+        """
+        pass
 
     def set_value(self, value: str):
-        _value = self.value
+        """
+        :raise SettingValueError: if the value is invalid for this setting
+        :param value:
+        :return:
+        """
+        self.validate(value)
 
         self.value = value
-        try:
-            _ = self.object_from_value
-        except ValueError:
-            raise ValueError(self.rule.format(name=self.name, value=self.value))
 
     @property
     def description_as_comment(self):
@@ -62,33 +73,77 @@ class StringAttribute(SingleAttribute):
 
 
 class IntAttribute(SingleAttribute):
-    rule = "The setting {name} has to be an integer, not {value}"
+    def validate(self, value: str):
+        if not value.isdigit():
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=value,
+                rule="has to be a digit (an int)"
+            )
 
     @property
     def object_from_value(self) -> int:
         if not self.value.isdigit():
-            raise ValueError(f"The value of {self.name} needs to be an integer, not {self.value}")
-
-        return int(self.value)
+            return int(self.value)
 
 
 class FloatAttribute(SingleAttribute):
-    rule = "The setting {name} has to be a number, not {value}"
+    def validate(self, value: str):
+        if not value.isnumeric():
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=value,
+                rule="has to be numeric (an int or float)"
+            )
 
     @property
     def object_from_value(self) -> float:
-        if not self.value.isnumeric():
-            raise ValueError(f"The value of {self.name} needs to be a number, not {self.value}")
-
-        return float(self.value)
+        if self.value.isnumeric():
+            return float(self.value)
 
 
 class ListAttribute(Attribute):
     value: List[str]
 
+    has_default_values: bool = True
+
+    def set_value(self, value: str):
+        """
+        Due to lists being represented as multiple lines with the same key,
+        this appends, rather than setting anything.
+
+        :raise SettingValueError:
+        :param value:
+        :return:
+        """
+        self.validate(value)
+
+        # resetting the list to an empty list, if this is the first config line to load
+        if self.has_default_values:
+            self.value = []
+
+        self.value.append(value)
+
     def __str__(self):
         return f"{self.description_as_comment}\n" + \
             "\n".join(f"{self.name}={element}" for element in self.value)
+
+    def single_object_from_element(self, value: str):
+        return value
+
+    @property
+    def object_from_value(self) -> list:
+        """
+        THIS IS NOT THE PROPERTY TO OVERRIDE WHEN INHERETING ListAttribute
+
+        :return:
+        """
+
+        parsed = list()
+        for raw in self.value:
+            parsed.append(self.single_object_from_element(raw))
+
+        return parsed
 
 
 @dataclass
@@ -131,9 +186,17 @@ class Section:
 
             self.name_attribute_map[element.name] = element
 
-    def __setitem__(self, key, value):
-        if key not in self.name_attribute_map:
-            raise KeyError(f"There is no such setting with the name: {key}")
+    def modify_setting(self, setting_name: str, new_value: str):
+        """
+        :raise SettingValueError, SettingNotFound:
+        :param setting_name:
+        :param new_value:
+        :return:
+        """
 
-        attribute = self.name_attribute_map[key]
-        attribute.set_value(value)
+        if setting_name not in self.name_attribute_map:
+            raise SettingNotFound(
+                setting_name=setting_name
+            )
+
+        self.name_attribute_map[setting_name].set_value(new_value)
