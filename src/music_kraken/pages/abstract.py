@@ -232,6 +232,7 @@ class Page:
         }
 
         cls._clean_music_object(music_object, collections)
+
         music_object.compile(merge_into=True)
         return music_object
 

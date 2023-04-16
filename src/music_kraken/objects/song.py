@@ -1,3 +1,4 @@
+import random
 from typing import List, Optional, Dict, Tuple
 
 import pycountry
@@ -287,7 +288,8 @@ class Album(MainObject):
             id3Mapping.COPYRIGHT: [self.copyright],
             id3Mapping.LANGUAGE: [self.iso_639_2_lang],
             id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
-            id3Mapping.DATE: [self.date.timestamp]
+            id3Mapping.DATE: [self.date.timestamp],
+            id3Mapping.ALBUMSORTORDER: [str(self.albumsort)] if self.albumsort is not None else []
         })
 
     def __repr__(self):
@@ -356,6 +358,18 @@ class Album(MainObject):
             if song.tracksort is not None:
                 continue
             song.tracksort = i + 1
+
+    def compile(self, merge_into: bool = False):
+        """
+        compiles the recursive structures,
+        and does depending on the object some other stuff.
+
+        no need to override if only the recursive structure should be built.
+        override self.build_recursive_structures() instead
+        """
+
+        self.update_tracksort()
+        self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
 
     @property
     def copyright(self) -> str:
@@ -453,6 +467,36 @@ class Artist(MainObject):
         self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection = Collection(data=label_list, element_type=Label)
 
+    def compile(self, merge_into: bool = False):
+        """
+        compiles the recursive structures,
+        and does depending on the object some other stuff.
+
+        no need to override if only the recursive structure should be built.
+        override self.build_recursive_structures() instead
+        """
+
+        self.update_albumsort()
+        self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
+
+    def update_albumsort(self):
+        """
+        TODO
+
+        This updates the albumsort attributes, of the albums in
+        `self.main_album_collection`, and sorts the albums, if possible.
+
+        It is advised to only call this function, once all the albums are
+        added to the artist.
+
+        :return:
+        """
+        # self.main_album_collection.sort(key=lambda _album: _album.date)
+
+        for i, album in enumerate(self.main_album_collection):
+            if album.albumsort is None:
+                album.albumsort = i + 1
+
     def _build_recursive_structures(self, build_version: int, merge: False):
         if build_version == self.build_version:
             return
@@ -515,23 +559,6 @@ class Artist(MainObject):
     @property
     def country_string(self):
         return self.country.alpha_3
-
-    def update_albumsort(self):
-        """
-        This updates the albumsort attributes, of the albums in
-        `self.main_album_collection`, and sorts the albums, if possible.
-
-        It is advised to only call this function, once all the albums are
-        added to the artist.
-
-        :return:
-        """
-        self.main_album_collection.sort(key=lambda _album: _album.date)
-
-        for i, album in enumerate(self.main_album_collection):
-            if album.albumsort is None:
-                continue
-            album.albumsort = i + 1
 
     @property
     def feature_album(self) -> Album:

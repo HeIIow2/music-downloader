@@ -117,8 +117,7 @@ class FloatAttribute(SingleAttribute):
 
     @property
     def object_from_value(self) -> float:
-        if self.value.isnumeric():
-            return float(self.value)
+        return float(self.value)
 
 
 class ListAttribute(Attribute):
