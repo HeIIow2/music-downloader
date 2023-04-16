@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 from typing import List, Optional, Dict, Tuple
 
 import pycountry
@@ -17,6 +18,7 @@ from .parents import MainObject
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
+from ..utils.shared import SORT_BY_ALBUM_TYPE, SORT_BY_DATE
 
 """
 All Objects dependent 
@@ -481,8 +483,6 @@ class Artist(MainObject):
 
     def update_albumsort(self):
         """
-        TODO
-
         This updates the albumsort attributes, of the albums in
         `self.main_album_collection`, and sorts the albums, if possible.
 
@@ -494,11 +494,50 @@ class Artist(MainObject):
         if len(self.main_album_collection) <= 0:
             return
 
-        self.main_album_collection.sort(key=lambda _album: _album.date)
+        type_section: Dict[AlbumType] = defaultdict(lambda: 2, {
+            AlbumType.OTHER: 0,  # if I don't know it, I add it to the first section
+            AlbumType.STUDIO_ALBUM: 0,
+            AlbumType.EP: 0,
+            AlbumType.SINGLE: 1
+        }) if SORT_BY_ALBUM_TYPE else defaultdict(lambda: 0)
 
-        for i, album in enumerate(self.main_album_collection):
-            if album.albumsort is None:
-                album.albumsort = i + 1
+        sections = defaultdict(list)
+
+        # order albums in the previously defined section
+        album: Album
+        for album in self.main_album_collection:
+            sections[type_section[album.album_type]].append(album)
+
+        def sort_section(_section: List[Album], last_albumsort: int) -> int:
+            # album is just a value used in loops
+            nonlocal album
+
+            if SORT_BY_DATE:
+                _section.sort(key=lambda _album: _album.date, reverse=True)
+
+            new_last_albumsort = last_albumsort
+
+            for album_index, album in enumerate(_section):
+                if album.albumsort is None:
+                    album.albumsort = new_last_albumsort = album_index + 1 + last_albumsort
+
+            _section.sort(key=lambda _album: _album.albumsort)
+
+            return new_last_albumsort
+
+        # sort the sections individually
+        _last_albumsort = 1
+        for section_index in sorted(sections):
+            _last_albumsort = sort_section(sections[section_index], _last_albumsort)
+
+        # merge all sections again
+        album_list = []
+        for section_index in sorted(sections):
+            album_list.extend(sections[section_index])
+
+        # replace the old collection with the new one
+        self.main_album_collection: Collection = Collection(data=album_list, element_type=Album)
+
 
     def _build_recursive_structures(self, build_version: int, merge: False):
         if build_version == self.build_version:
