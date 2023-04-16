@@ -1,6 +1,14 @@
 import logging
 
-from .base_classes import SingleAttribute, FloatAttribute, StringAttribute, IntAttribute, Section, Description, EmptyLine
+from .base_classes import (
+    SingleAttribute,
+    FloatAttribute,
+    StringAttribute,
+    Section,
+    Description,
+    EmptyLine,
+    BoolAttribute
+)
 
 # Only the formats with id3 metadata can be used
 # https://www.audioranger.com/audio-formats.php
@@ -52,6 +60,22 @@ but you will have cleaner Metadata using ID3.2.
 ID3.2: {', '.join(_sorted_id3_2_formats)}
 ID3.1: {', '.join(_sorted_id3_1_formats)}
         """.strip())
+
+        self.SORT_BY_DATE = BoolAttribute(
+            name="sort_by_date",
+            description="If this is set to true, it will set the albumsort attribute such that,\n"
+                        "the albums are sorted by date.",
+            value="true"
+        )
+
+        self.SORT_BY_ALBUM_TYPE = BoolAttribute(
+            name="sort_album_by_type",
+            description="If this is set to true, it will set the albumsort attribute such that,\n"
+                        "the albums are put into categories before being sorted.\n"
+                        "This means for example, the Studio Albums and EP's are always in front of Singles, "
+                        "and Compilations are in the back.",
+            value="true"
+        )
 
         self.DOWNLOAD_PATH = StringAttribute(
             name="download_path",
@@ -105,6 +129,8 @@ ID3.1: {', '.join(_sorted_id3_1_formats)}
             self.BITRATE,
             self.AUDIO_FORMAT,
             EmptyLine(),
+            self.SORT_BY_DATE,
+            self.SORT_BY_ALBUM_TYPE,
             Description("""
 There are multiple fields, you can use for the path and file name:
 - genre

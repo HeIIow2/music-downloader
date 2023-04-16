@@ -94,3 +94,6 @@ CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value
 # If the percentage goes over this threshold DownloadResult returns the download errors
 # in the __str__ method
 SHOW_DOWNLOAD_ERRORS_THRESHOLD = CONNECTION_SECTION.SHOW_DOWNLOAD_ERRORS_THRESHOLD.object_from_value
+
+SORT_BY_DATE = AUDIO_SECTION.SORT_BY_DATE.object_from_value
+SORT_BY_ALBUM_TYPE = AUDIO_SECTION.SORT_BY_ALBUM_TYPE.object_from_value

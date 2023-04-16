@@ -491,7 +491,10 @@ class Artist(MainObject):
 
         :return:
         """
-        # self.main_album_collection.sort(key=lambda _album: _album.date)
+        if len(self.main_album_collection) <= 0:
+            return
+
+        self.main_album_collection.sort(key=lambda _album: _album.date)
 
         for i, album in enumerate(self.main_album_collection):
             if album.albumsort is None:
