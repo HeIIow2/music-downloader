@@ -30,7 +30,7 @@ class Source(DatabaseObject):
         page_enum: SourcePages,
         url: str, 
         id_: str = None,
-        referer_page: SourceTypes = None,
+        referer_page: SourcePages = None,
         adio_url: str = None
     ) -> None:
         DatabaseObject.__init__(self, id_=id_)
@@ -42,7 +42,7 @@ class Source(DatabaseObject):
         self.audio_url = adio_url
 
     @classmethod
-    def match_url(cls, url: str) -> Optional["Source"]:
+    def match_url(cls, url: str, referer_page: SourcePages) -> Optional["Source"]:
         """
         this shouldn't be used, unlesse you are not certain what the source is for
         the reason is that it is more inefficient
@@ -51,38 +51,38 @@ class Source(DatabaseObject):
         url = parsed.geturl()
         
         if "musify" in parsed.netloc:
-            return cls(SourcePages.MUSIFY, url)
+            return cls(SourcePages.MUSIFY, url, referer_page=referer_page)
 
         if url.startswith("https://www.youtube"):
-            return cls(SourcePages.YOUTUBE, url)
+            return cls(SourcePages.YOUTUBE, url, referer_page=referer_page)
 
         if url.startswith("https://www.deezer"):
-            return cls(SourcePages.DEEZER, url)
+            return cls(SourcePages.DEEZER, url, referer_page=referer_page)
         
         if url.startswith("https://open.spotify.com"):
-            return cls(SourcePages.SPOTIFY, url)
+            return cls(SourcePages.SPOTIFY, url, referer_page=referer_page)
 
         if "bandcamp" in url:
-            return cls(SourcePages.BANDCAMP, url)
+            return cls(SourcePages.BANDCAMP, url, referer_page=referer_page)
 
         if "wikipedia" in parsed.netloc:
-            return cls(SourcePages.WIKIPEDIA, url)
+            return cls(SourcePages.WIKIPEDIA, url, referer_page=referer_page)
 
         if url.startswith("https://www.metal-archives.com/"):
-            return cls(SourcePages.ENCYCLOPAEDIA_METALLUM, url)
+            return cls(SourcePages.ENCYCLOPAEDIA_METALLUM, url, referer_page=referer_page)
 
         # the less important once
         if url.startswith("https://www.facebook"):
-            return cls(SourcePages.FACEBOOK, url)
+            return cls(SourcePages.FACEBOOK, url, referer_page=referer_page)
 
         if url.startswith("https://www.instagram"):
-            return cls(SourcePages.INSTAGRAM, url)
+            return cls(SourcePages.INSTAGRAM, url, referer_page=referer_page)
 
         if url.startswith("https://twitter"):
-            return cls(SourcePages.TWITTER, url)
+            return cls(SourcePages.TWITTER, url, referer_page=referer_page)
 
         if url.startswith("https://myspace.com"):
-            return cls(SourcePages.MYSPACE, url)
+            return cls(SourcePages.MYSPACE, url, referer_page=referer_page)
 
     def get_song_metadata(self) -> Metadata:
         return Metadata({

@@ -285,7 +285,7 @@ class EncyclopaediaMetallum(Page):
                 if url is None:
                     continue
 
-                source_list.append(Source.match_url(url))
+                source_list.append(Source.match_url(url, referer_page=cls.SOURCE_TYPE))
 
         return source_list
 

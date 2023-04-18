@@ -681,7 +681,7 @@ class Musify(Page):
                 href = additional_source.get("href")
                 if href is None:
                     continue
-                new_src = Source.match_url(href)
+                new_src = Source.match_url(href, referer_page=cls.SOURCE_TYPE)
                 if new_src is None:
                     continue
                 source_list.append(new_src)
