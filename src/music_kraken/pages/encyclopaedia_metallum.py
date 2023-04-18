@@ -9,6 +9,7 @@ from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER, proxies
 from ..utils import string_processing
 from .abstract import Page
 from ..utils.enums.source import SourcePages
+from ..utils.enums.album import AlbumType
 from ..objects import (
     Lyrics,
     Artist,
@@ -19,7 +20,6 @@ from ..objects import (
     FormattedText,
     Label,
     Options,
-    AlbumType
 )
 
 

@@ -1,10 +1,10 @@
+from ..utils.enums import album
 from . import (
     song,
     metadata,
     source,
     parents,
     formatted_text,
-    album,
     option,
     collection
 )
@@ -24,8 +24,6 @@ Target = song.Target
 Lyrics = song.Lyrics
 Label = song.Label
 
-AlbumType = album.AlbumType
-AlbumStatus = album.AlbumStatus
 Album = song.Album
 
 FormattedText = formatted_text.FormattedText

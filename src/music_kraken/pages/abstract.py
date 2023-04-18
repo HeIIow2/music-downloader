@@ -18,9 +18,9 @@ from ..objects import (
     Options,
     Collection,
     Label,
-    AlbumType
 )
 from ..utils.enums.source import SourcePages
+from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
 

@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Tuple
 
 import pycountry
 
-from .album import AlbumType, AlbumStatus
+from ..utils.enums.album import AlbumType, AlbumStatus
 from .collection import Collection
 from .formatted_text import FormattedText
 from .lyrics import Lyrics
