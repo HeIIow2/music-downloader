@@ -97,13 +97,7 @@ class Source(DatabaseObject):
 
     @property
     def metadata(self) -> Metadata:
-        if self.type_enum == SourceTypes.SONG:
-            return self.get_song_metadata()
-
-        if self.type_enum == SourceTypes.ARTIST:
-            return self.get_artist_metadata()
-
-        return super().metadata
+        return self.get_song_metadata()
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:

@@ -125,7 +125,7 @@ class Song(MainObject):
             id3Mapping.TRACKNUMBER: [self.tracksort_str]
         })
 
-        metadata.merge_many([s.metadata for s in self.source_collection])
+        # metadata.merge_many([s.get_song_metadata() for s in self.source_collection])  album sources have no relevant metadata for id3
         metadata.merge_many([a.metadata for a in self.album_collection])
         metadata.merge_many([a.metadata for a in self.main_artist_collection])
         metadata.merge_many([a.metadata for a in self.feature_artist_collection])
