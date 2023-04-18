@@ -52,7 +52,7 @@ def real_download():
 
 if __name__ == "__main__":
     music_kraken.cli(genre="test", command_list=[
-        "#a Ghost Bath",
-        "1",
+        "#a Molchat Doma",
+        "0",
         "ok"
     ])

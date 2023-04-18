@@ -3,53 +3,10 @@ from enum import Enum
 from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse
 
+from ..utils.enums.source import SourcePages, SourceTypes
 from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
 from .collection import Collection
-
-
-class SourceTypes(Enum):
-    SONG = "song"
-    ALBUM = "album"
-    ARTIST = "artist"
-    LYRICS = "lyrics"
-
-
-class SourcePages(Enum):
-    YOUTUBE = "youtube"
-    MUSIFY = "musify"
-    GENIUS = "genius"
-    MUSICBRAINZ = "musicbrainz"
-    ENCYCLOPAEDIA_METALLUM = "encyclopaedia metallum"
-    BANDCAMP = "bandcamp"
-    DEEZER = "deezer"
-    SPOTIFY = "spotify"
-
-    # This has nothing to do with audio, but bands can be here
-    WIKIPEDIA = "wikipedia"
-    INSTAGRAM = "instagram"
-    FACEBOOK = "facebook"
-    TWITTER = "twitter"     # I will use nitter though lol
-    MYSPACE = "myspace"     # Yes somehow this ancient site is linked EVERYWHERE
-
-    @classmethod
-    def get_homepage(cls, attribute) -> str:
-        homepage_map = {
-            cls.YOUTUBE: "https://www.youtube.com/",
-            cls.MUSIFY: "https://musify.club/",
-            cls.MUSICBRAINZ: "https://musicbrainz.org/",
-            cls.ENCYCLOPAEDIA_METALLUM: "https://www.metal-archives.com/",
-            cls.GENIUS: "https://genius.com/",
-            cls.BANDCAMP: "https://bandcamp.com/",
-            cls.DEEZER: "https://www.deezer.com/",
-            cls.INSTAGRAM: "https://www.instagram.com/",
-            cls.FACEBOOK: "https://www.facebook.com/",
-            cls.SPOTIFY: "https://open.spotify.com/",
-            cls.TWITTER: "https://twitter.com/",
-            cls.MYSPACE: "https://myspace.com/",
-            cls.WIKIPEDIA: "https://en.wikipedia.org/wiki/Main_Page"
-        }
-        return homepage_map[attribute]
 
 
 class Source(DatabaseObject):
@@ -62,18 +19,27 @@ class Source(DatabaseObject):
     """
     COLLECTION_ATTRIBUTES = tuple()
     SIMPLE_ATTRIBUTES = {
-        "type_enum": None,
         "page_enum": None,
-        "url": None
+        "url": None,
+        "referer_page": None,
+        "audio_url": None
     }
 
-    def __init__(self, page_enum: SourcePages, url: str, id_: str = None, type_enum=None) -> None:
+    def __init__(
+        self,
+        page_enum: SourcePages,
+        url: str, 
+        id_: str = None,
+        referer_page: SourceTypes = None,
+        adio_url: str = None
+    ) -> None:
         DatabaseObject.__init__(self, id_=id_)
 
-        self.type_enum = type_enum
         self.page_enum = page_enum
+        self.referer_page = page_enum if referer_page is None else referer_page
 
         self.url = url
+        self.audio_url = adio_url
 
     @classmethod
     def match_url(cls, url: str) -> Optional["Source"]:
