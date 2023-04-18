@@ -6,6 +6,9 @@ from typing import List, Tuple
 from .path_manager import LOCATIONS
 from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
 
+
+CONFIG_FILE = LOCATIONS.CONFIG_FILE
+
 # modifies the garbage collector to speed up the program
 # https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/
 # https://web.archive.org/web/20221124122222/https://mkennedy.codes/posts/python-gc-settings-change-this-and-make-your-app-go-20pc-faster/

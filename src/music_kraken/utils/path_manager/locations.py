@@ -10,12 +10,12 @@ from .config_directory import get_config_directory
 class Locations:
     def __init__(self, application_name: os.PathLike = "music-kraken"):
         self.TEMP_DIRECTORY = Path(tempfile.gettempdir(), application_name)
-        self.TEMP_DIRECTORY.mkdirs(exist_ok=True)
+        self.TEMP_DIRECTORY.mkdir(exist_ok=True, parents=True)
 
         self.MUSIC_DIRECTORY = get_music_directory()
 
         self.CONFIG_DIRECTORY = get_config_directory(str(application_name))
-        self.CONFIG_DIRECTORY.mkdirs(exist_ok=True)
+        self.CONFIG_DIRECTORY.mkdir(exist_ok=True, parents=True)
         self.CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
 
     def get_log_file(self, file_name: os.PathLike) -> Path:
