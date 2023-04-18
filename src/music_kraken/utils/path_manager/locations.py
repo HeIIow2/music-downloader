@@ -9,6 +9,8 @@ from .config_directory import get_config_directory
 
 class Locations:
     def __init__(self, application_name: os.PathLike = "music-kraken"):
+        self.FILE_ENCODING: str = "utf-8"
+        
         self.TEMP_DIRECTORY = Path(tempfile.gettempdir(), application_name)
         self.TEMP_DIRECTORY.mkdir(exist_ok=True, parents=True)
 

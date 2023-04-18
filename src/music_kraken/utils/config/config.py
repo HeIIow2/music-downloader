@@ -1,4 +1,5 @@
 from typing import Union, Tuple, Dict, Iterable, List
+from datetime import datetime
 import logging
 import os
 
@@ -21,6 +22,7 @@ class Config:
             Description("IMPORTANT: If you modify this file, the changes for the actual setting, will be kept as is.\n"
                         "The changes you make to the comments, will be discarded, next time you run music-kraken. "
                         "Have fun!"),
+            Description(f"Latest reset: {datetime.now()}"),
             Description("Those are all Settings for the audio codec.\n"
                         "If you, for some reason wanna fill your drive real quickly, I mean enjoy HIFI music,\n"
                         "feel free to tinker with the Bitrate or smth. :)"),
@@ -105,7 +107,7 @@ class Config:
         self.set_name_to_value(name, value)
 
     def read_from_config_file(self, path: os.PathLike):
-        with open(path, "r") as conf_file:
+        with open(path, "r", encoding=LOCATIONS.FILE_ENCODING) as conf_file:
             for section in self._section_list:
                 section.reset_list_attribute()
 
@@ -113,7 +115,7 @@ class Config:
                 self._parse_conf_line(line, i+1)
 
     def write_to_config_file(self, path: os.PathLike):
-        with open(path, "w") as conf_file:
+        with open(path, "w", encoding=LOCATIONS.FILE_ENCODING) as conf_file:
             conf_file.write(self.config_string)
 
     def __iter__(self) -> Iterable[Attribute]:
