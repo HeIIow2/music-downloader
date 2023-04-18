@@ -59,6 +59,12 @@ if __name__ == "__main__":
         help="Prints an overview over all music-kraken paths.",
         action="store_true"
     )
+    
+    parser.add_argument(
+        "-r",
+        help="Resets the config file to the default one.",
+        action="store_true"
+    )
 
     arguments = parser.parse_args()
 
@@ -82,6 +88,12 @@ if __name__ == "__main__":
     if arguments.paths:
         music_kraken.paths()
         exit()
+
+    if arguments.r:
+        import os
+        if os.path.exists(music_kraken.shared.CONFIG_FILE):
+            os.remove(music_kraken.shared.CONFIG_FILE)
+        music_kraken.read()
 
     # getting the genre
     genre: str = arguments.genre

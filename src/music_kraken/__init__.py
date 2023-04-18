@@ -7,10 +7,11 @@ import gc
 import musicbrainzngs
 
 from . import objects, pages
-from .utils import exception, shared
+from .utils import exception, shared, path_manager
 from .utils.config import config, read, write, PATHS_SECTION
 from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
 from .utils.string_processing import fit_to_file_system
+
 
 if MODIFY_GC:
     """
