@@ -28,7 +28,7 @@ class Source(DatabaseObject):
     def __init__(
         self,
         page_enum: SourcePages,
-        url: str, 
+        url: str = None,
         id_: str = None,
         referer_page: SourcePages = None,
         adio_url: str = None

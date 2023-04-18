@@ -424,7 +424,8 @@ class Musify(Page):
             nonlocal name
             nonlocal artist_name
             
-            # example of just setting not working: https://musify.club/release/unjoy-eurythmie-psychonaut-4-tired-numb-still-alive-2012-324067
+            # example of just setting not working:
+            # https://musify.club/release/unjoy-eurythmie-psychonaut-4-tired-numb-still-alive-2012-324067
             if new_name.count(" - ") != 1:
                 name = new_name
                 return
@@ -833,6 +834,27 @@ class Musify(Page):
 
                 if _artist_name is not None or _artist_src is not None:
                     artist_list.append(Artist(name=_artist_name, source_list=_artist_src))
+
+        # playlist actions
+        playlist_actions: BeautifulSoup = song_card.find("div", {"class": "playlist__actions"})
+        if playlist_actions is not None:
+            """
+            <div class="playlist__actions">
+                <span class="pl-btn save-to-pl" id="add_3051" title="Сохранить в плейлист"><i class="zmdi zmdi-plus zmdi-hc-1-5x"></i></span>
+                <a target="_blank" itemprop="audio" download="Linkin Park - Papercut.mp3" href="/track/dl/3051/linkin-park-papercut.mp3" class="no-ajaxy yaBrowser" id="dl_3051" title='Скачать Linkin Park - Papercut'>
+                    <span><i class="zmdi zmdi-download zmdi-hc-2-5x"></i></span>
+                </a>
+            </div>
+            """
+            # getting the actual download link:
+            download_anchor = playlist_actions.find("a", {"itemprop": "audio"})
+            if download_anchor is not None:
+                download_href = download_anchor.get("href")
+                if download_href is not None:
+                    source_list.append(Source(
+                        cls.SOURCE_TYPE,
+                        adio_url=cls.HOST + download_href
+                    ))
 
         return Song(
             title=song_name,
