@@ -9,10 +9,10 @@ import requests
 from bs4 import BeautifulSoup
 
 from .abstract import Page
+from ..utils.enums.source import SourcePages
 from ..objects import (
     Artist,
     Source,
-    SourcePages,
     Song,
     Album,
     ID3Timestamp,

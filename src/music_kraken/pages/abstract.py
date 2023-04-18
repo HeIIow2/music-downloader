@@ -16,11 +16,11 @@ from ..objects import (
     Target,
     DatabaseObject,
     Options,
-    SourcePages,
     Collection,
     Label,
     AlbumType
 )
+from ..utils.enums.source import SourcePages
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
 

@@ -1,6 +1,7 @@
 import music_kraken
 from music_kraken import pages
-from music_kraken.objects import Song, Target, Source, SourcePages, Album
+from music_kraken.utils.enums.source import SourcePages
+from music_kraken.objects import Song, Target, Source, Album
 
 
 def search_pages():

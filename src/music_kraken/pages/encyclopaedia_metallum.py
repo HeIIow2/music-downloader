@@ -8,11 +8,11 @@ from urllib.parse import urlparse
 from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER, proxies
 from ..utils import string_processing
 from .abstract import Page
+from ..utils.enums.source import SourcePages
 from ..objects import (
     Lyrics,
     Artist,
     Source,
-    SourcePages,
     Song,
     Album,
     ID3Timestamp,

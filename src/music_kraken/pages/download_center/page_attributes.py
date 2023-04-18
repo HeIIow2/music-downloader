@@ -1,6 +1,6 @@
 from typing import Tuple, Type, Dict
 
-from ...objects import SourcePages
+from ...utils.enums.source import SourcePages
 from ..abstract import Page
 from ..encyclopaedia_metallum import EncyclopaediaMetallum
 from ..musify import Musify
