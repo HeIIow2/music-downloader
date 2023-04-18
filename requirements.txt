@@ -14,3 +14,4 @@ tqdm~=4.65.0
 peewee~=3.15.4
 ffmpeg-python~=0.2.0
 platformdirs~=3.2.0
+transliterate~=1.10.2
