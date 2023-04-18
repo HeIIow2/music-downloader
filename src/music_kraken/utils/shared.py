@@ -1,7 +1,7 @@
 import logging
 import random
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 from .path_manager import LOCATIONS
 from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
@@ -101,4 +101,4 @@ SHOW_DOWNLOAD_ERRORS_THRESHOLD = CONNECTION_SECTION.SHOW_DOWNLOAD_ERRORS_THRESHO
 SORT_BY_DATE = AUDIO_SECTION.SORT_BY_DATE.object_from_value
 SORT_BY_ALBUM_TYPE = AUDIO_SECTION.SORT_BY_ALBUM_TYPE.object_from_value
 
-ALBUM_TYPE_BLACKLIST: List[AlbumType] = AUDIO_SECTION.ALBUM_TYPE_BLACKLIST.object_from_value
+ALBUM_TYPE_BLACKLIST: Set[AlbumType] = set(AUDIO_SECTION.ALBUM_TYPE_BLACKLIST.object_from_value)

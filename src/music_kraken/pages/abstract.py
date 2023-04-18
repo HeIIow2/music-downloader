@@ -314,7 +314,7 @@ class Page:
             override_existing: bool = False,
             create_target_on_demand: bool = True,
             download_all: bool = False,
-            exclude_album_type: Set[AlbumType] = None
+            exclude_album_type: Set[AlbumType] = shared.ALBUM_TYPE_BLACKLIST
     ) -> DownloadResult:
         """
 
