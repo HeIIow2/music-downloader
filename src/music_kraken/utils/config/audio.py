@@ -7,8 +7,11 @@ from .base_classes import (
     Section,
     Description,
     EmptyLine,
-    BoolAttribute
+    BoolAttribute,
+    ListAttribute
 )
+from ...utils.enums.album import AlbumType
+from ...utils.exception.config import SettingValueError
 
 # Only the formats with id3 metadata can be used
 # https://www.audioranger.com/audio-formats.php
@@ -32,6 +35,15 @@ _sorted_id3_1_formats = sorted(ID3_1_FILE_FORMATS)
 
 
 class AudioFormatAttribute(SingleAttribute):
+    def validate(self, value: str):
+        v = self.value.strip().lower()
+        if v not in ID3_1_FILE_FORMATS and v not in ID3_2_FILE_FORMATS:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=value,
+                rule="has to be a valid audio format, supporting id3 metadata"
+            )
+    
     @property
     def object_from_value(self) -> str:
         v = self.value.strip().lower()
@@ -42,6 +54,21 @@ class AudioFormatAttribute(SingleAttribute):
             return v
 
         raise ValueError(f"Invalid Audio Format: {v}")
+
+
+class AlbumTypeListAttribute(ListAttribute):
+    def validate(self, value: str):
+        try:
+            AlbumType(value.strip())
+        except ValueError:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=value,
+                rule="has to be an existing album type"
+            )
+    
+    def single_object_from_element(self, value: str) -> AlbumType:
+        return AlbumType(value)
 
 
 class AudioSection(Section):
@@ -124,6 +151,18 @@ ID3.1: {', '.join(_sorted_id3_1_formats)}
             value="Other",
             description="Weirdly enough I barely see this used in file systems."
         )
+        
+        self.ALBUM_TYPE_BLACKLIST = AlbumTypeListAttribute(
+            name="album_type_blacklist",
+            description="Music Kraken ignores all albums of those types.\n"
+                        "Following album types exist in the programm:\n"
+                        f"{', '.join(album.value for album in AlbumType)}",
+            value=[
+                AlbumType.COMPILATION_ALBUM.value,
+                AlbumType.LIVE_ALBUM.value,
+                AlbumType.MIXTAPE.value
+            ]
+        )
 
         self.attribute_list = [
             self.BITRATE,
@@ -146,7 +185,8 @@ There are multiple fields, you can use for the path and file name:
             self.DEFAULT_ARTIST,
             self.DEFAULT_GENRE,
             self.DEFAULT_LABEL,
-            self.DEFAULT_SONG
+            self.DEFAULT_SONG,
+            self.ALBUM_TYPE_BLACKLIST,
         ]
         super().__init__()
 
