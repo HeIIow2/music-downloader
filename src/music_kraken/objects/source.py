@@ -109,14 +109,15 @@ class Source(DatabaseObject):
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
             ('id', self.id),
-            ('url', self.url)
+            ('url', self.url),
+            ('audio_url', self.audio_url),
         ]
 
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self) -> str:
-        return f"Src({self.page_enum.value}: {self.url})"
+        return f"Src({self.page_enum.value}: {self.url}, {self.audio_url})"
 
     page_str = property(fget=lambda self: self.page_enum.value)
     type_str = property(fget=lambda self: self.type_enum.value)
@@ -129,7 +130,6 @@ class SourceCollection(Collection):
 
         super().__init__(data=source_list, element_type=Source)
 
-        
     def map_element(self, source: Source):
         super().map_element(source)
 

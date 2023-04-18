@@ -774,6 +774,8 @@ class Musify(Page):
         source_list: List[Source] = []
         tracksort = None
 
+        current_url = None
+
         def parse_title(_title: str) -> str:
             return _title
 
@@ -813,6 +815,7 @@ class Musify(Page):
                 track_anchor: BeautifulSoup = anchor_list[-1]
                 href: str = track_anchor.get("href")
                 if href is not None:
+                    current_url = cls.HOST + href
                     source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
                 song_name = parse_title(track_anchor.get_text(strip=True))
 
@@ -850,9 +853,10 @@ class Musify(Page):
             download_anchor = playlist_actions.find("a", {"itemprop": "audio"})
             if download_anchor is not None:
                 download_href = download_anchor.get("href")
-                if download_href is not None:
+                if download_href is not None and current_url is not None:
                     source_list.append(Source(
                         cls.SOURCE_TYPE,
+                        url=current_url,
                         adio_url=cls.HOST + download_href
                     ))
 
@@ -982,12 +986,16 @@ class Musify(Page):
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
         """
+        endpoint = source.audio_url
 
-        url: MusifyUrl = cls.parse_url(source.url)
-        if url.source_type != MusifyTypes.SONG:
-            return DownloadResult(error_message=f"The url is not of the type Song: {source.url}")
-        
-        endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
+        if source.audio_url is None:
+            url: MusifyUrl = cls.parse_url(source.url)
+            if url.source_type != MusifyTypes.SONG:
+                return DownloadResult(error_message=f"The url is not of the type Song: {source.url}")
+
+            endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
+
+            cls.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
         r = cls.get_request(endpoint, stream=True)
         if r is None:
