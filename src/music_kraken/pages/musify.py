@@ -940,13 +940,15 @@ class Musify(Page):
                             name=artist_name,
                             source_list=artist_source_list
                         ))
-                        print(artist_list[-1])
 
             time_soup: BeautifulSoup = album_info_ul.find("time", {"itemprop": "datePublished"})
             if time_soup is not None:
                 raw_datetime = time_soup.get("datetime")
                 if raw_datetime is not None:
-                    date = ID3Timestamp.strptime(raw_datetime, "%d.%m.%Y")
+                    try:
+                        date = ID3Timestamp.strptime(raw_datetime, "%Y-%m-%d")
+                    except ValueError:
+                        cls.LOGGER.debug(f"Raw datetime doesn't match time format %Y-%m-%d: {raw_datetime}")
 
         return Album(
             title=name,
