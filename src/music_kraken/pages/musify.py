@@ -871,6 +871,7 @@ class Musify(Page):
         name: str = None
         source_list: List[Source] = []
         artist_list: List[Artist] = []
+        date: ID3Timestamp = None
 
         """
         if breadcrumb list has 4 elements, then
@@ -917,18 +918,41 @@ class Musify(Page):
             if _name is not None:
                 name = _name
                 
-        # album infor
-        album_info_ul = soup.find("ul", {"class": "album-info"})
+        # album info
+        album_info_ul: BeautifulSoup = soup.find("ul", {"class": "album-info"})
         if album_info_ul is not None:
             artist_anchor: BeautifulSoup
             for artist_anchor in album_info_ul.find_all("a", {"itemprop": "byArtist"}):
                 # line 98
+                artist_source_list: List[Source] = []
+
                 artist_url_meta = artist_anchor.find("meta", {"itemprop": "url"})
+                if artist_url_meta is not None:
+                    artist_href = artist_url_meta.get("content")
+                    if artist_href is not None:
+                        artist_source_list.append(Source(cls.SOURCE_TYPE, url=cls.HOST + artist_href))
+
+                artist_meta_name = artist_anchor.find("meta", {"itemprop": "name"})
+                if artist_meta_name is not None:
+                    artist_name = artist_meta_name.get("content")
+                    if artist_name is not None:
+                        artist_list.append(Artist(
+                            name=artist_name,
+                            source_list=artist_source_list
+                        ))
+                        print(artist_list[-1])
+
+            time_soup: BeautifulSoup = album_info_ul.find("time", {"itemprop": "datePublished"})
+            if time_soup is not None:
+                raw_datetime = time_soup.get("datetime")
+                if raw_datetime is not None:
+                    date = ID3Timestamp.strptime(raw_datetime, "%d.%m.%Y")
 
         return Album(
             title=name,
             source_list=source_list,
-            artist_list=artist_list
+            artist_list=artist_list,
+            date=date
         )
 
     @classmethod
