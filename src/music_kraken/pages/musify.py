@@ -670,7 +670,6 @@ class Musify(Page):
                     This is the css file, where all flags that can be used on musify
                     are laid out and styled.
                     Every flag has two upper case letters, thus I assume they follow the alpha_2
-                    standard, though I haven't checked.
                     https://musify.club/content/flags.min.css
                     """
 
@@ -878,6 +877,7 @@ class Musify(Page):
         the -2 is the artist link,
         the -1 is the album
         """
+        # breadcrumb
         breadcrumb_soup: BeautifulSoup = soup.find("ol", {"class", "breadcrumb"})
         breadcrumb_elements: List[BeautifulSoup] = breadcrumb_soup.find_all("li", {"class": "breadcrumb-item"})
         if len(breadcrumb_elements) == 4:
@@ -904,6 +904,7 @@ class Musify(Page):
         else:
             cls.LOGGER.debug("there are not 4 breadcrumb items, which shouldn't be the case")
 
+        # meta
         meta_url: BeautifulSoup = soup.find("meta", {"itemprop": "url"})
         if meta_url is not None:
             url = meta_url.get("content")
@@ -915,6 +916,14 @@ class Musify(Page):
             _name = meta_name.get("content")
             if _name is not None:
                 name = _name
+                
+        # album infor
+        album_info_ul = soup.find("ul", {"class": "album-info"})
+        if album_info_ul is not None:
+            artist_anchor: BeautifulSoup
+            for artist_anchor in album_info_ul.find_all("a", {"itemprop": "byArtist"}):
+                # line 98
+                artist_url_meta = artist_anchor.find("meta", {"itemprop": "url"})
 
         return Album(
             title=name,
