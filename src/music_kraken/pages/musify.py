@@ -8,6 +8,7 @@ import pycountry
 import requests
 from bs4 import BeautifulSoup
 
+from ..connection import Connection
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType, AlbumStatus
@@ -22,6 +23,7 @@ from ..objects import (
     Options,
     Target
 )
+from ..utils.shared import MUSIFY_LOGGER
 from ..utils import string_processing, shared
 from .support_classes.download_result import DownloadResult
 
@@ -75,6 +77,11 @@ class Musify(Page):
     POST_TIMEOUT = 15
     TRIES = 5
     HOST = "https://musify.club"
+
+    CONNECTION = Connection(
+        host="https://musify.club/",
+        logger=MUSIFY_LOGGER
+    )
 
     SOURCE_TYPE = SourcePages.MUSIFY
     
@@ -355,7 +362,7 @@ class Musify(Page):
     def plaintext_search(cls, query: str) -> Options:
         search_results = []
 
-        r = cls.get_request(f"https://musify.club/search?searchText={query}")
+        r = cls.CONNECTION.get(f"https://musify.club/search?searchText={query}")
         if r is None:
             return Options()
         search_soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
@@ -580,7 +587,7 @@ class Musify(Page):
         :return:
         """
 
-        r = cls.get_request(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
+        r = cls.CONNECTION.get(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
         if r is None:
             return Artist(_id=url.musify_id)
 
@@ -976,7 +983,7 @@ class Musify(Page):
         url = cls.parse_url(source.url)
 
         endpoint = cls.HOST + "/release/" + url.name_with_id
-        r = cls.get_request(endpoint)
+        r = cls.CONNECTION.get(endpoint)
         if r is None:
             return Album()
 
@@ -1032,7 +1039,7 @@ class Musify(Page):
 
             cls.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        r = cls.get_request(endpoint, stream=True)
+        r = cls.CONNECTION.get(endpoint, stream=True)
         if r is None:
             return DownloadResult(error_message=f"couldn't connect to {endpoint}")
 
