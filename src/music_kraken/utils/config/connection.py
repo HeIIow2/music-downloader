@@ -1,4 +1,9 @@
+from urllib.parse import urlparse
+import re
+
 from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute
+from ..regex import URL_PATTERN
+from ..exception.config import SettingValueError
 
 
 class ProxAttribute(ListAttribute):
@@ -8,6 +13,21 @@ class ProxAttribute(ListAttribute):
             'https': value,
             'ftp': value
         }
+
+class UrlListAttribute(ListAttribute):
+    def validate(self, value: str):
+        v = value.strip()
+        url = re.match(URL_PATTERN, v)
+        if v != url:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=v,
+                rule="has to be a valid url"
+            )
+    
+    def single_object_from_element(self, value: str):
+        return urlparse(value)
+    
 
 
 class ConnectionSection(Section):
@@ -41,6 +61,25 @@ class ConnectionSection(Section):
             description="If the percentage of failed downloads goes over this threshold,\n"
                         "all the error messages are shown.",
             value="0.3"
+        )
+        
+        # INVIDIOUS INSTANCES LIST
+        self.INVIDIOUS_INSTANCE_LIST = UrlListAttribute(
+            name="invidious_instances",
+            description="This is a List, where you can define the invidious instances,\n"
+                        "the youtube downloader should use.\n"
+                        "Here is a list of active ones: https://docs.invidious.io/instances/\n"
+                        "Instances that use cloudflare or have source code changes could cause issues.\n"
+                        "Hidden instances (.onion) will only work, when setting 'tor=true'.",
+            value=[
+                "https://yt.artemislena.eu/",
+                "https://watch.thekitty.zone/",
+                "https://y.com.sb/"
+            ]
+        )
+        # INVIDIOUS PROXY
+        self.INVIDIOUS_PROXY_VIDEOS = BoolAttribute(
+            name="invidious_proxy_video",
         )
 
         self.attribute_list = [
