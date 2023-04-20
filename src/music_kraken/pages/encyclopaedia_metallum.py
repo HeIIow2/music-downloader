@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import pycountry
 from urllib.parse import urlparse
 
+from ..connection import Connection
 from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER, proxies
 from ..utils import string_processing
 from .abstract import Page
@@ -24,12 +25,10 @@ from ..objects import (
 
 
 class EncyclopaediaMetallum(Page):
-    API_SESSION: requests.Session = requests.Session()
-    API_SESSION.proxies = proxies
-    API_SESSION.headers = {
-        "Host": "www.metal-archives.com",
-        "Connection": "keep-alive"
-    }
+    CONNECTION: Connection = Connection(
+        host="https://www.metal-archives.com/",
+        logger=ENCYCLOPAEDIA_METALLUM_LOGGER
+    )
 
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
 
@@ -70,10 +69,10 @@ class EncyclopaediaMetallum(Page):
                    "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
                    "=1674550595663"
 
-        r = cls.get_request(endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str))
-        if r.status_code != 200:
-            cls.LOGGER.warning(
-                f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+        r = cls.CONNECTION.get(
+            endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)
+        )
+        if r is None:
             return []
 
         return [cls.get_song_from_json(
@@ -92,10 +91,8 @@ class EncyclopaediaMetallum(Page):
                    "=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns" \
                    "=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
 
-        r = cls.get_request(endpoint.format(artist=query.artist_str, album=query.album_str))
-        if r.status_code != 200:
-            cls.LOGGER.warning(
-                f"code {r.status_code} at {endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)}")
+        r = cls.CONNECTION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
+        if r is None:
             return []
 
         return [cls.get_album_from_json(
@@ -111,7 +108,7 @@ class EncyclopaediaMetallum(Page):
                    "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
                    "&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
 
-        r = cls.get_request(endpoint.format(artist=query.artist))
+        r = cls.CONNECTION.get(endpoint.format(artist=query.artist))
 
         if r is None:
             return []
@@ -134,7 +131,7 @@ class EncyclopaediaMetallum(Page):
         """
         endpoint = "https://www.metal-archives.com/search/ajax-band-search/?field=name&query={query}&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2"
 
-        r = cls.get_request(endpoint.format(query=query))
+        r = cls.CONNECTION.get(endpoint.format(query=query))
         if r is None:
             return []
 
@@ -220,7 +217,7 @@ class EncyclopaediaMetallum(Page):
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
 
         # make the request
-        r = cls.get_request(discography_url.format(ma_artist_id))
+        r = cls.CONNECTION.get(discography_url.format(ma_artist_id))
         if r is None:
             return []
         soup = cls.get_soup_from_response(r)
@@ -257,7 +254,7 @@ class EncyclopaediaMetallum(Page):
     @classmethod
     def _fetch_artist_sources(cls, ma_artist_id: str) -> List[Source]:
         sources_url = "https://www.metal-archives.com/link/ajax-list/type/band/id/{}"
-        r = cls.get_request(sources_url.format(ma_artist_id))
+        r = cls.CONNECTION.get(sources_url.format(ma_artist_id))
         if r is None:
             return []
 
@@ -405,7 +402,7 @@ class EncyclopaediaMetallum(Page):
 
     @classmethod
     def _fetch_artist_attributes(cls, url: str) -> Artist:
-        r = cls.get_request(url)
+        r = cls.CONNECTION.get(url)
         if r is None:
             return Artist()
         soup: BeautifulSoup = cls.get_soup_from_response(r)
@@ -417,7 +414,7 @@ class EncyclopaediaMetallum(Page):
         endpoint = "https://www.metal-archives.com/band/read-more/id/{}"
 
         # make the request
-        r = cls.get_request(endpoint.format(ma_artist_id))
+        r = cls.CONNECTION.get(endpoint.format(ma_artist_id))
         if r is None:
             return FormattedText()
 
@@ -570,7 +567,7 @@ class EncyclopaediaMetallum(Page):
 
         # <table class="display table_lyrics
 
-        r = cls.get_request(source.url)
+        r = cls.CONNECTION.get(source.url)
         if r is None:
             return Album()
 
@@ -610,7 +607,7 @@ class EncyclopaediaMetallum(Page):
         
         endpoint = "https://www.metal-archives.com/release/ajax-view-lyrics/id/{id}".format(id=song_id)
         
-        r = cls.get_request(endpoint)
+        r = cls.CONNECTION.get(endpoint)
         if r is None:
             return None
         

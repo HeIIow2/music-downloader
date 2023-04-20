@@ -6,6 +6,7 @@ from typing import Optional, Union, Type, Dict, Set
 import requests
 from bs4 import BeautifulSoup
 
+from ..connection import Connection
 from .support_classes.default_target import DefaultTarget
 from .support_classes.download_result import DownloadResult
 from ..objects import (
@@ -30,6 +31,8 @@ class Page:
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
+    CONNECTION: Connection
+
     API_SESSION: requests.Session = requests.Session()
     API_SESSION.proxies = shared.proxies
     TIMEOUT = 5
