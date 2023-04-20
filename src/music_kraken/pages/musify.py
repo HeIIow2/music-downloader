@@ -965,7 +965,7 @@ class Musify(Page):
 
         /html/musify/album_overview.html
         - [x] tracklist
-        - [ ] attributes
+        - [x] attributes
         - [ ] ratings
 
         :param stop_at_level:
