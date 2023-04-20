@@ -14,6 +14,7 @@ class ProxAttribute(ListAttribute):
             'ftp': value
         }
 
+
 class UrlListAttribute(ListAttribute):
     def validate(self, value: str):
         v = value.strip()
@@ -24,10 +25,9 @@ class UrlListAttribute(ListAttribute):
                 setting_value=v,
                 rule="has to be a valid url"
             )
-    
+
     def single_object_from_element(self, value: str):
         return urlparse(value)
-    
 
 
 class ConnectionSection(Section):
@@ -62,7 +62,7 @@ class ConnectionSection(Section):
                         "all the error messages are shown.",
             value="0.3"
         )
-        
+
         # INVIDIOUS INSTANCES LIST
         self.INVIDIOUS_INSTANCE_LIST = UrlListAttribute(
             name="invidious_instances",
@@ -80,6 +80,8 @@ class ConnectionSection(Section):
         # INVIDIOUS PROXY
         self.INVIDIOUS_PROXY_VIDEOS = BoolAttribute(
             name="invidious_proxy_video",
+            value="false",
+            description="Downloads the videos using the given instances."
         )
 
         self.attribute_list = [

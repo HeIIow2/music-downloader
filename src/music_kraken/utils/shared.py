@@ -1,7 +1,7 @@
 import logging
 import random
 from pathlib import Path
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Dict
 
 from .path_manager import LOCATIONS
 from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
@@ -77,6 +77,7 @@ DEFAULT_VALUES = {
 }
 
 TOR: bool = CONNECTION_SECTION.USE_TOR.object_from_value
+PROXIES_LIST: List[Dict[str, str]] = CONNECTION_SECTION.PROXIES.object_from_value
 proxies = {}
 if len(CONNECTION_SECTION.PROXIES) > 0:
     """
