@@ -7,8 +7,6 @@ import requests
 from .rotating import RotatingProxy
 from ..utils.shared import PROXIES_LIST
 
-LOGGER = logging.getLogger("connection")
-
 
 class Connection:
     def __init__(
@@ -17,6 +15,7 @@ class Connection:
             proxies: List[dict] = None,
             tries: int = (len(PROXIES_LIST) + 1) * 2,
             timeout: int = 7,
+            logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
             session: requests.Session = None,
             accepted_response_codes: Set[int] = None,
@@ -27,7 +26,7 @@ class Connection:
         if header_values is None:
             header_values = dict()
 
-        self.LOGGER = LOGGER
+        self.LOGGER = logger
         self.HOST = urlparse(host)
         self.TRIES = tries
         self.TIMEOUT = timeout
@@ -74,14 +73,18 @@ class Connection:
             try_count: int,
             accepted_response_code: set,
             url: str,
+            timeout: float,
             **kwargs
     ) -> Optional[requests.Response]:
         if try_count >= self.TRIES:
             return
 
+        if timeout is None:
+            timeout = self.TIMEOUT
+
         retry = False
         try:
-            r = request(url=url, **kwargs)
+            r = request(url=url, timeout=timeout, **kwargs)
         except requests.exceptions.Timeout:
             self.LOGGER.warning(f"Request timed out at \"{url}\": ({try_count}-{self.TRIES})")
             retry = True
@@ -116,6 +119,7 @@ class Connection:
             url: str,
             stream: bool = False,
             accepted_response_codes: set = None,
+            timeout: float = None,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
@@ -124,6 +128,7 @@ class Connection:
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
             stream=stream,
+            timeout=timeout,
             **kwargs
         )
         if r is None:
@@ -136,6 +141,7 @@ class Connection:
             json: dict,
             stream: bool = False,
             accepted_response_codes: set = None,
+            timeout: float = None,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
@@ -143,6 +149,7 @@ class Connection:
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
+            timeout=timeout,
             json=json,
             stream=stream,
             **kwargs
