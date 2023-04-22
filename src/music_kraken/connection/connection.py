@@ -1,5 +1,5 @@
 from typing import List, Dict, Callable, Optional, Set
-from urllib.parse import urlparse, urlunsplit
+from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
 
 import requests
@@ -17,7 +17,6 @@ class Connection:
             timeout: int = 7,
             logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
-            session: requests.Session = None,
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True
     ):
@@ -25,6 +24,8 @@ class Connection:
             proxies = PROXIES_LIST
         if header_values is None:
             header_values = dict()
+
+        self.HEADER_VALUES = header_values
 
         self.LOGGER = logger
         self.HOST = urlparse(host)
@@ -35,37 +36,62 @@ class Connection:
         self.ACCEPTED_RESPONSE_CODES = accepted_response_codes or {200}
         self.SEMANTIC_NOT_FOUND = semantic_not_found
 
-        self.session: requests.Session = session
-        if self.session is None:
-            self.new_session(**header_values)
-        else:
-            self.rotating_proxy.register_session(session)
-            self.set_header()
+        self._session_map: Dict[str] = {
+            self.HOST.netloc: self.new_session()
+        }
 
-    @property
-    def base_url(self):
-        return urlunsplit((self.HOST.scheme, self.HOST.netloc, "", "", ""))
+    def base_url(self, url: ParseResult = None):
+        if url is None:
+            url = self.HOST
 
-    def new_session(self, **header_values):
-        session = requests.Session()
+        return urlunsplit((url.scheme, url.netloc, "", "", ""))
+
+    def _register_session(self, session: requests.Session, **header_values):
         session.headers = self.get_header(**header_values)
         self.rotating_proxy.register_session(session)
-        self.session = session
+
+    def new_session(
+            self,
+            url: ParseResult = None,
+            refer_from_origin: bool = True
+    ) -> requests.Session:
+
+        header_values = self.HEADER_VALUES.copy()
+        if url is not None:
+            header_values["Host"] = url.netloc
+
+            if not refer_from_origin:
+                header_values["Referer"] = self.base_url(url=url)
+
+        session = requests.Session()
+        self._register_session(session=session, **header_values)
+
+        return session
 
     def get_header(self, **header_values) -> Dict[str, str]:
         return {
             "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
             "Connection": "keep-alive",
             "Host": self.HOST.netloc,
-            "Referer": self.base_url,
+            "Referer": self.base_url(),
             **header_values
         }
 
-    def set_header(self, **header_values):
-        self.session.headers = self.get_header(**header_values)
-
     def rotate(self):
         self.rotating_proxy.rotate()
+
+    def get_session_from_url(self, url: str, refer_from_origin: bool = True) -> requests.Session:
+        parsed_url = urlparse(url)
+
+        if parsed_url.netloc in self._session_map:
+            print("saved session")
+            return self._session_map[parsed_url.netloc]
+
+        self._session_map[parsed_url.netloc] = self.new_session(
+            url=parsed_url,
+            refer_from_origin=refer_from_origin
+        )
+        return self._session_map[parsed_url.netloc]
 
     def _request(
             self,
@@ -99,6 +125,9 @@ class Connection:
             if r.status_code in accepted_response_code:
                 return r
 
+        print(r.content)
+        print(r.headers)
+
         if not retry:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
                                 f"at {url}. ({try_count}-{self.TRIES})")
@@ -111,19 +140,22 @@ class Connection:
             try_count=try_count,
             accepted_response_code=accepted_response_code,
             url=url,
+            timeout=timeout,
             **kwargs
         )
 
     def get(
             self,
             url: str,
+            refer_from_origin: bool = True,
             stream: bool = False,
             accepted_response_codes: set = None,
             timeout: float = None,
             **kwargs
     ) -> Optional[requests.Response]:
+        s = self.get_session_from_url(url, refer_from_origin)
         r = self._request(
-            request=self.session.get,
+            request=s.get,
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
@@ -139,13 +171,14 @@ class Connection:
             self,
             url: str,
             json: dict,
+            refer_from_origin: bool = True,
             stream: bool = False,
             accepted_response_codes: set = None,
             timeout: float = None,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
-            request=self.session.post,
+            request=self.get_session_from_url(url, refer_from_origin).post,
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
