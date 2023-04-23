@@ -1039,7 +1039,7 @@ class Musify(Page):
 
             cls.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        r = cls.CONNECTION.get(endpoint, stream=True, allow_redirects=True, headers={"Host": "40s.musify.club", "Referer": endpoint})
+        r = cls.CONNECTION.get(endpoint, stream=True, allow_redirects=True, headers={"Connection": "https://musify.club/"})
         if r is None:
             return DownloadResult(error_message=f"couldn't connect to {endpoint}")
 

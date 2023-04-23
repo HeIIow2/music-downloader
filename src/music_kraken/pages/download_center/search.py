@@ -6,6 +6,7 @@ from .multiple_options import MultiPageOptions
 from ..abstract import Page
 from ..support_classes.download_result import DownloadResult
 from ...objects import DatabaseObject, Source
+from ...utils.enums.source import SourcePages
 
 
 class Search(Download):
@@ -116,7 +117,7 @@ class Search(Download):
         can download directly after
         """
         
-        source = Source.match_url(url=url)
+        source = Source.match_url(url=url, referer_page=SourcePages.MANUAL)
         if source is None: 
             return False
         

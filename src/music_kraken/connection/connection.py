@@ -36,9 +36,9 @@ class Connection:
         self.ACCEPTED_RESPONSE_CODES = accepted_response_codes or {200}
         self.SEMANTIC_NOT_FOUND = semantic_not_found
 
-        self._session_map: Dict[str] = {
-            self.HOST.netloc: self.new_session()
-        }
+        self.session = requests.Session()
+        self.session.headers = self.get_header(**self.HEADER_VALUES)
+        self.session.proxies = self.rotating_proxy.current_proxy
 
     def base_url(self, url: ParseResult = None):
         if url is None:
@@ -46,31 +46,9 @@ class Connection:
 
         return urlunsplit((url.scheme, url.netloc, "", "", ""))
 
-    def _register_session(self, session: requests.Session, **header_values):
-        session.headers = self.get_header(**header_values)
-        self.rotating_proxy.register_session(session)
-
-    def new_session(
-            self,
-            url: ParseResult = None,
-            refer_from_origin: bool = True
-    ) -> requests.Session:
-
-        header_values = self.HEADER_VALUES.copy()
-        if url is not None:
-            header_values["Host"] = url.netloc
-
-            if not refer_from_origin:
-                header_values["Referer"] = self.base_url(url=url)
-
-        session = requests.Session()
-        self._register_session(session=session, **header_values)
-
-        return session
-
     def get_header(self, **header_values) -> Dict[str, str]:
         return {
-            "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
             "Connection": "keep-alive",
             "Host": self.HOST.netloc,
             "Referer": self.base_url(),
@@ -78,20 +56,21 @@ class Connection:
         }
 
     def rotate(self):
-        self.rotating_proxy.rotate()
+        self.session.proxies = self.rotating_proxy.rotate()
 
-    def get_session_from_url(self, url: str, refer_from_origin: bool = True) -> requests.Session:
-        parsed_url = urlparse(url)
+    def _update_headers(
+            self,
+            headers: Optional[dict],
+            refer_from_origin: bool,
+            url: ParseResult
+    ) -> Dict[str, str]:
+        if headers is None:
+            headers = dict()
 
-        if parsed_url.netloc in self._session_map:
-            print("saved session")
-            return self._session_map[parsed_url.netloc]
+        if not refer_from_origin:
+            headers["Referer"] = self.base_url(url=url)
 
-        self._session_map[parsed_url.netloc] = self.new_session(
-            url=parsed_url,
-            refer_from_origin=refer_from_origin
-        )
-        return self._session_map[parsed_url.netloc]
+        return headers
 
     def _request(
             self,
@@ -100,6 +79,8 @@ class Connection:
             accepted_response_code: set,
             url: str,
             timeout: float,
+            headers: dict,
+            refer_from_origin: bool = True,
             **kwargs
     ) -> Optional[requests.Response]:
         if try_count >= self.TRIES:
@@ -108,9 +89,20 @@ class Connection:
         if timeout is None:
             timeout = self.TIMEOUT
 
+        parsed_url = urlparse(url)
+
+        print(url)
+        print(parsed_url)
+
+        headers = self._update_headers(
+            headers=headers,
+            refer_from_origin=refer_from_origin,
+            url=parsed_url
+        )
+
         retry = False
         try:
-            r = request(url=url, timeout=timeout, **kwargs)
+            r: requests.Response = request(url=parsed_url.geturl(), timeout=timeout, headers=headers, **kwargs)
         except requests.exceptions.Timeout:
             self.LOGGER.warning(f"Request timed out at \"{url}\": ({try_count}-{self.TRIES})")
             retry = True
@@ -121,12 +113,11 @@ class Connection:
         if not retry:
             if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
                 self.LOGGER.warning(f"Couldn't find url (404): {url}")
+                print(r.headers)
+                print(r.request.headers)
                 return
             if r.status_code in accepted_response_code:
                 return r
-
-        print(r.content)
-        print(r.headers)
 
         if not retry:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
@@ -134,6 +125,7 @@ class Connection:
             self.LOGGER.debug(r.content)
 
         self.rotate()
+        print(r.headers)
 
         return self._request(
             request=request,
@@ -151,16 +143,18 @@ class Connection:
             stream: bool = False,
             accepted_response_codes: set = None,
             timeout: float = None,
+            headers: dict = None,
             **kwargs
     ) -> Optional[requests.Response]:
-        s = self.get_session_from_url(url, refer_from_origin)
         r = self._request(
-            request=s.get,
+            request=self.session.get,
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
             stream=stream,
             timeout=timeout,
+            headers=headers,
+            refer_from_origin=refer_from_origin,
             **kwargs
         )
         if r is None:
@@ -175,14 +169,17 @@ class Connection:
             stream: bool = False,
             accepted_response_codes: set = None,
             timeout: float = None,
+            headers: dict = None,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
-            request=self.get_session_from_url(url, refer_from_origin).post,
+            request=self.session.post,
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
             timeout=timeout,
+            headers=headers,
+            refer_from_origin=refer_from_origin,
             json=json,
             stream=stream,
             **kwargs

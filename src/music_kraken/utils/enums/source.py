@@ -25,6 +25,8 @@ class SourcePages(Enum):
     TWITTER = "twitter"     # I will use nitter though lol
     MYSPACE = "myspace"     # Yes somehow this ancient site is linked EVERYWHERE
 
+    MANUAL = "manual"
+
     @classmethod
     def get_homepage(cls, attribute) -> str:
         homepage_map = {

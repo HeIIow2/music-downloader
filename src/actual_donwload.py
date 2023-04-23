@@ -53,7 +53,7 @@ def real_download():
 
 if __name__ == "__main__":
     music_kraken.cli(genre="test", command_list=[
-        "#a Molchat Doma",
-        "0",
+        # "https://musify.club/release/molchat-doma-etazhi-2018-1092949",
+        "https://musify.club/release/ghost-bath-self-loather-2021-1554266",
         "ok"
     ])

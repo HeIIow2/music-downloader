@@ -30,27 +30,14 @@ class RotatingObject:
 
 
 class RotatingProxy(RotatingObject):
-    def __init__(self, proxy_list: List[Dict[str, str]], session_list: List[requests.Session] = None):
-        self._session_list: List[requests.Session] = session_list
-        if self._session_list is None:
-            self._session_list = []
+    def __init__(self, proxy_list: List[Dict[str, str]]):
+        super().__init__(
+            proxy_list if len(proxy_list) > 0 else [None]
+        )
 
-        super().__init__(proxy_list if len(proxy_list) > 0 else [{}])
-
-    def register_session(self, session: requests.Session):
-        self._session_list.append(session)
-        session.proxies = self.current_proxy
-
-    def rotate(self):
-        new_proxy = self.next
-
-        for session in self._session_list:
-            session.proxies = new_proxy
+    def rotate(self) -> Dict[str, str]:
+        return self.next
 
     @property
     def current_proxy(self) -> Dict[str, str]:
-        return super().object
-
-    @property
-    def next(self) -> Dict[str, str]:
         return super().object
