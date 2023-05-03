@@ -81,6 +81,7 @@ class Connection:
             timeout: float,
             headers: dict,
             refer_from_origin: bool = True,
+            raw_url: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         if try_count >= self.TRIES:
@@ -100,19 +101,21 @@ class Connection:
             url=parsed_url
         )
 
+        request_url = parsed_url.geturl() if not raw_url else url
+
         retry = False
         try:
-            r: requests.Response = request(url=parsed_url.geturl(), timeout=timeout, headers=headers, **kwargs)
+            r: requests.Response = request(url=request_url, timeout=timeout, headers=headers, **kwargs)
         except requests.exceptions.Timeout:
-            self.LOGGER.warning(f"Request timed out at \"{url}\": ({try_count}-{self.TRIES})")
+            self.LOGGER.warning(f"Request timed out at \"{request_url}\": ({try_count}-{self.TRIES})")
             retry = True
         except requests.exceptions.ConnectionError:
-            self.LOGGER.warning(f"Couldn't connect to \"{url}\": ({try_count}-{self.TRIES})")
+            self.LOGGER.warning(f"Couldn't connect to \"{request_url}\": ({try_count}-{self.TRIES})")
             retry = True
 
         if not retry:
             if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
-                self.LOGGER.warning(f"Couldn't find url (404): {url}")
+                self.LOGGER.warning(f"Couldn't find url (404): {request_url}")
                 print(r.headers)
                 print(r.request.headers)
                 return
@@ -144,6 +147,7 @@ class Connection:
             accepted_response_codes: set = None,
             timeout: float = None,
             headers: dict = None,
+            raw_url: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
@@ -155,6 +159,7 @@ class Connection:
             timeout=timeout,
             headers=headers,
             refer_from_origin=refer_from_origin,
+            raw_url=raw_url,
             **kwargs
         )
         if r is None:
@@ -170,6 +175,7 @@ class Connection:
             accepted_response_codes: set = None,
             timeout: float = None,
             headers: dict = None,
+            raw_url: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         r = self._request(
@@ -182,6 +188,7 @@ class Connection:
             refer_from_origin=refer_from_origin,
             json=json,
             stream=stream,
+            raw_url=raw_url,
             **kwargs
         )
         if r is None:
