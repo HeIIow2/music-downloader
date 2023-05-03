@@ -50,7 +50,7 @@ class Connection:
         return {
             "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
             "Connection": "keep-alive",
-            "Host": self.HOST.netloc,
+            # "Host": self.HOST.netloc,
             "Referer": self.base_url(),
             **header_values
         }
@@ -92,9 +92,6 @@ class Connection:
 
         parsed_url = urlparse(url)
 
-        print(url)
-        print(parsed_url)
-
         headers = self._update_headers(
             headers=headers,
             refer_from_origin=refer_from_origin,
@@ -103,32 +100,30 @@ class Connection:
 
         request_url = parsed_url.geturl() if not raw_url else url
 
-        retry = False
+        connection_failed = False
         try:
-            r: requests.Response = request(url=request_url, timeout=timeout, headers=headers, **kwargs)
-        except requests.exceptions.Timeout:
-            self.LOGGER.warning(f"Request timed out at \"{request_url}\": ({try_count}-{self.TRIES})")
-            retry = True
-        except requests.exceptions.ConnectionError:
-            self.LOGGER.warning(f"Couldn't connect to \"{request_url}\": ({try_count}-{self.TRIES})")
-            retry = True
+            r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
 
-        if not retry:
-            if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
-                self.LOGGER.warning(f"Couldn't find url (404): {request_url}")
-                print(r.headers)
-                print(r.request.headers)
-                return
             if r.status_code in accepted_response_code:
                 return r
 
-        if not retry:
+            if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
+                self.LOGGER.warning(f"Couldn't find url (404): {request_url}")
+                return None
+
+        except requests.exceptions.Timeout:
+            self.LOGGER.warning(f"Request timed out at \"{request_url}\": ({try_count}-{self.TRIES})")
+            connection_failed = True
+        except requests.exceptions.ConnectionError:
+            self.LOGGER.warning(f"Couldn't connect to \"{request_url}\": ({try_count}-{self.TRIES})")
+            connection_failed = True
+
+        if not connection_failed:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
                                 f"at {url}. ({try_count}-{self.TRIES})")
             self.LOGGER.debug(r.content)
 
         self.rotate()
-        print(r.headers)
 
         return self._request(
             request=request,
@@ -155,11 +150,11 @@ class Connection:
             try_count=0,
             accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
-            stream=stream,
             timeout=timeout,
             headers=headers,
-            refer_from_origin=refer_from_origin,
             raw_url=raw_url,
+            refer_from_origin=refer_from_origin,
+            stream=stream,
             **kwargs
         )
         if r is None:
@@ -186,9 +181,9 @@ class Connection:
             timeout=timeout,
             headers=headers,
             refer_from_origin=refer_from_origin,
+            raw_url=raw_url,
             json=json,
             stream=stream,
-            raw_url=raw_url,
             **kwargs
         )
         if r is None:
