@@ -1,7 +1,7 @@
 import logging
 import random
 from copy import copy
-from typing import Optional, Union, Type, Dict, Set
+from typing import Optional, Union, Type, Dict, Set, List
 
 import requests
 from bs4 import BeautifulSoup
@@ -153,6 +153,10 @@ class Page:
         artist_str = property(fget=lambda self: self.get_str(self.artist))
         album_str = property(fget=lambda self: self.get_str(self.album))
         song_str = property(fget=lambda self: self.get_str(self.song))
+
+    @classmethod
+    def search_by_object(cls, data_object: DatabaseObject, filter_none: bool = True) -> List[DatabaseObject]:
+        return []
 
     @classmethod
     def search_by_query(cls, query: str) -> Options:
