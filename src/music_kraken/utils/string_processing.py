@@ -1,6 +1,8 @@
 from transliterate.exceptions import LanguageDetectionError
 from transliterate import translit
 
+from pathvalidate import sanitize_filename
+
 
 def unify(string: str) -> str:
     """
@@ -27,5 +29,7 @@ def fit_to_file_system(string: str) -> str:
         string = string[1:]
 
     string = string.replace("/", "|").replace("\\", "|")
+
+    string = sanitize_filename(string)
 
     return string
