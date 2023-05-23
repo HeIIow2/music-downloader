@@ -26,6 +26,55 @@ from ..utils import shared
 from ..utils.support_classes import Query, DownloadResult, DefaultTarget
 
 
+INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
+INDEPENDENT_DB_TYPES = Union[Type[Song], Type[Album], Type[Artist], Type[Label]]
+
+def _clean_music_object(music_object: INDEPENDENT_DB_OBJECTS, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    if type(music_object) == Label:
+        return _clean_label(label=music_object, collections=collections)
+    if type(music_object) == Artist:
+        return _clean_artist(artist=music_object, collections=collections)
+    if type(music_object) == Album:
+        return _clean_album(album=music_object, collections=collections)
+    if type(music_object) == Song:
+        return _clean_song(song=music_object, collections=collections)
+
+
+def _clean_collection(collection: Collection, collection_dict: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    if collection.element_type not in collection_dict:
+        return
+
+    for i, element in enumerate(collection):
+        r = collection_dict[collection.element_type].append(element, merge_into_existing=True)
+        collection[i] = r.current_element
+
+        if not r.was_the_same:
+            _clean_music_object(r.current_element, collection_dict)
+
+
+def _clean_label(label: Label, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    _clean_collection(label.current_artist_collection, collections)
+    _clean_collection(label.album_collection, collections)
+
+
+def _clean_artist(artist: Artist, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    _clean_collection(artist.main_album_collection, collections)
+    _clean_collection(artist.feature_song_collection, collections)
+    _clean_collection(artist.label_collection, collections)
+
+
+def _clean_album(album: Album, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    _clean_collection(album.label_collection, collections)
+    _clean_collection(album.song_collection, collections)
+    _clean_collection(album.artist_collection, collections)
+
+
+def _clean_song(song: Song, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
+    _clean_collection(song.album_collection, collections)
+    _clean_collection(song.feature_artist_collection, collections)
+    _clean_collection(song.main_artist_collection, collections)
+
+
 class Page(threading.Thread):
     """
     This is an abstract class, laying out the 
@@ -37,6 +86,9 @@ class Page(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
+
+    def run(self) -> None:
+        pass
       
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
@@ -119,10 +171,12 @@ class Page(threading.Thread):
             Song: Collection(element_type=Song)
         }
 
-        cls._clean_music_object(new_music_object, collections)
+        if not isinstance(new_music_object, INDEPENDENT_DB_OBJECTS):
+            raise TypeError(f"Can't clean the object, because it isn't a valid type: {type(new_music_object)} | {type(INDEPENDENT_DB_OBJECTS)}")
+
+        _clean_music_object(new_music_object, collections)
 
         music_object.merge(new_music_object)
-
         music_object.compile(merge_into=True)
 
         return music_object
@@ -163,57 +217,6 @@ class Page(threading.Thread):
         if obj_type == Label:
             return cls._fetch_label_from_source(source=source, stop_at_level=stop_at_level)
 
-    @classmethod
-    def _clean_music_object(cls, music_object: Union[Label, Album, Artist, Song],
-                            collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        if type(music_object) == Label:
-            return cls._clean_label(label=music_object, collections=collections)
-        if type(music_object) == Artist:
-            return cls._clean_artist(artist=music_object, collections=collections)
-        if type(music_object) == Album:
-            return cls._clean_album(album=music_object, collections=collections)
-        if type(music_object) == Song:
-            return cls._clean_song(song=music_object, collections=collections)
-
-    @classmethod
-    def _clean_collection(cls, collection: Collection,
-                          collection_dict: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        if collection.element_type not in collection_dict:
-            return
-
-        for i, element in enumerate(collection):
-            r = collection_dict[collection.element_type].append(element, merge_into_existing=True)
-            collection[i] = r.current_element
-
-            if not r.was_the_same:
-                cls._clean_music_object(r.current_element, collection_dict)
-
-    @classmethod
-    def _clean_label(cls, label: Label,
-                     collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        cls._clean_collection(label.current_artist_collection, collections)
-        cls._clean_collection(label.album_collection, collections)
-
-    @classmethod
-    def _clean_artist(cls, artist: Artist,
-                      collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        cls._clean_collection(artist.main_album_collection, collections)
-        cls._clean_collection(artist.feature_song_collection, collections)
-        cls._clean_collection(artist.label_collection, collections)
-
-    @classmethod
-    def _clean_album(cls, album: Album,
-                     collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        cls._clean_collection(album.label_collection, collections)
-        cls._clean_collection(album.song_collection, collections)
-        cls._clean_collection(album.artist_collection, collections)
-
-    @classmethod
-    def _clean_song(cls, song: Song,
-                    collections: Dict[Union[Type[Song], Type[Album], Type[Artist], Type[Label]], Collection]):
-        cls._clean_collection(song.album_collection, collections)
-        cls._clean_collection(song.feature_artist_collection, collections)
-        cls._clean_collection(song.main_artist_collection, collections)
 
     @classmethod
     def download(
