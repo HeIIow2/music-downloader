@@ -132,12 +132,11 @@ class Page(threading.Thread):
         return []
     
 
-    @classmethod
-    def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:
+    def fetch_details(self, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:
         """
         when a music object with laccing data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
-        If you for example put in an album, it fetches the tracklist
+        If you for example put in, an album, it fetches the tracklist
 
         :param music_object:
         :param stop_at_level: 
@@ -155,7 +154,7 @@ class Page(threading.Thread):
         had_sources = False
 
         source: Source
-        for source in music_object.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
+        for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
             new_music_object.merge(
                 cls._fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
             had_sources = True
