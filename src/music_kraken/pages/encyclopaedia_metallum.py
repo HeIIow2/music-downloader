@@ -20,6 +20,7 @@ from ..objects import (
     FormattedText,
     Label,
     Options,
+    DatabaseObject
 )
 
 
@@ -202,22 +203,21 @@ class EncyclopaediaMetallum(Page):
             for raw_artist in r.json()['aaData']
         ]
 
-    @classmethod
-    def _raw_search(cls, query: str) -> Options:
+    def general_search(self, query: str) -> List[DatabaseObject]:
         """
         Searches the default endpoint from metal archives, which intern searches only
         for bands, but it is the default, thus I am rolling with it
         """
         endpoint = "https://www.metal-archives.com/search/ajax-band-search/?field=name&query={query}&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2"
 
-        r = cls.CONNECTION.get(endpoint.format(query=query))
+        r = self.connection.get(endpoint.format(query=query))
         if r is None:
-            return Options()
+            return []
 
-        return Options([
-            cls.get_artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
+        return [
+            _artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
-        ])
+        ]
 
 
     @classmethod
