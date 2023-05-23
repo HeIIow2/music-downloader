@@ -49,16 +49,25 @@ class EncyclopaediaMetallum(Page):
             host="https://www.metal-archives.com/",
             logger=ENCYCLOPAEDIA_METALLUM_LOGGER
         )
+        
+        super().__init__()
 
-    @classmethod
-    def search_for_song(cls, query: Query) -> List[Song]:
+    def song_search(self, song: Song) -> List[Song]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={" \
                    "artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0" \
                    "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
                    "=1674550595663"
 
-        r = cls.CONNECTION.get(
-            endpoint.format(song=query.song_str, artist=query.artist_str, album=query.album_str)
+        """
+        The difficult question I am facing is, that if I try every artist, with every song, with every album,
+        I end up with a quadratic runtime complecety O(n^2), where every step means one web request.
+        
+        This.
+        Is not good.
+        """
+
+        r = self.connection.get(
+            endpoint.format(song=song.title, artist=query.artist_str, album=query.album_str)
         )
         if r is None:
             return []
