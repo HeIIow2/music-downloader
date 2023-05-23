@@ -34,14 +34,80 @@ ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
 })
 
 
-class EncyclopaediaMetallum(Page):
-    CONNECTION: Connection = Connection(
-        host="https://www.metal-archives.com/",
-        logger=ENCYCLOPAEDIA_METALLUM_LOGGER
+def _song_from_json(artist_html=None, album_html=None, release_type=None, title=None,
+                    lyrics_html=None) -> Song:
+    song_id = None
+    if lyrics_html is not None:
+        soup = BeautifulSoup(lyrics_html, 'html.parser')
+        anchor = soup.find('a')
+        raw_song_id = anchor.get('id')
+        song_id = raw_song_id.replace("lyricsLink_", "")
+
+    return Song(
+        title=title,
+        main_artist_list=[
+            _artist_from_json(artist_html=artist_html)
+        ],
+        album_list=[
+            _album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
+        ],
+        source_list=[
+            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, song_id)
+        ]
     )
 
+
+def _artist_from_json(artist_html=None, genre=None, country=None) -> Artist:
+    """
+    TODO parse the country to a standart
+    """
+    # parse the html
+    # parse the html for the band name and link on metal-archives
+    soup = BeautifulSoup(artist_html, 'html.parser')
+    anchor = soup.find('a')
+    artist_name = anchor.text
+    artist_url = anchor.get('href')
+    artist_id = artist_url.split("/")[-1]
+
+    anchor.decompose()
+    strong = soup.find('strong')
+    if strong is not None:
+        strong.decompose()
+        akronyms_ = soup.text[2:-2].split(', ')
+
+    return Artist(
+        name=artist_name,
+        source_list=[
+            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
+        ]
+    )
+
+
+def _album_from_json(album_html=None, release_type=None, artist_html=None) -> Album:
+    # parse the html
+    # <a href="https://www.metal-archives.com/albums/Ghost_Bath/Self_Loather/970834">Self Loather</a>'
+    soup = BeautifulSoup(album_html, 'html.parser')
+    anchor = soup.find('a')
+    album_name = anchor.text
+    album_url = anchor.get('href')
+    album_id = album_url.split("/")[-1]
+
+    album_type = ALBUM_TYPE_MAP[release_type.strip()]
+
+    return Album(
+        title=album_name,
+        album_type=album_type,
+        source_list=[
+            Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
+        ],
+        artist_list=[
+            _artist_from_json(artist_html=artist_html)
+        ]
+    )
+
+
+class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
-    
     LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
     
     def __init__(self):
@@ -66,46 +132,62 @@ class EncyclopaediaMetallum(Page):
         Is not good.
         """
 
-        r = self.connection.get(
-            endpoint.format(song=song.title, artist=query.artist_str, album=query.album_str)
-        )
-        if r is None:
-            return []
+        song_title = song.title
+        album_titles = ["*"] if song.album_collection.empty else [album.title for album in song.album_collection]
+        artist_titles = ["*"] if song.main_artist_collection.empty else [artist.name for artist in song.main_artist_collection]
 
-        return [cls.get_song_from_json(
-            artist_html=raw_song[0],
-            album_html=raw_song[1],
-            release_type=raw_song[2],
-            title=raw_song[3],
-            lyrics_html=raw_song[4]
-        ) for raw_song in r.json()['aaData']]
+        search_results = []
 
-    @classmethod
-    def search_for_album(cls, query: Query) -> List[Album]:
+        for artist in artist_titles:
+            for album in album_titles:
+                r = self.connection.get(
+                    endpoint.format(song=song_title, artist=artist, album=album)
+                )
+
+                if r is None:
+                    return []
+
+                search_results.extend(_song_from_json(
+                    artist_html=raw_song[0],
+                    album_html=raw_song[1],
+                    release_type=raw_song[2],
+                    title=raw_song[3],
+                    lyrics_html=raw_song[4]
+                ) for raw_song in r.json()['aaData'])
+
+        return search_results
+
+    def album_search(self, album: Album) -> List[Album]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={" \
                    "artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo" \
                    "=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers" \
                    "=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns" \
                    "=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
 
-        r = cls.CONNECTION.get(endpoint.format(artist=query.artist_str, album=query.album_str))
-        if r is None:
-            return []
 
-        return [cls.get_album_from_json(
-            artist_html=raw_album[0],
-            album_html=raw_album[1],
-            release_type=raw_album[2]
-        ) for raw_album in r.json()['aaData']]
+        album_title = album.title
+        artist_titles = ["*"] if album.artist_collection.empty else [artist.name for artist in album.artist_collection]
 
-    @classmethod
-    def search_for_artist(cls, query: Query) -> List[Artist]:
+        search_results = []
+
+        for artist in artist_titles:
+            r = self.connection.get(endpoint.format(artist=artist, album=album_title))
+            if r is None:
+                return []
+
+            search_results.extend(_album_from_json(
+                artist_html=raw_album[0],
+                album_html=raw_album[1],
+                release_type=raw_album[2]
+            ) for raw_album in r.json()['aaData'])
+
+    def artist_search(self, artist: Artist) -> List[Artist]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={" \
                    "artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location" \
                    "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
                    "&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
 
-        r = cls.CONNECTION.get(endpoint.format(artist=query.artist))
+        r = self.connection.get(endpoint.format(artist=artist.name))
 
         if r is None:
             return []
@@ -116,7 +198,7 @@ class EncyclopaediaMetallum(Page):
             return []
 
         return [
-            cls.get_artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
+            _artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
         ]
 
@@ -137,77 +219,6 @@ class EncyclopaediaMetallum(Page):
             for raw_artist in r.json()['aaData']
         ])
 
-    @classmethod
-    def get_artist_from_json(cls, artist_html=None, genre=None, country=None) -> Artist:
-        """
-        TODO parse the country to a standart
-        """
-        # parse the html
-        # parse the html for the band name and link on metal-archives
-        soup = BeautifulSoup(artist_html, 'html.parser')
-        anchor = soup.find('a')
-        artist_name = anchor.text
-        artist_url = anchor.get('href')
-        artist_id = artist_url.split("/")[-1]
-
-        anchor.decompose()
-        strong = soup.find('strong')
-        if strong is not None:
-            strong.decompose()
-            akronyms_ = soup.text[2:-2].split(', ')
-
-        return Artist(
-            name=artist_name,
-            source_list=[
-                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, artist_url)
-            ]
-        )
-
-    @classmethod
-    def get_album_from_json(cls, album_html=None, release_type=None, artist_html=None) -> Album:
-        # parse the html
-        # <a href="https://www.metal-archives.com/albums/Ghost_Bath/Self_Loather/970834">Self Loather</a>'
-        soup = BeautifulSoup(album_html, 'html.parser')
-        anchor = soup.find('a')
-        album_name = anchor.text
-        album_url = anchor.get('href')
-        album_id = album_url.split("/")[-1]
-        
-        album_type = cls.ALBUM_TYPE_MAP[release_type.strip()]
-        
-        return Album(
-            title=album_name,
-            album_type=album_type,
-            source_list=[
-                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)
-            ],
-            artist_list=[
-                cls.get_artist_from_json(artist_html=artist_html)
-            ]
-        )
-
-    @classmethod
-    def get_song_from_json(cls, artist_html=None, album_html=None, release_type=None, title=None,
-                           lyrics_html=None) -> Song:
-        song_id = None
-        if lyrics_html is not None:
-            soup = BeautifulSoup(lyrics_html, 'html.parser')
-            anchor = soup.find('a')
-            raw_song_id = anchor.get('id')
-            song_id = raw_song_id.replace("lyricsLink_", "")
-
-        return Song(
-            title=title,
-            main_artist_list=[
-                cls.get_artist_from_json(artist_html=artist_html)
-            ],
-            album_list=[
-                cls.get_album_from_json(album_html=album_html, release_type=release_type, artist_html=artist_html)
-            ],
-            source_list=[
-                Source(SourcePages.ENCYCLOPAEDIA_METALLUM, song_id)
-            ]
-        )
 
     @classmethod
     def _fetch_artist_discography(cls, ma_artist_id: str) -> List[Album]:

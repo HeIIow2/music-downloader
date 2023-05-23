@@ -44,13 +44,6 @@ class Page(threading.Thread):
 
     # to search stuff
     def search(self, query: Query) -> List[DatabaseObject]:
-        results = []
-        
-        if query.is_raw:
-            for search_query in query.default_search:
-                results.extend(self.general_search(search_query))
-            return results
-        
         music_object = query.music_object
         
         search_functions = {
@@ -67,9 +60,9 @@ class Page(threading.Thread):
             
         r = []
         for default_query in query.default_search:
-            results.extend(self.general_search(default_query))
+            r.extend(self.general_search(default_query))
         
-        return results
+        return r
     
     def general_search(self, search_query: str) -> List[DatabaseObject]:
         return []
