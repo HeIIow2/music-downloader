@@ -35,8 +35,7 @@ ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
 })
 
 
-def _song_from_json(artist_html=None, album_html=None, release_type=None, title=None,
-                    lyrics_html=None) -> Song:
+def _song_from_json(artist_html=None, album_html=None, release_type=None, title=None, lyrics_html=None) -> Song:
     song_id = None
     if lyrics_html is not None:
         soup = BeautifulSoup(lyrics_html, 'html.parser')
@@ -60,7 +59,7 @@ def _song_from_json(artist_html=None, album_html=None, release_type=None, title=
 
 def _artist_from_json(artist_html=None, genre=None, country=None) -> Artist:
     """
-    TODO parse the country to a standart
+    TODO parse the country to a standard
     """
     # parse the html
     # parse the html for the band name and link on metal-archives

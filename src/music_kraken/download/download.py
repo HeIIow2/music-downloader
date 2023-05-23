@@ -10,12 +10,15 @@ MusicObject = Union[Song, Album, Artist, Label]
 class Download:
     def __init__(
             self,
-            pages: Tuple[Type[Page]] = page_attributes.ALL_PAGES,
-            exclude_pages: Set[Type[Page]] = set(),
+            pages: Tuple[Page] = page_attributes.ALL_PAGES,
+            exclude_pages=None,
             exclude_shady: bool = False,
     ) -> None:
-        _page_list: List[Type[Page]] = []
-        _audio_page_list: List[Type[Page]] = []
+        if exclude_pages is None:
+            exclude_pages = set()
+
+        _page_list: List[Page] = []
+        _audio_page_list: List[Page] = []
 
         for page in pages:
             if exclude_shady and page in page_attributes.SHADY_PAGES:
@@ -28,8 +31,8 @@ class Download:
             if page in page_attributes.AUDIO_PAGES:
                 _audio_page_list.append(page)
 
-        self.pages: Tuple[Type[Page]] = tuple(_page_list)
-        self.audio_pages: Tuple[Type[Page]] = tuple(_audio_page_list)
+        self.pages: Tuple[Page] = tuple(_page_list)
+        self.audio_pages: Tuple[Page] = tuple(_audio_page_list)
 
     def fetch_details(self, music_object: MusicObject) -> MusicObject:
         for page in self.pages:

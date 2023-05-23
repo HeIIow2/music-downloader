@@ -94,7 +94,7 @@ class Search(Download):
         new_text = ""
         latest_key: str = None
         for i in range(len(query) - 1):
-            currenct_char = query[i]
+            current_char = query[i]
             next_char = query[i+1]
             
             if skip_next:
@@ -102,24 +102,25 @@ class Search(Download):
                 continue
             
             if escape_next:
-                new_text += currenct_char
+                new_text += current_char
                 escape_next = False
             
             # escaping
-            if currenct_char == "\\":
+            if current_char == "\\":
                 if next_char in special_characters:
                     escape_next = True
                     continue
                 
-            if currenct_char == "#":
+            if current_char == "#":
                 if latest_key is not None:
-                    key_text[latest_key]
+                    key_text[latest_key] = new_text
+                    new_text = ""
                     
                 latest_key = next_char
                 skip_next = True
                 continue
             
-            new_text += currenct_char
+            new_text += current_char
         
         if latest_key is not None:
             key_text[latest_key] = new_text
@@ -129,8 +130,7 @@ class Search(Download):
             
 
         for page in self.pages:
-            for search in parsed_query.default_search:
-                self._current_option[page].extend(page._raw_search(query=search))
+            self._current_option[page].extend(page.search(parsed_query))
 
     def choose_page(self, page: Type[Page]):
         """

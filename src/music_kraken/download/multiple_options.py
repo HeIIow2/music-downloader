@@ -34,11 +34,11 @@ class MultiPageOptions:
     def __len__(self) -> int:
         return self._length
 
-    def get_page_str(self, page: Type[Page]) -> str:
+    def get_page_str(self, page: Page) -> str:
         page_name_fill = "-"
         max_page_len = 21
         
-        return f"({page_attributes.PAGE_NAME_MAP[page]}) ------------------------{page.__name__:{page_name_fill}<{max_page_len}}------------"
+        return f"({page_attributes.PAGE_NAME_MAP[page]}) ------------------------{type(page).__name__:{page_name_fill}<{max_page_len}}------------"
 
     def string_from_all_pages(self) -> str:
         if self._length == 1:
