@@ -1,13 +1,11 @@
 from collections import defaultdict
 from typing import List, Optional, Dict, Type, Union
-import requests
 from bs4 import BeautifulSoup
 import pycountry
 from urllib.parse import urlparse
 
 from ..connection import Connection
-from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER, proxies
-from ..utils import string_processing
+from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
@@ -45,7 +43,7 @@ class EncyclopaediaMetallum(Page):
     LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
 
     @classmethod
-    def search_by_query(cls, query: str) -> Options:
+    def _raw_search(cls, query: str) -> Options:
         query_obj = cls.Query(query)
 
         if query_obj.is_raw:

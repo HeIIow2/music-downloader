@@ -46,7 +46,7 @@ class YouTube(Page):
 
 
     @classmethod
-    def search_by_query(cls, query: str) -> Options:
+    def _raw_search(cls, query: str) -> Options:
         return Options()
 
     @classmethod

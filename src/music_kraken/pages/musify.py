@@ -25,7 +25,7 @@ from ..objects import (
 )
 from ..utils.shared import MUSIFY_LOGGER
 from ..utils import string_processing, shared
-from .support_classes.download_result import DownloadResult
+from ..utils.support_classes import DownloadResult
 
 """
 https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
@@ -112,7 +112,7 @@ class Musify(Page):
         )
 
     @classmethod
-    def search_by_query(cls, query: str) -> Options:
+    def _raw_search(cls, query: str) -> Options:
         query_obj = cls.Query(query)
 
         if query_obj.is_raw:

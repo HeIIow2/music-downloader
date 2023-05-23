@@ -7,8 +7,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from ..connection import Connection
-from ..utils.support_classes.default_target import DefaultTarget
-from ..utils.support_classes.download_result import DownloadResult
 from ..objects import (
     Song,
     Source,
@@ -24,6 +22,7 @@ from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
+from ..utils.support_classes import Query, DownloadResult, DefaultTarget
 
 
 class Page:
@@ -41,125 +40,22 @@ class Page:
     LOGGER = logging.getLogger("this shouldn't be used")
 
     SOURCE_TYPE: SourcePages
-
-    @classmethod
-    def get_request(
-            cls,
-            url: str,
-            stream: bool = False,
-            accepted_response_codes: set = {200},
-            trie: int = 0
-    ) -> Optional[requests.Response]:
-
-        retry = False
-        try:
-            r = cls.API_SESSION.get(url, timeout=cls.TIMEOUT, stream=stream)
-        except requests.exceptions.Timeout:
-            cls.LOGGER.warning(f"request timed out at \"{url}\": ({trie}-{cls.TRIES})")
-            retry = True
-        except requests.exceptions.ConnectionError:
-            cls.LOGGER.warning(f"couldn't connect to \"{url}\": ({trie}-{cls.TRIES})")
-            retry = True
-
-        if not retry and r.status_code in accepted_response_codes:
-            return r
-
-        if not retry:
-            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at GET:{url}. ({trie}-{cls.TRIES})")
-            cls.LOGGER.debug(r.content)
-
-        if trie >= cls.TRIES:
-            cls.LOGGER.warning("to many tries. Aborting.")
-            return None
-
-        return cls.get_request(url=url, stream=stream, accepted_response_codes=accepted_response_codes, trie=trie + 1)
-
-    @classmethod
-    def post_request(cls, url: str, json: dict, accepted_response_codes: set = {200}, trie: int = 0) -> Optional[
-        requests.Response]:
-        retry = False
-        try:
-            r = cls.API_SESSION.post(url, json=json, timeout=cls.POST_TIMEOUT)
-        except requests.exceptions.Timeout:
-            cls.LOGGER.warning(f"request timed out at \"{url}\": ({trie}-{cls.TRIES})")
-            retry = True
-        except requests.exceptions.ConnectionError:
-            cls.LOGGER.warning(f"couldn't connect to \"{url}\": ({trie}-{cls.TRIES})")
-            retry = True
-
-        if not retry and r.status_code in accepted_response_codes:
-            return r
-
-        if not retry:
-            cls.LOGGER.warning(f"{cls.__name__} responded wit {r.status_code} at POST:{url}. ({trie}-{cls.TRIES})")
-            cls.LOGGER.debug(r.content)
-
-        if trie >= cls.TRIES:
-            cls.LOGGER.warning("to many tries. Aborting.")
-            return None
-
-        cls.LOGGER.warning(f"payload: {json}")
-        return cls.post_request(url=url, json=json, accepted_response_codes=accepted_response_codes, trie=trie + 1)
-
+    
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
         return BeautifulSoup(r.content, "html.parser")
 
-    class Query:
-        def __init__(self, query: str):
-            self.query = query
-            self.is_raw = False
-
-            self.artist = None
-            self.album = None
-            self.song = None
-
-            self.parse_query(query=query)
-
-        def __str__(self):
-            if self.is_raw:
-                return self.query
-            return f"{self.artist}; {self.album}; {self.song}"
-
-        def parse_query(self, query: str):
-            if not '#' in query:
-                self.is_raw = True
-                return
-
-            query = query.strip()
-            parameters = query.split('#')
-            parameters.remove('')
-
-            for parameter in parameters:
-                splitted = parameter.split(" ")
-                type_ = splitted[0]
-                input_ = " ".join(splitted[1:]).strip()
-
-                if type_ == "a":
-                    self.artist = input_
-                    continue
-                if type_ == "r":
-                    self.album = input_
-                    continue
-                if type_ == "t":
-                    self.song = input_
-                    continue
-
-        def get_str(self, string):
-            if string is None:
-                return ""
-            return string
-
-        artist_str = property(fget=lambda self: self.get_str(self.artist))
-        album_str = property(fget=lambda self: self.get_str(self.album))
-        song_str = property(fget=lambda self: self.get_str(self.song))
+    @classmethod
+    def search(cls, query: Query) -> Options:
+        results = []
+        
+        for default_query in query.default_search:
+            results.extend(cls._raw_search(default_query))
+        
+        return Options(results)
 
     @classmethod
-    def search_by_object(cls, data_object: DatabaseObject, filter_none: bool = True) -> List[DatabaseObject]:
-        return []
-
-    @classmethod
-    def search_by_query(cls, query: str) -> Options:
+    def _raw_search(cls, query: str) -> Options:
         """
         # The Query
         You can define a new parameter with "#",
@@ -174,7 +70,7 @@ class Page:
         :return possible_music_objects:
         """
 
-        return Options()
+        return []
 
     @classmethod
     def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:

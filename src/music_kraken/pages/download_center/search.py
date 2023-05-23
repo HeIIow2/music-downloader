@@ -67,7 +67,7 @@ class Search(Download):
         """
 
         for page in self.pages:
-            self._current_option[page] = page.search_by_query(query=query)
+            self._current_option[page] = page._raw_search(query=query)
 
     def choose_page(self, page: Type[Page]):
         """
