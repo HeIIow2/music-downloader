@@ -75,6 +75,21 @@ def _clean_song(song: Song, collections: Dict[INDEPENDENT_DB_TYPES, Collection])
     _clean_collection(song.main_artist_collection, collections)
 
 
+def post_process_object(database_object: DatabaseObject, clean_up: bool = True) -> DatabaseObject:
+    if isinstance(database_object, INDEPENDENT_DB_OBJECTS) and clean_up:
+        collections = {
+            Label: Collection(element_type=Label),
+            Artist: Collection(element_type=Artist),
+            Album: Collection(element_type=Album),
+            Song: Collection(element_type=Song)
+        }
+
+        _clean_music_object(database_object, collections)
+
+    database_object.compile(merge_into=True)
+    return database_object
+
+
 class Page(threading.Thread):
     """
     This is an abstract class, laying out the 
@@ -132,9 +147,9 @@ class Page(threading.Thread):
         return []
     
 
-    def fetch_details(self, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:
+    def fetch_details(self, music_object: DatabaseObject, stop_at_level: int = 1) -> DatabaseObject:
         """
-        when a music object with laccing data is passed in, it returns
+        when a music object with lacking data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
         If you for example put in, an album, it fetches the tracklist
 
@@ -149,55 +164,33 @@ class Page(threading.Thread):
         :return detailed_music_object: IT MODIFIES THE INPUT OBJ
         """
 
+        # creating a new object, of the same type
         new_music_object: DatabaseObject = type(music_object)()
 
-        had_sources = False
+        # only certain database objects, have a source list
+        if isinstance(music_object, INDEPENDENT_DB_TYPES):
+            source: Source
+            for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
+                new_music_object.merge(
+                    self.fetch_object_from_source(source=source, enforce_type=type(music_object), stop_at_level=stop_at_level, post_process=False))
 
-        source: Source
-        for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
-            new_music_object.merge(
-                cls._fetch_object_from_source(source=source, obj_type=type(music_object), stop_at_level=stop_at_level))
-            had_sources = True
-
-        if not had_sources:
-            music_object.compile(merge_into=True)
-            return music_object
-
-        collections = {
-            Label: Collection(element_type=Label),
-            Artist: Collection(element_type=Artist),
-            Album: Collection(element_type=Album),
-            Song: Collection(element_type=Song)
-        }
-
-        if not isinstance(new_music_object, INDEPENDENT_DB_OBJECTS):
-            raise TypeError(f"Can't clean the object, because it isn't a valid type: {type(new_music_object)} | {type(INDEPENDENT_DB_OBJECTS)}")
-
-        _clean_music_object(new_music_object, collections)
+        new_music_object = post_process_object(new_music_object)
 
         music_object.merge(new_music_object)
         music_object.compile(merge_into=True)
 
         return music_object
 
-    @classmethod
-    def fetch_object_from_source(cls, source: Source, stop_at_level: int = 2):
-        obj_type = cls._get_type_of_url(source.url)
+    def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> DatabaseObject:
+        obj_type = self._get_type_of_url(source.url)
         if obj_type is None:
             return None
 
         music_object = cls._fetch_object_from_source(source=source, obj_type=obj_type, stop_at_level=stop_at_level)
 
-        collections = {
-            Label: Collection(element_type=Label),
-            Artist: Collection(element_type=Artist),
-            Album: Collection(element_type=Album),
-            Song: Collection(element_type=Song)
-        }
+        if post_process:
+            return post_process_object(music_object)
 
-        cls._clean_music_object(music_object, collections)
-
-        music_object.compile(merge_into=True)
         return music_object
 
     @classmethod
