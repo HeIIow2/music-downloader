@@ -1,8 +1,8 @@
 from typing import Optional, Tuple, Type, Set, Union, List
 
 from . import page_attributes
-from ..abstract import Page
-from ...objects import Song, Album, Artist, Label, Source
+from ..pages import Page
+from ..objects import Song, Album, Artist, Label, Source
 
 MusicObject = Union[Song, Album, Artist, Label]
 

@@ -25,7 +25,7 @@ from ..objects import (
 )
 from ..utils.shared import MUSIFY_LOGGER
 from ..utils import string_processing, shared
-from ..utils.support_classes import DownloadResult
+from ..utils.support_classes import DownloadResult, Query
 
 """
 https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
@@ -120,7 +120,7 @@ class Musify(Page):
         return cls.plaintext_search(cls.get_plaintext_query(query_obj))
 
     @classmethod
-    def get_plaintext_query(cls, query: Page.Query) -> str:
+    def get_plaintext_query(cls, query: Query) -> str:
         if query.album is None:
             return f"{query.artist or '*'} - {query.song or '*'}"
         return f"{query.artist or '*'} - {query.album or '*'} - {query.song or '*'}"

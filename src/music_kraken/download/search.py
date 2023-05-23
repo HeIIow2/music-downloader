@@ -1,12 +1,12 @@
-from typing import Tuple, List, Set, Type, Optional
+from typing import Tuple, List, Set, Type, Optional, Dict
 
 from . import page_attributes
 from .download import Download
 from .multiple_options import MultiPageOptions
-from ..abstract import Page
-from ..support_classes.download_result import DownloadResult
-from ...objects import DatabaseObject, Source
-from ...utils.enums.source import SourcePages
+from ..pages.abstract import Page
+from ..utils.support_classes import DownloadResult, Query
+from ..objects import DatabaseObject, Source, Artist, Song, Album
+from ..utils.enums.source import SourcePages
 
 
 class Search(Download):
@@ -52,6 +52,24 @@ class Search(Download):
         self._current_option = self._option_history[-1]
         
         return self._option_history[-1]
+    
+    def _process_parsed(self, key_text: Dict[str, str], query: str) -> Query:
+        song = None if not "t" in key_text else Song(title=key_text["t"], dynamic=True)
+        album = None if not "r" in key_text else Album(title=key_text["r"], dynamic=True)
+        artist = None if not "a" in key_text else Artist(name=key_text["a"], dynamic=True)
+        
+        if song is not None:
+            song.album_collection.append(album)
+            song.main_artist_collection.append(artist)
+            return Query(raw_query=query, music_object=song)
+        
+        if album is not None:
+            album.artist_collection.append(artist)
+            return Query(raw_query=query, music_object=album)
+        
+        if artist is not None:
+            return Query(raw_query=query, music_object=artist)
+        
 
     def search(self, query: str):
         """
@@ -65,9 +83,54 @@ class Search(Download):
         doesn't set derived_from thus,
         can't download right after
         """
+        
+        special_characters = "#\\"
+        query = query + " "
+        
+        key_text = {}
+        
+        skip_next = False
+        escape_next = False
+        new_text = ""
+        latest_key: str = None
+        for i in range(len(query) - 1):
+            currenct_char = query[i]
+            next_char = query[i+1]
+            
+            if skip_next:
+                skip_next = False
+                continue
+            
+            if escape_next:
+                new_text += currenct_char
+                escape_next = False
+            
+            # escaping
+            if currenct_char == "\\":
+                if next_char in special_characters:
+                    escape_next = True
+                    continue
+                
+            if currenct_char == "#":
+                if latest_key is not None:
+                    key_text[latest_key]
+                    
+                latest_key = next_char
+                skip_next = True
+                continue
+            
+            new_text += currenct_char
+        
+        if latest_key is not None:
+            key_text[latest_key] = new_text
+            
+            
+        parsed_query: Query = self._process_parsed(key_text, query)
+            
 
         for page in self.pages:
-            self._current_option[page] = page._raw_search(query=query)
+            for search in parsed_query.default_search:
+                self._current_option[page].extend(page._raw_search(query=search))
 
     def choose_page(self, page: Type[Page]):
         """

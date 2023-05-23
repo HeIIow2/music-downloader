@@ -1,9 +1,8 @@
 from typing import Tuple, Type, Dict
 
-from ...utils.enums.source import SourcePages
-from ..abstract import Page
-from ..encyclopaedia_metallum import EncyclopaediaMetallum
-from ..musify import Musify
+from ..utils.enums.source import SourcePages
+from ..pages import Page, EncyclopaediaMetallum, Musify
+
 
 NAME_PAGE_MAP: Dict[str, Type[Page]] = dict()
 PAGE_NAME_MAP: Dict[Type[Page], str] = dict()

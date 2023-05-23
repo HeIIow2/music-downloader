@@ -1,4 +1,5 @@
 from ..utils.enums import album
+from .option import Options
 from . import (
     song,
     metadata,
@@ -28,5 +29,4 @@ Album = song.Album
 
 FormattedText = formatted_text.FormattedText
 
-Options = option.Options
 Collection = collection.Collection

@@ -2,8 +2,8 @@ from collections import defaultdict
 from typing import Tuple, List, Dict, Type
 
 from . import page_attributes
-from ..abstract import Page
-from ...objects import Options, DatabaseObject, Source
+from ..pages import Page
+from ..objects import Options, DatabaseObject, Source
 
 
 class MultiPageOptions:

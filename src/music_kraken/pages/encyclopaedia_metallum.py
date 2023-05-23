@@ -9,6 +9,7 @@ from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
+from ..utils.support_classes import Query
 from ..objects import (
     Lyrics,
     Artist,
@@ -51,7 +52,7 @@ class EncyclopaediaMetallum(Page):
         return cls.advanced_search(query_obj)
 
     @classmethod
-    def advanced_search(cls, query: Page.Query) -> Options:
+    def advanced_search(cls, query: Query) -> Options:
         if query.song is not None:
             return Options(cls.search_for_song(query=query))
         if query.album is not None:
@@ -61,7 +62,7 @@ class EncyclopaediaMetallum(Page):
         return Options
 
     @classmethod
-    def search_for_song(cls, query: Page.Query) -> List[Song]:
+    def search_for_song(cls, query: Query) -> List[Song]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={" \
                    "artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0" \
                    "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
@@ -82,7 +83,7 @@ class EncyclopaediaMetallum(Page):
         ) for raw_song in r.json()['aaData']]
 
     @classmethod
-    def search_for_album(cls, query: Page.Query) -> List[Album]:
+    def search_for_album(cls, query: Query) -> List[Album]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={" \
                    "artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo" \
                    "=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers" \
@@ -100,7 +101,7 @@ class EncyclopaediaMetallum(Page):
         ) for raw_album in r.json()['aaData']]
 
     @classmethod
-    def search_for_artist(cls, query: Page.Query) -> List[Artist]:
+    def search_for_artist(cls, query: Query) -> List[Artist]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={" \
                    "artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location" \
                    "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
@@ -122,7 +123,7 @@ class EncyclopaediaMetallum(Page):
         ]
 
     @classmethod
-    def simple_search(cls, query: Page.Query) -> List[Artist]:
+    def simple_search(cls, query: Query) -> List[Artist]:
         """
         Searches the default endpoint from metal archives, which intern searches only
         for bands, but it is the default, thus I am rolling with it
