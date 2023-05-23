@@ -7,8 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 
 from ..connection import Connection
-from .support_classes.default_target import DefaultTarget
-from .support_classes.download_result import DownloadResult
+from ..utils.support_classes.default_target import DefaultTarget
+from ..utils.support_classes.download_result import DownloadResult
 from ..objects import (
     Song,
     Source,
