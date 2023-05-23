@@ -23,6 +23,17 @@ from ..objects import (
 )
 
 
+ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
+    "Full-length": AlbumType.STUDIO_ALBUM,
+    "Single": AlbumType.SINGLE,
+    "EP": AlbumType.EP,
+    "Demo": AlbumType.DEMO,
+    "Video": AlbumType.OTHER,
+    "Live album": AlbumType.LIVE_ALBUM,
+    "Compilation": AlbumType.COMPILATION_ALBUM
+})
+
+
 class EncyclopaediaMetallum(Page):
     CONNECTION: Connection = Connection(
         host="https://www.metal-archives.com/",
@@ -30,36 +41,14 @@ class EncyclopaediaMetallum(Page):
     )
 
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
-
-    ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
-        "Full-length": AlbumType.STUDIO_ALBUM,
-        "Single": AlbumType.SINGLE,
-        "EP": AlbumType.EP,
-        "Demo": AlbumType.DEMO,
-        "Video": AlbumType.OTHER,
-        "Live album": AlbumType.LIVE_ALBUM,
-        "Compilation": AlbumType.COMPILATION_ALBUM
-    })
     
     LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
-
-    @classmethod
-    def _raw_search(cls, query: str) -> Options:
-        query_obj = cls.Query(query)
-
-        if query_obj.is_raw:
-            return cls.simple_search(query_obj)
-        return cls.advanced_search(query_obj)
-
-    @classmethod
-    def advanced_search(cls, query: Query) -> Options:
-        if query.song is not None:
-            return Options(cls.search_for_song(query=query))
-        if query.album is not None:
-            return Options(cls.search_for_album(query=query))
-        if query.artist is not None:
-            return Options(cls.search_for_artist(query=query))
-        return Options
+    
+    def __init__(self):
+        self.connection: Connection = Connection(
+            host="https://www.metal-archives.com/",
+            logger=ENCYCLOPAEDIA_METALLUM_LOGGER
+        )
 
     @classmethod
     def search_for_song(cls, query: Query) -> List[Song]:
@@ -123,7 +112,7 @@ class EncyclopaediaMetallum(Page):
         ]
 
     @classmethod
-    def simple_search(cls, query: Query) -> List[Artist]:
+    def _raw_search(cls, query: str) -> Options:
         """
         Searches the default endpoint from metal archives, which intern searches only
         for bands, but it is the default, thus I am rolling with it
@@ -132,12 +121,12 @@ class EncyclopaediaMetallum(Page):
 
         r = cls.CONNECTION.get(endpoint.format(query=query))
         if r is None:
-            return []
+            return Options()
 
-        return [
+        return Options([
             cls.get_artist_from_json(artist_html=raw_artist[0], genre=raw_artist[1], country=raw_artist[2])
             for raw_artist in r.json()['aaData']
-        ]
+        ])
 
     @classmethod
     def get_artist_from_json(cls, artist_html=None, genre=None, country=None) -> Artist:

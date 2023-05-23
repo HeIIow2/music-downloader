@@ -2,6 +2,7 @@ import logging
 import random
 from copy import copy
 from typing import Optional, Union, Type, Dict, Set, List
+import threading
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,52 +26,66 @@ from ..utils import shared
 from ..utils.support_classes import Query, DownloadResult, DefaultTarget
 
 
-class Page:
+class Page(threading.Thread):
     """
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
-    CONNECTION: Connection
-
-    API_SESSION: requests.Session = requests.Session()
-    API_SESSION.proxies = shared.proxies
-    TIMEOUT = 5
-    POST_TIMEOUT = TIMEOUT
-    TRIES = 5
-    LOGGER = logging.getLogger("this shouldn't be used")
 
     SOURCE_TYPE: SourcePages
+    LOGGER = logging.getLogger("this shouldn't be used")
     
+    def __init__(self):
+        threading.Thread.__init__(self)
+      
     @classmethod
     def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
         return BeautifulSoup(r.content, "html.parser")
 
-    @classmethod
-    def search(cls, query: Query) -> Options:
+    # to search stuff
+    def search(self, query: Query) -> List[DatabaseObject]:
         results = []
         
-        for default_query in query.default_search:
-            results.extend(cls._raw_search(default_query))
+        if query.is_raw:
+            for search_query in query.default_search:
+                results.extend(self.general_search(search_query))
+            return results
         
-        return Options(results)
-
-    @classmethod
-    def _raw_search(cls, query: str) -> Options:
-        """
-        # The Query
-        You can define a new parameter with "#",
-        the letter behind it defines the *type* of parameter, followed by a space
-        "#a Psychonaut 4 #r Tired, Numb and #t Drop by Drop"
-        if no # is in the query it gets treated as "unspecified query"
-
-        # Functionality
-        Returns the best matches from this page for the query, passed in.
-
-        :param query:
-        :return possible_music_objects:
-        """
-
+        music_object = query.music_object
+        
+        search_functions = {
+            Song: self.song_search,
+            Album: self.album_search,
+            Artist: self.artist_search,
+            Label: self.label_search
+        }
+        
+        if type(music_object) in search_functions:
+            r = search_functions[type(music_object)](music_object)
+            if len(r) > 0:
+                return r
+            
+        r = []
+        for default_query in query.default_search:
+            results.extend(self.general_search(default_query))
+        
+        return results
+    
+    def general_search(self, search_query: str) -> List[DatabaseObject]:
         return []
+    
+    def label_search(self, label: Label) -> List[Label]:
+        return []
+    
+    def artist_search(self, artist: Artist) -> List[Artist]:
+        return []
+    
+    def album_search(self, album: Album) -> List[Album]:
+        return []
+    
+    def song_search(self, song: Song) -> List[Song]:
+        return []
+    
 
     @classmethod
     def fetch_details(cls, music_object: Union[Song, Album, Artist, Label], stop_at_level: int = 1) -> DatabaseObject:

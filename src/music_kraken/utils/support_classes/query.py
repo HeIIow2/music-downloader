@@ -9,7 +9,11 @@ class Query:
         music_object: DatabaseObject = None
     ) -> None:
         self.raw_query: str = raw_query
-        self.music_object: Optional[DatabaseObject] = None
+        self.music_object: Optional[DatabaseObject] = music_object
+        
+    @property
+    def is_raw(self) -> bool:
+        return self.music_object is None
 
     @property
     def default_search(self) -> List[str]:
