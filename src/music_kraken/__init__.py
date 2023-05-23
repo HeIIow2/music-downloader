@@ -6,7 +6,7 @@ from typing import List
 import gc
 import musicbrainzngs
 
-from . import objects, pages
+from . import objects, pages, download
 from .utils import exception, shared, path_manager
 from .utils.config import config, read, write, PATHS_SECTION
 from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_message
@@ -176,7 +176,7 @@ def cli(
             if verification in agree_inputs:
                 return new_genre
 
-    def next_search(_search: pages.Search, query: str) -> bool:
+    def next_search(_search: download.Search, query: str) -> bool:
         """
         :param _search:
         :param query:
@@ -234,7 +234,7 @@ def cli(
     print(f"Downloading to: \"{genre}\"")
     print()
 
-    search = pages.Search()
+    search = download.Search()
 
     # directly download url
     if direct_download_url is not None:
