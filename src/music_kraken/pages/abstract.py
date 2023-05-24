@@ -84,7 +84,8 @@ def clean_object(dirty_object: DatabaseObject) -> DatabaseObject:
             Song: Collection(element_type=Song)
         }
 
-        return _clean_music_object(dirty_object, collections)
+        _clean_music_object(dirty_object, collections)
+    return dirty_object
     
 def build_new_object(new_object: DatabaseObject) -> DatabaseObject:
     new_object = clean_object(new_object)
