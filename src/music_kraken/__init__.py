@@ -13,8 +13,6 @@ from .utils.shared import MUSIC_DIR, MODIFY_GC, NOT_A_GENRE_REGEX, get_random_me
 from .utils.string_processing import fit_to_file_system
 
 
-import sys; sys.setrecursionlimit(100)
-
 if MODIFY_GC:
     """
     At the start I modify the garbage collector to run a bit fewer times.

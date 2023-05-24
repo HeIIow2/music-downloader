@@ -117,7 +117,7 @@ class Page(threading.Thread):
     def run(self) -> None:
         pass
     
-    def get_source_type(self, source: Source) -> Optional[INDEPENDENT_DB_TYPES]:
+    def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return None
       
     def get_soup_from_response(self, r: requests.Response) -> BeautifulSoup:
@@ -186,7 +186,13 @@ class Page(threading.Thread):
             source: Source
             for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
                 new_music_object.merge(
-                    self.fetch_object_from_source(source=source, enforce_type=type(music_object), stop_at_level=stop_at_level, post_process=False))
+                    self.fetch_object_from_source(
+                        source=source, 
+                        enforce_type=type(music_object), 
+                        stop_at_level=stop_at_level, 
+                        post_process=False
+                    )
+                )
 
         return merge_together(music_object, new_music_object)
 

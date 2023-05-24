@@ -65,6 +65,9 @@ class DatabaseObject:
         return list()
 
     def merge(self, other, override: bool = False):
+        if other is None:
+            return
+        
         if self is other:
             return
         

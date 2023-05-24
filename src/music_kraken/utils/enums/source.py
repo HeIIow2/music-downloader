@@ -26,6 +26,8 @@ class SourcePages(Enum):
     MYSPACE = "myspace"     # Yes somehow this ancient site is linked EVERYWHERE
 
     MANUAL = "manual"
+    
+    PRESET = "preset"
 
     @classmethod
     def get_homepage(cls, attribute) -> str:
