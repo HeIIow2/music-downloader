@@ -75,9 +75,8 @@ def _clean_song(song: Song, collections: Dict[INDEPENDENT_DB_TYPES, Collection])
     _clean_collection(song.feature_artist_collection, collections)
     _clean_collection(song.main_artist_collection, collections)
 
-
-def post_process_object(database_object: DatabaseObject, clean_up: bool = True) -> DatabaseObject:
-    if isinstance(database_object, INDEPENDENT_DB_OBJECTS) and clean_up:
+def clean_object(dirty_object: DatabaseObject) -> DatabaseObject:
+    if isinstance(dirty_object, INDEPENDENT_DB_OBJECTS):
         collections = {
             Label: Collection(element_type=Label),
             Artist: Collection(element_type=Artist),
@@ -85,10 +84,21 @@ def post_process_object(database_object: DatabaseObject, clean_up: bool = True) 
             Song: Collection(element_type=Song)
         }
 
-        _clean_music_object(database_object, collections)
+        return _clean_music_object(dirty_object, collections)
+    
+def build_new_object(new_object: DatabaseObject) -> DatabaseObject:
+    new_object = clean_object(new_object)
+    new_object.compile(merge_into=False)
+    
+    return new_object
 
-    database_object.compile(merge_into=True)
-    return database_object
+def merge_together(old_object: DatabaseObject, new_object: DatabaseObject) -> DatabaseObject:
+    new_object = clean_object(new_object)
+    
+    old_object.merge(new_object)
+    old_object.compile(merge_into=False)
+    
+    return old_object
 
 
 class Page(threading.Thread):
@@ -177,12 +187,7 @@ class Page(threading.Thread):
                 new_music_object.merge(
                     self.fetch_object_from_source(source=source, enforce_type=type(music_object), stop_at_level=stop_at_level, post_process=False))
 
-        new_music_object = post_process_object(new_music_object)
-
-        music_object.merge(new_music_object)
-        music_object.compile(merge_into=True)
-
-        return music_object
+        return merge_together(music_object, new_music_object)
 
     def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
         obj_type = self.get_source_type(source)
@@ -204,9 +209,12 @@ class Page(threading.Thread):
         
         if obj_type in fetch_map:
             music_object = fetch_map[obj_type](source, stop_at_level)
+        else:
+            self.LOGGER.warning(f"Can't fetch details of type: {obj_type}")
+            return None
 
-        if post_process and music_object is not None:
-            return post_process_object(music_object)
+        if post_process and music_object:
+            return build_new_object(music_object)
 
         return music_object
     
