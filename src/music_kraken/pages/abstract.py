@@ -237,6 +237,38 @@ class Page(threading.Thread):
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
 
+    def download(self, music_object: DatabaseObject, download_all: bool = False) -> DownloadResult:
+        self._download(music_object, {}, download_all)
+
+        return DownloadResult()
+
+
+    def _download(self, music_object: DatabaseObject, naming_objects: Dict[Type[DatabaseObject], DatabaseObject], download_all: bool = False) -> list:
+        # Skips all releases, that are defined in shared.ALBUM_TYPE_BLACKLIST, if download_all is False
+        if isinstance(music_object, Album):
+            if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
+                return []
+
+        naming_objects[type(music_object)] = music_object
+
+        if isinstance(music_object, Song):
+            print("Downloading", music_object)
+            return [music_object]
+
+        return_values: List = []
+
+        for collection_name in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
+            collection: Collection = getattr(self, collection_name)
+
+            sub_ordered_music_object: DatabaseObject
+            for sub_ordered_music_object in collection:
+                return_values.extend(self._download(sub_ordered_music_object, naming_objects.copy(), download_all))
+
+        return return_values
+
+    def download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], DatabaseObject]):
+        pass
+
     @classmethod
     def download(
             cls,

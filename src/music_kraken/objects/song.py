@@ -204,6 +204,8 @@ class Album(MainObject):
         "notes": FormattedText()
     }
 
+    DOWNWARDS_COLLECTION_ATTRIBUTES = ("song_collection",)
+
     def __init__(
             self,
             _id: int = None,
@@ -421,6 +423,8 @@ class Artist(MainObject):
         "lyrical_themes": [],
         "general_genre": ""
     }
+
+    DOWNWARDS_COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
 
     def __init__(
             self,
@@ -645,6 +649,8 @@ class Label(MainObject):
         "unified_name": None,
         "notes": FormattedText()
     }
+
+    DOWNWARDS_COLLECTION_ATTRIBUTES = COLLECTION_ATTRIBUTES
 
     def __init__(
             self,

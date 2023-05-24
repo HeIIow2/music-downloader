@@ -96,7 +96,7 @@ class Collection:
                     return AppendResult(True, existing_object, False)
 
                 # if the object does already exist
-                # thus merging and don't add it afterwards
+                # thus merging and don't add it afterward
                 if merge_into_existing:
                     existing_object.merge(element)
                     # in case any relevant data has been added (e.g. it remaps the old object)
