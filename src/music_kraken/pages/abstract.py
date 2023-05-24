@@ -29,6 +29,7 @@ from ..utils.support_classes import Query, DownloadResult, DefaultTarget
 INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
 INDEPENDENT_DB_TYPES = Union[Type[Song], Type[Album], Type[Artist], Type[Label]]
 
+
 def _clean_music_object(music_object: INDEPENDENT_DB_OBJECTS, collections: Dict[INDEPENDENT_DB_TYPES, Collection]):
     if type(music_object) == Label:
         return _clean_label(label=music_object, collections=collections)
@@ -104,9 +105,11 @@ class Page(threading.Thread):
 
     def run(self) -> None:
         pass
+    
+    def get_source_type(self, source: Source) -> Optional[INDEPENDENT_DB_TYPES]:
+        return None
       
-    @classmethod
-    def get_soup_from_response(cls, r: requests.Response) -> BeautifulSoup:
+    def get_soup_from_response(self, r: requests.Response) -> BeautifulSoup:
         return BeautifulSoup(r.content, "html.parser")
 
     # to search stuff
@@ -168,7 +171,7 @@ class Page(threading.Thread):
         new_music_object: DatabaseObject = type(music_object)()
 
         # only certain database objects, have a source list
-        if isinstance(music_object, INDEPENDENT_DB_TYPES):
+        if isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             source: Source
             for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
                 new_music_object.merge(
@@ -181,34 +184,43 @@ class Page(threading.Thread):
 
         return music_object
 
-    def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> DatabaseObject:
-        obj_type = self._get_type_of_url(source.url)
+    def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
+        obj_type = self.get_source_type(source)
+        
         if obj_type is None:
             return None
+        if enforce_type != obj_type and enforce_type is not None:
+            self.LOGGER.warning(f"Object type isn't type to enforce: {enforce_type}, {obj_type}")
+            return None
+        
+        music_object: DatabaseObject = None
+        
+        fetch_map = {
+            Song: self.fetch_song,
+            Album: self.fetch_album,
+            Artist: self.fetch_artist,
+            Label: self.fetch_label
+        }
+        
+        if obj_type in fetch_map:
+            music_object = fetch_map[obj_type](source, stop_at_level)
 
-        music_object = cls._fetch_object_from_source(source=source, obj_type=obj_type, stop_at_level=stop_at_level)
-
-        if post_process:
+        if post_process and music_object is not None:
             return post_process_object(music_object)
 
         return music_object
+    
+    def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
+        return Song()
 
-    @classmethod
-    def _fetch_object_from_source(cls, source: Source,
-                                  obj_type: Union[Type[Song], Type[Album], Type[Artist], Type[Label]],
-                                  stop_at_level: int = 1) -> Union[Song, Album, Artist, Label]:
-        if obj_type == Artist:
-            return cls._fetch_artist_from_source(source=source, stop_at_level=stop_at_level)
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        return Album()
 
-        if obj_type == Song:
-            return cls._fetch_song_from_source(source=source, stop_at_level=stop_at_level)
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        return Artist()
 
-        if obj_type == Album:
-            return cls._fetch_album_from_source(source=source, stop_at_level=stop_at_level)
-
-        if obj_type == Label:
-            return cls._fetch_label_from_source(source=source, stop_at_level=stop_at_level)
-
+    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
+        return Label()
 
     @classmethod
     def download(
@@ -460,26 +472,6 @@ class Page(threading.Thread):
             r.add_target(target)
         
         return r
-
-    @classmethod
-    def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
-        return Song()
-
-    @classmethod
-    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
-        return Album()
-
-    @classmethod
-    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
-        return Artist()
-
-    @classmethod
-    def _fetch_label_from_source(cls, source: Source, stop_at_level: int = 1) -> Label:
-        return Label()
-
-    @classmethod
-    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
-        return None
 
     @classmethod
     def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:

@@ -218,16 +218,14 @@ class EncyclopaediaMetallum(Page):
             for raw_artist in r.json()['aaData']
         ]
 
-
-    @classmethod
-    def _fetch_artist_discography(cls, ma_artist_id: str) -> List[Album]:
+    def _fetch_artist_discography(self, ma_artist_id: str) -> List[Album]:
         discography_url = "https://www.metal-archives.com/band/discography/id/{}/tab/all"
 
         # make the request
-        r = cls.CONNECTION.get(discography_url.format(ma_artist_id))
+        r = self.connection.get(discography_url.format(ma_artist_id))
         if r is None:
             return []
-        soup = cls.get_soup_from_response(r)
+        soup = self.get_soup_from_response(r)
 
         discography = []
 
@@ -251,21 +249,20 @@ class EncyclopaediaMetallum(Page):
                 Album(
                     title=album_name,
                     date=date_obj,
-                    album_type=cls.ALBUM_TYPE_MAP[raw_album_type],
-                    source_list=[Source(SourcePages.ENCYCLOPAEDIA_METALLUM, album_url)]
+                    album_type=ALBUM_TYPE_MAP[raw_album_type],
+                    source_list=[Source(self.SOURCE_TYPE, album_url)]
                 )
             )
 
         return discography
 
-    @classmethod
-    def _fetch_artist_sources(cls, ma_artist_id: str) -> List[Source]:
+    def _fetch_artist_sources(self, ma_artist_id: str) -> List[Source]:
         sources_url = "https://www.metal-archives.com/link/ajax-list/type/band/id/{}"
-        r = cls.CONNECTION.get(sources_url.format(ma_artist_id))
+        r = self.connection.get(sources_url.format(ma_artist_id))
         if r is None:
             return []
 
-        soup = cls.get_soup_from_response(r)
+        soup = self.get_soup_from_response(r)
 
         if soup.find("span", {"id": "noLinks"}) is not None:
             return []
@@ -289,12 +286,11 @@ class EncyclopaediaMetallum(Page):
                 if url is None:
                     continue
 
-                source_list.append(Source.match_url(url, referer_page=cls.SOURCE_TYPE))
+                source_list.append(Source.match_url(url, referer_page=self.SOURCE_TYPE))
 
         return source_list
 
-    @classmethod
-    def _parse_artist_attributes(cls, artist_soup: BeautifulSoup) -> Artist:
+    def _parse_artist_attributes(self, artist_soup: BeautifulSoup) -> Artist:
         name: str = None
         country: pycountry.Countrie = None
         formed_in_year: int = None
@@ -311,7 +307,7 @@ class EncyclopaediaMetallum(Page):
             if title_text.count(bad_name_substring) == 1:
                 name = title_text.replace(bad_name_substring, "")
             else:
-                cls.LOGGER.debug(f"the title of the page is \"{title_text}\"")
+                self.LOGGER.debug(f"the title of the page is \"{title_text}\"")
 
         """
         TODO
@@ -341,7 +337,7 @@ class EncyclopaediaMetallum(Page):
 
             href = anchor.get("href")
             if href is not None:
-                source_list.append(Source(cls.SOURCE_TYPE, href))
+                source_list.append(Source(self.SOURCE_TYPE, href))
 
             name = anchor.get_text(strip=True)
 
@@ -400,35 +396,32 @@ class EncyclopaediaMetallum(Page):
                 Label(
                     name=label_name,
                     source_list=[
-                        Source(cls.SOURCE_TYPE, label_url)
+                        Source(self.SOURCE_TYPE, label_url)
                     ]
                 )
             ],
             source_list=source_list
         )
 
-    @classmethod
-    def _fetch_artist_attributes(cls, url: str) -> Artist:
-        r = cls.CONNECTION.get(url)
+    def _fetch_artist_attributes(self, url: str) -> Artist:
+        r = self.connection.get(url)
         if r is None:
             return Artist()
-        soup: BeautifulSoup = cls.get_soup_from_response(r)
+        soup: BeautifulSoup = self.get_soup_from_response(r)
 
-        return cls._parse_artist_attributes(artist_soup=soup)
+        return self._parse_artist_attributes(artist_soup=soup)
 
-    @classmethod
-    def _fetch_band_notes(cls, ma_artist_id: str) -> Optional[FormattedText]:
+    def _fetch_band_notes(self, ma_artist_id: str) -> Optional[FormattedText]:
         endpoint = "https://www.metal-archives.com/band/read-more/id/{}"
 
         # make the request
-        r = cls.CONNECTION.get(endpoint.format(ma_artist_id))
+        r = self.connection.get(endpoint.format(ma_artist_id))
         if r is None:
             return FormattedText()
 
         return FormattedText(html=r.text)
 
-    @classmethod
-    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
         """
         What it could fetch, and what is implemented:
 
@@ -440,28 +433,27 @@ class EncyclopaediaMetallum(Page):
         [x] band notes: https://www.metal-archives.com/band/read-more/id/3540372489
         """
 
-        artist = cls._fetch_artist_attributes(source.url)
+        artist = self._fetch_artist_attributes(source.url)
 
         artist_id = source.url.split("/")[-1]
 
-        artist_sources = cls._fetch_artist_sources(artist_id)
+        artist_sources = self._fetch_artist_sources(artist_id)
         artist.source_collection.extend(artist_sources)
 
-        band_notes = cls._fetch_band_notes(artist_id)
+        band_notes = self._fetch_band_notes(artist_id)
         if band_notes is not None:
             artist.notes = band_notes
 
-        discography: List[Album] = cls._fetch_artist_discography(artist_id)
+        discography: List[Album] = self._fetch_artist_discography(artist_id)
         if stop_at_level > 1:
             for album in discography:
-                for source in album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    album.merge(cls._fetch_album_from_source(source, stop_at_level=stop_at_level-1))
+                for source in album.source_collection.get_sources_from_page(self.SOURCE_TYPE):
+                    album.merge(self._fetch_album_from_source(source, stop_at_level=stop_at_level-1))
         artist.main_album_collection.extend(discography)
 
         return artist
 
-    @classmethod
-    def _parse_album_track_row(cls, track_row: BeautifulSoup) -> Song:
+    def _parse_album_track_row(self, track_row: BeautifulSoup) -> Song:
         """
         <tr class="even">
             <td width="20"><a class="anchor" name="5948442"> </a>1.</td>        # id and tracksort
@@ -482,7 +474,7 @@ class EncyclopaediaMetallum(Page):
         track_id = track_sort_soup.find("a").get("name").strip()
         
         if track_row.find("a", {"href": f"#{track_id}"}) is not None:
-            source_list.append(Source(cls.SOURCE_TYPE, track_id))
+            source_list.append(Source(self.SOURCE_TYPE, track_id))
 
         title = row_list[1].text.strip()
 
@@ -500,9 +492,7 @@ class EncyclopaediaMetallum(Page):
             source_list=source_list
         )
         
-
-    @classmethod
-    def _parse_album_attributes(cls, album_soup: BeautifulSoup, stop_at_level: int = 1) -> Album:
+    def _parse_album_attributes(self, album_soup: BeautifulSoup, stop_at_level: int = 1) -> Album:
         tracklist: List[Song] = []
         artist_list = []
         album_name: str = None
@@ -522,12 +512,12 @@ class EncyclopaediaMetallum(Page):
                 
                 href = anchor.get("href")
                 if href is not None:
-                    source_list.append(Source(cls.SOURCE_TYPE, href.strip()))
+                    source_list.append(Source(self.SOURCE_TYPE, href.strip()))
                     
                 album_name = anchor.get_text(strip=True)
                 
             elif len(album_soup_list) > 1:
-                cls.LOGGER.debug("there are more than 1 album soups")
+                self.LOGGER.debug("there are more than 1 album soups")
                 
             
             artist_soup_list = album_info_soup.find_all("h2", {"class": "band_name"})
@@ -537,7 +527,7 @@ class EncyclopaediaMetallum(Page):
                     
                     href = anchor.get("href")
                     if href is not None:
-                        artist_sources.append(Source(cls.SOURCE_TYPE, href.strip()))
+                        artist_sources.append(Source(self.SOURCE_TYPE, href.strip()))
                         
                     artist_name = anchor.get_text(strip=True)
                     
@@ -547,13 +537,13 @@ class EncyclopaediaMetallum(Page):
                     ))
                 
             elif len(artist_soup_list) > 1:
-                cls.LOGGER.debug("there are more than 1 artist soups")
+                self.LOGGER.debug("there are more than 1 artist soups")
         
         _parse_album_info(album_info_soup=album_soup.find(id="album_info"))
         
         tracklist_soup = album_soup.find("table", {"class": "table_lyrics"}).find("tbody")
         for track_soup in tracklist_soup.find_all("tr", {"class": ["even", "odd"]}):
-            tracklist.append(cls._parse_album_track_row(track_row=track_soup))
+            tracklist.append(self._parse_album_track_row(track_row=track_soup))
 
         return Album(
             title=album_name,
@@ -562,8 +552,7 @@ class EncyclopaediaMetallum(Page):
             song_list=tracklist
         )
 
-    @classmethod
-    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
         """
         I am preeeety sure I can get way more data than... nothing from there
 
@@ -574,23 +563,22 @@ class EncyclopaediaMetallum(Page):
 
         # <table class="display table_lyrics
 
-        r = cls.CONNECTION.get(source.url)
+        r = self.connection.get(source.url)
         if r is None:
             return Album()
 
-        soup = cls.get_soup_from_response(r)
+        soup = self.get_soup_from_response(r)
         
-        album = cls._parse_album_attributes(soup, stop_at_level=stop_at_level)
+        album = self._parse_album_attributes(soup, stop_at_level=stop_at_level)
         
         if stop_at_level > 1:
             for song in album.song_collection:
-                for source in song.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    song.merge(cls._fetch_song_from_source(source=source, stop_at_level=stop_at_level-1))
+                for source in song.source_collection.get_sources_from_page(self.SOURCE_TYPE):
+                    song.merge(self._fetch_song_from_source(source=source, stop_at_level=stop_at_level-1))
                     
         return album
     
-    @classmethod
-    def _fetch_lyrics(cls, song_id: str) -> Optional[Lyrics]:
+    def _fetch_lyrics(self, song_id: str) -> Optional[Lyrics]:
         """
         function toggleLyrics(songId) {
             var lyricsRow = $('#song' + songId);
@@ -614,7 +602,7 @@ class EncyclopaediaMetallum(Page):
         
         endpoint = "https://www.metal-archives.com/release/ajax-view-lyrics/id/{id}".format(id=song_id)
         
-        r = cls.CONNECTION.get(endpoint)
+        r = self.connection.get(endpoint)
         if r is None:
             return None
         
@@ -622,22 +610,27 @@ class EncyclopaediaMetallum(Page):
             text=FormattedText(html=r.text),
             language=pycountry.languages.get(alpha_2="en"),
             source_list=[
-                Source(cls.SOURCE_TYPE, endpoint)
+                Source(self.SOURCE_TYPE, endpoint)
             ]
         )
 
-    @classmethod
-    def _fetch_song_from_source(cls, source: Source, stop_at_level: int = 1) -> Song:
+    def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         song_id = source.url
         
         return Song(
             lyrics_list=[
-                cls._fetch_lyrics(song_id=song_id)
+                self._fetch_lyrics(song_id=song_id)
             ]
         )
 
-    @classmethod
-    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
+    def get_source_type(self, source: Source):
+        if self.SOURCE_TYPE != source.page_enum:
+            return None
+        
+        url = source.url
+        if url is None:
+            return None
+        
         parsed_url = urlparse(url)
         path: List[str] = parsed_url.path.split("/")
         
