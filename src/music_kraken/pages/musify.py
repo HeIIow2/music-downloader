@@ -108,7 +108,7 @@ def parse_url(url: str) -> MusifyUrl:
     )
 
 
-class Preset(Page):
+class Musify(Page):
     # CHANGE
     SOURCE_TYPE = SourcePages.MUSIFY
     LOGGER = MUSIFY_LOGGER
@@ -129,7 +129,7 @@ class Preset(Page):
         
         musify_url = parse_url(source.url)
         
-        # Has no labels, because afaiak musify has no Labels
+        # Has no labels, because afaik musify has no Labels
         musify_type_to_database_type = {
             MusifyTypes.SONG: Song,
             MusifyTypes.RELEASE: Album,
@@ -999,7 +999,7 @@ class Preset(Page):
         return Label()
         
 
-class Musify(Page):
+class OldMusify(Page):
     API_SESSION: requests.Session = requests.Session()
     API_SESSION.headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",

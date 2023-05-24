@@ -1,11 +1,12 @@
 import music_kraken
 from music_kraken import pages
+from music_kraken.download import Search
 from music_kraken.utils.enums.source import SourcePages
 from music_kraken.objects import Song, Target, Source, Album
 
 
 def search_pages():
-    search = pages.Search()
+    search = Search()
     print("metadata", search.pages)
     print("audio", search.audio_pages)
 
@@ -22,7 +23,7 @@ def search_pages():
 
 
 def direct_download():
-    search = pages.Search()
+    search = Search()
 
     search.search_url("https://www.metal-archives.com/bands/Ghost_Bath/3540372489")
     print(search)
@@ -46,7 +47,7 @@ def download_audio():
 
 
 def real_download():
-    search = pages.Search()
+    search = Search()
     search.search_url("https://musify.club/release/children-of-the-night-2018-1079829")
     search.download_chosen()
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
         # "https://musify.club/release/molchat-doma-etazhi-2018-1092949",
         # "https://musify.club/release/ghost-bath-self-loather-2021-1554266",
         "#a Ghost Bath",
-        "0",
+        "1",
         "4",
         "ok"
     ])

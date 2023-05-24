@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 import logging
 
 
-from music_kraken.objects import Source, DatabaseObject
+from ..objects import Source, DatabaseObject
 from .abstract import Page
 from ..objects import (
     Artist,

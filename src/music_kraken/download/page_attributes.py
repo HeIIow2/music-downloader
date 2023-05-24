@@ -10,6 +10,7 @@ SOURCE_PAGE_MAP: Dict[SourcePages, Page] = dict()
 
 ALL_PAGES: Tuple[Page, ...] = (
     EncyclopaediaMetallum(),
+    Musify()
 )
 
 AUDIO_PAGES: Tuple[Page, ...] = (
