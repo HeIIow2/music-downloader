@@ -10,7 +10,7 @@ SOURCE_PAGE_MAP: Dict[SourcePages, Page] = dict()
 
 ALL_PAGES: Tuple[Page, ...] = (
     EncyclopaediaMetallum(),
-    Musify()
+    Musify())
 )
 
 AUDIO_PAGES: Tuple[Page, ...] = (
@@ -27,7 +27,7 @@ for i, page in enumerate(ALL_PAGES):
     NAME_PAGE_MAP[type(page).__name__.lower()] = page
     NAME_PAGE_MAP[SHORTHANDS[i].lower()] = page
     
-    PAGE_NAME_MAP[page] = SHORTHANDS[i]
+    PAGE_NAME_MAP[type(page)] = SHORTHANDS[i]
 
     SOURCE_PAGE_MAP[page.SOURCE_TYPE] = page
     

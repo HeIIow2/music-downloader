@@ -203,7 +203,7 @@ class Search(Download):
             page = self._get_page_from_source(source=source)
             
             if page in self.audio_pages:
-                return page.download(music_object=self._current_option._derive_from, genre=genre, download_all=download_all, **kwargs)
+                return page.download(music_object=self._current_option._derive_from, genre=genre, download_all=download_all)
 
         return DownloadResult(error_message=f"Didn't find a source for {self._current_option._derive_from.option_string}.")
 

@@ -110,13 +110,13 @@ class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
     LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.connection: Connection = Connection(
             host="https://www.metal-archives.com/",
             logger=ENCYCLOPAEDIA_METALLUM_LOGGER
         )
         
-        super().__init__()
+        super().__init__(**kwargs)
 
     def song_search(self, song: Song) -> List[Song]:
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={" \

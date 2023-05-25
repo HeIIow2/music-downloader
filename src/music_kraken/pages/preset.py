@@ -20,13 +20,13 @@ class Preset(Page):
     SOURCE_TYPE = SourcePages.PRESET
     LOGGER = logging.getLogger("preset")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
             host="https://www.preset.cum/",
             logger=self.LOGGER
         )
         
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return super().get_source_type(source)

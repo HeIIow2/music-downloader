@@ -3,6 +3,7 @@ import random
 from copy import copy
 from typing import Optional, Union, Type, Dict, Set, List
 import threading
+from queue import Queue
 
 import requests
 from bs4 import BeautifulSoup
@@ -108,11 +109,14 @@ class Page(threading.Thread):
     This is an abstract class, laying out the 
     functionality for every other class fetching something
     """
-
+    
     SOURCE_TYPE: SourcePages
     LOGGER = logging.getLogger("this shouldn't be used")
     
-    def __init__(self):
+    def __init__(self, search_queue: Queue, search_result_queue: Queue):
+        self.search_queue = search_queue
+        self.search_result_queue = search_result_queue
+        
         threading.Thread.__init__(self)
 
     def run(self) -> None:
