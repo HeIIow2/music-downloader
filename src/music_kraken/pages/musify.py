@@ -567,7 +567,7 @@ class Musify(Page):
         if stop_at_level > 1:
             song: Song
             for song in album.song_collection:
-                sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+                sources = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
                 for source in sources:
                     song.merge(self.fetch_song(source=source))
         
@@ -997,61 +997,8 @@ class Musify(Page):
 
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
-        
-
-class OldMusify(Page):
-    API_SESSION: requests.Session = requests.Session()
-    API_SESSION.headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
-        "Connection": "keep-alive",
-        "Referer": "https://musify.club/"
-    }
-    API_SESSION.proxies = shared.proxies
-    TIMEOUT = 7
-    POST_TIMEOUT = 15
-    TRIES = 5
-    HOST = "https://musify.club"
-
-    CONNECTION = Connection(
-        host="https://musify.club/",
-        logger=MUSIFY_LOGGER
-    )
-
-    SOURCE_TYPE = SourcePages.MUSIFY
     
-    LOGGER = shared.MUSIFY_LOGGER
-
-
-
-
-
-    @classmethod
-    def get_plaintext_query(cls, query: Query) -> str:
-        if query.album is None:
-            return f"{query.artist or '*'} - {query.song or '*'}"
-        return f"{query.artist or '*'} - {query.album or '*'} - {query.song or '*'}"
-
-
-    
-
-
-
-    
-
-    @classmethod
-    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
-        url: MusifyUrl = cls.parse_url(url)
-        
-        if url.source_type == MusifyTypes.ARTIST:
-            return Artist
-        if url.source_type == MusifyTypes.RELEASE:
-            return Album
-        if url.source_type == MusifyTypes.SONG:
-            return Song
-        return None
-    
-    @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
+    def download_song_to_targets(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
@@ -1059,15 +1006,15 @@ class OldMusify(Page):
         endpoint = source.audio_url
 
         if source.audio_url is None:
-            url: MusifyUrl = cls.parse_url(source.url)
+            url: MusifyUrl = parse_url(source.url)
             if url.source_type != MusifyTypes.SONG:
                 return DownloadResult(error_message=f"The url is not of the type Song: {source.url}")
 
             endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
 
-            cls.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
+            self.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        r = cls.CONNECTION.get(endpoint, stream=True, raw_url=True)
+        r = self.connection.get(endpoint, stream=True, raw_url=True)
         if r is None:
             return DownloadResult(error_message=f"couldn't connect to {endpoint}")
 

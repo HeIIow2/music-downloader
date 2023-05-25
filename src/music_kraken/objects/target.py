@@ -98,3 +98,6 @@ class Target(DatabaseObject):
             except requests.exceptions.Timeout:
                 shared.DOWNLOAD_LOGGER.error("Stream timed out.")
                 return False
+            
+    def delete(self):
+        self.file_path.unlink(missing_ok=True)

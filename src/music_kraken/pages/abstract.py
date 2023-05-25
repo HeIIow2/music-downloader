@@ -257,32 +257,31 @@ class Page(threading.Thread):
           
         fill_naming_objects(music_object)
           
-        self._download(music_object, {}, genre, download_all)
-
-        return DownloadResult()
+        return self._download(music_object, {}, genre, download_all)
 
 
     def _download(self, music_object: DatabaseObject, naming_objects: Dict[Type[DatabaseObject], DatabaseObject], download_all: bool = False) -> list:
         # Skips all releases, that are defined in shared.ALBUM_TYPE_BLACKLIST, if download_all is False
         if isinstance(music_object, Album):
             if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
-                return []
+                return DownloadResult()
 
+        self.fetch_details(music_object=music_object, stop_at_level=2)
         naming_objects[type(music_object)] = music_object
 
         if isinstance(music_object, Song):
-            return [self._download_song(music_object, naming_objects)]
+            return self._download_song(music_object, naming_objects)
 
-        return_values: List = []
+        download_result: DownloadResult = DownloadResult()
 
         for collection_name in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
             collection: Collection = getattr(self, collection_name)
 
             sub_ordered_music_object: DatabaseObject
             for sub_ordered_music_object in collection:
-                return_values.extend(self._download(sub_ordered_music_object, naming_objects.copy(), download_all))
+                download_result.merge(self._download(sub_ordered_music_object, naming_objects.copy(), download_all))
 
-        return return_values
+        return download_result
 
     def _download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], DatabaseObject]):
         name_attribute = DEFAULT_VALUES.copy()
@@ -309,246 +308,27 @@ class Page(threading.Thread):
             path=DOWNLOAD_PATH.format(**name_attribute),
             file=DOWNLOAD_FILE.format(**name_attribute)
         )
-        pass
-
-    @classmethod
-    def download(
-            cls,
-            music_object: Union[Song, Album, Artist, Label],
-            download_features: bool = True,
-            default_target: DefaultTarget = None,
-            genre: str = None,
-            override_existing: bool = False,
-            create_target_on_demand: bool = True,
-            download_all: bool = False,
-            exclude_album_type: Set[AlbumType] = shared.ALBUM_TYPE_BLACKLIST
-    ) -> DownloadResult:
-        """
-
-        :param genre: The downloader will download to THIS folder (set the value of default_target.genre to genre)
-        :param music_object:
-        :param download_features:
-        :param default_target:
-        :param override_existing:
-        :param create_target_on_demand:
-        :param download_all:
-        :param exclude_album_type:
-        :return total downloads, failed_downloads:
-        """
-        if default_target is None:
-            default_target = DefaultTarget()
-
-        if download_all:
-            exclude_album_type: Set[AlbumType] = set()
-        elif exclude_album_type is None:
-            exclude_album_type = {
-                AlbumType.COMPILATION_ALBUM,
-                AlbumType.LIVE_ALBUM,
-                AlbumType.MIXTAPE
-            }
-
-        if type(music_object) is Song:
-            return cls.download_song(
-                music_object,
-                override_existing=override_existing,
-                create_target_on_demand=create_target_on_demand,
-                genre=genre
-            )
-        if type(music_object) is Album:
-            return cls.download_album(
-                music_object,
-                default_target=default_target,
-                override_existing=override_existing,
-                genre=genre
-            )
-        if type(music_object) is Artist:
-            return cls.download_artist(
-                music_object,
-                default_target=default_target,
-                download_features=download_features,
-                exclude_album_type=exclude_album_type,
-                genre=genre
-            )
-        if type(music_object) is Label:
-            return cls.download_label(
-                music_object,
-                download_features=download_features,
-                default_target=default_target,
-                exclude_album_type=exclude_album_type,
-                genre=genre
-            )
-
-        return DownloadResult(error_message=f"{type(music_object)} can't be downloaded.")
-
-    @classmethod
-    def download_label(
-            cls,
-            label: Label,
-            exclude_album_type: Set[AlbumType],
-            download_features: bool = True,
-            override_existing: bool = False,
-            default_target: DefaultTarget = None,
-            genre: str = None
-    ) -> DownloadResult:
-
-        default_target = DefaultTarget() if default_target is None else copy(default_target)
-        default_target.label_object(label)
-
-        r = DownloadResult()
-
-        cls.fetch_details(label)
-        for artist in label.current_artist_collection:
-            r.merge(cls.download_artist(
-                artist,
-                download_features=download_features,
-                override_existing=override_existing,
-                default_target=default_target,
-                exclude_album_type=exclude_album_type,
-                genre=genre
-            ))
-
-        album: Album
-        for album in label.album_collection:
-            if album.album_type == AlbumType.OTHER:
-                cls.fetch_details(album)
-
-            if album.album_type in exclude_album_type:
-                cls.LOGGER.info(f"Skipping {album.option_string} due to the filter. ({album.album_type})")
-                continue
-            
-            r.merge(cls.download_album(
-                album,
-                override_existing=override_existing,
-                default_target=default_target,
-                genre=genre
-            ))
-
-        return r
-
-    @classmethod
-    def download_artist(
-            cls,
-            artist: Artist,
-            exclude_album_type: Set[AlbumType],
-            download_features: bool = True,
-            override_existing: bool = False,
-            default_target: DefaultTarget = None,
-            genre: str = None
-    ) -> DownloadResult:
-
-        default_target = DefaultTarget() if default_target is None else copy(default_target)
-        default_target.artist_object(artist)
-
-        r = DownloadResult()
-
-        cls.fetch_details(artist)
-
-        album: Album
-        for album in artist.main_album_collection:
-            if album.album_type in exclude_album_type:
-                cls.LOGGER.info(f"Skipping {album.option_string} due to the filter. ({album.album_type})")
-                continue
-            
-            r.merge(cls.download_album(
-                album,
-                override_existing=override_existing,
-                default_target=default_target,
-                genre=genre
-            ))
-
-        if download_features:
-            for song in artist.feature_album.song_collection:
-                r.merge(cls.download_song(
-                    song,
-                    override_existing=override_existing,
-                    default_target=default_target,
-                    genre=genre
-                ))
-
-        return r
-
-    @classmethod
-    def download_album(
-            cls,
-            album: Album,
-            override_existing: bool = False,
-            default_target: DefaultTarget = None,
-            genre: str = None
-       ) -> DownloadResult:
-
-        default_target = DefaultTarget() if default_target is None else copy(default_target)
-        default_target.album_object(album)
-
-        r = DownloadResult()
-
-        cls.fetch_details(album)
-
-        album.update_tracksort()
-
-        cls.LOGGER.info(f"downloading album: {album.title}")
-        for song in album.song_collection:
-            r.merge(cls.download_song(
-                song,
-                override_existing=override_existing,
-                default_target=default_target,
-                genre=genre
-            ))
-
-        return r
-
-    @classmethod
-    def download_song(
-            cls,
-            song: Song,
-            override_existing: bool = False,
-            create_target_on_demand: bool = True,
-            default_target: DefaultTarget = None,
-            genre: str = None
-    ) -> DownloadResult:
-        cls.LOGGER.debug(f"Setting genre of {song.option_string} to {genre}")
-        song.genre = genre
-
-        default_target = DefaultTarget() if default_target is None else copy(default_target)
-        default_target.song_object(song)
-
-        cls.fetch_details(song)
-
+        
         if song.target_collection.empty:
-            if create_target_on_demand and not song.main_artist_collection.empty and not song.album_collection.empty:
-                song.target_collection.append(default_target.target)
-            else:
-                return DownloadResult(error_message=f"No target exists for {song.title}, but create_target_on_demand is False.")
-
-        target: Target
-        if any(target.exists for target in song.target_collection) and not override_existing:
-            r = DownloadResult(total=1, fail=0)
-            
-            existing_target: Target
-            for existing_target in song.target_collection:
-                if existing_target.exists:
-                    r.merge(cls._post_process_targets(song=song, temp_target=existing_target))
-                    break
-  
-            return r
-
-        sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
+            song.target_collection.append(new_target)
+        
+        sources = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
         if len(sources) == 0:
-            return DownloadResult(error_message=f"No source found for {song.title} as {cls.__name__}.")
+            return DownloadResult(error_message=f"No source found for {song.title} as {self.__class__.__name__}.")
 
         temp_target: Target = Target(
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
         )
-
-        r = cls._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
+        
+        r = self._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
 
         if not r.is_fatal_error:
-            r.merge(cls._post_process_targets(song, temp_target))
+            r.merge(self._post_process_targets(song, temp_target))
 
         return r
-
-    @classmethod
-    def _post_process_targets(cls, song: Song, temp_target: Target) -> DownloadResult:
+    
+    def _post_process_targets(self, song: Song, temp_target: Target) -> DownloadResult:
         correct_codec(temp_target)
         write_metadata_to_target(song.metadata, temp_target)
 
@@ -559,9 +339,10 @@ class Page(threading.Thread):
             if temp_target is not target:
                 temp_target.copy_content(target)
             r.add_target(target)
+            
+        temp_target.delete()
         
         return r
-
-    @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
+    
+    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         return DownloadResult()
