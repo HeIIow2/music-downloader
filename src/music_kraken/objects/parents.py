@@ -14,6 +14,7 @@ class DatabaseObject:
     # contains all collection attributes, which describe something "smaller"
     # e.g. album has songs, but not artist.
     DOWNWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
+    UPWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
 
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs) -> None:
         self.automatic_id: bool = False

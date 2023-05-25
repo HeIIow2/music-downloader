@@ -46,6 +46,8 @@ class Song(MainObject):
         "genre": None,
         "notes": FormattedText()
     }
+    
+    UPWARDS_COLLECTION_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
 
     def __init__(
             self,
@@ -204,7 +206,8 @@ class Album(MainObject):
         "notes": FormattedText()
     }
 
-    DOWNWARDS_COLLECTION_ATTRIBUTES = ("song_collection",)
+    DOWNWARDS_COLLECTION_ATTRIBUTES = ("song_collection", )
+    UPWARDS_COLLECTION_ATTRIBUTES = ("artist_collection", "label_collection")
 
     def __init__(
             self,
@@ -425,6 +428,7 @@ class Artist(MainObject):
     }
 
     DOWNWARDS_COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
+    UPWARDS_COLLECTION_ATTRIBUTES = ("label_collection", )
 
     def __init__(
             self,

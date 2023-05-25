@@ -23,6 +23,7 @@ from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
+from ..utils.shared import DEFAULT_VALUES, DOWNLOAD_PATH, DOWNLOAD_FILE
 from ..utils.support_classes import Query, DownloadResult, DefaultTarget
 
 
@@ -237,8 +238,26 @@ class Page(threading.Thread):
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
 
-    def download(self, music_object: DatabaseObject, download_all: bool = False) -> DownloadResult:
-        self._download(music_object, {}, download_all)
+    def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False) -> DownloadResult:
+        naming_objects = {"genre": genre}
+        
+        def fill_naming_objects(naming_music_object: DatabaseObject):
+            nonlocal naming_objects
+            
+            for collection_name in naming_music_object.UPWARDS_COLLECTION_ATTRIBUTES:
+                collection: Collection = getattr(self, collection_name)
+                
+                if collection.empty():
+                    continue
+                if collection.element_type in naming_objects:
+                    continue
+                
+                dom_ordered_music_object: DatabaseObject = collection[0]
+                return fill_naming_objects(dom_ordered_music_object)
+          
+        fill_naming_objects(music_object)
+          
+        self._download(music_object, {}, genre, download_all)
 
         return DownloadResult()
 
@@ -252,8 +271,7 @@ class Page(threading.Thread):
         naming_objects[type(music_object)] = music_object
 
         if isinstance(music_object, Song):
-            print("Downloading", music_object)
-            return [music_object]
+            return [self._download_song(music_object, naming_objects)]
 
         return_values: List = []
 
@@ -266,7 +284,31 @@ class Page(threading.Thread):
 
         return return_values
 
-    def download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], DatabaseObject]):
+    def _download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], DatabaseObject]):
+        name_attribute = DEFAULT_VALUES.copy()
+        
+        # song
+        name_attribute["genre"] = naming_objects["genre"]
+        name_attribute["song"] = song.title
+        
+        if Album in naming_objects:
+            album: Album = naming_objects[Album]
+            name_attribute["album"] = album.title
+            name_attribute["album_type"] = album.album_type.value
+        
+        if Artist in naming_objects:
+            artist: Artist = naming_objects[Artist]
+            naming_objects["artist"] = artist.name
+        
+        if Label in naming_objects:
+            label: Label = naming_objects[Label]
+            naming_objects["label"] = label.name
+        
+        new_target = Target(
+            relative_to_music_dir=True,
+            path=DOWNLOAD_PATH.format(**name_attribute),
+            file=DOWNLOAD_FILE.format(**name_attribute)
+        )
         pass
 
     @classmethod
