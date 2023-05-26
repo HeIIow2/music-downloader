@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Set, Tuple, Optional
 from urllib.parse import urlparse
 
 from ..utils.enums.source import SourcePages, SourceTypes
@@ -128,6 +128,10 @@ class SourceCollection(Collection):
         super().map_element(source)
 
         self._page_to_source_list[source.page_enum].append(source)
+        
+    @property
+    def source_pages(self) -> Set[SourcePages]:
+        return set(source.page_enum for source in self._data)
 
     def get_sources_from_page(self, source_page: SourcePages) -> List[Source]:
         """
