@@ -104,14 +104,7 @@ def merge_together(old_object: DatabaseObject, new_object: DatabaseObject) -> Da
     return old_object
 
 
-class LoreIpsum:
-    pass
-
-
-Parent = threading.Thread if THREADED else LoreIpsum
-
-
-class Page(Parent):
+class Page():
     """
     This is an abstract class, laying out the 
     functionality for every other class fetching something
@@ -120,14 +113,21 @@ class Page(Parent):
     SOURCE_TYPE: SourcePages
     LOGGER = logging.getLogger("this shouldn't be used")
     
+        
+    def __init__(self):
+        super().__init__()
+    
+    """
+    CODE I NEED WHEN I START WITH MULTITHREADING
+    
     def __init__(self, end_event: EndThread, search_queue: Queue, search_result_queue: Queue):
         self.end_event = end_event
         
         self.search_queue = search_queue
         self.search_result_queue = search_result_queue
         
-        Parent.__init__(self)
-
+        super().__init__()
+        
     @property
     def _empty_working_queues(self):
         return self.search_queue.empty()
@@ -138,6 +138,7 @@ class Page(Parent):
                 self.search(self.search_queue.get())
                 self.search_result_queue.put(FinishedSearch())
                 continue
+    """
     
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return None
