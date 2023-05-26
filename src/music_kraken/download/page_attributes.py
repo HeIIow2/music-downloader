@@ -1,26 +1,32 @@
-from typing import Tuple, Type, Dict
+from typing import Tuple, Type, Dict, List
+import threading
+from queue import Queue
 
 from ..utils.enums.source import SourcePages
+from ..utils.support_classes import Query, EndThread
 from ..pages import Page, EncyclopaediaMetallum, Musify
 
-
-NAME_PAGE_MAP: Dict[str, Page] = dict()
-PAGE_NAME_MAP: Dict[Page, str] = dict()
-SOURCE_PAGE_MAP: Dict[SourcePages, Page] = dict()
-
-ALL_PAGES: Tuple[Page, ...] = (
-    EncyclopaediaMetallum(),
-    Musify())
+ALL_PAGES: Tuple[Type[Page], ...] = (
+    EncyclopaediaMetallum,
+    Musify
 )
 
-AUDIO_PAGES: Tuple[Page, ...] = (
-    Musify(),
+AUDIO_PAGES: Tuple[Type[Page], ...] = (
+    Musify,
 )
 
-SHADY_PAGES: Tuple[Page, ...] = (
-    Musify(),
+SHADY_PAGES: Tuple[Type[Page], ...] = (
+    Musify,
 )
 
+
+exit_threads = EndThread()
+search_queue: Queue[Query] = Queue()
+
+_page_threads: Dict[Type[Page], List[Page]] = dict()
+
+
+"""
 # this needs to be case-insensitive
 SHORTHANDS = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z')
 for i, page in enumerate(ALL_PAGES):
@@ -30,4 +36,4 @@ for i, page in enumerate(ALL_PAGES):
     PAGE_NAME_MAP[type(page)] = SHORTHANDS[i]
 
     SOURCE_PAGE_MAP[page.SOURCE_TYPE] = page
-    
+"""

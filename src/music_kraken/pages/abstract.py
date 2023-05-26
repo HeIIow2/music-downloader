@@ -24,8 +24,8 @@ from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
-from ..utils.shared import DEFAULT_VALUES, DOWNLOAD_PATH, DOWNLOAD_FILE
-from ..utils.support_classes import Query, DownloadResult, DefaultTarget
+from ..utils.shared import DEFAULT_VALUES, DOWNLOAD_PATH, DOWNLOAD_FILE, THREADED
+from ..utils.support_classes import Query, DownloadResult, DefaultTarget, EndThread, FinishedSearch
 
 
 INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
@@ -104,7 +104,14 @@ def merge_together(old_object: DatabaseObject, new_object: DatabaseObject) -> Da
     return old_object
 
 
-class Page(threading.Thread):
+class LoreIpsum:
+    pass
+
+
+Parent = threading.Thread if THREADED else LoreIpsum
+
+
+class Page(Parent):
     """
     This is an abstract class, laying out the 
     functionality for every other class fetching something
@@ -113,14 +120,24 @@ class Page(threading.Thread):
     SOURCE_TYPE: SourcePages
     LOGGER = logging.getLogger("this shouldn't be used")
     
-    def __init__(self, search_queue: Queue, search_result_queue: Queue):
+    def __init__(self, end_event: EndThread, search_queue: Queue, search_result_queue: Queue):
+        self.end_event = end_event
+        
         self.search_queue = search_queue
         self.search_result_queue = search_result_queue
         
-        threading.Thread.__init__(self)
+        Parent.__init__(self)
+
+    @property
+    def _empty_working_queues(self):
+        return self.search_queue.empty()
 
     def run(self) -> None:
-        pass
+        while bool(self.end_event) and self._empty_working_queues:
+            if not self.search_queue.empty():
+                self.search(self.search_queue.get())
+                self.search_result_queue.put(FinishedSearch())
+                continue
     
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return None
@@ -146,7 +163,9 @@ class Page(threading.Thread):
             
         r = []
         for default_query in query.default_search:
-            r.extend(self.general_search(default_query))
+            for single_option in self.general_search(default_query):
+                r.append(single_option)
+                self.search_result_queue.put(single_option)
         
         return r
     
