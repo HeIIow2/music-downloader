@@ -63,7 +63,7 @@ def exit_message():
 def paths():
     print(f"Temp dir:\t{shared.TEMP_DIR}\n"
           f"Music dir:\t{shared.MUSIC_DIR}\n"
-          f"Log file:\t{shared.LOG_PATH}"
+          f"Log file:\t{shared.LOG_PATH}\n"
           f"Config file:\t{shared.CONFIG_FILE}")
     print()
     print_cute_message()
