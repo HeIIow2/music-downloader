@@ -129,6 +129,7 @@ config = Config()
 
 def read():
     if not LOCATIONS.CONFIG_FILE.is_file():
+        LOGGER.debug("Creating default config file.")
         write()
     config.read_from_config_file(LOCATIONS.CONFIG_FILE)
 
