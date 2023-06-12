@@ -80,11 +80,11 @@ class Pages:
         audio_pages = self._audio_pages_set.intersection(_page_types)
         
         for download_page in audio_pages:
-            return self._page_instances[download_page].download(genre=genre, download_all=download_all)
+            return self._page_instances[download_page].download(music_object=music_object, genre=genre, download_all=download_all)
         
         return DownloadResult(error_message=f"No audio source has been found for {music_object}.")
 
-    def fetch_url(self, url: str, stop_at_level: int = 2) -> DatabaseObject:
+    def fetch_url(self, url: str, stop_at_level: int = 2) -> Tuple[Type[Page], DatabaseObject]:
         source = Source.match_url(url, SourcePages.MANUAL)
         
         if source is None:
@@ -92,5 +92,4 @@ class Pages:
         
         _actual_page = self._source_to_page[source.page_enum]
         
-        
-        return self._page_instances[_actual_page].fetch_object_from_source(source=source, stop_at_level=stop_at_level)
+        return _actual_page, self._page_instances[_actual_page].fetch_object_from_source(source=source, stop_at_level=stop_at_level)

@@ -268,7 +268,7 @@ class Page():
             nonlocal naming_objects
             
             for collection_name in naming_music_object.UPWARDS_COLLECTION_ATTRIBUTES:
-                collection: Collection = getattr(self, collection_name)
+                collection: Collection = getattr(naming_music_object, collection_name)
                 
                 if collection.empty():
                     continue

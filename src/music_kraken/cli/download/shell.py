@@ -5,7 +5,7 @@ import re
 from ...utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX
 from ...utils.regex import URL_PATTERN
 from ...utils.string_processing import fit_to_file_system
-from ...utils.support_classes import Query
+from ...utils.support_classes import Query, DownloadResult
 from ...download.results import Results, SearchResults, Option, PageResults
 from ...download.page_attributes import Pages
 from ...pages import Page
@@ -211,8 +211,15 @@ class Shell:
         
         if artist is not None:
             return Query(raw_query=query, music_object=artist)
+        
+        return Query(raw_query=query)
     
     def search(self, query: str):
+        if re.match(URL_PATTERN, query) is not None:
+            self.set_current_options(*self.pages.fetch_url(re.match(URL_PATTERN, query)))
+            self.print_current_options()
+            return
+        
         special_characters = "#\\"
         query = query + " "
         
@@ -266,7 +273,7 @@ class Shell:
         
         try:
             page, music_object = self.current_results.get_music_object_by_index(index)
-        except IndexError:
+        except KeyError:
             print()
             print(f"The option {index} doesn't exist.")
             print()
@@ -280,6 +287,41 @@ class Shell:
         
     
     def download(self, download_str: str, download_all: bool = False) -> bool:
+        to_download: List[DatabaseObject] = []
+
+        if re.match(URL_PATTERN, download_str) is not None:
+            _, music_objects = self.pages.fetch_url(re.match(URL_PATTERN, download_str))
+            to_download.append(music_objects)
+            
+        else:
+            index: str
+            for index in download_str.split(", "):
+                if not index.strip().isdigit():
+                    print()
+                    print(f"Every download thingie has to be an index, not {index}.")
+                    print()
+                    return False
+            
+            for index in download_str.split(", "):
+                to_download.append(self.current_results.get_music_object_by_index(int(index))[1])
+        
+        print()
+        print("Downloading:")
+        for download_object in to_download:
+            print(download_object.option_string)
+        print()
+        
+        _result_map: Dict[DatabaseObject, DownloadResult] = dict()
+        
+        for database_object in to_download:
+            r = self.pages.download(music_object=database_object, genre=self.genre, download_all=download_all)
+            _result_map[database_object] = r
+            
+        for music_object, result in _result_map.items():
+            print()
+            print(music_object.option_string)
+            print(result)
+            
         return False
     
     def process_input(self, input_str: str) -> bool:

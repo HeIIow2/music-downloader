@@ -131,6 +131,7 @@ class Connection:
             accepted_response_code=accepted_response_code,
             url=url,
             timeout=timeout,
+            headers=headers,
             **kwargs
         )
 
