@@ -14,7 +14,7 @@ from .metadata import (
     Metadata
 )
 from .option import Options
-from .parents import MainObject
+from .parents import MainObject, DatabaseObject
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
@@ -162,7 +162,7 @@ class Song(MainObject):
                f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         """
         Return a list of related objects including the song object, album object, main artist objects, and
         feature artist objects.
@@ -173,7 +173,7 @@ class Song(MainObject):
         options.extend(self.feature_artist_collection)
         options.extend(self.album_collection)
         options.append(self)
-        return Options(options)
+        return options
 
     @property
     def tracksort_str(self) -> str:
@@ -309,12 +309,12 @@ class Album(MainObject):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = self.artist_collection.shallow_list
         options.append(self)
         options.extend(self.song_collection)
 
-        return Options(options)
+        return options
 
     def update_tracksort(self):
         """
@@ -600,11 +600,11 @@ class Artist(MainObject):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = [self]
         options.extend(self.main_album_collection)
         options.extend(self.feature_song_collection)
-        return Options(options)
+        return options
 
     @property
     def country_string(self):
@@ -704,7 +704,9 @@ class Label(MainObject):
         ]
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = [self]
         options.extend(self.current_artist_collection.shallow_list)
         options.extend(self.album_collection.shallow_list)
+        
+        return options

@@ -1,9 +1,10 @@
 from typing import Tuple, Type, Dict, List, Set
 
 from .results import SearchResults
-from ..objects import DatabaseObject
+from ..objects import DatabaseObject, Source
 from ..utils.enums.source import SourcePages
 from ..utils.support_classes import Query, DownloadResult
+from ..utils.exception.download import UrlNotFoundException
 from ..pages import Page, EncyclopaediaMetallum, Musify, INDEPENDENT_DB_OBJECTS
 
 ALL_PAGES: Set[Type[Page]] = {
@@ -39,7 +40,7 @@ class Pages:
             return tuple(sorted(page_set, key=lambda page: page.__name__))
         
         self._pages_set: Set[Type[Page]] = ALL_PAGES.difference(exclude_pages)
-        self.pages: Tuple[Type[Page], ...] = _set_to_tuple(ALL_PAGES.difference(self.pages))
+        self.pages: Tuple[Type[Page], ...] = _set_to_tuple(self._pages_set)
                                                            
         self._audio_pages_set: Set[Type[Page]] = self._pages_set.intersection(AUDIO_PAGES)
         self.audio_pages: Tuple[Type[Page], ...] = _set_to_tuple(self._audio_pages_set)
@@ -79,19 +80,16 @@ class Pages:
         audio_pages = self._audio_pages_set.intersection(_page_types)
         
         for download_page in audio_pages:
-            return self._page_instances[download_page].download(genre=genre, download_all=download_all)
+            return self._page_instances[download_page].download(music_object=music_object, genre=genre, download_all=download_all)
         
         return DownloadResult(error_message=f"No audio source has been found for {music_object}.")
 
-
-"""
-# this needs to be case-insensitive
-SHORTHANDS = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z')
-for i, page in enumerate(ALL_PAGES):
-    NAME_PAGE_MAP[type(page).__name__.lower()] = page
-    NAME_PAGE_MAP[SHORTHANDS[i].lower()] = page
-    
-    PAGE_NAME_MAP[type(page)] = SHORTHANDS[i]
-
-    SOURCE_PAGE_MAP[page.SOURCE_TYPE] = page
-"""
+    def fetch_url(self, url: str, stop_at_level: int = 2) -> Tuple[Type[Page], DatabaseObject]:
+        source = Source.match_url(url, SourcePages.MANUAL)
+        
+        if source is None:
+            raise UrlNotFoundException(url=url)
+        
+        _actual_page = self._source_to_page[source.page_enum]
+        
+        return _actual_page, self._page_instances[_actual_page].fetch_object_from_source(source=source, stop_at_level=stop_at_level)

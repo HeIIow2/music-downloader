@@ -166,7 +166,6 @@ class Page():
         for default_query in query.default_search:
             for single_option in self.general_search(default_query):
                 r.append(single_option)
-                self.search_result_queue.put(single_option)
         
         return r
     
@@ -269,7 +268,7 @@ class Page():
             nonlocal naming_objects
             
             for collection_name in naming_music_object.UPWARDS_COLLECTION_ATTRIBUTES:
-                collection: Collection = getattr(self, collection_name)
+                collection: Collection = getattr(naming_music_object, collection_name)
                 
                 if collection.empty():
                     continue
