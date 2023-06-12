@@ -5,7 +5,6 @@ from typing import List, Optional, Type, Union
 from urllib.parse import urlparse
 
 import pycountry
-import requests
 from bs4 import BeautifulSoup
 
 from ..connection import Connection
@@ -20,7 +19,6 @@ from ..objects import (
     ID3Timestamp,
     FormattedText,
     Label,
-    Options,
     Target,
     DatabaseObject
 )

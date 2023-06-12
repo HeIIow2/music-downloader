@@ -1,6 +1,6 @@
 # Music Kraken 
 
-<img align="right" src="assets/logo.svg" width=300>
+<img src="assets/logo.svg" width=300  alt="music kraken logo"/>
 
 - [Music Kraken](#music-kraken)
   - [Installation](#installation)
@@ -52,9 +52,19 @@ If you choose to run it in WSL, make sure ` ~/.local/bin` is added to your `$PAT
 
 ## Quick-Guide
 
-**Genre:** First, the cli asks you to input a genre you want to download to. The options it gives you (if it gives you any) are all the folders you have in the music directory. You can also just input a new one.
+The **Genre** you define at the start is the folder, my programm will download the files into, AS WELL as the value of the ID3 genre field.
 
-**What to download:** After that it prompts you for a search. Here are a couple examples how you can search:
+When it drops you into the **shell** 2 main things are important:
+
+1. You search with `s: <query/url>`
+2. You choose an option with just the index number of the option
+3. You download with `d: <options/url>`, where the options are comma seperated
+
+Trust me it WILL make sense, once you see it.
+
+### Query
+
+The syntax for the query is like really simple.
 
 ```
 > #a <any artist>
@@ -67,9 +77,9 @@ searches for the release (album) <any release> by the artist <any artist>
 searches for the track <any track> from the release <any relaese>
 ```
 
-After searching with this syntax, it prompts you with multiple results. You can either choose one of those by inputing its id `int`, or you can search for a new query.
+For a more detailed guid of the downloading shell, see [here](documentation/shell.md).
 
-After you chose either an artist, a release group, a release, or a track by its id, download it by inputting the string `ok`. My downloader will download it automatically for you.
+LOVE YALL *(except nazis ;-;)*
 
 ---
 

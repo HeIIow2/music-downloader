@@ -12,8 +12,10 @@ from ..objects import (
     Song,
     Album,
     Label,
+    Target
 )
 from ..connection import Connection
+from ..utils.support_classes import DownloadResult
 
 class Preset(Page):
     # CHANGE
@@ -57,3 +59,6 @@ class Preset(Page):
 
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
+
+    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
+        return DownloadResult()

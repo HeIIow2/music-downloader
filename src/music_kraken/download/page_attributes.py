@@ -5,15 +5,17 @@ from ..objects import DatabaseObject, Source
 from ..utils.enums.source import SourcePages
 from ..utils.support_classes import Query, DownloadResult
 from ..utils.exception.download import UrlNotFoundException
-from ..pages import Page, EncyclopaediaMetallum, Musify, INDEPENDENT_DB_OBJECTS
+from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, INDEPENDENT_DB_OBJECTS
 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
-    Musify
+    Musify,
+    YouTube,
 }
 
 AUDIO_PAGES: Set[Type[Page]] = {
     Musify,
+    YouTube,
 }
 
 SHADY_PAGES: Set[Type[Page]] = {
