@@ -16,6 +16,11 @@ class SearchResults:
         self.results = Dict[Type[Page], List[DatabaseObject]] = {}
         
     def add(self, page: Type[Page], search_result: List[DatabaseObject]):
+        """
+        adds a list of found music objects to the according page
+        WARNING: if a page already has search results, they are just gonna be overwritten
+        """
+        
         self.results[page] = search_result
         
     def __str__(self) -> str:
