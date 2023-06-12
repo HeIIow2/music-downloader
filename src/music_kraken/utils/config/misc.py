@@ -12,11 +12,11 @@ class MiscSection(Section):
                 "Support the artist.",
                 "Star Me: https://github.com/HeIIow2/music-downloader",
                 "🏳️‍⚧️🏳️‍⚧️ Trans rights are human rights. 🏳️‍⚧️🏳️‍⚧️",
-                "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men. 🏳️‍⚧️🏳️‍⚧️",
-                "🏴‍☠️🏴‍☠️ Unite under one flag, fuck borders. 🏴‍☠️🏴‍☠️",
+                "🏳️‍⚧️🏳️‍⚧️ Trans women are women, trans men are men, and enbies are enbies. 🏳️‍⚧️🏳️‍⚧️",
+                "🏴‍☠️🏴‍☠️ Unite under one flag, fck borders. 🏴‍☠️🏴‍☠️",
                 "Join my Matrix Space: https://matrix.to/#/#music-kraken:matrix.org",
-                "Gotta love the BPJM!! >:(",
-                "🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️"
+                "Gotta love the BPJM ;-;",
+                "🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️",
             ]
         )
 

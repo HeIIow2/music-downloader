@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 import re
 
-from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute
+from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute, StringAttribute
 from ..regex import URL_PATTERN
 from ..exception.config import SettingValueError
 
@@ -15,7 +15,7 @@ class ProxAttribute(ListAttribute):
         }
 
 
-class UrlListAttribute(ListAttribute):
+class UrlStringAttribute(StringAttribute):
     def validate(self, value: str):
         v = value.strip()
         url = re.match(URL_PATTERN, v)
@@ -64,7 +64,7 @@ class ConnectionSection(Section):
         )
 
         # INVIDIOUS INSTANCES LIST
-        self.INVIDIOUS_INSTANCE_LIST = UrlListAttribute(
+        self.INVIDIOUS_INSTANCE = UrlListAttribute(
             name="invidious_instances",
             description="This is a List, where you can define the invidious instances,\n"
                         "the youtube downloader should use.\n"
