@@ -40,7 +40,7 @@ class Pages:
             return tuple(sorted(page_set, key=lambda page: page.__name__))
         
         self._pages_set: Set[Type[Page]] = ALL_PAGES.difference(exclude_pages)
-        self.pages: Tuple[Type[Page], ...] = _set_to_tuple(ALL_PAGES.difference(self.pages))
+        self.pages: Tuple[Type[Page], ...] = _set_to_tuple(self._pages_set)
                                                            
         self._audio_pages_set: Set[Type[Page]] = self._pages_set.intersection(AUDIO_PAGES)
         self.audio_pages: Tuple[Type[Page], ...] = _set_to_tuple(self._audio_pages_set)

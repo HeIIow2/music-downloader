@@ -1,4 +1,4 @@
-from typing import Tuple, Type, Dict, List, Generator
+from typing import Tuple, Type, Dict, List, Generator, Union
 from dataclasses import dataclass
 
 from ..objects import DatabaseObject
@@ -14,33 +14,35 @@ class Option:
 
 class Results:
     def __init__(self) -> None:
-        self._by_index = Dict[int, DatabaseObject] = dict()
+        self._by_index: Dict[int, DatabaseObject] = dict()
+        self._page_by_index: Dict[int: Type[Page]] = dict()
         
-    def __iter__(self) -> Generator[DatabaseObject]:
+    def __iter__(self) -> Generator[DatabaseObject, None, None]:
         for option in self.formated_generator():
             if isinstance(option, Option):
                 yield option.music_object
     
-    def formated_generator(self, max_items_per_page: int = 10) -> Generator[Type[Page], Option]:
+    def formated_generator(self, max_items_per_page: int = 10) -> Generator[Union[Type[Page], Option], None, None]:
         self._by_index = dict()
+        self._page_by_index = dict()
     
-    def get_music_object_by_index(self, index: int) -> DatabaseObject:
+    def get_music_object_by_index(self, index: int) -> Tuple[Type[Page], DatabaseObject]:
         # if this throws a key error, either the formated generator needs to be iterated, or the option doesn't exist.
-        return self._by_index[index]
+        return self._page_by_index[index], self._by_index[index]
 
 
 class SearchResults(Results):
     def __init__(
         self,
-        pages: Tuple[Type[Page], ...]
+        pages: Tuple[Type[Page], ...] = None
         
     ) -> None:
-        super().__init()
+        super().__init__()
         
-        self.pages = pages
+        self.pages = pages or []
         # this would initialize a list for every page, which I don't think I want
         # self.results = Dict[Type[Page], List[DatabaseObject]] = {page: [] for page in self.pages}
-        self.results = Dict[Type[Page], List[DatabaseObject]] = {}
+        self.results: Dict[Type[Page], List[DatabaseObject]] = {}
         
     def add(self, page: Type[Page], search_result: List[DatabaseObject]):
         """
@@ -64,6 +66,7 @@ class SearchResults(Results):
             for option in self.results[page]:
                 yield Option(i, option)
                 self._by_index[i] = option
+                self._page_by_index[i] = page
                 i += 1
                 j += 1
                 
@@ -73,7 +76,7 @@ class SearchResults(Results):
 
 class PageResults(Results):
     def __init__(self, page: Type[Page], results: List[DatabaseObject]) -> None:
-        super().__init()
+        super().__init__()
         
         self.page: Type[Page] = page
         self.results: List[DatabaseObject] = results
@@ -87,4 +90,5 @@ class PageResults(Results):
         for option in self.results:
             yield Option(i, option)
             self._by_index[i] = option
+            self._page_by_index[i] = self.page
             i += 1

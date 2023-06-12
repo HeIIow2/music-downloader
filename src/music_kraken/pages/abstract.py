@@ -166,7 +166,6 @@ class Page():
         for default_query in query.default_search:
             for single_option in self.general_search(default_query):
                 r.append(single_option)
-                self.search_result_queue.put(single_option)
         
         return r
     

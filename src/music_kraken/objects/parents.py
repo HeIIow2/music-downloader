@@ -95,8 +95,8 @@ class DatabaseObject:
         return Metadata()
 
     @property
-    def options(self) -> Options:
-        return Options([self])
+    def options(self) -> List["DatabaseObject"]:
+        return [self]
 
     @property
     def option_string(self) -> str:

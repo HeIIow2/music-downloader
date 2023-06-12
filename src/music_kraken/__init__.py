@@ -6,6 +6,7 @@ from typing import List
 import gc
 import musicbrainzngs
 
+from .cli import Shell
 from . import objects, pages, download
 from .utils import exception, shared, path_manager
 from .utils.config import config, read, write, PATHS_SECTION
@@ -132,138 +133,18 @@ def cli(
         direct_download_url: str = None,
         command_list: List[str] = None
 ):
-    def get_existing_genre() -> List[str]:
-        """
-        gets the name of all subdirectories of shared.MUSIC_DIR,
-        but filters out all directories, where the name matches with any patern
-        from shared.NOT_A_GENRE_REGEX.
-        """
-        existing_genres: List[str] = []
-
-        # get all subdirectories of MUSIC_DIR, not the files in the dir.
-        existing_subdirectories: List[Path] = [f for f in MUSIC_DIR.iterdir() if f.is_dir()]
-
-        for subdirectory in existing_subdirectories:
-            name: str = subdirectory.name
-
-            if not any(re.match(regex_pattern, name) for regex_pattern in NOT_A_GENRE_REGEX):
-                existing_genres.append(name)
-
-        existing_genres.sort()
-
-        return existing_genres
-
-    def get_genre():
-        existing_genres = get_existing_genre()
-        for i, genre_option in enumerate(existing_genres):
-            print(f"{i + 1:0>2}: {genre_option}")
-
-        while True:
-            genre = input("Id or new genre: ")
-
-            if genre.isdigit():
-                genre_id = int(genre) - 1
-                if genre_id >= len(existing_genres):
-                    print(f"No genre under the id {genre_id + 1}.")
-                    continue
-
-                return existing_genres[genre_id]
-
-            new_genre = fit_to_file_system(genre)
-
-            agree_inputs = {"y", "yes", "ok"}
-            verification = input(f"create new genre \"{new_genre}\"? (Y/N): ").lower()
-            if verification in agree_inputs:
-                return new_genre
-
-    def next_search(_search: download.Search, query: str) -> bool:
-        """
-        :param _search:
-        :param query:
-        :return exit in the next step:
-        """
-        nonlocal genre
-        nonlocal download_all
-
-        query: str = query.strip()
-        parsed: str = query.lower()
-
-        if parsed in EXIT_COMMANDS:
-            return True
-
-        if parsed == ".":
-            return False
-        if parsed == "..":
-            _search.goto_previous()
-            return False
-
-        if parsed.isdigit():
-            _search.choose_index(int(parsed))
-            return False
-
-        if parsed in DOWNLOAD_COMMANDS:
-            r = _search.download_chosen(genre=genre, download_all=download_all)
-
-            print()
-            print(r)
-            print()
-
-            return not r.is_mild_failure
-
-        url = re.match(URL_REGEX, query)
-        if url is not None:
-            if not _search.search_url(url.string):
-                print("The given url couldn't be found.")
-            return False
-
-        page = _search.get_page_from_query(parsed)
-        if page is not None:
-            _search.choose_page(page)
-            return False
-
-        # if everything else is not valid search
-        _search.search(query)
-        return False
-
-    if genre is None:
-        genre = get_genre()
-        print()
-
-    print_cute_message()
-    print()
-    print(f"Downloading to: \"{genre}\"")
-    print()
-
-    search = download.Search()
-
-    # directly download url
-    if direct_download_url is not None:
-        if search.search_url(direct_download_url):
-            r = search.download_chosen(genre=genre, download_all=download_all)
-            print()
-            print(r)
-            print()
-        else:
-            print(f"Sorry, could not download the url: {direct_download_url}")
-
-        exit_message()
-        return
-
-    # run one command after another from the command list
+    shell = Shell(genre=genre)
+    
     if command_list is not None:
         for command in command_list:
-            print(f">> {command}")
-            if next_search(search, command):
-                break
-            print(search)
-
-        exit_message()
+            shell.process_input(command)
         return
 
-    # the actual cli
-    while True:
-        if next_search(search, input(">> ")):
-            break
-        print(search)
-
+    if direct_download_url is not None:
+        if shell.download(direct_download_url, download_all=download_all):
+            exit_message()
+            return
+        
+    shell.mainloop()
+    
     exit_message()
