@@ -1,7 +1,6 @@
 from typing import Tuple, List, Set, Type, Optional, Dict
 
-from . import page_attributes
-from .download import Download
+from .page_attributes import Pages
 from .multiple_options import MultiPageOptions
 from ..pages.abstract import Page
 from ..utils.support_classes import DownloadResult, Query
@@ -9,20 +8,15 @@ from ..objects import DatabaseObject, Source, Artist, Song, Album
 from ..utils.enums.source import SourcePages
 
 
-class Search(Download):
+class Search:
     def __init__(
             self,
-            pages: Tuple[Type[Page]] = page_attributes.ALL_PAGES,
-            exclude_pages: Set[Type[Page]] = set(),
+            exclude_pages: Set[Type[Page]] = None, 
             exclude_shady: bool = False,
             max_displayed_options: int = 10,
             option_digits: int = 3,
     ) -> None:
-        super().__init__(
-            pages=pages,
-            exclude_pages=exclude_pages,
-            exclude_shady=exclude_shady
-        )
+        self.pages: Pages = Pages(exclude_pages=exclude_pages, exclude_shady=exclude_shady)
 
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
