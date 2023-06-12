@@ -178,7 +178,9 @@ class Shell:
     
     def print_current_options(self):
         self.page_dict = dict()
-        
+
+        print()
+
         page_count = 0
         for option in self.current_results.formated_generator(max_items_per_page=self.max_displayed_options):
             if isinstance(option, Option):
@@ -191,7 +193,9 @@ class Shell:
                 self.page_dict[option.__name__] = option
                 
                 page_count += 1
-    
+
+        print()
+
     def set_current_options(self, current_options: Results):
         self.current_results = current_options
     
@@ -216,7 +220,8 @@ class Shell:
     
     def search(self, query: str):
         if re.match(URL_PATTERN, query) is not None:
-            self.set_current_options(*self.pages.fetch_url(re.match(URL_PATTERN, query)))
+            page, data_object = self.pages.fetch_url(query)
+            self.set_current_options(PageResults(page, data_object.options))
             self.print_current_options()
             return
         
@@ -290,7 +295,7 @@ class Shell:
         to_download: List[DatabaseObject] = []
 
         if re.match(URL_PATTERN, download_str) is not None:
-            _, music_objects = self.pages.fetch_url(re.match(URL_PATTERN, download_str))
+            _, music_objects = self.pages.fetch_url(download_str)
             to_download.append(music_objects)
             
         else:
@@ -322,7 +327,7 @@ class Shell:
             print(music_object.option_string)
             print(result)
             
-        return False
+        return True
     
     def process_input(self, input_str: str) -> bool:
         input_str = input_str.strip()

@@ -164,7 +164,6 @@ class Musify(Page):
             artist_thumbnail = image_soup.get("src")
 
         return Artist(
-            _id=_id,
             name=name,
             source_list=source_list
         )
@@ -269,7 +268,6 @@ class Musify(Page):
                 self.LOGGER.warning("got an unequal ammount than 3 small elements")
 
         return Album(
-            _id=_id,
             title=title,
             source_list=source_list,
             date=ID3Timestamp(year=year),
@@ -316,7 +314,6 @@ class Musify(Page):
                         _id = href.split("-")[-1]
 
                     artist_list.append(Artist(
-                        _id=_id,
                         name=artist_anchor.get_text(strip=True),
                         source_list=[artist_source]
                     ))
@@ -352,7 +349,6 @@ class Musify(Page):
                 _id = raw_id
 
         return Song(
-            _id=_id,
             title=song_title,
             main_artist_list=artist_list,
             source_list=source_list
@@ -838,7 +834,6 @@ class Musify(Page):
             self.LOGGER.debug("there is not even 1 footer in the album card")
 
         return Album(
-            _id=_id,
             title=name,
             source_list=source_list,
             date=timestamp,
@@ -998,7 +993,7 @@ class Musify(Page):
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
     
-    def download_song_to_targets(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
+    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3

@@ -104,7 +104,7 @@ def merge_together(old_object: DatabaseObject, new_object: DatabaseObject) -> Da
     return old_object
 
 
-class Page():
+class Page:
     """
     This is an abstract class, laying out the 
     functionality for every other class fetching something
@@ -270,7 +270,7 @@ class Page():
             for collection_name in naming_music_object.UPWARDS_COLLECTION_ATTRIBUTES:
                 collection: Collection = getattr(naming_music_object, collection_name)
                 
-                if collection.empty():
+                if collection.empty:
                     continue
                 if collection.element_type in naming_objects:
                     continue
@@ -280,10 +280,10 @@ class Page():
           
         fill_naming_objects(music_object)
           
-        return self._download(music_object, {}, genre, download_all)
+        return self._download(music_object, naming_objects, download_all)
 
 
-    def _download(self, music_object: DatabaseObject, naming_objects: Dict[Type[DatabaseObject], DatabaseObject], download_all: bool = False) -> list:
+    def _download(self, music_object: DatabaseObject, naming_objects: Dict[Union[Type[DatabaseObject], str], DatabaseObject], download_all: bool = False) -> DownloadResult:
         # Skips all releases, that are defined in shared.ALBUM_TYPE_BLACKLIST, if download_all is False
         if isinstance(music_object, Album):
             if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
@@ -298,7 +298,7 @@ class Page():
         download_result: DownloadResult = DownloadResult()
 
         for collection_name in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
-            collection: Collection = getattr(self, collection_name)
+            collection: Collection = getattr(music_object, collection_name)
 
             sub_ordered_music_object: DatabaseObject
             for sub_ordered_music_object in collection:
@@ -306,11 +306,12 @@ class Page():
 
         return download_result
 
-    def _download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], DatabaseObject]):
+    def _download_song(self, song: Song, naming_objects: Dict[Type[DatabaseObject], Union[DatabaseObject, str]]):
         name_attribute = DEFAULT_VALUES.copy()
         
         # song
-        name_attribute["genre"] = naming_objects["genre"]
+        if "genre" in naming_objects:
+            name_attribute["genre"] = naming_objects["genre"]
         name_attribute["song"] = song.title
         
         if Album in naming_objects:
@@ -344,7 +345,7 @@ class Page():
             file=str(random.randint(0, 999999))
         )
         
-        r = self._download_song_to_targets(source=sources[0], target=temp_target, desc=song.title)
+        r = self.download_song_to_target(source=sources[0], target=temp_target, desc=song.title)
 
         if not r.is_fatal_error:
             r.merge(self._post_process_targets(song, temp_target))

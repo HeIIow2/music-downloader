@@ -36,6 +36,11 @@ class DatabaseObject:
         
         self.build_version = -1
 
+    def __hash__(self):
+        if self.dynamic:
+            raise TypeError("Dynamic DatabaseObjects are unhashable.")
+        return self.id
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
