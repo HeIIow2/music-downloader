@@ -1,3 +1,4 @@
+import time
 from typing import List, Dict, Callable, Optional, Set
 from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
@@ -82,6 +83,7 @@ class Connection:
             headers: dict,
             refer_from_origin: bool = True,
             raw_url: bool = False,
+            wait_on_403: bool = True,
             **kwargs
     ) -> Optional[requests.Response]:
         if try_count >= self.TRIES:
@@ -122,12 +124,15 @@ class Connection:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
                                 f"at {url}. ({try_count}-{self.TRIES})")
             self.LOGGER.debug(r.content)
+            if wait_on_403:
+                self.LOGGER.warning(f"Waiting for 5 seconds.")
+                time.sleep(5)
 
         self.rotate()
 
         return self._request(
             request=request,
-            try_count=try_count,
+            try_count=try_count+1,
             accepted_response_code=accepted_response_code,
             url=url,
             timeout=timeout,

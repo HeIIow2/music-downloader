@@ -206,6 +206,19 @@ class ID3Timestamp:
         return time_format, self.date_obj.strftime(time_format)
 
     @classmethod
+    def fromtimestamp(cls, utc_timestamp: int):
+        date_obj = datetime.datetime.fromtimestamp(utc_timestamp)
+
+        return cls(
+            year=date_obj.year,
+            month=date_obj.month,
+            day=date_obj.day,
+            hour=date_obj.hour,
+            minute=date_obj.minute,
+            second=date_obj.second
+        )
+
+    @classmethod
     def strptime(cls, time_stamp: str, format: str):
         """
         day: "%d" 
