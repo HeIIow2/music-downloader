@@ -201,16 +201,33 @@ class YouTube(Page):
 
         title = data["title"]
         license_str = None
-        for music_track in data.get("musicTracks", []):
-            title = music_track["song"]
-            license_str = music_track["license"]
+
+        artist_list: List[Artist] = []
+
+        _author: str = data["author"]
+        if _author.endswith(" - Topic"):
+            artist_list.append(Artist(
+                name=_author.replace(" - Topic", ""),
+                source_list=[Source(
+                    self.SOURCE_TYPE, get_invidious_url(path=f"/channel/{data['authorId']}")
+                )]
+            ))
+
+        else:
+            for music_track in data.get("musicTracks", []):
+                title = music_track["song"]
+                license_str = music_track["license"]
+
+                for artist_name in music_track["artist"].split(" x "):
+                    artist_list.append(Artist(name=artist_name))
 
         return Song(
             title=title,
             source_list=[Source(
                 self.SOURCE_TYPE, get_invidious_url(path="/watch", query=f"v={data['videoId']}")
             )],
-            notes=FormattedText(html=data["descriptionHtml"] + f"\n<p>{license_str}</ p>" )
+            notes=FormattedText(html=data["descriptionHtml"] + f"\n<p>{license_str}</ p>" ),
+            main_artist_list=artist_list
         ), int(data["published"])
 
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
