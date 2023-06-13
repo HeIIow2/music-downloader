@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlparse, ParseResult
 import re
 
 from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute, StringAttribute
@@ -26,8 +26,9 @@ class UrlStringAttribute(StringAttribute):
                 rule="has to be a valid url"
             )
 
-    def single_object_from_element(self, value: str):
-        return urlparse(value)
+    @property
+    def object_from_value(self) -> ParseResult:
+        return urlparse(self.value)
 
 
 class ConnectionSection(Section):

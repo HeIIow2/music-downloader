@@ -29,7 +29,8 @@ from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE
 
 
 def get_invidious_url(path: str = "", query: str = "", fragment: str = "") -> str:
-    return urlunparse((INVIDIOUS_INSTANCE.scheme, INVIDIOUS_INSTANCE.netloc, path, query, fragment))
+    _ = ""
+    return urlunparse((INVIDIOUS_INSTANCE.scheme, INVIDIOUS_INSTANCE.netloc, path, query, fragment, _))
 
 
 class YouTubeUrlType(Enum):
@@ -129,7 +130,7 @@ class YouTube(Page):
 
     def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
-            host=urlunparse(INVIDIOUS_INSTANCE),
+            host=get_invidious_url(),
             logger=self.LOGGER
         )
 
@@ -147,12 +148,16 @@ class YouTube(Page):
             return _url_type[parsed.url_type]
 
     def general_search(self, search_query: str) -> List[DatabaseObject]:
+        
         return [Artist(name="works")]
 
     def label_search(self, label: Label) -> List[Label]:
         return []
 
     def artist_search(self, artist: Artist) -> List[Artist]:
+        # https://yt.artemislena.eu/api/v1/search?q=Zombiez+-+Topic&page=1&date=none&type=channel&duration=none&sort=relevance
+        endpoint = get_invidious_url(path="/api/v1/search", query=f"q={artist.name.replace(' ', '+')}+-+Topic&page=1&date=none&type=channel&duration=none&sort=relevance")
+        print(endpoint)
         return []
 
     def album_search(self, album: Album) -> List[Album]:
