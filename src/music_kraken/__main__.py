@@ -65,6 +65,13 @@ if __name__ == "__main__":
         help="Resets the config file to the default one.",
         action="store_true"
     )
+    
+    parser.add_argument(
+        "--invidious",
+        "-i",
+        help="Set a good and fast invidious instance from your homecountry, to reduce the latency.",
+        action="store_true"
+    )
 
     arguments = parser.parse_args()
 
@@ -94,6 +101,11 @@ if __name__ == "__main__":
         if os.path.exists(music_kraken.shared.CONFIG_FILE):
             os.remove(music_kraken.shared.CONFIG_FILE)
         music_kraken.read()
+        
+    if arguments.invidious:
+        from .cli.options import invidious
+        invidious()
+        exit()
 
     # getting the genre
     genre: str = arguments.genre

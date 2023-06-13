@@ -19,7 +19,7 @@ class UrlStringAttribute(StringAttribute):
     def validate(self, value: str):
         v = value.strip()
         url = re.match(URL_PATTERN, v)
-        if v != url:
+        if url is None:
             raise SettingValueError(
                 setting_name=self.name,
                 setting_value=v,
@@ -64,18 +64,14 @@ class ConnectionSection(Section):
         )
 
         # INVIDIOUS INSTANCES LIST
-        self.INVIDIOUS_INSTANCE = UrlListAttribute(
-            name="invidious_instances",
+        self.INVIDIOUS_INSTANCE = UrlStringAttribute(
+            name="invidious_instance",
             description="This is a List, where you can define the invidious instances,\n"
                         "the youtube downloader should use.\n"
                         "Here is a list of active ones: https://docs.invidious.io/instances/\n"
                         "Instances that use cloudflare or have source code changes could cause issues.\n"
                         "Hidden instances (.onion) will only work, when setting 'tor=true'.",
-            value=[
-                "https://yt.artemislena.eu/",
-                "https://watch.thekitty.zone/",
-                "https://y.com.sb/"
-            ]
+            value="https://yt.artemislena.eu/"
         )
         # INVIDIOUS PROXY
         self.INVIDIOUS_PROXY_VIDEOS = BoolAttribute(
@@ -88,7 +84,9 @@ class ConnectionSection(Section):
             self.USE_TOR,
             self.TOR_PORT,
             self.CHUNK_SIZE,
-            self.SHOW_DOWNLOAD_ERRORS_THRESHOLD
+            self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
+            self.INVIDIOUS_INSTANCE,
+            self.INVIDIOUS_PROXY_VIDEOS
         ]
 
         super().__init__()
