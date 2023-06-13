@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from ....utils import config, write
-from ....utils import exception
 
 
 INSTANCES_ENDPOINT = "https://api.invidious.io/instances.json"

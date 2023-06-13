@@ -2,6 +2,7 @@ import logging
 import random
 from pathlib import Path
 from typing import List, Tuple, Set, Dict
+from urllib.parse import ParseResult
 
 from .path_manager import LOCATIONS
 from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
@@ -90,6 +91,7 @@ if TOR:
         'http': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}',
         'https': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}'
     }
+INVIDIOUS_INSTANCE: ParseResult = CONNECTION_SECTION.INVIDIOUS_INSTANCE.value
 
 # size of the chunks that are streamed
 CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value
