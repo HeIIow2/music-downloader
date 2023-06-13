@@ -11,5 +11,10 @@ if __name__ == "__main__":
     direct_download = [
         "d: https://musify.club/release/crystal-f-x-2012-795181"
     ]
+    
+    youtube_search = [
+        "s: #a Zombiez",
+        "10"
+    ]
 
-    music_kraken.cli(genre="test", command_list=direct_download)
+    music_kraken.cli(genre="test", command_list=youtube_search)

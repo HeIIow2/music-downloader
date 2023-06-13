@@ -28,9 +28,8 @@ from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE
 """
 
 
-def get_invidious_url(path: str = "", query: str = "", fragment: str = "") -> str:
-    _ = ""
-    return urlunparse((INVIDIOUS_INSTANCE.scheme, INVIDIOUS_INSTANCE.netloc, path, query, fragment, _))
+def get_invidious_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
+    return urlunparse((INVIDIOUS_INSTANCE.scheme, INVIDIOUS_INSTANCE.netloc, path, params, query, fragment))
 
 
 class YouTubeUrlType(Enum):
@@ -153,12 +152,32 @@ class YouTube(Page):
 
     def label_search(self, label: Label) -> List[Label]:
         return []
+    
+    def _json_to_artist(self, artist_json: dict) -> Artist:#
+        return Artist(
+            name=artist_json["author"].replace(" - Topic", ""),
+            source_list=[
+                Source(self.SOURCE_TYPE, get_invidious_url(path=artist_json["authorUrl"]))
+            ]
+        )
 
     def artist_search(self, artist: Artist) -> List[Artist]:
         # https://yt.artemislena.eu/api/v1/search?q=Zombiez+-+Topic&page=1&date=none&type=channel&duration=none&sort=relevance
         endpoint = get_invidious_url(path="/api/v1/search", query=f"q={artist.name.replace(' ', '+')}+-+Topic&page=1&date=none&type=channel&duration=none&sort=relevance")
-        print(endpoint)
-        return []
+        
+        artist_list = []
+        
+        r = self.connection.get(endpoint)
+        for search_result in r.json():
+            if search_result["type"] != "channel":
+                continue
+            author: str = search_result["author"]
+            if not author.endswith(" - Topic"):
+                continue
+            
+            artist_list.append(self._json_to_artist(search_result))
+            
+        return artist_list
 
     def album_search(self, album: Album) -> List[Album]:
         return []
@@ -170,10 +189,40 @@ class YouTube(Page):
         return Song()
 
     def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
-        return Album()
+        return Album()  
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
-        return Artist()
+        parsed = YouTubeUrl(source.url)
+        if parsed.url_type != YouTubeUrlType.CHANNEL:
+            return Artist(source_list=[source])
+        
+        artist_name = None
+        album_list = []
+        
+        # playlist
+        # https://yt.artemislena.eu/api/v1/channels/playlists/UCV0Ntl3lVR7xDXKoCU6uUXA
+        r = self.connection.get(get_invidious_url(f"/api/v1/channels/playlists/{parsed.id}"))
+        for playlist_json in r.json()["playlists"]:
+            if playlist_json["type"] != "playlist":
+                continue
+            
+            artist_name = playlist_json["author"].replace(" - Topic", "")
+            
+            # /playlist?list=OLAK5uy_nbvQeskr8nbIuzeLxoceNLuCL_KjAmzVw
+            album_list.append(Album(
+                title=playlist_json["title"],
+                source_list=[Source(
+                    self.SOURCE_TYPE, get_invidious_url(path="/playlist", query=f"list={playlist_json['playlistId']}")
+                )],
+                artist_list=[Artist(
+                    name=artist_name,
+                    source_list=[
+                        Source(self.SOURCE_TYPE, get_invidious_url(path=playlist_json["authorUrl"]))
+                    ]
+                )]
+            ))
+        
+        return Artist(name=artist_name, main_album_list=album_list, source_list=[source])
 
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
