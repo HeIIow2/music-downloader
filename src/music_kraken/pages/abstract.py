@@ -354,6 +354,9 @@ class Page:
     
     def _post_process_targets(self, song: Song, temp_target: Target) -> DownloadResult:
         correct_codec(temp_target)
+        
+        self.post_process_hook(song, temp_target)
+        
         write_metadata_to_target(song.metadata, temp_target)
 
         r = DownloadResult()
@@ -367,6 +370,9 @@ class Page:
         temp_target.delete()
         
         return r
+    
+    def post_process_hook(self, song: Song, temp_target: Target, **kwargs):
+        pass
     
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         return DownloadResult()

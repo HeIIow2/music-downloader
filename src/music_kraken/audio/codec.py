@@ -1,5 +1,6 @@
 from typing import List, Tuple
 import ffmpeg
+import subprocess
 
 from ..utils.shared import BITRATE, AUDIO_FORMAT, CODEX_LOGGER as LOGGER
 from ..objects import Target
@@ -9,6 +10,12 @@ def remove_intervals(target: Target, interval_list: List[Tuple[float, float]]):
     if not target.exists:
         LOGGER.warning(f"Target doesn't exist: {target.file_path}")
         return
+    
+    temp_target = Target(
+        path=target._path,
+        file=str(target._file) + ".temp"
+    )
+    target.copy_content(temp_target)
     
     # https://stackoverflow.com/questions/50594412/cut-multiple-parts-of-a-video-with-ffmpeg
     aselect_list: List[str] = []
@@ -22,6 +29,13 @@ def remove_intervals(target: Target, interval_list: List[Tuple[float, float]]):
     aselect_list.append(f"gte(t,{next_start})")
     
     select = f"aselect='{'+'.join(aselect_list)}',asetpts=N/SR/TB"
+    
+    command = f"ffmpeg -i {str(temp_target.file_path)} -af \"{select}\" {str(target.file_path)}"
+    r = subprocess.run(command)
+    if r.stderr != "":
+        LOGGER.debug(r.stderr)
+        
+    temp_target.delete()
 
 
 def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str = AUDIO_FORMAT):
@@ -49,4 +63,4 @@ def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str =
         LOGGER.debug(err)
 
     output_target.copy_content(target)
-    output_target.file_path.unlink()
+    output_target.delete()

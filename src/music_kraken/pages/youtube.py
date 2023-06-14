@@ -2,6 +2,11 @@ from typing import List, Optional, Type, Tuple
 from urllib.parse import urlparse, urlunparse, parse_qs
 from enum import Enum
 
+import sponsorblock
+
+from music_kraken.objects import Song, Target
+from music_kraken.utils.support_classes import DownloadResult
+
 from ..objects import Source, DatabaseObject
 from .abstract import Page
 from ..objects import (
@@ -15,9 +20,10 @@ from ..objects import (
     FormattedText,
     ID3Timestamp
 )
+from ..audio.codec import remove_intervals
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
-from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE
+from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK
 
 
 """
@@ -137,6 +143,10 @@ class YouTube(Page):
             host="https://www.youtube.com/",
             logger=self.LOGGER
         )
+        
+        # the stuff with the connection is, to ensure sponsorblock uses the proxies, my programm does
+        _sponsorblock_connection: Connection = Connection()
+        self.sponsorblock_client = sponsorblock.Client(session=_sponsorblock_connection.session)
 
         super().__init__(*args, **kwargs)
 
@@ -375,3 +385,23 @@ class YouTube(Page):
         if target.stream_into(r, desc=desc):
             return DownloadResult(total=1)
         return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
+
+    def post_process_hook(self, song: Song, temp_target: Target, **kwargs):
+        if not ENABLE_SPONSOR_BLOCK:
+            return
+        
+        # find the youtube id
+        source_list = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
+        if len(source_list) <= 0:
+            self.LOGGER.warning(f"Couldn't find a youtube source in the post_processing_hook for {song.option_string}")
+            return 
+
+        source = source_list[0]
+        parsed = YouTubeUrl(source.url)
+        if parsed.url_type != YouTubeUrlType.VIDEO:
+            self.LOGGER.warning(f"{source.url} is no video url.")
+            return 
+        
+        # call the sponsorblock api, and remove the segments from the audio
+        segments =  self.sponsorblock_client.get_skip_segments(video_id=parsed.id)
+        remove_intervals(temp_target, [(segment.start, segment.end) for segment in segments])

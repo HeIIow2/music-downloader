@@ -92,6 +92,7 @@ if TOR:
         'https': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}'
     }
 INVIDIOUS_INSTANCE: ParseResult = CONNECTION_SECTION.INVIDIOUS_INSTANCE.object_from_value
+ENABLE_SPONSOR_BLOCK: bool = CONNECTION_SECTION.SPONSOR_BLOCK.object_from_value
 
 # size of the chunks that are streamed
 CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value
