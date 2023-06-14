@@ -7,5 +7,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="rythmbox-id3-lyrics-support" />
+    <orderEntry type="module" module-name="sponsorblock.py" />
   </component>
 </module>

@@ -3,11 +3,9 @@ from urllib.parse import urlparse, urlunparse, parse_qs
 from enum import Enum
 
 import sponsorblock
+from sponsorblock.errors import HTTPException, NotFoundException
 
-from music_kraken.objects import Song, Target
-from music_kraken.utils.support_classes import DownloadResult
-
-from ..objects import Source, DatabaseObject
+from ..objects import Source, DatabaseObject, Song, Target
 from .abstract import Page
 from ..objects import (
     Artist,
@@ -145,7 +143,7 @@ class YouTube(Page):
         )
         
         # the stuff with the connection is, to ensure sponsorblock uses the proxies, my programm does
-        _sponsorblock_connection: Connection = Connection()
+        _sponsorblock_connection: Connection = Connection(host="https://sponsor.ajay.app/")
         self.sponsorblock_client = sponsorblock.Client(session=_sponsorblock_connection.session)
 
         super().__init__(*args, **kwargs)
@@ -390,7 +388,7 @@ class YouTube(Page):
         if not ENABLE_SPONSOR_BLOCK:
             return
         
-        # find the youtube id
+        # find the YouTube id
         source_list = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
         if len(source_list) <= 0:
             self.LOGGER.warning(f"Couldn't find a youtube source in the post_processing_hook for {song.option_string}")
@@ -403,5 +401,13 @@ class YouTube(Page):
             return 
         
         # call the sponsorblock api, and remove the segments from the audio
-        segments =  self.sponsorblock_client.get_skip_segments(video_id=parsed.id)
-        remove_intervals(temp_target, [(segment.start, segment.end) for segment in segments])
+        segments = []
+        try:
+            segments = self.sponsorblock_client.get_skip_segments(parsed.id)
+        except NotFoundException:
+            self.LOGGER.debug(f"No sponsor found for the video {parsed.id}.")
+        except HTTPException as e:
+            self.LOGGER.warning(f"{e}")
+
+        if len(segments) <= 0:
+            remove_intervals(temp_target, [(segment.start, segment.end) for segment in segments])

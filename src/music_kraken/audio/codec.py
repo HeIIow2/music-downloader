@@ -10,17 +10,17 @@ def remove_intervals(target: Target, interval_list: List[Tuple[float, float]]):
     if not target.exists:
         LOGGER.warning(f"Target doesn't exist: {target.file_path}")
         return
-    
-    temp_target = Target(
+
+    output_target = Target(
         path=target._path,
-        file=str(target._file) + ".temp"
+        file=str(target._file) + "." + AUDIO_FORMAT
     )
-    target.copy_content(temp_target)
     
     # https://stackoverflow.com/questions/50594412/cut-multiple-parts-of-a-video-with-ffmpeg
     aselect_list: List[str] = []
     
     start = 0
+    next_start = 0
     for end, next_start in interval_list:
         aselect_list.append(f"between(t,{start},{end})")
         
@@ -29,13 +29,13 @@ def remove_intervals(target: Target, interval_list: List[Tuple[float, float]]):
     aselect_list.append(f"gte(t,{next_start})")
     
     select = f"aselect='{'+'.join(aselect_list)}',asetpts=N/SR/TB"
-    
-    command = f"ffmpeg -i {str(temp_target.file_path)} -af \"{select}\" {str(target.file_path)}"
-    r = subprocess.run(command)
+
+    r = subprocess.run(["ffmpeg", "-i", str(target.file_path), "-af", select, str(output_target.file_path)])
     if r.stderr != "":
         LOGGER.debug(r.stderr)
-        
-    temp_target.delete()
+
+    output_target.copy_content(target)
+    output_target.delete()
 
 
 def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str = AUDIO_FORMAT):
