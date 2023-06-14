@@ -80,6 +80,12 @@ class ConnectionSection(Section):
             value="false",
             description="Downloads the videos using the given instances."
         )
+        
+        self.SPONSOR_BLOCK = BoolAttribute(
+            name="use_sponsor_block",
+            value="true",
+            description="Use sponsor block to remove adds or simmilar from the youtube videos."
+        )
 
         self.attribute_list = [
             self.USE_TOR,
@@ -87,7 +93,8 @@ class ConnectionSection(Section):
             self.CHUNK_SIZE,
             self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
             self.INVIDIOUS_INSTANCE,
-            self.INVIDIOUS_PROXY_VIDEOS
+            self.INVIDIOUS_PROXY_VIDEOS,
+            self.SPONSOR_BLOCK
         ]
 
         super().__init__()
