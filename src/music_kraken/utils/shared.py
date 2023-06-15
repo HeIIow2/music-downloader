@@ -67,15 +67,6 @@ AUDIO_FORMAT = AUDIO_SECTION.AUDIO_FORMAT.object_from_value
 
 DOWNLOAD_PATH = AUDIO_SECTION.DOWNLOAD_PATH.object_from_value
 DOWNLOAD_FILE = AUDIO_SECTION.DOWNLOAD_FILE.object_from_value
-DEFAULT_VALUES = {
-    "genre": AUDIO_SECTION.DEFAULT_GENRE.object_from_value,
-    "label": AUDIO_SECTION.DEFAULT_LABEL.object_from_value,
-    "artist": AUDIO_SECTION.DEFAULT_ARTIST.object_from_value,
-    "album": AUDIO_SECTION.DEFAULT_ALBUM.object_from_value,
-    "song": AUDIO_SECTION.DEFAULT_SONG.object_from_value,
-    "album_type": AUDIO_SECTION.DEFAULT_ALBUM_TYPE.object_from_value,
-    "audio_format": AUDIO_FORMAT
-}
 
 TOR: bool = CONNECTION_SECTION.USE_TOR.object_from_value
 PROXIES_LIST: List[Dict[str, str]] = CONNECTION_SECTION.PROXIES.object_from_value

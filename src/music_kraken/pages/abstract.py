@@ -23,9 +23,8 @@ from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils import shared
-from ..utils.shared import DEFAULT_VALUES, DOWNLOAD_PATH, DOWNLOAD_FILE, THREADED, AUDIO_FORMAT
-from ..utils.support_classes import Query, DownloadResult, DefaultTarget, EndThread, FinishedSearch
-
+from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, AUDIO_FORMAT
+from ..utils.support_classes import Query, DownloadResult
 
 INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
 INDEPENDENT_DB_TYPES = Union[Type[Song], Type[Album], Type[Artist], Type[Label]]
