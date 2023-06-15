@@ -1,7 +1,7 @@
 import logging
 import random
 from copy import copy
-from typing import Optional, Union, Type, Dict, Set, List
+from typing import Optional, Union, Type, Dict, Set, List, Tuple
 import threading
 from queue import Queue
 
@@ -345,15 +345,16 @@ class Page:
             file=str(random.randint(0, 999999))
         )
         
-        r = self.download_song_to_target(source=sources[0], target=temp_target, desc=song.title)
+        source = sources[0]
+        r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
 
         if not r.is_fatal_error:
-            r.merge(self._post_process_targets(song, temp_target))
+            r.merge(self._post_process_targets(song, temp_target, source))
 
         return r
     
-    def _post_process_targets(self, song: Song, temp_target: Target) -> DownloadResult:
-        correct_codec(temp_target)
+    def _post_process_targets(self, song: Song, temp_target: Target, source: Source) -> DownloadResult:
+        correct_codec(temp_target, interval_list=self.get_skip_intervals(song, source))
         
         self.post_process_hook(song, temp_target)
         
@@ -370,6 +371,9 @@ class Page:
         temp_target.delete()
         
         return r
+    
+    def get_skip_intervals(self, song: Song, source: Source) -> List[Tuple[float, float]]:
+        return []
     
     def post_process_hook(self, song: Song, temp_target: Target, **kwargs):
         pass

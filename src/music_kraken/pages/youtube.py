@@ -5,6 +5,8 @@ from enum import Enum
 import sponsorblock
 from sponsorblock.errors import HTTPException, NotFoundException
 
+from music_kraken.objects import Song, Source
+
 from ..objects import Source, DatabaseObject, Song, Target
 from .abstract import Page
 from ..objects import (
@@ -18,7 +20,6 @@ from ..objects import (
     FormattedText,
     ID3Timestamp
 )
-from ..audio.codec import remove_intervals
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
 from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK
@@ -384,23 +385,15 @@ class YouTube(Page):
             return DownloadResult(total=1)
         return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
 
-    def post_process_hook(self, song: Song, temp_target: Target, **kwargs):
+    def get_skip_intervals(self, song: Song, source: Source) -> List[Tuple[float, float]]:
         if not ENABLE_SPONSOR_BLOCK:
-            return
+            return []
         
-        # find the YouTube id
-        source_list = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
-        if len(source_list) <= 0:
-            self.LOGGER.warning(f"Couldn't find a youtube source in the post_processing_hook for {song.option_string}")
-            return 
-
-        source = source_list[0]
         parsed = YouTubeUrl(source.url)
         if parsed.url_type != YouTubeUrlType.VIDEO:
             self.LOGGER.warning(f"{source.url} is no video url.")
-            return 
+            return []
         
-        # call the sponsorblock api, and remove the segments from the audio
         segments = []
         try:
             segments = self.sponsorblock_client.get_skip_segments(parsed.id)
@@ -408,6 +401,5 @@ class YouTube(Page):
             self.LOGGER.debug(f"No sponsor found for the video {parsed.id}.")
         except HTTPException as e:
             self.LOGGER.warning(f"{e}")
-
-        if len(segments) <= 0:
-            remove_intervals(temp_target, [(segment.start, segment.end) for segment in segments])
+            
+        return [(segment.start, segment.end) for segment in segments]
