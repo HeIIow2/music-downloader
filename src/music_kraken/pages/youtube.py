@@ -132,6 +132,8 @@ class YouTube(Page):
     SOURCE_TYPE = SourcePages.YOUTUBE
     LOGGER = YOUTUBE_LOGGER
 
+    NO_ADDITIONAL_DATA_FROM_SONG = True
+
     def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
             host=get_invidious_url(),

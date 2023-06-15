@@ -172,6 +172,9 @@ class Page:
     SOURCE_TYPE: SourcePages
     LOGGER = logging.getLogger("this shouldn't be used")
     
+    # set this to true, if all song details can also be fetched by fetching album details
+    NO_ADDITIONAL_DATA_FROM_SONG = False
+    
         
     def __init__(self):
         super().__init__()
@@ -341,13 +344,20 @@ class Page:
         return self._download(music_object, naming_dict, download_all)
 
 
-    def _download(self, music_object: DatabaseObject, naming_dict: NamingDict, download_all: bool = False) -> DownloadResult:
+    def _download(self, music_object: DatabaseObject, naming_dict: NamingDict, download_all: bool = False, skip_details: bool = False) -> DownloadResult:
+        skip_next_details = skip_details
+        
         # Skips all releases, that are defined in shared.ALBUM_TYPE_BLACKLIST, if download_all is False
         if isinstance(music_object, Album):
+            if self.NO_ADDITIONAL_DATA_FROM_SONG:
+                skip_next_details = True
+            
             if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
                 return DownloadResult()
 
-        self.fetch_details(music_object=music_object, stop_at_level=2)
+        if not isinstance(music_object, Song) or not self.NO_ADDITIONAL_DATA_FROM_SONG:
+            self.fetch_details(music_object=music_object, stop_at_level=2)
+            
         naming_dict.add_object(music_object)
 
         if isinstance(music_object, Song):
@@ -360,7 +370,7 @@ class Page:
 
             sub_ordered_music_object: DatabaseObject
             for sub_ordered_music_object in collection:
-                download_result.merge(self._download(sub_ordered_music_object, naming_dict.copy(), download_all))
+                download_result.merge(self._download(sub_ordered_music_object, naming_dict.copy(), download_all, skip_details=skip_next_details))
 
         return download_result
 
