@@ -403,6 +403,10 @@ class Album(MainObject):
         :return:
         """
         return len(self.artist_collection) > 1
+    
+    @property
+    def album_type_string(self) -> str:
+        return self.album_type.value
 
 
 """

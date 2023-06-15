@@ -192,12 +192,6 @@ class YouTube(Page):
             
         return artist_list
 
-    def album_search(self, album: Album) -> List[Album]:
-        return []
-
-    def song_search(self, song: Song) -> List[Song]:
-        return []
-
     def _fetch_song_from_id(self, youtube_id: str) -> Tuple[Song, Optional[int]]:
         # https://yt.artemislena.eu/api/v1/videos/SULFl39UjgY
         r = self.connection.get(get_invidious_url(path=f"/api/v1/videos/{youtube_id}"))

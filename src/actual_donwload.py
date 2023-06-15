@@ -18,4 +18,4 @@ if __name__ == "__main__":
         "8"
     ]
 
-    music_kraken.cli(genre="test", command_list=youtube_search)
+    music_kraken.cli(genre="test", command_list=direct_download)
