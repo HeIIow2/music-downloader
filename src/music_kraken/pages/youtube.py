@@ -5,8 +5,6 @@ from enum import Enum
 import sponsorblock
 from sponsorblock.errors import HTTPException, NotFoundException
 
-from music_kraken.objects import Song, Source
-
 from ..objects import Source, DatabaseObject, Song, Target
 from .abstract import Page
 from ..objects import (
@@ -373,11 +371,9 @@ class YouTube(Page):
 
         endpoint = audio_format["url"]
 
-        r = self.download_connection.get(endpoint, stream=True, raw_url=True)
-        if r is None:
-            return DownloadResult(error_message=f"Couldn't connect to {endpoint}")
+        self.download_connection.stream_into(endpoint, target, description=desc, raw_url=True)
 
-        if target.stream_into(r, desc=desc):
+        if self.download_connection.get(endpoint, stream=True, raw_url=True):
             return DownloadResult(total=1)
         return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
 
@@ -397,5 +393,8 @@ class YouTube(Page):
             self.LOGGER.debug(f"No sponsor found for the video {parsed.id}.")
         except HTTPException as e:
             self.LOGGER.warning(f"{e}")
-            
+
+        if len(segments) > 0:
+            print(f"Removing {len(segments)} interruptions in the audio...")
+
         return [(segment.start, segment.end) for segment in segments]

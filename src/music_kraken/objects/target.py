@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, TextIO
 
 import requests
 from tqdm import tqdm
@@ -98,6 +98,9 @@ class Target(DatabaseObject):
             except requests.exceptions.Timeout:
                 shared.DOWNLOAD_LOGGER.error("Stream timed out.")
                 return False
+
+    def open(self, file_mode: str, **kwargs) -> TextIO:
+        return self.file_path.open(file_mode, **kwargs)
             
     def delete(self):
         self.file_path.unlink(missing_ok=True)
