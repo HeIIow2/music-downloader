@@ -15,7 +15,7 @@ if __name__ == "__main__":
     youtube_search = [
         "s: #a Zombiez",
         "10",
-        "8"
+        "d: 5"
     ]
 
-    music_kraken.cli(genre="test", command_list=direct_download)
+    music_kraken.cli(genre="test", command_list=youtube_search)

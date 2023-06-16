@@ -394,7 +394,4 @@ class YouTube(Page):
         except HTTPException as e:
             self.LOGGER.warning(f"{e}")
 
-        if len(segments) > 0:
-            print(f"Removing {len(segments)} interruptions in the audio...")
-
         return [(segment.start, segment.end) for segment in segments]

@@ -45,9 +45,9 @@ def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str =
 
     # run the ffmpeg command with a progressbar
     ff = FfmpegProgress(ffmpeg_command)
-    with tqdm(total=100, desc="ffmpeg") as pbar:
+    with tqdm(total=100, desc=f"removing {len(interval_list)} segments") as pbar:
         for progress in ff.run_command_with_progress():
-            pbar.update(int(progress)-pbar.n)
+            pbar.update(progress-pbar.n)
 
     LOGGER.debug(ff.stderr)
 

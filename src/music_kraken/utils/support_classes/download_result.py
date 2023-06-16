@@ -80,11 +80,11 @@ class DownloadResult:
     def __str__(self):
         if self.is_fatal_error:
             return self.error_message
-        head = f"{self.fail} from {self.total} downloads failed:\n" \
-               f"successrate:\t{int(self.success_percentage * 100)}%\n" \
-               f"failrate:\t{int(self.failure_percentage * 100)}%\n" \
-               f"total size:\t{self.formated_size}\n" \
-                f"skipped segments:\t{self.sponsor_segments}" \
+        head =  f"{self.fail} from {self.total} downloads failed:\n" \
+                f"successrate:\t{int(self.success_percentage * 100)}%\n" \
+                f"failrate:\t{int(self.failure_percentage * 100)}%\n" \
+                f"total size:\t{self.formated_size}\n" \
+                f"skipped segments:\t{self.sponsor_segments}\n" \
                 f"found on disc:\t{self.found_on_disk}"
 
         if not self.is_mild_failure:

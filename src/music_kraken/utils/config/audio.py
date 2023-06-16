@@ -106,7 +106,7 @@ ID3.1: {', '.join(_sorted_id3_1_formats)}
 
         self.DOWNLOAD_PATH = StringAttribute(
             name="download_path",
-            value="{genre}/{artist}/{album_type}/{album}",
+            value="{genre}/{artist}/{album}",
             description="The folder music kraken should put the songs into."
         )
 
