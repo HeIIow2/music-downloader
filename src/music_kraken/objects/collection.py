@@ -158,3 +158,6 @@ class Collection:
     @property
     def empty(self) -> bool:
         return len(self._data) == 0
+
+    def clear(self):
+        self.__init__(element_type=self.element_type)

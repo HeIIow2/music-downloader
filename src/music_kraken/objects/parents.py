@@ -95,6 +95,10 @@ class DatabaseObject:
             if override or getattr(self, simple_attribute) == default_value:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
+    def strip_details(self):
+        for collection in type(self).DOWNWARDS_COLLECTION_ATTRIBUTES:
+            getattr(self, collection).clear()
+
     @property
     def metadata(self) -> Metadata:
         return Metadata()

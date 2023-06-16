@@ -167,7 +167,7 @@ class Shell:
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
         
-        self.current_results: Results = SearchResults
+        self.current_results: Results = None
         self._result_history: List[Results] = []
         
         self.genre = genre or get_genre()
@@ -295,6 +295,9 @@ class Shell:
     def goto(self, index: int):
         page: Type[Page]
         music_object: DatabaseObject
+        
+        if self.current_results is not None:
+            self.current_results.delete_details(index)
         
         try:
             page, music_object = self.current_results.get_music_object_by_index(index)
