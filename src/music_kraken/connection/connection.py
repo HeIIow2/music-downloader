@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from .rotating import RotatingProxy
 from ..utils.shared import PROXIES_LIST, CHUNK_SIZE
+from ..utils.support_classes import DownloadResult
 from ..objects import Target
 
 
@@ -209,8 +210,12 @@ class Connection:
             timeout: float = None,
             headers: dict = None,
             raw_url: bool = False,
+            chunk_size: int = CHUNK_SIZE,
+            try_count: int = 0,
+            progress: int = 0,
             **kwargs
-    ):
+    ) -> DownloadResult:
+        
         r = self._request(
             request=self.session.get,
             try_count=0,
@@ -225,10 +230,13 @@ class Connection:
         )
 
         if r is None:
-            return False
+            return DownloadResult(error_message=f"Could not establish connection to: {url}")
 
         target.create_path()
         total_size = int(r.headers.get('content-length'))
+        progress = 0
+
+        retry = False
 
         with target.open("wb") as f:
             try:
@@ -236,13 +244,39 @@ class Connection:
                 https://en.wikipedia.org/wiki/Kilobyte
                 > The internationally recommended unit symbol for the kilobyte is kB.
                 """
+                
                 with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024, desc=description) as t:
 
-                    for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
+                    for chunk in r.iter_content(chunk_size=chunk_size):
                         size = f.write(chunk)
+                        progress += size
                         t.update(size)
                 return True
 
             except requests.exceptions.ConnectionError:
-                self.LOGGER.error("Stream timed out.")
-                return False
+                if try_count >= self.TRIES:
+                    self.LOGGER.warning(f"Stream timed out at \"{url}\": to many retries, aborting.")
+                    return DownloadResult(error_message=f"Stream timed out from {url}, reducing the chunksize might help.")
+                
+                self.LOGGER.warning(f"Stream timed out at \"{url}\": ({try_count}-{self.TRIES})")
+                retry = True
+
+
+            finally:
+                if total_size > progress or retry:
+                    return self.stream_into(
+                        url = url,
+                        target = target,
+                        description = description,
+                        try_count=try_count+1,
+                        progress=progress,
+                        accepted_response_code=accepted_response_codes,
+                        timeout=timeout,
+                        headers=headers,
+                        raw_url=raw_url,
+                        refer_from_origin=refer_from_origin,
+                        chunk_size=chunk_size,
+                        **kwargs
+                    )
+                    
+                return DownloadResult()

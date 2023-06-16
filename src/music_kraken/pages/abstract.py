@@ -394,22 +394,26 @@ class Page:
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
         )
+        
+        r = DownloadResult(1)
 
         found_on_disc = False
         target: Target
         for target in song.target_collection:
             if target.exists:
-                target.copy_content(temp_target)
                 found_on_disc = True
-                break
-
-        r = DownloadResult(1)
+                
+                r.found_on_disk += 1
+                r.add_target(target)
+        
+        if found_on_disc:
+            self.LOGGER.info(f"{song.option_string} already exists, thus not downloading again.")
+            return r
 
         source = sources[0]
-        if not found_on_disc:
-            r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
-        else:
-            self.LOGGER.info(f"{song.option_string} already exists, thus not downloading again.")
+            
+        r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
+                    
 
         if not r.is_fatal_error:
             r.merge(self._post_process_targets(song, temp_target, [] if found_on_disc else self.get_skip_intervals(song, source)))
@@ -432,6 +436,7 @@ class Page:
             r.add_target(target)
             
         temp_target.delete()
+        r.sponsor_segments += len(interval_list)
         
         return r
     

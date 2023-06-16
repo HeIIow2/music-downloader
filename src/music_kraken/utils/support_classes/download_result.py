@@ -12,8 +12,10 @@ UNIT_DIVISOR = 1024
 class DownloadResult:
     total: int = 0
     fail: int = 0
+    sponsor_segments: int = 0
     error_message: str = None
     total_size = 0
+    found_on_disk: int = 0
 
     _error_message_list: List[str] = field(default_factory=list)
 
@@ -71,7 +73,9 @@ class DownloadResult:
             self.fail += other.fail
             self._error_message_list.extend(other._error_message_list)
 
+        self.sponsor_segments += other.sponsor_segments
         self.total_size += other.total_size
+        self.found_on_disk += other.found_on_disk
 
     def __str__(self):
         if self.is_fatal_error:
@@ -79,7 +83,9 @@ class DownloadResult:
         head = f"{self.fail} from {self.total} downloads failed:\n" \
                f"successrate:\t{int(self.success_percentage * 100)}%\n" \
                f"failrate:\t{int(self.failure_percentage * 100)}%\n" \
-               f"total size:\t{self.formated_size}"
+               f"total size:\t{self.formated_size}\n" \
+                f"skipped segments:\t{self.sponsor_segments}" \
+                f"found on disc:\t{self.found_on_disk}"
 
         if not self.is_mild_failure:
             return head
