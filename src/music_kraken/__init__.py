@@ -61,15 +61,6 @@ def exit_message():
     print("See you soon! :3")
 
 
-def paths():
-    print(f"Temp dir:\t{shared.TEMP_DIR}\n"
-          f"Music dir:\t{shared.MUSIC_DIR}\n"
-          f"Log file:\t{shared.LOG_PATH}")
-    print()
-    print_cute_message()
-    print()
-
-
 def settings(
         name: str = None,
         value: str = None,
