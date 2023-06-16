@@ -2,7 +2,7 @@ from typing import Set, Type, Dict, List
 from pathlib import Path
 import re
 
-from ...utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX
+from ...utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH
 from ...utils.regex import URL_PATTERN
 from ...utils.string_processing import fit_to_file_system
 from ...utils.support_classes import Query, DownloadResult
@@ -168,6 +168,7 @@ class Shell:
         self.option_digits: int = option_digits
         
         self.current_results: Results = SearchResults
+        self._result_history: List[Results] = []
         
         self.genre = genre or get_genre()
         
@@ -197,7 +198,26 @@ class Shell:
         print()
 
     def set_current_options(self, current_options: Results):
+        if ENABLE_RESULT_HISTORY:
+            self._result_history.append(current_options)
+            
+        if HISTORY_LENGTH != -1:
+            if len(self._result_history) > HISTORY_LENGTH:
+                self._result_history.pop(0)
+        
         self.current_results = current_options
+        
+    def previous_option(self) -> bool:
+        if not ENABLE_RESULT_HISTORY:
+            print("History is turned of.\nGo to settings, and change the value at 'result_history' to 'true'.")
+            return False
+        
+        if len(self._result_history) <= 1:
+            print(f"No results in history.")
+            return False
+        self._result_history.pop()
+        self.current_results = self._result_history[-1]
+        return True
     
     def _process_parsed(self, key_text: Dict[str, str], query: str) -> Query:
         song = None if not "t" in key_text else Song(title=key_text["t"], dynamic=True)
@@ -338,6 +358,11 @@ class Shell:
         
         if processed_input == ".":
             self.print_current_options()
+            return False
+        
+        if processed_input == "..":
+            if self.previous_option():
+                self.print_current_options()
             return False
         
         if processed_input.startswith("s: "):

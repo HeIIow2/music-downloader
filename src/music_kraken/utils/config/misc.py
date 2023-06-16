@@ -3,6 +3,21 @@ from .base_classes import Section, IntAttribute, ListAttribute, BoolAttribute
 
 class MiscSection(Section):
     def __init__(self):
+        self.ENABLE_RESULT_HISTORY = BoolAttribute(
+            name="result_history",
+            description="If enabled, you can go back to the previous results.\n"
+                        "The consequence is a higher meory consumption, because every result is saved.",
+            value="false"
+        )
+        
+        self.HISTORY_LENGTH = IntAttribute(
+            name="history_length",
+            description="You can choose how far back you can go in the result history.\n"
+                        "The further you choose to be able to go back, the higher the memory usage.\n"
+                        "'-1' removes the Limit entirely.",
+            value="8"
+        )
+        
         self.HAPPY_MESSAGES = ListAttribute(
             name="happy_messages",
             description="Just some nice and wholesome messages.\n"
@@ -37,6 +52,8 @@ class MiscSection(Section):
         )
 
         self.attribute_list = [
+            self.ENABLE_RESULT_HISTORY,
+            self.HISTORY_LENGTH,
             self.HAPPY_MESSAGES,
             self.MODIFY_GC,
             self.ID_BITS
