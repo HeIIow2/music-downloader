@@ -4,9 +4,11 @@ from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
 
 import requests
+from tqdm import tqdm
 
 from .rotating import RotatingProxy
-from ..utils.shared import PROXIES_LIST
+from ..utils.shared import PROXIES_LIST, CHUNK_SIZE
+from ..objects import Target
 
 
 class Connection:
@@ -196,3 +198,51 @@ class Connection:
             self.LOGGER.warning(f"Max attempts ({self.TRIES}) exceeded for: GET:{url}")
             self.LOGGER.warning(f"payload: {json}")
         return r
+
+    def stream_into(
+            self,
+            url: str,
+            target: Target,
+            description: str = "download",
+            refer_from_origin: bool = True,
+            accepted_response_codes: set = None,
+            timeout: float = None,
+            headers: dict = None,
+            raw_url: bool = False,
+            **kwargs
+    ):
+        r = self._request(
+            request=self.session.get,
+            try_count=0,
+            accepted_response_code=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
+            url=url,
+            timeout=timeout,
+            headers=headers,
+            raw_url=raw_url,
+            refer_from_origin=refer_from_origin,
+            stream=True,
+            **kwargs
+        )
+
+        if r is None:
+            return False
+
+        target.create_path()
+        total_size = int(r.headers.get('content-length'))
+
+        with target.open("wb") as f:
+            try:
+                """
+                https://en.wikipedia.org/wiki/Kilobyte
+                > The internationally recommended unit symbol for the kilobyte is kB.
+                """
+                with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024, desc=description) as t:
+
+                    for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
+                        size = f.write(chunk)
+                        t.update(size)
+                return True
+
+            except requests.exceptions.ConnectionError:
+                self.LOGGER.error("Stream timed out.")
+                return False

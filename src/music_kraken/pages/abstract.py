@@ -375,16 +375,17 @@ class Page:
 
     def _download_song(self, song: Song, naming_dict: NamingDict):
         path_parts = Formatter().parse(DOWNLOAD_PATH)
-        file_parts = Formatter().parse(DOWNLOAD_FILE) 
+        file_parts = Formatter().parse(DOWNLOAD_FILE)
         new_target = Target(
             relative_to_music_dir=True,
             path=DOWNLOAD_PATH.format(**{part[1]: naming_dict[part[1]] for part in path_parts}),
             file=DOWNLOAD_FILE.format(**{part[1]: naming_dict[part[1]] for part in file_parts})
         )
-        
+
+
         if song.target_collection.empty:
             song.target_collection.append(new_target)
-        
+
         sources = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
         if len(sources) == 0:
             return DownloadResult(error_message=f"No source found for {song.title} as {self.__class__.__name__}.")
@@ -393,17 +394,30 @@ class Page:
             path=shared.TEMP_DIR,
             file=str(random.randint(0, 999999))
         )
-        
+
+        found_on_disc = False
+        target: Target
+        for target in song.target_collection:
+            if target.exists:
+                target.copy_content(temp_target)
+                found_on_disc = True
+                break
+
+        r = DownloadResult(1)
+
         source = sources[0]
-        r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
+        if not found_on_disc:
+            r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
+        else:
+            self.LOGGER.info(f"{song.option_string} already exists, thus not downloading again.")
 
         if not r.is_fatal_error:
-            r.merge(self._post_process_targets(song, temp_target, source))
+            r.merge(self._post_process_targets(song, temp_target, [] if found_on_disc else self.get_skip_intervals(song, source)))
 
         return r
     
-    def _post_process_targets(self, song: Song, temp_target: Target, source: Source) -> DownloadResult:
-        correct_codec(temp_target, interval_list=self.get_skip_intervals(song, source))
+    def _post_process_targets(self, song: Song, temp_target: Target, interval_list: List) -> DownloadResult:
+        correct_codec(temp_target, interval_list=interval_list)
         
         self.post_process_hook(song, temp_target)
         

@@ -58,7 +58,7 @@ class Config:
                 self._name_section_map[name] = element
                 self._length += 1
 
-    def set_name_to_value(self, name: str, value: str):
+    def set_name_to_value(self, name: str, value: str, silent: bool = True):
         """
         :raises SettingValueError, SettingNotFound:
         :param name:
@@ -66,6 +66,9 @@ class Config:
         :return:
         """
         if name not in self._name_section_map:
+            if silent:
+                LOGGER.warning(f"The setting \"{name}\" is either deprecated, or doesn't exist.")
+                return
             raise SettingNotFound(setting_name=name)
 
         LOGGER.debug(f"setting: {name} value: {value}")
