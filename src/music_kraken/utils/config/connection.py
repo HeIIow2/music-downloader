@@ -67,18 +67,22 @@ class ConnectionSection(Section):
         # INVIDIOUS INSTANCES LIST
         self.INVIDIOUS_INSTANCE = UrlStringAttribute(
             name="invidious_instance",
-            description="This is a List, where you can define the invidious instances,\n"
+            description="This is an attribute, where you can define the invidious instances,\n"
                         "the youtube downloader should use.\n"
                         "Here is a list of active ones: https://docs.invidious.io/instances/\n"
                         "Instances that use cloudflare or have source code changes could cause issues.\n"
                         "Hidden instances (.onion) will only work, when setting 'tor=true'.",
             value="https://yt.artemislena.eu/"
         )
-        # INVIDIOUS PROXY
-        self.INVIDIOUS_PROXY_VIDEOS = BoolAttribute(
-            name="invidious_proxy_video",
-            value="false",
-            description="Downloads the videos using the given instances."
+        
+        self.PIPED_INSTANCE = UrlStringAttribute(
+            name="piped_instance",
+            description="This is an attribute, where you can define the pioed instances,\n"
+                        "the youtube downloader should use.\n"
+                        "Here is a list of active ones: https://github.com/TeamPiped/Piped/wiki/Instances\n"
+                        "Instances that use cloudflare or have source code changes could cause issues.\n"
+                        "Hidden instances (.onion) will only work, when setting 'tor=true'.",
+            value="https://pipedapi.kavin.rocks"
         )
         
         self.SPONSOR_BLOCK = BoolAttribute(
@@ -93,7 +97,7 @@ class ConnectionSection(Section):
             self.CHUNK_SIZE,
             self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
             self.INVIDIOUS_INSTANCE,
-            self.INVIDIOUS_PROXY_VIDEOS,
+            self.PIPED_INSTANCE,
             self.SPONSOR_BLOCK
         ]
 

@@ -5,9 +5,9 @@ from enum import Enum
 import sponsorblock
 from sponsorblock.errors import HTTPException, NotFoundException
 
-from ..objects import Source, DatabaseObject, Song, Target
-from .abstract import Page
-from ..objects import (
+from ...objects import Source, DatabaseObject, Song, Target
+from ..abstract import Page
+from ...objects import (
     Artist,
     Source,
     SourcePages,
@@ -18,9 +18,9 @@ from ..objects import (
     FormattedText,
     ID3Timestamp
 )
-from ..connection import Connection
-from ..utils.support_classes import DownloadResult
-from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK
+from ...connection import Connection
+from ...utils.support_classes import DownloadResult
+from ...utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK
 
 
 """

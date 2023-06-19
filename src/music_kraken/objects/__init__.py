@@ -16,3 +16,5 @@ from .song import (
 
 from .formatted_text import FormattedText
 from .collection import Collection
+
+from .country import Country

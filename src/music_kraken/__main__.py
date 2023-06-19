@@ -67,9 +67,9 @@ if __name__ == "__main__":
     )
     
     parser.add_argument(
-        "--invidious",
-        "-i",
-        help="Set a good and fast invidious instance from your homecountry, to reduce the latency.",
+        "--frontend",
+        "-f",
+        help="Set a good and fast invidious/piped instance from your homecountry, to reduce the latency.",
         action="store_true"
     )
 
@@ -102,9 +102,9 @@ if __name__ == "__main__":
             os.remove(music_kraken.shared.CONFIG_FILE)
         music_kraken.read()
         
-    if arguments.invidious:
-        from .cli.options import invidious
-        invidious()
+    if arguments.frontend:
+        from .cli.options.frontend import set_frontend
+        set_frontend()
         exit()
 
     # getting the genre
