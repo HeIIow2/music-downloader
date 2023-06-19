@@ -31,6 +31,22 @@ class UrlStringAttribute(StringAttribute):
         return urlparse(self.value)
 
 
+class UrlListAttribute(ListAttribute):
+    def validate(self, value: str):
+        v = value.strip()
+        url = re.match(URL_PATTERN, v)
+        if url is None:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=v,
+                rule="has to be a valid url"
+            )
+            
+    def single_object_from_element(self, value: str):
+        return urlparse(value)
+
+
+
 class ConnectionSection(Section):
     def __init__(self):
         self.PROXIES = ProxAttribute(
@@ -85,6 +101,18 @@ class ConnectionSection(Section):
             value="https://pipedapi.kavin.rocks"
         )
         
+        self.ALL_YOUTUBE_URLS = UrlListAttribute(
+            name="youtube_url",
+            description="This is used to detect, if an url is from youtube, or any alternativ frontend.\n"
+                        "If any instance seems to be missing, run music kraken with the -f flag.",
+            value=[
+                "https://www.youtube.com/",
+                "https://www.youtu.be/",
+                "https://redirect.invidious.io/",
+                "https://piped.kavin.rocks/"
+            ]
+        )
+        
         self.SPONSOR_BLOCK = BoolAttribute(
             name="use_sponsor_block",
             value="true",
@@ -98,6 +126,7 @@ class ConnectionSection(Section):
             self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
             self.INVIDIOUS_INSTANCE,
             self.PIPED_INSTANCE,
+            self.ALL_YOUTUBE_URLS,
             self.SPONSOR_BLOCK
         ]
 

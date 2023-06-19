@@ -144,6 +144,9 @@ class ListAttribute(Attribute):
             self.value = []
             self.has_default_values = False
 
+        if value in self.value:
+            return
+
         self.value.append(value)
 
     def __str__(self):

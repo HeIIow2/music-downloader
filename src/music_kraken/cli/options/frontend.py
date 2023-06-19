@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from ...objects import Country
-from ...utils import config, write
+from ...utils import config, write, shared
 from ...connection import Connection
 
 
@@ -33,6 +33,8 @@ class FrontendInstance:
         
     def add_instance(self, instance: Instance):
         self.all_instances.append(instance)
+        
+        config.set_name_to_value("youtube_url", instance.uri)
         
         for region in instance.regions:
             self.region_instances[region].append(instance)
@@ -118,7 +120,6 @@ class Invidious(FrontendInstance):
         self.add_instance(instance)
     
     def fetch(self, silent: bool):
-        print("jhdflashfö")
         r = self.connection.get(self.endpoint)
         if r is None:
             return
