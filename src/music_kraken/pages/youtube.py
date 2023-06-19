@@ -5,9 +5,9 @@ from enum import Enum
 import sponsorblock
 from sponsorblock.errors import HTTPException, NotFoundException
 
-from ...objects import Source, DatabaseObject, Song, Target
-from ..abstract import Page
-from ...objects import (
+from ..objects import Source, DatabaseObject, Song, Target
+from .abstract import Page
+from ..objects import (
     Artist,
     Source,
     SourcePages,
@@ -18,9 +18,9 @@ from ...objects import (
     FormattedText,
     ID3Timestamp
 )
-from ...connection import Connection
-from ...utils.support_classes import DownloadResult
-from ...utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK
+from ..connection import Connection
+from ..utils.support_classes import DownloadResult
+from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK, PIPED_INSTANCE
 
 
 """
@@ -33,6 +33,9 @@ from ...utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_
 
 def get_invidious_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
     return urlunparse((INVIDIOUS_INSTANCE.scheme, INVIDIOUS_INSTANCE.netloc, path, params, query, fragment))
+
+def get_piped_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
+    return urlunparse((PIPED_INSTANCE.scheme, PIPED_INSTANCE.netloc, path, params, query, fragment))
 
 
 class YouTubeUrlType(Enum):
@@ -135,6 +138,11 @@ class YouTube(Page):
     def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
             host=get_invidious_url(),
+            logger=self.LOGGER
+        )
+        
+        self.piped_connection: Connection = Connection(
+            host=get_piped_url(),
             logger=self.LOGGER
         )
 
@@ -294,17 +302,13 @@ class YouTube(Page):
             date=ID3Timestamp.fromtimestamp(round(sum(timestamps) / len(timestamps)))
         )
 
-    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
-        parsed = YouTubeUrl(source.url)
-        if parsed.url_type != YouTubeUrlType.CHANNEL:
-            return Artist(source_list=[source])
-        
+    def fetch_invidious_album_list(self, yt_id: str):
         artist_name = None
         album_list = []
         
         # playlist
         # https://yt.artemislena.eu/api/v1/channels/playlists/UCV0Ntl3lVR7xDXKoCU6uUXA
-        r = self.connection.get(get_invidious_url(f"/api/v1/channels/playlists/{parsed.id}"))
+        r = self.connection.get(get_invidious_url(f"/api/v1/channels/playlists/{yt_id}"))
         if r is None:
             return Artist()
 
@@ -327,6 +331,51 @@ class YouTube(Page):
                     ]
                 )]
             ))
+        
+        return album_list, artist_name
+
+    def fetch_piped_album_list(self, yt_id: str):
+        endpoint = get_piped_url(path=f"/channels/tabs", query='data={"originalUrl":"https://www.youtube.com/' + yt_id + '/playlists","url":"https://www.youtube.com/' + yt_id + 'playlists","id":"' + yt_id + '","contentFilters":["playlists"],"sortFilter":"","baseUrl":"https://www.youtube.com"}')
+        
+        r = self.piped_connection.get(endpoint)
+        if r is None:
+            return [], None
+        
+        content = r.json()["content"]
+        
+        artist_name = None
+        album_list = []
+        
+        for playlist in content:
+            if playlist["type"] != "playlist":
+                continue
+            
+            artist_name = playlist["uploaderName"].replace(" - Topic", "")
+            
+            album_list.append(Album(
+                title=playlist["name"],
+                source_list=[Source(
+                    self.SOURCE_TYPE, get_invidious_url() + playlist["url"]
+                )],
+                artist_list=[Artist(
+                    name=artist_name,
+                    source_list=[
+                        Source(self.SOURCE_TYPE, get_invidious_url(path=playlist["uploaderUrl"]))
+                    ]
+                )]
+            ))
+        
+        return album_list, artist_name
+
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        parsed = YouTubeUrl(source.url)
+        if parsed.url_type != YouTubeUrlType.CHANNEL:
+            return Artist(source_list=[source])
+        
+        album_list, artist_name  = self.fetch_piped_album_list(parsed.id)
+        if len(album_list) <= 0:
+            self.LOGGER.warning(f"didn't found any playlists with piped, falling back to invidious. (it is unusual)")
+            album_list, artist_name = self.fetch_invidious_album_list(parsed.id)
         
         return Artist(name=artist_name, main_album_list=album_list, source_list=[source])
 

@@ -83,6 +83,9 @@ if TOR:
         'https': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}'
     }
 INVIDIOUS_INSTANCE: ParseResult = CONNECTION_SECTION.INVIDIOUS_INSTANCE.object_from_value
+PIPED_INSTANCE: ParseResult = CONNECTION_SECTION.PIPED_INSTANCE.object_from_value
+
+ALL_YOUTUBE_URLS: List[ParseResult] = CONNECTION_SECTION.ALL_YOUTUBE_URLS.object_from_value
 ENABLE_SPONSOR_BLOCK: bool = CONNECTION_SECTION.SPONSOR_BLOCK.object_from_value
 
 # size of the chunks that are streamed
@@ -102,5 +105,3 @@ THREADED = False
 
 ENABLE_RESULT_HISTORY: bool = MISC_SECTION.ENABLE_RESULT_HISTORY.object_from_value
 HISTORY_LENGTH: int = MISC_SECTION.HISTORY_LENGTH.object_from_value
-
-ALL_YOUTUBE_URLS: List[ParseResult] = CONNECTION_SECTION.ALL_YOUTUBE_URLS.object_from_value
