@@ -250,6 +250,8 @@ class YouTube(Page):
         return song
 
     def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        self.LOGGER.info(f"Getting the metadata of an album may take slightly longer, only panic in a couple minutes <333")
+        
         parsed = YouTubeUrl(source.url)
         if parsed.url_type != YouTubeUrlType.PLAYLIST:
             return Album()
