@@ -105,3 +105,18 @@ THREADED = False
 
 ENABLE_RESULT_HISTORY: bool = MISC_SECTION.ENABLE_RESULT_HISTORY.object_from_value
 HISTORY_LENGTH: int = MISC_SECTION.HISTORY_LENGTH.object_from_value
+
+HELP_MESSAGE = """
+to search:
+> s: {query or url}
+> s: https://musify.club/release/some-random-release-183028492
+> s: #a {artist} #r {release} #t {track}
+
+to download:
+> d: {option ids or direct url}
+> d: 0, 3, 4
+> d: 1
+> d: https://musify.club/release/some-random-release-183028492
+
+have fun :3
+""".strip()

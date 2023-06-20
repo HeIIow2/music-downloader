@@ -80,44 +80,39 @@ if __name__ == "__main__":
         print("Setting logging-level to DEBUG")
         logging.getLogger().setLevel(logging.DEBUG)
 
-    import music_kraken
-
-    music_kraken.read()
-
-    if arguments.setting is not None:
-        music_kraken.settings(*arguments.setting)
-        exit()
-
-    if arguments.settings:
-        music_kraken.settings()
-        exit()
-
-    if arguments.paths:
-        music_kraken.paths()
-        exit()
-
+    from . import cli
+    from .utils.config import read_config
+    from .utils import shared
+    
     if arguments.r:
         import os
-        if os.path.exists(music_kraken.shared.CONFIG_FILE):
-            os.remove(music_kraken.shared.CONFIG_FILE)
-        music_kraken.read()
+        if os.path.exists(shared.CONFIG_FILE):
+            os.remove(shared.CONFIG_FILE)
+        read_config()
+        
+        exit()
+
+    read_config()
+
+    if arguments.setting is not None:
+        cli.settings(*arguments.setting)
+
+    if arguments.settings:
+        cli.settings()
+
+    if arguments.paths:
+        cli.print_paths()
         
     if arguments.frontend:
-        from .cli.options.frontend import set_frontend
-        set_frontend()
-        exit()
+        cli.set_frontend(silent=False)
 
     # getting the genre
     genre: str = arguments.genre
     if arguments.test:
         genre = "test"
 
-    try:
-        music_kraken.cli(
-            genre=genre,
-            download_all=arguments.all,
-            direct_download_url=arguments.url
-        )
-    except KeyboardInterrupt:
-        print("\n\nRaise an issue if I fucked up:\nhttps://github.com/HeIIow2/music-downloader/issues")
-        music_kraken.exit_message()
+    cli.download(
+        genre=genre,
+        download_all=arguments.all,
+        direct_download_url=arguments.url
+    )

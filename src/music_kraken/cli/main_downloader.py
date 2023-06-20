@@ -2,14 +2,16 @@ from typing import Set, Type, Dict, List
 from pathlib import Path
 import re
 
-from ...utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH
-from ...utils.regex import URL_PATTERN
-from ...utils.string_processing import fit_to_file_system
-from ...utils.support_classes import Query, DownloadResult
-from ...download.results import Results, SearchResults, Option, PageResults
-from ...download.page_attributes import Pages
-from ...pages import Page
-from ...objects import Song, Album, Artist, DatabaseObject
+from .utils import cli_function
+
+from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH, HELP_MESSAGE
+from ..utils.regex import URL_PATTERN
+from ..utils.string_processing import fit_to_file_system
+from ..utils.support_classes import Query, DownloadResult
+from ..download.results import Results, SearchResults, Option, PageResults
+from ..download.page_attributes import Pages
+from ..pages import Page
+from ..objects import Song, Album, Artist, DatabaseObject
 
 
 """
@@ -128,30 +130,12 @@ def get_genre():
         
 def help_message():
     print()
-    print("""
-to search:
-> s: {query or url}
-> s: https://musify.club/release/some-random-release-183028492
-> s: #a {artist} #r {release} #t {track}
-
-to download:
-> d: {option ids or direct url}
-> d: 0, 3, 4
-> d: 1
-> d: https://musify.club/release/some-random-release-183028492
-
-have fun :3
-          """.strip())
+    print(HELP_MESSAGE)
     print()
 
 
-class Shell:
-    """
-    TODO:
-    
-    - Implement search and download for direct urls
-    """
-    
+
+class Downloader:
     def __init__(
             self,
             exclude_pages: Set[Type[Page]] = None, 
@@ -388,4 +372,23 @@ class Shell:
         while True:
             if self.process_input(input("> ")):
                 return
-            
+
+@cli_function
+def download(
+        genre: str = None,
+        download_all: bool = False,
+        direct_download_url: str = None,
+        command_list: List[str] = None
+):
+    shell = Downloader(genre=genre)
+    
+    if command_list is not None:
+        for command in command_list:
+            shell.process_input(command)
+        return
+
+    if direct_download_url is not None:
+        if shell.download(direct_download_url, download_all=download_all):
+            return
+        
+    shell.mainloop()

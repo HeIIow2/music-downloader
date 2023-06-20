@@ -1,10 +1,11 @@
 from typing import Dict, List
-import requests
 from dataclasses import dataclass
 from collections import defaultdict
 
+from ..utils import cli_function
+
 from ...objects import Country
-from ...utils import config, write, shared
+from ...utils import config, write_config
 from ...connection import Connection
 
 
@@ -45,7 +46,7 @@ class FrontendInstance:
             
     def set_instance(self, instance: Instance):
         config.set_name_to_value(self.SETTING_NAME, instance.uri)
-        write()
+        write_config()
     
     def _choose_country(self) -> List[Instance]:
         print("Input the country code, an example would be \"US\"")
@@ -123,7 +124,7 @@ class Invidious(FrontendInstance):
         r = self.connection.get(self.endpoint)
         if r is None:
             return
-        
+
         for instance in r.json():
             self._process_instance(all_instance_data=instance)
             
@@ -177,6 +178,8 @@ class FrontendSelection:
         self.piped.choose(silent)
 
 
+@cli_function
 def set_frontend(silent: bool = False):
     shell = FrontendSelection()
     shell.choose(silent=silent)
+    

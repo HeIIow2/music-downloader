@@ -1,3 +1,5 @@
+from ..utils import cli_function
+
 from ...utils.path_manager import LOCATIONS
 from ...utils import shared
 
@@ -12,6 +14,7 @@ def all_paths():
     }
 
 
+@cli_function
 def print_paths():
     for name, path in all_paths().items():
         print(f"{name}:\t{path}")
