@@ -143,7 +143,8 @@ class Downloader:
             exclude_shady: bool = False,
             max_displayed_options: int = 10,
             option_digits: int = 3,
-            genre: str = None
+            genre: str = None,
+            process_metadata_anyway: bool = False,
     ) -> None:
         self.pages: Pages = Pages(exclude_pages=exclude_pages, exclude_shady=exclude_shady)
         
@@ -156,6 +157,7 @@ class Downloader:
         self._result_history: List[Results] = []
         
         self.genre = genre or get_genre()
+        self.process_metadata_anyway = process_metadata_anyway
         
         print()
         print(f"Downloading to: \"{self.genre}\"")
@@ -334,7 +336,7 @@ class Downloader:
         _result_map: Dict[DatabaseObject, DownloadResult] = dict()
         
         for database_object in to_download:
-            r = self.pages.download(music_object=database_object, genre=self.genre, download_all=download_all)
+            r = self.pages.download(music_object=database_object, genre=self.genre, download_all=download_all, process_metadata_anyway=self.process_metadata_anyway)
             _result_map[database_object] = r
             
         for music_object, result in _result_map.items():
@@ -386,9 +388,10 @@ def download(
         genre: str = None,
         download_all: bool = False,
         direct_download_url: str = None,
-        command_list: List[str] = None
+        command_list: List[str] = None,
+        process_metadata_anyway: bool = False,
 ):
-    shell = Downloader(genre=genre)
+    shell = Downloader(genre=genre, process_metadata_anyway=process_metadata_anyway)
     
     if command_list is not None:
         for command in command_list:

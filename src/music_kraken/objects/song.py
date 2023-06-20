@@ -295,7 +295,11 @@ class Album(MainObject):
             id3Mapping.COPYRIGHT: [self.copyright],
             id3Mapping.LANGUAGE: [self.iso_639_2_lang],
             id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
-            id3Mapping.DATE: [self.date.timestamp],
+            id3Mapping.DATE: [self.date.strftime("%d%m")] if self.date.has_year and self.date.has_month else [],
+            id3Mapping.TIME: [self.date.strftime(("%H%M"))] if self.date.has_hour and self.date.has_minute else [],
+            id3Mapping.YEAR: [str(self.date.year).zfill(4)] if self.date.has_year else [],
+            id3Mapping.RELEASE_DATE: [self.date.timestamp],
+            id3Mapping.ORIGINAL_RELEASE_DATE: [self.date.timestamp],
             id3Mapping.ALBUMSORTORDER: [str(self.albumsort)] if self.albumsort is not None else []
         })
 

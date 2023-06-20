@@ -19,6 +19,8 @@ if __name__ == "__main__":
     fetch_youtube_playlist = [
         "s: https://yt.artemislena.eu/playlist?list=OLAK5uy_kcUBiDv5ATbl-R20OjNaZ5G28XFanQOmM"
     ]
+
+    download_youtube_playlist = ["d: https://www.youtube.com/playlist?list=OLAK5uy_lqI_c6aDF9q4DWJ4TBzt1AFQYx_FXfU4E"]
     
     youtube_search = [
         "s: #a Zombiez",
@@ -26,4 +28,4 @@ if __name__ == "__main__":
         "d: 5"
     ]
 
-    music_kraken.cli.download(genre="test", command_list=fetch_youtube_playlist)
+    music_kraken.cli.download(genre="test", command_list=download_youtube_playlist, process_metadata_anyway=True)

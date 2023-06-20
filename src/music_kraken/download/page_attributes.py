@@ -74,7 +74,7 @@ class Pages:
         
         return music_object
     
-    def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False) -> DownloadResult:
+    def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         if not isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             return DownloadResult(error_message=f"{type(music_object).__name__} can't be downloaded.")
         
@@ -82,7 +82,7 @@ class Pages:
         audio_pages = self._audio_pages_set.intersection(_page_types)
         
         for download_page in audio_pages:
-            return self._page_instances[download_page].download(music_object=music_object, genre=genre, download_all=download_all)
+            return self._page_instances[download_page].download(music_object=music_object, genre=genre, download_all=download_all, process_metadata_anyway=process_metadata_anyway)
         
         return DownloadResult(error_message=f"No audio source has been found for {music_object}.")
 

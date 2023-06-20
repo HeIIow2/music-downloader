@@ -17,9 +17,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-p', '--force-post-process',
+        action="store_true",
+        help="If a to downloaded thing is skipped due to being found on disc,\nit will still update the metadata accordingly."
+    )
+
+    parser.add_argument(
         '-t', '--test',
         action="store_true",
-        help="For the sake of testing. Equals: '-v -g test'"
+        help="For the sake of testing. Equals: '-vp -g test'"
     )
 
     # general arguments
@@ -114,5 +120,6 @@ if __name__ == "__main__":
     cli.download(
         genre=genre,
         download_all=arguments.all,
-        direct_download_url=arguments.url
+        direct_download_url=arguments.url,
+        process_metadata_anyway=arguments.force_post_process or arguments.test
     )

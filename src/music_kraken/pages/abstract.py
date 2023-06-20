@@ -322,7 +322,7 @@ class Page:
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
 
-    def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False) -> DownloadResult:
+    def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         naming_dict: NamingDict = NamingDict({"genre": genre})
           
         def fill_naming_objects(naming_music_object: DatabaseObject):
@@ -340,10 +340,10 @@ class Page:
           
         fill_naming_objects(music_object)
           
-        return self._download(music_object, naming_dict, download_all)
+        return self._download(music_object, naming_dict, download_all, process_metadata_anyway=process_metadata_anyway)
 
 
-    def _download(self, music_object: DatabaseObject, naming_dict: NamingDict, download_all: bool = False, skip_details: bool = False) -> DownloadResult:
+    def _download(self, music_object: DatabaseObject, naming_dict: NamingDict, download_all: bool = False, skip_details: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         skip_next_details = skip_details
         
         # Skips all releases, that are defined in shared.ALBUM_TYPE_BLACKLIST, if download_all is False
@@ -360,7 +360,7 @@ class Page:
         naming_dict.add_object(music_object)
 
         if isinstance(music_object, Song):
-            return self._download_song(music_object, naming_dict)
+            return self._download_song(music_object, naming_dict, process_metadata_anyway=process_metadata_anyway)
 
         download_result: DownloadResult = DownloadResult()
 
@@ -369,11 +369,17 @@ class Page:
 
             sub_ordered_music_object: DatabaseObject
             for sub_ordered_music_object in collection:
-                download_result.merge(self._download(sub_ordered_music_object, naming_dict.copy(), download_all, skip_details=skip_next_details))
+                download_result.merge(self._download(sub_ordered_music_object, naming_dict.copy(), download_all, skip_details=skip_next_details, process_metadata_anyway=process_metadata_anyway))
 
         return download_result
 
-    def _download_song(self, song: Song, naming_dict: NamingDict):
+    def _download_song(self, song: Song, naming_dict: NamingDict, process_metadata_anyway: bool = False):
+        if "genre" not in naming_dict and song.genre is not None:
+            naming_dict["genre"] = song.genre
+
+        if song.genre is None:
+            song.genre = naming_dict["genre"]
+
         path_parts = Formatter().parse(DOWNLOAD_PATH)
         file_parts = Formatter().parse(DOWNLOAD_FILE)
         new_target = Target(
@@ -401,18 +407,21 @@ class Page:
         target: Target
         for target in song.target_collection:
             if target.exists:
+                if process_metadata_anyway:
+                    target.copy_content(temp_target)
                 found_on_disc = True
                 
                 r.found_on_disk += 1
                 r.add_target(target)
         
-        if found_on_disc:
+        if found_on_disc and not process_metadata_anyway:
             self.LOGGER.info(f"{song.option_string} already exists, thus not downloading again.")
             return r
 
         source = sources[0]
-            
-        r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
+
+        if not found_on_disc:
+            r = self.download_song_to_target(source=source, target=temp_target, desc=song.title)
                     
 
         if not r.is_fatal_error:
