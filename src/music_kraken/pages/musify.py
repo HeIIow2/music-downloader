@@ -1120,4 +1120,4 @@ class Musify(Page):
 
             self.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        return self.connection.stream_into(endpoint, target, stream=True, raw_url=True)
+        return self.connection.stream_into(endpoint, target, raw_url=True)
