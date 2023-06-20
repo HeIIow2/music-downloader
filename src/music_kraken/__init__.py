@@ -1,13 +1,11 @@
 import logging
-import re
-from pathlib import Path
-from typing import List
 
 import gc
 import musicbrainzngs
 
+from .utils.config import read_config
 from .utils.shared import MODIFY_GC
-
+from . import cli
 
 if MODIFY_GC:
     """

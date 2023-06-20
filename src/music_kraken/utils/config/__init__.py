@@ -21,3 +21,5 @@ def write_config():
     config.write_to_config_file(LOCATIONS.CONFIG_FILE)
 
 set_name_to_value = config.set_name_to_value
+
+read_config()

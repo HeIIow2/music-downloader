@@ -15,6 +15,10 @@ if __name__ == "__main__":
     fetch_musify_song = [
         "s: https://musify.club/track/blokkmonsta-schwartz-crystal-f-purer-hass-8369115"
     ]
+
+    fetch_youtube_playlist = [
+        "s: https://yt.artemislena.eu/playlist?list=OLAK5uy_kcUBiDv5ATbl-R20OjNaZ5G28XFanQOmM"
+    ]
     
     youtube_search = [
         "s: #a Zombiez",
@@ -22,4 +26,4 @@ if __name__ == "__main__":
         "d: 5"
     ]
 
-    music_kraken.cli(genre="test", command_list=fetch_musify_song)
+    music_kraken.cli.download(genre="test", command_list=fetch_youtube_playlist)

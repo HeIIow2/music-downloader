@@ -54,7 +54,7 @@ class Source(DatabaseObject):
         if "musify" in parsed.netloc:
             return cls(SourcePages.MUSIFY, url, referer_page=referer_page)
 
-        if parsed.netloc in [url.netloc for url in ALL_YOUTUBE_URLS]:
+        if parsed.netloc in [_url.netloc for _url in ALL_YOUTUBE_URLS]:
             return cls(SourcePages.YOUTUBE, url, referer_page=referer_page)
 
         if url.startswith("https://www.deezer"):

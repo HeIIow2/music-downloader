@@ -8,7 +8,8 @@ from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, 
 from ..utils.regex import URL_PATTERN
 from ..utils.string_processing import fit_to_file_system
 from ..utils.support_classes import Query, DownloadResult
-from ..download.results import Results, SearchResults, Option, PageResults
+from ..utils.exception.download import UrlNotFoundException
+from ..download.results import Results, Option, PageResults
 from ..download.page_attributes import Pages
 from ..pages import Page
 from ..objects import Song, Album, Artist, DatabaseObject
@@ -224,7 +225,14 @@ class Downloader:
     
     def search(self, query: str):
         if re.match(URL_PATTERN, query) is not None:
-            page, data_object = self.pages.fetch_url(query)
+            try:
+                page, data_object = self.pages.fetch_url(query)
+            except UrlNotFoundException as e:
+                print(f"{e.url} could not be attributed/parsed to any yet implemented site.\n"
+                      f"PR appreciated if the site isn't implemented.\n"
+                      f"Recommendations and suggestions on sites to implement appreciated.\n"
+                      f"But don't be a bitch if I don't end up implementing it.")
+                return
             self.set_current_options(PageResults(page, data_object.options))
             self.print_current_options()
             return
