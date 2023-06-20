@@ -395,6 +395,49 @@ class Musify(Page):
         artist_list: List[Artist] = []
         album_list: List[Album] = []
         
+        def _parse_artist_anchor(artist_soup: BeautifulSoup):
+            nonlocal artist_list
+            if artist_anchor is None:
+                return
+            
+            artist_src_list = []
+            artist_name = None
+            
+            href = artist_soup["href"]
+            if href is not None:
+                artist_src_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+            name_elem: BeautifulSoup = artist_soup.find("span", {"itemprop": "name"})
+            if name_elem is not None:
+                artist_name = name_elem.text.strip()
+                
+            artist_list.append(Artist(name=artist_name, source_list=artist_src_list))    
+    
+        def _parse_album_anchor(album_soup: BeautifulSoup):
+            nonlocal album_list
+            if album_anchor is None:
+                return
+            album_source_list = []
+            album_name = None
+            
+            href = album_soup["href"]
+            if href is not None:
+                album_source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+            name_elem: BeautifulSoup = album_soup.find("span", {"itemprop": "name"})
+            if name_elem is not None:
+                album_name = name_elem.text.strip()
+                
+            album_list.append(Album(title=album_name, source_list=album_source_list))
+
+        # download url
+        anchor: BeautifulSoup
+        for anchor in soup.find_all("a", {"itemprop": "audio"}):
+            href = anchor["href"]
+            if href is not None:
+                source.audio_url = self.HOST + href
+    
+    
         # breadcrums
         breadcrumb_list_element_list: List[BeautifulSoup] = soup.find_all("ol", {"class": "breadcrumb"})
         for breadcrumb_list_element in breadcrumb_list_element_list:
@@ -404,36 +447,11 @@ class Musify(Page):
                 break
             
             artist_anchor: BeautifulSoup = list_points[2].find("a")
-            if artist_anchor is not None:
-                artist_src_list = []
-                artist_name = None
-                
-                href = artist_anchor["href"]
-                if href is not None:
-                    artist_src_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
-
-                name_elem: BeautifulSoup = artist_anchor.find("span", {"itemprop": "name"})
-                if name_elem is not None:
-                    artist_name = name_elem.text.strip()
-                    
-                artist_list.append(Artist(name=artist_name, source_list=artist_src_list))
-        
+            _parse_artist_anchor(artist_anchor)
+            
             album_anchor: BeautifulSoup = list_points[3].find("a")
-            if album_anchor is not None:
-                album_source_list = []
-                album_name = None
-                
-                href = artist_anchor["href"]
-                if href is not None:
-                    album_source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
-
-                name_elem: BeautifulSoup = album_anchor.find("span", {"itemprop": "name"})
-                if name_elem is not None:
-                    album_name = name_elem.text.strip()
-                    
-                album_list.append(Album(title=album_name, source_list=album_source_list))
-
-        
+            _parse_album_anchor(album_anchor)
+            
             track_name = list_points[4].text.strip()
         
         
