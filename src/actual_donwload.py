@@ -12,10 +12,14 @@ if __name__ == "__main__":
         "d: https://musify.club/release/crystal-f-x-2012-795181"
     ]
     
+    fetch_musify_song = [
+        "s: https://musify.club/track/linkin-park-numb-210765"
+    ]
+    
     youtube_search = [
         "s: #a Zombiez",
         "10",
         "d: 5"
     ]
 
-    music_kraken.cli(genre="test", command_list=youtube_search)
+    music_kraken.cli(genre="test", command_list=fetch_musify_song)

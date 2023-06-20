@@ -17,7 +17,7 @@ class Lyrics(DatabaseObject):
     def __init__(
             self,
             text: FormattedText,
-            language: pycountry.Languages,
+            language: pycountry.Languages = pycountry.languages.get(alpha_2="en"),
             _id: str = None,
             dynamic: bool = False,
             source_list: List[Source] = None,

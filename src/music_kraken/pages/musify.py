@@ -20,7 +20,8 @@ from ..objects import (
     FormattedText,
     Label,
     Target,
-    DatabaseObject
+    DatabaseObject,
+    Lyrics
 )
 from ..utils.shared import MUSIFY_LOGGER
 from ..utils import string_processing, shared
@@ -381,7 +382,85 @@ class Musify(Page):
         return search_results
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
-        return Song()
+        # https://musify.club/track/linkin-park-numb-210765
+        r = self.connection.get(source.url)
+        if r is None:
+            return Song
+        
+        soup = self.get_soup_from_response(r)
+        
+        track_name: str = None
+        source_list: List[Source] = [source]
+        lyrics_list: List[Lyrics] = []
+        artist_list: List[Artist] = []
+        album_list: List[Album] = []
+        
+        # breadcrums
+        breadcrumb_list_element_list: List[BeautifulSoup] = soup.find_all("ol", {"class": "breadcrumb"})
+        for breadcrumb_list_element in breadcrumb_list_element_list:
+            list_points: List[BeautifulSoup] = breadcrumb_list_element.find_all("li", "breadcrumb-item")
+            if len(list_points) != 5:
+                self.LOGGER.warning(f"breadcrumbs of song doesn't have 5 items: {breadcrumb_list_element.prettify()}")
+                break
+            
+            artist_anchor: BeautifulSoup = list_points[2].find("a")
+            if artist_anchor is not None:
+                artist_src_list = []
+                artist_name = None
+                
+                href = artist_anchor["href"]
+                if href is not None:
+                    artist_src_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+                name_elem: BeautifulSoup = artist_anchor.find("span", {"itemprop": "name"})
+                if name_elem is not None:
+                    artist_name = name_elem.text.strip()
+                    
+                artist_list.append(Artist(name=artist_name, source_list=artist_src_list))
+        
+            album_anchor: BeautifulSoup = list_points[3].find("a")
+            if album_anchor is not None:
+                album_source_list = []
+                album_name = None
+                
+                href = artist_anchor["href"]
+                if href is not None:
+                    album_source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+                name_elem: BeautifulSoup = album_anchor.find("span", {"itemprop": "name"})
+                if name_elem is not None:
+                    album_name = name_elem.text.strip()
+                    
+                album_list.append(Album(title=album_name, source_list=album_source_list))
+
+        
+            track_name = list_points[4].text.strip()
+        
+        
+        # lyrics
+        lyrics_container: List[BeautifulSoup] = soup.find_all("div", {"id": "tabLyrics"})
+        for lyrics in lyrics_container:
+            lyrics_text = lyrics.find("div", {"style": "white-space: pre-line"}).text.strip()
+            lyrics_list.append(Lyrics(text=FormattedText(html=lyrics_text)))
+        
+        # youtube video
+        video_container_list: List[BeautifulSoup] = soup.find_all("div", {"id": "tabVideo"})
+        for video_container in video_container_list:
+            iframe_list: List[BeautifulSoup] = video_container.findAll("iframe")
+            for iframe in iframe_list:
+                source_list.append(Source(
+                    SourcePages.YOUTUBE,
+                    iframe["src"],
+                    referer_page=self.SOURCE_TYPE
+                ))
+        
+        return Song(
+            title=track_name,
+            source_list=source_list,
+            lyrics_list=lyrics_list,
+            main_artist_list=artist_list,
+            album_list=album_list,
+        )
 
     def _parse_song_card(self, song_card: BeautifulSoup) -> Song:
         """
@@ -1007,10 +1086,4 @@ class Musify(Page):
 
             self.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        r = self.connection.get(endpoint, stream=True, raw_url=True)
-        if r is None:
-            return DownloadResult(error_message=f"couldn't connect to {endpoint}")
-
-        if target.stream_into(r, desc=desc):
-            return DownloadResult(total=1)
-        return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
+        return self.connection.stream_into(endpoint, target, stream=True, raw_url=True)
