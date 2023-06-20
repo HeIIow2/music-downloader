@@ -397,7 +397,7 @@ class Musify(Page):
         
         def _parse_artist_anchor(artist_soup: BeautifulSoup):
             nonlocal artist_list
-            if artist_anchor is None:
+            if artist_soup is None:
                 return
             
             artist_src_list = []
@@ -437,6 +437,22 @@ class Musify(Page):
             if href is not None:
                 source.audio_url = self.HOST + href
     
+        # song detail
+        album_info: BeautifulSoup
+        for album_info in soup.find_all("ul", {"class": "album-info"}):
+            list_element: BeautifulSoup = album_info.find("li")
+            
+            if list_element is not None:
+                artist_soup: BeautifulSoup
+                for artist_soup in list_element.find_all("a"):
+                    artist_source_list = []
+                    href = artist_soup["href"]
+                    if href is not None:
+                        artist_source_list = [Source(self.SOURCE_TYPE, self.HOST + href)]
+                    artist_list.append(Artist(
+                        name=artist_soup.text.strip(),
+                        source_list=artist_source_list
+                    ))
     
         # breadcrums
         breadcrumb_list_element_list: List[BeautifulSoup] = soup.find_all("ol", {"class": "breadcrumb"})

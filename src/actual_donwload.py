@@ -13,7 +13,7 @@ if __name__ == "__main__":
     ]
     
     fetch_musify_song = [
-        "s: https://musify.club/track/linkin-park-numb-210765"
+        "s: https://musify.club/track/blokkmonsta-schwartz-crystal-f-purer-hass-8369115"
     ]
     
     youtube_search = [
