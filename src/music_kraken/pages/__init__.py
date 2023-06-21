@@ -1,10 +1,5 @@
 from .encyclopaedia_metallum import EncyclopaediaMetallum
 from .musify import Musify
+from .youtube import YouTube
 
-EncyclopaediaMetallum = EncyclopaediaMetallum
-Musify = Musify
-
-from . import download_center
-
-Search = download_center.Search
-
+from .abstract import Page, INDEPENDENT_DB_OBJECTS

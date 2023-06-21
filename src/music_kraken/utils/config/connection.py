@@ -1,4 +1,9 @@
-from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute
+from urllib.parse import urlparse, ParseResult
+import re
+
+from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute, StringAttribute
+from ..regex import URL_PATTERN
+from ..exception.config import SettingValueError
 
 
 class ProxAttribute(ListAttribute):
@@ -8,6 +13,38 @@ class ProxAttribute(ListAttribute):
             'https': value,
             'ftp': value
         }
+
+
+class UrlStringAttribute(StringAttribute):
+    def validate(self, value: str):
+        v = value.strip()
+        url = re.match(URL_PATTERN, v)
+        if url is None:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=v,
+                rule="has to be a valid url"
+            )
+
+    @property
+    def object_from_value(self) -> ParseResult:
+        return urlparse(self.value)
+
+
+class UrlListAttribute(ListAttribute):
+    def validate(self, value: str):
+        v = value.strip()
+        url = re.match(URL_PATTERN, v)
+        if url is None:
+            raise SettingValueError(
+                setting_name=self.name,
+                setting_value=v,
+                rule="has to be a valid url"
+            )
+            
+    def single_object_from_element(self, value: str):
+        return urlparse(value)
+
 
 
 class ConnectionSection(Section):
@@ -43,11 +80,54 @@ class ConnectionSection(Section):
             value="0.3"
         )
 
+        # INVIDIOUS INSTANCES LIST
+        self.INVIDIOUS_INSTANCE = UrlStringAttribute(
+            name="invidious_instance",
+            description="This is an attribute, where you can define the invidious instances,\n"
+                        "the youtube downloader should use.\n"
+                        "Here is a list of active ones: https://docs.invidious.io/instances/\n"
+                        "Instances that use cloudflare or have source code changes could cause issues.\n"
+                        "Hidden instances (.onion) will only work, when setting 'tor=true'.",
+            value="https://yt.artemislena.eu/"
+        )
+        
+        self.PIPED_INSTANCE = UrlStringAttribute(
+            name="piped_instance",
+            description="This is an attribute, where you can define the pioed instances,\n"
+                        "the youtube downloader should use.\n"
+                        "Here is a list of active ones: https://github.com/TeamPiped/Piped/wiki/Instances\n"
+                        "Instances that use cloudflare or have source code changes could cause issues.\n"
+                        "Hidden instances (.onion) will only work, when setting 'tor=true'.",
+            value="https://pipedapi.kavin.rocks"
+        )
+        
+        self.ALL_YOUTUBE_URLS = UrlListAttribute(
+            name="youtube_url",
+            description="This is used to detect, if an url is from youtube, or any alternativ frontend.\n"
+                        "If any instance seems to be missing, run music kraken with the -f flag.",
+            value=[
+                "https://www.youtube.com/",
+                "https://www.youtu.be/",
+                "https://redirect.invidious.io/",
+                "https://piped.kavin.rocks/"
+            ]
+        )
+        
+        self.SPONSOR_BLOCK = BoolAttribute(
+            name="use_sponsor_block",
+            value="true",
+            description="Use sponsor block to remove adds or simmilar from the youtube videos."
+        )
+
         self.attribute_list = [
             self.USE_TOR,
             self.TOR_PORT,
             self.CHUNK_SIZE,
-            self.SHOW_DOWNLOAD_ERRORS_THRESHOLD
+            self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
+            self.INVIDIOUS_INSTANCE,
+            self.PIPED_INSTANCE,
+            self.ALL_YOUTUBE_URLS,
+            self.SPONSOR_BLOCK
         ]
 
         super().__init__()

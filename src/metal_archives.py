@@ -3,7 +3,7 @@ from music_kraken.pages import EncyclopaediaMetallum
 
 
 def search():
-    results = EncyclopaediaMetallum.search_by_query("#a Ghost Bath")
+    results = EncyclopaediaMetallum._raw_search("#a Ghost Bath")
     print(results)
     print(results[0].source_collection)
 

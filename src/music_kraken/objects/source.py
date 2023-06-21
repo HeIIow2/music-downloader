@@ -1,9 +1,10 @@
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Set, Tuple, Optional
 from urllib.parse import urlparse
 
 from ..utils.enums.source import SourcePages, SourceTypes
+from ..utils.shared import ALL_YOUTUBE_URLS
 from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
 from .collection import Collection
@@ -53,7 +54,7 @@ class Source(DatabaseObject):
         if "musify" in parsed.netloc:
             return cls(SourcePages.MUSIFY, url, referer_page=referer_page)
 
-        if url.startswith("https://www.youtube"):
+        if parsed.netloc in [_url.netloc for _url in ALL_YOUTUBE_URLS]:
             return cls(SourcePages.YOUTUBE, url, referer_page=referer_page)
 
         if url.startswith("https://www.deezer"):
@@ -128,6 +129,10 @@ class SourceCollection(Collection):
         super().map_element(source)
 
         self._page_to_source_list[source.page_enum].append(source)
+        
+    @property
+    def source_pages(self) -> Set[SourcePages]:
+        return set(source.page_enum for source in self._data)
 
     def get_sources_from_page(self, source_page: SourcePages) -> List[Source]:
         """

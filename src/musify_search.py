@@ -3,7 +3,7 @@ from music_kraken.pages import Musify
 
 
 def search():
-    results = Musify.search_by_query("#a Ghost Bath")
+    results = Musify._raw_search("#a Ghost Bath")
     print(results)
 
 

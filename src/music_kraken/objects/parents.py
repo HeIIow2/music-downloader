@@ -11,6 +11,11 @@ class DatabaseObject:
     COLLECTION_ATTRIBUTES: tuple = tuple()
     SIMPLE_ATTRIBUTES: dict = dict()
 
+    # contains all collection attributes, which describe something "smaller"
+    # e.g. album has songs, but not artist.
+    DOWNWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
+    UPWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
+
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs) -> None:
         self.automatic_id: bool = False
 
@@ -30,6 +35,11 @@ class DatabaseObject:
         self.dynamic = dynamic
         
         self.build_version = -1
+
+    def __hash__(self):
+        if self.dynamic:
+            raise TypeError("Dynamic DatabaseObjects are unhashable.")
+        return self.id
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
@@ -65,6 +75,9 @@ class DatabaseObject:
         return list()
 
     def merge(self, other, override: bool = False):
+        if other is None:
+            return
+        
         if self is other:
             return
         
@@ -82,13 +95,17 @@ class DatabaseObject:
             if override or getattr(self, simple_attribute) == default_value:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
+    def strip_details(self):
+        for collection in type(self).DOWNWARDS_COLLECTION_ATTRIBUTES:
+            getattr(self, collection).clear()
+
     @property
     def metadata(self) -> Metadata:
         return Metadata()
 
     @property
-    def options(self) -> Options:
-        return Options([self])
+    def options(self) -> List["DatabaseObject"]:
+        return [self]
 
     @property
     def option_string(self) -> str:

@@ -16,7 +16,11 @@ class Mapping(Enum):
     TITLE = "TIT2"
     ISRC = "TSRC"
     LENGTH = "TLEN"  # in milliseconds
-    DATE = "TYER"
+    # The 'Date' frame is a numeric string in the DDMM format containing the date for the recording. This field is always four characters long.
+    DATE = "TDAT"
+    # The 'Time' frame is a numeric string in the HHMM format containing the time for the recording. This field is always four characters long.
+    TIME = "TIME"
+    YEAR = "TYER"
     TRACKNUMBER = "TRCK"
     TOTALTRACKS = "TRCK"  # Stored in the same frame with TRACKNUMBER, separated by '/': e.g. '4/9'.
     TITLESORTORDER = "TSOT"
@@ -206,6 +210,19 @@ class ID3Timestamp:
         return time_format, self.date_obj.strftime(time_format)
 
     @classmethod
+    def fromtimestamp(cls, utc_timestamp: int):
+        date_obj = datetime.datetime.fromtimestamp(utc_timestamp)
+
+        return cls(
+            year=date_obj.year,
+            month=date_obj.month,
+            day=date_obj.day,
+            hour=date_obj.hour,
+            minute=date_obj.minute,
+            second=date_obj.second
+        )
+
+    @classmethod
     def strptime(cls, time_stamp: str, format: str):
         """
         day: "%d" 
@@ -285,7 +302,7 @@ class Metadata:
         if id3_dict is not None:
             self.add_metadata_dict(id3_dict)
 
-    def __setitem__(self, frame, value_list: list, override_existing: bool = True):
+    def __setitem__(self, frame: Mapping, value_list: list, override_existing: bool = True):
         if type(value_list) != list:
             raise ValueError(f"can only set attribute to list, not {type(value_list)}")
 

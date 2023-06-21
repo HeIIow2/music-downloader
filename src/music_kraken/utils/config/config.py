@@ -58,7 +58,7 @@ class Config:
                 self._name_section_map[name] = element
                 self._length += 1
 
-    def set_name_to_value(self, name: str, value: str):
+    def set_name_to_value(self, name: str, value: str, silent: bool = True):
         """
         :raises SettingValueError, SettingNotFound:
         :param name:
@@ -66,6 +66,9 @@ class Config:
         :return:
         """
         if name not in self._name_section_map:
+            if silent:
+                LOGGER.warning(f"The setting \"{name}\" is either deprecated, or doesn't exist.")
+                return
             raise SettingNotFound(setting_name=name)
 
         LOGGER.debug(f"setting: {name} value: {value}")
@@ -122,17 +125,3 @@ class Config:
         for section in self._section_list:
             for name, attribute in section.name_attribute_map.items():
                 yield attribute
-
-
-config = Config()
-
-
-def read():
-    if not LOCATIONS.CONFIG_FILE.is_file():
-        LOGGER.debug("Creating default config file.")
-        write()
-    config.read_from_config_file(LOCATIONS.CONFIG_FILE)
-
-
-def write():
-    config.write_to_config_file(LOCATIONS.CONFIG_FILE)

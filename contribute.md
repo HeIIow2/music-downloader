@@ -1,3 +1,5 @@
+> IMPORTANT NOTE: heavily outdated sorryyyyy
+
 # How to contribute
 
 I am always happy about pull requests.  

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Iterable
 
 if TYPE_CHECKING:
     from .parents import DatabaseObject
@@ -14,6 +14,13 @@ class Options:
     def __iter__(self):
         for database_object in self._data:
             yield database_object
+            
+    def append(self, element: 'DatabaseObject'):
+        self._data.append(element)
+        
+    def extend(self, iterable: Iterable['DatabaseObject']):
+        for element in iterable:
+            self.append(element)
 
     def get_next_options(self, index: int) -> 'Options':
         if index >= len(self._data):

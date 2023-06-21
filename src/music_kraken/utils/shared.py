@@ -1,7 +1,8 @@
 import logging
 import random
 from pathlib import Path
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Dict
+from urllib.parse import ParseResult
 
 from .path_manager import LOCATIONS
 from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
@@ -66,17 +67,9 @@ AUDIO_FORMAT = AUDIO_SECTION.AUDIO_FORMAT.object_from_value
 
 DOWNLOAD_PATH = AUDIO_SECTION.DOWNLOAD_PATH.object_from_value
 DOWNLOAD_FILE = AUDIO_SECTION.DOWNLOAD_FILE.object_from_value
-DEFAULT_VALUES = {
-    "genre": AUDIO_SECTION.DEFAULT_GENRE.object_from_value,
-    "label": AUDIO_SECTION.DEFAULT_LABEL.object_from_value,
-    "artist": AUDIO_SECTION.DEFAULT_ARTIST.object_from_value,
-    "album": AUDIO_SECTION.DEFAULT_ALBUM.object_from_value,
-    "song": AUDIO_SECTION.DEFAULT_SONG.object_from_value,
-    "album_type": AUDIO_SECTION.DEFAULT_ALBUM_TYPE.object_from_value,
-    "audio_format": AUDIO_FORMAT
-}
 
 TOR: bool = CONNECTION_SECTION.USE_TOR.object_from_value
+PROXIES_LIST: List[Dict[str, str]] = CONNECTION_SECTION.PROXIES.object_from_value
 proxies = {}
 if len(CONNECTION_SECTION.PROXIES) > 0:
     """
@@ -89,6 +82,11 @@ if TOR:
         'http': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}',
         'https': f'socks5h://127.0.0.1:{CONNECTION_SECTION.TOR_PORT.object_from_value}'
     }
+INVIDIOUS_INSTANCE: ParseResult = CONNECTION_SECTION.INVIDIOUS_INSTANCE.object_from_value
+PIPED_INSTANCE: ParseResult = CONNECTION_SECTION.PIPED_INSTANCE.object_from_value
+
+ALL_YOUTUBE_URLS: List[ParseResult] = CONNECTION_SECTION.ALL_YOUTUBE_URLS.object_from_value
+ENABLE_SPONSOR_BLOCK: bool = CONNECTION_SECTION.SPONSOR_BLOCK.object_from_value
 
 # size of the chunks that are streamed
 CHUNK_SIZE = CONNECTION_SECTION.CHUNK_SIZE.object_from_value
@@ -102,3 +100,23 @@ SORT_BY_DATE = AUDIO_SECTION.SORT_BY_DATE.object_from_value
 SORT_BY_ALBUM_TYPE = AUDIO_SECTION.SORT_BY_ALBUM_TYPE.object_from_value
 
 ALBUM_TYPE_BLACKLIST: Set[AlbumType] = set(AUDIO_SECTION.ALBUM_TYPE_BLACKLIST.object_from_value)
+
+THREADED = False
+
+ENABLE_RESULT_HISTORY: bool = MISC_SECTION.ENABLE_RESULT_HISTORY.object_from_value
+HISTORY_LENGTH: int = MISC_SECTION.HISTORY_LENGTH.object_from_value
+
+HELP_MESSAGE = """
+to search:
+> s: {query or url}
+> s: https://musify.club/release/some-random-release-183028492
+> s: #a {artist} #r {release} #t {track}
+
+to download:
+> d: {option ids or direct url}
+> d: 0, 3, 4
+> d: 1
+> d: https://musify.club/release/some-random-release-183028492
+
+have fun :3
+""".strip()

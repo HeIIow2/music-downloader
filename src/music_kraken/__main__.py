@@ -1,4 +1,4 @@
-if __name__ == "__main__":
+def cli():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -17,9 +17,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-m', '--force-post-process',
+        action="store_true",
+        help="If a to downloaded thing is skipped due to being found on disc,\nit will still update the metadata accordingly."
+    )
+
+    parser.add_argument(
         '-t', '--test',
         action="store_true",
-        help="For the sake of testing. Equals: '-v -g test'"
+        help="For the sake of testing. Equals: '-vp -g test'"
     )
 
     # general arguments
@@ -65,6 +71,13 @@ if __name__ == "__main__":
         help="Resets the config file to the default one.",
         action="store_true"
     )
+    
+    parser.add_argument(
+        "--frontend",
+        "-f",
+        help="Set a good and fast invidious/piped instance from your homecountry, to reduce the latency.",
+        action="store_true"
+    )
 
     arguments = parser.parse_args()
 
@@ -73,39 +86,44 @@ if __name__ == "__main__":
         print("Setting logging-level to DEBUG")
         logging.getLogger().setLevel(logging.DEBUG)
 
-    import music_kraken
-
-    music_kraken.read()
-
-    if arguments.setting is not None:
-        music_kraken.settings(*arguments.setting)
-        exit()
-
-    if arguments.settings:
-        music_kraken.settings()
-        exit()
-
-    if arguments.paths:
-        music_kraken.paths()
-        exit()
-
+    from . import cli
+    from .utils.config import read_config
+    from .utils import shared
+    
     if arguments.r:
         import os
-        if os.path.exists(music_kraken.shared.CONFIG_FILE):
-            os.remove(music_kraken.shared.CONFIG_FILE)
-        music_kraken.read()
+        if os.path.exists(shared.CONFIG_FILE):
+            os.remove(shared.CONFIG_FILE)
+        read_config()
+        
+        exit()
+
+    read_config()
+
+    if arguments.setting is not None:
+        cli.settings(*arguments.setting)
+
+    if arguments.settings:
+        cli.settings()
+
+    if arguments.paths:
+        cli.print_paths()
+        
+    if arguments.frontend:
+        cli.set_frontend(silent=False)
 
     # getting the genre
     genre: str = arguments.genre
     if arguments.test:
         genre = "test"
 
-    try:
-        music_kraken.cli(
-            genre=genre,
-            download_all=arguments.all,
-            direct_download_url=arguments.url
-        )
-    except KeyboardInterrupt:
-        print("\n\nRaise an issue if I fucked up:\nhttps://github.com/HeIIow2/music-downloader/issues")
-        music_kraken.exit_message()
+    cli.download(
+        genre=genre,
+        download_all=arguments.all,
+        direct_download_url=arguments.url,
+        process_metadata_anyway=arguments.force_post_process or arguments.test
+    )
+
+
+if __name__ == "__main__":
+    cli()

@@ -1,13 +1,9 @@
-from collections import defaultdict
-from dataclasses import dataclass
-from enum import Enum
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Type
 from urllib.parse import urlparse
+import logging
 
-import pycountry
-import requests
-from bs4 import BeautifulSoup
 
+from ..objects import Source, DatabaseObject
 from .abstract import Page
 from ..objects import (
     Artist,
@@ -15,61 +11,54 @@ from ..objects import (
     SourcePages,
     Song,
     Album,
-    ID3Timestamp,
-    FormattedText,
     Label,
-    Options,
-    AlbumType,
-    AlbumStatus,
     Target
 )
-from ..utils import string_processing, shared
-from .support_classes.download_result import DownloadResult
+from ..connection import Connection
+from ..utils.support_classes import DownloadResult
 
+class Preset(Page):
+    # CHANGE
+    SOURCE_TYPE = SourcePages.PRESET
+    LOGGER = logging.getLogger("preset")
 
-class YouTube(Page):
-    API_SESSION: requests.Session = requests.Session()
-    API_SESSION.headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
-        "Connection": "keep-alive",
-        "Referer": "https://www.youtube.com/"
-    }
-    API_SESSION.proxies = shared.proxies
-    TIMEOUT = 7
-    POST_TIMEOUT = 15
-    TRIES = 5
-    HOST = "https://www.youtube.com"
+    def __init__(self, *args, **kwargs):
+        self.connection: Connection = Connection(
+            host="https://www.preset.cum/",
+            logger=self.LOGGER
+        )
+        
+        super().__init__(*args, **kwargs)
 
-    SOURCE_TYPE = SourcePages.YOUTUBE
+    def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
+        return super().get_source_type(source)
+    
+    def general_search(self, search_query: str) -> List[DatabaseObject]:
+        return []
+    
+    def label_search(self, label: Label) -> List[Label]:
+        return []
+    
+    def artist_search(self, artist: Artist) -> List[Artist]:
+        return []
+    
+    def album_search(self, album: Album) -> List[Album]:
+        return []
+    
+    def song_search(self, song: Song) -> List[Song]:
+        return []
+    
+    def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
+        return Song()
 
-    LOGGER = shared.YOUTUBE_LOGGER
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        return Album()
 
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        return Artist()
 
-    @classmethod
-    def search_by_query(cls, query: str) -> Options:
-        return Options()
+    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
+        return Label()
 
-    @classmethod
-    def plaintext_search(cls, query: str) -> Options:
-        search_results = []
-
-        return Options(search_results)
-
-    @classmethod
-    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
-        artist: Artist = Artist(source_list=[source])
-
-        return artist
-
-    @classmethod
-    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
-        album: Album = Album(source_list=[source])
-        return album
-
-    @classmethod
-    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
-        return None
-
-    @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
+    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         return DownloadResult()

@@ -1,32 +1,20 @@
-from ..utils.enums import album
-from . import (
-    song,
-    metadata,
-    source,
-    parents,
-    formatted_text,
-    option,
-    collection
+from .option import Options
+from .parents import DatabaseObject
+
+from .metadata import Metadata, Mapping as ID3Mapping, ID3Timestamp
+
+from .source import Source, SourcePages, SourceTypes
+
+from .song import (
+    Song,
+    Album,
+    Artist,
+    Target,
+    Lyrics,
+    Label
 )
 
-DatabaseObject = parents.DatabaseObject
+from .formatted_text import FormattedText
+from .collection import Collection
 
-Metadata = metadata.Metadata
-ID3Mapping = metadata.Mapping
-ID3Timestamp = metadata.ID3Timestamp
-
-Source = source.Source
-
-Song = song.Song
-Artist = song.Artist
-Source = source.Source
-Target = song.Target
-Lyrics = song.Lyrics
-Label = song.Label
-
-Album = song.Album
-
-FormattedText = formatted_text.FormattedText
-
-Options = option.Options
-Collection = collection.Collection
+from .country import Country

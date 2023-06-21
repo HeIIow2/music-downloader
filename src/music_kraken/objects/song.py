@@ -14,7 +14,7 @@ from .metadata import (
     Metadata
 )
 from .option import Options
-from .parents import MainObject
+from .parents import MainObject, DatabaseObject
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
@@ -46,6 +46,8 @@ class Song(MainObject):
         "genre": None,
         "notes": FormattedText()
     }
+    
+    UPWARDS_COLLECTION_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
 
     def __init__(
             self,
@@ -160,7 +162,7 @@ class Song(MainObject):
                f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         """
         Return a list of related objects including the song object, album object, main artist objects, and
         feature artist objects.
@@ -171,7 +173,7 @@ class Song(MainObject):
         options.extend(self.feature_artist_collection)
         options.extend(self.album_collection)
         options.append(self)
-        return Options(options)
+        return options
 
     @property
     def tracksort_str(self) -> str:
@@ -203,6 +205,9 @@ class Album(MainObject):
         "albumsort": None,
         "notes": FormattedText()
     }
+
+    DOWNWARDS_COLLECTION_ATTRIBUTES = ("song_collection", )
+    UPWARDS_COLLECTION_ATTRIBUTES = ("artist_collection", "label_collection")
 
     def __init__(
             self,
@@ -290,7 +295,11 @@ class Album(MainObject):
             id3Mapping.COPYRIGHT: [self.copyright],
             id3Mapping.LANGUAGE: [self.iso_639_2_lang],
             id3Mapping.ALBUM_ARTIST: [a.name for a in self.artist_collection],
-            id3Mapping.DATE: [self.date.timestamp],
+            id3Mapping.DATE: [self.date.strftime("%d%m")] if self.date.has_year and self.date.has_month else [],
+            id3Mapping.TIME: [self.date.strftime(("%H%M"))] if self.date.has_hour and self.date.has_minute else [],
+            id3Mapping.YEAR: [str(self.date.year).zfill(4)] if self.date.has_year else [],
+            id3Mapping.RELEASE_DATE: [self.date.timestamp],
+            id3Mapping.ORIGINAL_RELEASE_DATE: [self.date.timestamp],
             id3Mapping.ALBUMSORTORDER: [str(self.albumsort)] if self.albumsort is not None else []
         })
 
@@ -304,12 +313,12 @@ class Album(MainObject):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = self.artist_collection.shallow_list
         options.append(self)
         options.extend(self.song_collection)
 
-        return Options(options)
+        return options
 
     def update_tracksort(self):
         """
@@ -398,6 +407,10 @@ class Album(MainObject):
         :return:
         """
         return len(self.artist_collection) > 1
+    
+    @property
+    def album_type_string(self) -> str:
+        return self.album_type.value
 
 
 """
@@ -421,6 +434,9 @@ class Artist(MainObject):
         "lyrical_themes": [],
         "general_genre": ""
     }
+
+    DOWNWARDS_COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
+    UPWARDS_COLLECTION_ATTRIBUTES = ("label_collection", )
 
     def __init__(
             self,
@@ -592,11 +608,11 @@ class Artist(MainObject):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = [self]
         options.extend(self.main_album_collection)
         options.extend(self.feature_song_collection)
-        return Options(options)
+        return options
 
     @property
     def country_string(self):
@@ -646,6 +662,8 @@ class Label(MainObject):
         "notes": FormattedText()
     }
 
+    DOWNWARDS_COLLECTION_ATTRIBUTES = COLLECTION_ATTRIBUTES
+
     def __init__(
             self,
             _id: int = None,
@@ -694,7 +712,9 @@ class Label(MainObject):
         ]
 
     @property
-    def options(self) -> Options:
+    def options(self) -> List[DatabaseObject]:
         options = [self]
         options.extend(self.current_artist_collection.shallow_list)
         options.extend(self.album_collection.shallow_list)
+        
+        return options

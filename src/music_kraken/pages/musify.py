@@ -5,9 +5,9 @@ from typing import List, Optional, Type, Union
 from urllib.parse import urlparse
 
 import pycountry
-import requests
 from bs4 import BeautifulSoup
 
+from ..connection import Connection
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType, AlbumStatus
@@ -19,11 +19,13 @@ from ..objects import (
     ID3Timestamp,
     FormattedText,
     Label,
-    Options,
-    Target
+    Target,
+    DatabaseObject,
+    Lyrics
 )
+from ..utils.shared import MUSIFY_LOGGER
 from ..utils import string_processing, shared
-from .support_classes.download_result import DownloadResult
+from ..utils.support_classes import DownloadResult, Query
 
 """
 https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
@@ -61,65 +63,81 @@ class MusifyUrl:
     name_with_id: str
     musify_id: str
     url: str
+    
+
+ALBUM_TYPE_MAP = defaultdict(lambda: AlbumType.OTHER, {
+    1: AlbumType.OTHER,                 # literally other xD
+    2: AlbumType.STUDIO_ALBUM,
+    3: AlbumType.EP,
+    4: AlbumType.SINGLE,
+    5: AlbumType.OTHER,                 # BOOTLEG
+    6: AlbumType.LIVE_ALBUM,
+    7: AlbumType.COMPILATION_ALBUM,     # compilation of different artists
+    8: AlbumType.MIXTAPE,
+    9: AlbumType.DEMO,
+    10: AlbumType.MIXTAPE,              # DJ Mixes
+    11: AlbumType.COMPILATION_ALBUM,    # compilation of only this artist
+    12: AlbumType.STUDIO_ALBUM,         # split
+    13: AlbumType.COMPILATION_ALBUM,    # unofficial
+    14: AlbumType.MIXTAPE               # "Soundtracks"
+})
+
+    
+def parse_url(url: str) -> MusifyUrl:
+    parsed = urlparse(url)
+
+    path = parsed.path.split("/")
+
+    split_name = path[2].split("-")
+    url_id = split_name[-1]
+    name_for_url = "-".join(split_name[:-1])
+
+    try:
+        type_enum = MusifyTypes(path[1])
+    except ValueError as e:
+        MUSIFY_LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
+        raise e
+
+    return MusifyUrl(
+        source_type=type_enum,
+        name_without_id=name_for_url,
+        name_with_id=path[2],
+        musify_id=url_id,
+        url=url
+    )
 
 
 class Musify(Page):
-    API_SESSION: requests.Session = requests.Session()
-    API_SESSION.headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0",
-        "Connection": "keep-alive",
-        "Referer": "https://musify.club/"
-    }
-    API_SESSION.proxies = shared.proxies
-    TIMEOUT = 7
-    POST_TIMEOUT = 15
-    TRIES = 5
-    HOST = "https://musify.club"
-
+    # CHANGE
     SOURCE_TYPE = SourcePages.MUSIFY
+    LOGGER = MUSIFY_LOGGER
     
-    LOGGER = shared.MUSIFY_LOGGER
-
-    @classmethod
-    def parse_url(cls, url: str) -> MusifyUrl:
-        parsed = urlparse(url)
-
-        path = parsed.path.split("/")
-
-        split_name = path[2].split("-")
-        url_id = split_name[-1]
-        name_for_url = "-".join(split_name[:-1])
-
-        try:
-            type_enum = MusifyTypes(path[1])
-        except ValueError as e:
-            cls.LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
-            raise e
-
-        return MusifyUrl(
-            source_type=type_enum,
-            name_without_id=name_for_url,
-            name_with_id=path[2],
-            musify_id=url_id,
-            url=url
+    HOST = "https://musify.club"
+    
+    def __init__(self, *args, **kwargs):
+        self.connection: Connection = Connection(
+            host="https://musify.club/",
+            logger=self.LOGGER
         )
+        
+        super().__init__(*args, **kwargs)
 
-    @classmethod
-    def search_by_query(cls, query: str) -> Options:
-        query_obj = cls.Query(query)
-
-        if query_obj.is_raw:
-            return cls.plaintext_search(query_obj.query)
-        return cls.plaintext_search(cls.get_plaintext_query(query_obj))
-
-    @classmethod
-    def get_plaintext_query(cls, query: Page.Query) -> str:
-        if query.album is None:
-            return f"{query.artist or '*'} - {query.song or '*'}"
-        return f"{query.artist or '*'} - {query.album or '*'} - {query.song or '*'}"
-
-    @classmethod
-    def parse_artist_contact(cls, contact: BeautifulSoup) -> Artist:
+    def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
+        if source.url is None:
+            return None
+        
+        musify_url = parse_url(source.url)
+        
+        # Has no labels, because afaik musify has no Labels
+        musify_type_to_database_type = {
+            MusifyTypes.SONG: Song,
+            MusifyTypes.RELEASE: Album,
+            MusifyTypes.ARTIST: Artist
+        }
+        
+        return musify_type_to_database_type.get(musify_url.source_type)
+    
+    def _parse_artist_contact(self, contact: BeautifulSoup) -> Artist:
         source_list: List[Source] = []
         name = None
         _id = None
@@ -133,7 +151,7 @@ class Musify(Page):
             if "-" in href:
                 _id = href.split("-")[-1]
 
-            source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+            source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
 
         # artist image
         image_soup = contact.find("img")
@@ -145,13 +163,11 @@ class Musify(Page):
             artist_thumbnail = image_soup.get("src")
 
         return Artist(
-            _id=_id,
             name=name,
             source_list=source_list
         )
-
-    @classmethod
-    def parse_album_contact(cls, contact: BeautifulSoup) -> Album:
+        
+    def _parse_album_contact(self, contact: BeautifulSoup) -> Album:
         """
         <div class="contacts__item">
             <a href="/release/ghost-bath-ghost-bath-2013-602489" title="Ghost Bath - 2013">
@@ -206,7 +222,7 @@ class Musify(Page):
             if "-" in href:
                 _id = href.split("-")[-1]
 
-            source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+            source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
 
         # cover art
         image_soup = contact.find("img")
@@ -248,18 +264,16 @@ class Musify(Page):
                 track_count_soup: BeautifulSoup = small_list[1]
                 rating_soup: BeautifulSoup = small_list[2]
             else:
-                cls.LOGGER.warning("got an unequal ammount than 3 small elements")
+                self.LOGGER.warning("got an unequal ammount than 3 small elements")
 
         return Album(
-            _id=_id,
             title=title,
             source_list=source_list,
             date=ID3Timestamp(year=year),
             artist_list=artist_list
         )
-
-    @classmethod
-    def parse_contact_container(cls, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
+    
+    def _parse_contact_container(self, contact_container_soup: BeautifulSoup) -> List[Union[Artist, Album]]:
         contacts = []
 
         contact: BeautifulSoup
@@ -272,13 +286,12 @@ class Musify(Page):
 
                 if url is not None:
                     if "artist" in url:
-                        contacts.append(cls.parse_artist_contact(contact))
+                        contacts.append(self._parse_artist_contact(contact))
                     elif "release" in url:
-                        contacts.append(cls.parse_album_contact(contact))
+                        contacts.append(self._parse_album_contact(contact))
         return contacts
 
-    @classmethod
-    def parse_playlist_item(cls, playlist_item_soup: BeautifulSoup) -> Song:
+    def _parse_playlist_item(self, playlist_item_soup: BeautifulSoup) -> Song:
         _id = None
         song_title = playlist_item_soup.get("data-name")
         artist_list: List[Artist] = []
@@ -295,12 +308,11 @@ class Musify(Page):
                 for artist_anchor in anchor_list[:-1]:
                     _id = None
                     href = artist_anchor.get("href")
-                    artist_source: Source = Source(cls.SOURCE_TYPE, cls.HOST + href)
+                    artist_source: Source = Source(self.SOURCE_TYPE, self.HOST + href)
                     if "-" in href:
                         _id = href.split("-")[-1]
 
                     artist_list.append(Artist(
-                        _id=_id,
                         name=artist_anchor.get_text(strip=True),
                         source_list=[artist_source]
                     ))
@@ -318,11 +330,11 @@ class Musify(Page):
                         raw_id: str = href.split("-")[-1]
                         if raw_id.isdigit():
                             _id = raw_id
-                    source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+                    source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
 
             else:
-                cls.LOGGER.debug("there are not enough anchors (2) for artist and track")
-                cls.LOGGER.debug(str(artist_list))
+                self.LOGGER.debug("there are not enough anchors (2) for artist and track")
+                self.LOGGER.debug(str(artist_list))
 
         """
         artist_name = playlist_item_soup.get("data-artist")
@@ -336,396 +348,155 @@ class Musify(Page):
                 _id = raw_id
 
         return Song(
-            _id=_id,
             title=song_title,
             main_artist_list=artist_list,
             source_list=source_list
         )
 
-    @classmethod
-    def parse_playlist_soup(cls, playlist_soup: BeautifulSoup) -> List[Song]:
+    def _parse_playlist_soup(self, playlist_soup: BeautifulSoup) -> List[Song]:
         song_list = []
 
         for playlist_item_soup in playlist_soup.find_all("div", {"class": "playlist__item"}):
-            song_list.append(cls.parse_playlist_item(playlist_item_soup))
+            song_list.append(self._parse_playlist_item(playlist_item_soup))
 
         return song_list
-
-    @classmethod
-    def plaintext_search(cls, query: str) -> Options:
+        
+    def general_search(self, search_query: str) -> List[DatabaseObject]:
         search_results = []
 
-        r = cls.get_request(f"https://musify.club/search?searchText={query}")
+        r = self.connection.get(f"https://musify.club/search?searchText={search_query}")
         if r is None:
-            return Options()
-        search_soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
+            return []
+        search_soup: BeautifulSoup = self.get_soup_from_response(r)
 
         # album and songs
         # child of div class: contacts row
         for contact_container_soup in search_soup.find_all("div", {"class": "contacts"}):
-            search_results.extend(cls.parse_contact_container(contact_container_soup))
+            search_results.extend(self._parse_contact_container(contact_container_soup))
 
         # song
         # div class: playlist__item
         for playlist_soup in search_soup.find_all("div", {"class": "playlist"}):
-            search_results.extend(cls.parse_playlist_soup(playlist_soup))
+            search_results.extend(self._parse_playlist_soup(playlist_soup))
 
-        return Options(search_results)
-
-    @classmethod
-    def parse_album_card(cls, album_card: BeautifulSoup, artist_name: str = None) -> Album:
-        """
-        <div class="card release-thumbnail" data-type="2">
-            <a href="/release/ghost-bath-self-loather-2021-1554266">
-                <img alt="Self Loather" class="card-img-top lozad" data-src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/>
-                <noscript><img alt="Self Loather" src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/></noscript>
-            </a>
-            <div class="card-body">
-                <h4 class="card-subtitle">
-                <a href="/release/ghost-bath-self-loather-2021-1554266">Self Loather</a>
-                </h4>
-            </div>
-            <div class="card-footer"><p class="card-text"><a href="/albums/2021">2021</a></p></div>
-            <div class="card-footer">
-                <p class="card-text genre__labels">
-                <a href="/genre/depressive-black-132">Depressive Black</a><a href="/genre/post-black-metal-295">Post-Black Metal</a> </p>
-            </div>
-            <div class="card-footer">
-                <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 13.11.2021</small>
-                <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 5,88</small>
-            </div>
-        </div>
-        """
-
-        album_type_map = defaultdict(lambda: AlbumType.OTHER, {
-            1: AlbumType.OTHER,                 # literally other xD
-            2: AlbumType.STUDIO_ALBUM,
-            3: AlbumType.EP,
-            4: AlbumType.SINGLE,
-            5: AlbumType.OTHER,                 # BOOTLEG
-            6: AlbumType.LIVE_ALBUM,
-            7: AlbumType.COMPILATION_ALBUM,     # compilation of different artists
-            8: AlbumType.MIXTAPE,
-            9: AlbumType.DEMO,
-            10: AlbumType.MIXTAPE,              # DJ Mixes
-            11: AlbumType.COMPILATION_ALBUM,    # compilation of only this artist
-            12: AlbumType.STUDIO_ALBUM,         # split
-            13: AlbumType.COMPILATION_ALBUM,    # unofficial
-            14: AlbumType.MIXTAPE               # "Soundtracks"
-        })
-
-        _id: Optional[str] = None
-        name: str = None
-        source_list: List[Source] = []
-        timestamp: Optional[ID3Timestamp] = None
-        album_status = None
-
-        def set_name(new_name: str):
-            nonlocal name
-            nonlocal artist_name
-            
-            # example of just setting not working:
-            # https://musify.club/release/unjoy-eurythmie-psychonaut-4-tired-numb-still-alive-2012-324067
-            if new_name.count(" - ") != 1:
-                name = new_name
+        return search_results
+    
+    def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
+        # https://musify.club/track/linkin-park-numb-210765
+        r = self.connection.get(source.url)
+        if r is None:
+            return Song
+        
+        soup = self.get_soup_from_response(r)
+        
+        track_name: str = None
+        source_list: List[Source] = [source]
+        lyrics_list: List[Lyrics] = []
+        artist_list: List[Artist] = []
+        album_list: List[Album] = []
+        
+        def _parse_artist_anchor(artist_soup: BeautifulSoup):
+            nonlocal artist_list
+            if artist_soup is None:
                 return
             
-            potential_artist_list, potential_name = new_name.split(" - ")
-            unified_artist_list = string_processing.unify(potential_artist_list)
-            if artist_name is not None:
-                if string_processing.unify(artist_name) not in unified_artist_list:
-                    name = new_name
-                    return
-                
-                name = potential_name
-                return
+            artist_src_list = []
+            artist_name = None
             
-            name = new_name
-
-        album_status_id = album_card.get("data-type")
-        if album_status_id.isdigit():
-            album_status_id = int(album_status_id)
-        album_type = album_type_map[album_status_id]
-
-        if album_status_id == 5:
-            album_status = AlbumStatus.BOOTLEG
-
-        def parse_release_anchor(_anchor: BeautifulSoup, text_is_name=False):
-            nonlocal _id
-            nonlocal name
-            nonlocal source_list
-
-            if _anchor is None:
-                return
-
-            href = _anchor.get("href")
+            href = artist_soup["href"]
             if href is not None:
-                # add url to sources
+                artist_src_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+            name_elem: BeautifulSoup = artist_soup.find("span", {"itemprop": "name"})
+            if name_elem is not None:
+                artist_name = name_elem.text.strip()
+                
+            artist_list.append(Artist(name=artist_name, source_list=artist_src_list))    
+    
+        def _parse_album_anchor(album_soup: BeautifulSoup):
+            nonlocal album_list
+            if album_anchor is None:
+                return
+            album_source_list = []
+            album_name = None
+            
+            href = album_soup["href"]
+            if href is not None:
+                album_source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
+
+            name_elem: BeautifulSoup = album_soup.find("span", {"itemprop": "name"})
+            if name_elem is not None:
+                album_name = name_elem.text.strip()
+                
+            album_list.append(Album(title=album_name, source_list=album_source_list))
+
+        # download url
+        anchor: BeautifulSoup
+        for anchor in soup.find_all("a", {"itemprop": "audio"}):
+            href = anchor["href"]
+            if href is not None:
+                source.audio_url = self.HOST + href
+    
+        # song detail
+        album_info: BeautifulSoup
+        for album_info in soup.find_all("ul", {"class": "album-info"}):
+            list_element: BeautifulSoup = album_info.find("li")
+            
+            if list_element is not None:
+                artist_soup: BeautifulSoup
+                for artist_soup in list_element.find_all("a"):
+                    artist_source_list = []
+                    href = artist_soup["href"]
+                    if href is not None:
+                        artist_source_list = [Source(self.SOURCE_TYPE, self.HOST + href)]
+                    artist_list.append(Artist(
+                        name=artist_soup.text.strip(),
+                        source_list=artist_source_list
+                    ))
+    
+        # breadcrums
+        breadcrumb_list_element_list: List[BeautifulSoup] = soup.find_all("ol", {"class": "breadcrumb"})
+        for breadcrumb_list_element in breadcrumb_list_element_list:
+            list_points: List[BeautifulSoup] = breadcrumb_list_element.find_all("li", "breadcrumb-item")
+            if len(list_points) != 5:
+                self.LOGGER.warning(f"breadcrumbs of song doesn't have 5 items: {breadcrumb_list_element.prettify()}")
+                break
+            
+            artist_anchor: BeautifulSoup = list_points[2].find("a")
+            _parse_artist_anchor(artist_anchor)
+            
+            album_anchor: BeautifulSoup = list_points[3].find("a")
+            _parse_album_anchor(album_anchor)
+            
+            track_name = list_points[4].text.strip()
+        
+        
+        # lyrics
+        lyrics_container: List[BeautifulSoup] = soup.find_all("div", {"id": "tabLyrics"})
+        for lyrics in lyrics_container:
+            lyrics_text = lyrics.find("div", {"style": "white-space: pre-line"}).text.strip()
+            lyrics_list.append(Lyrics(text=FormattedText(html=lyrics_text)))
+        
+        # youtube video
+        video_container_list: List[BeautifulSoup] = soup.find_all("div", {"id": "tabVideo"})
+        for video_container in video_container_list:
+            iframe_list: List[BeautifulSoup] = video_container.findAll("iframe")
+            for iframe in iframe_list:
                 source_list.append(Source(
-                    cls.SOURCE_TYPE,
-                    cls.HOST + href
+                    SourcePages.YOUTUBE,
+                    iframe["src"],
+                    referer_page=self.SOURCE_TYPE
                 ))
-
-                # split id from url
-                split_href = href.split("-")
-                if len(split_href) > 1:
-                    _id = split_href[-1]
-
-            if not text_is_name:
-                return
-
-            set_name(_anchor.text)
-
-        anchor_list = album_card.find_all("a", recursive=False)
-        if len(anchor_list) > 0:
-            anchor = anchor_list[0]
-            parse_release_anchor(anchor)
-
-            thumbnail: BeautifulSoup = anchor.find("img")
-            if thumbnail is not None:
-                alt = thumbnail.get("alt")
-                if alt is not None:
-                    set_name(alt)
-
-                image_url = thumbnail.get("src")
-        else:
-            cls.LOGGER.debug("the card has no thumbnail or url")
-
-        card_body = album_card.find("div", {"class": "card-body"})
-        if card_body is not None:
-            parse_release_anchor(card_body.find("a"), text_is_name=True)
-
-        def parse_small_date(small_soup: BeautifulSoup):
-            """
-            <small>
-                <i class="zmdi zmdi-calendar" title="Добавлено"></i>
-                13.11.2021
-            </small>
-            """
-            nonlocal timestamp
-
-            italic_tagging_soup: BeautifulSoup = small_soup.find("i")
-            if italic_tagging_soup is None:
-                return
-            if italic_tagging_soup.get("title") != "Добавлено":
-                # "Добавлено" can be translated to "Added (at)"
-                return
-
-            raw_time = small_soup.text.strip()
-            timestamp = ID3Timestamp.strptime(raw_time, "%d.%m.%Y")
-
-        # parse small date
-        card_footer_list = album_card.find_all("div", {"class": "card-footer"})
-        if len(card_footer_list) != 3:
-            cls.LOGGER.debug("there are not exactly 3 card footers in a card")
-
-        if len(card_footer_list) > 0:
-            for any_small_soup in card_footer_list[-1].find_all("small"):
-                parse_small_date(any_small_soup)
-        else:
-            cls.LOGGER.debug("there is not even 1 footer in the album card")
-
-        return Album(
-            _id=_id,
-            title=name,
+        
+        return Song(
+            title=track_name,
             source_list=source_list,
-            date=timestamp,
-            album_type=album_type,
-            album_status=album_status
+            lyrics_list=lyrics_list,
+            main_artist_list=artist_list,
+            album_list=album_list,
         )
 
-    @classmethod
-    def get_discography(cls, url: MusifyUrl, artist_name: str = None, stop_at_level: int = 1) -> List[Album]:
-        """
-        POST https://musify.club/artist/filteralbums
-        ArtistID: 280348
-        SortOrder.Property: dateCreated
-        SortOrder.IsAscending: false
-        X-Requested-With: XMLHttpRequest
-        """
-
-        endpoint = cls.HOST + "/" + url.source_type.value + "/filteralbums"
-
-        r = cls.post_request(url=endpoint, json={
-            "ArtistID": str(url.musify_id),
-            "SortOrder.Property": "dateCreated",
-            "SortOrder.IsAscending": False,
-            "X-Requested-With": "XMLHttpRequest"
-        })
-        if r is None:
-            return []
-        soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
-
-        discography: List[Album] = []
-        for card_soup in soup.find_all("div", {"class": "card"}):
-            new_album: Album = cls.parse_album_card(card_soup, artist_name)
-            album_source: Source
-            
-            if stop_at_level > 1:
-                for album_source in new_album.source_collection.get_sources_from_page(cls.SOURCE_TYPE):
-                    new_album.merge(cls._fetch_album_from_source(album_source, stop_at_level=stop_at_level-1))
-            
-            discography.append(new_album)
-
-        return discography
-
-    @classmethod
-    def get_artist_attributes(cls, url: MusifyUrl) -> Artist:
-        """
-        fetches the main Artist attributes from this endpoint
-        https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
-        it needs to parse html
-
-        :param url:
-        :return:
-        """
-
-        r = cls.get_request(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
-        if r is None:
-            return Artist(_id=url.musify_id)
-
-        soup = BeautifulSoup(r.content, "html.parser")
-
-        """
-        <ol class="breadcrumb" itemscope="" itemtype="http://schema.org/BreadcrumbList">
-            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/" itemprop="item"><span itemprop="name">Главная</span><meta content="1" itemprop="position"/></a></li>
-            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/artist" itemprop="item"><span itemprop="name">Исполнители</span><meta content="2" itemprop="position"/></a></li>
-            <li class="breadcrumb-item active">Ghost Bath</li>
-        </ol>
-        
-        <ul class="nav nav-tabs nav-fill">
-            <li class="nav-item"><a class="active nav-link" href="/artist/ghost-bath-280348">песни (41)</a></li>
-            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/releases">альбомы (12)</a></li>
-            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/clips">видеоклипы (23)</a></li>
-            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/photos">фото (38)</a></li>
-        </ul>
-        
-        <header class="content__title">
-            <h1>Ghost Bath</h1>
-            <div class="actions">
-                ...
-            </div>
-        </header>
-        
-        <ul class="icon-list">
-            <li>
-                <i class="zmdi zmdi-globe zmdi-hc-fw" title="Страна"></i> 
-                <i class="flag-icon US shadow"></i>
-                Соединенные Штаты
-            </li>
-        </ul>
-        """
-        name = None
-        source_list: List[Source] = []
-        country = None
-        notes: FormattedText = FormattedText()
-
-        breadcrumbs: BeautifulSoup = soup.find("ol", {"class": "breadcrumb"})
-        if breadcrumbs is not None:
-            breadcrumb_list: List[BeautifulSoup] = breadcrumbs.find_all("li", {"class": "breadcrumb-item"}, recursive=False)
-            if len(breadcrumb_list) == 3:
-                name = breadcrumb_list[-1].get_text(strip=True)
-            else:
-                cls.LOGGER.debug("breadcrumb layout on artist page changed")
-
-        nav_tabs: BeautifulSoup = soup.find("ul", {"class": "nav-tabs"})
-        if nav_tabs is not None:
-            list_item: BeautifulSoup
-            for list_item in nav_tabs.find_all("li", {"class": "nav-item"}, recursive=False):
-                if not list_item.get_text(strip=True).startswith("песни"):
-                    # "песни" translates to "songs"
-                    continue
-
-                anchor: BeautifulSoup = list_item.find("a")
-                if anchor is None:
-                    continue
-                href = anchor.get("href")
-                if href is None:
-                    continue
-
-                source_list.append(Source(
-                    cls.SOURCE_TYPE,
-                    cls.HOST + href
-                ))
-
-        content_title: BeautifulSoup = soup.find("header", {"class": "content__title"})
-        if content_title is not None:
-            h1_name: BeautifulSoup = content_title.find("h1", recursive=False)
-            if h1_name is not None:
-                name = h1_name.get_text(strip=True)
-
-        # country and sources
-        icon_list: BeautifulSoup = soup.find("ul", {"class": "icon-list"})
-        if icon_list is not None:
-            country_italic: BeautifulSoup = icon_list.find("i", {"class", "flag-icon"})
-            if country_italic is not None:
-                style_classes: set = {'flag-icon', 'shadow'}
-                classes: set = set(country_italic.get("class"))
-
-                country_set: set = classes.difference(style_classes)
-                if len(country_set) != 1:
-                    cls.LOGGER.debug("the country set contains multiple values")
-                if len(country_set) != 0:
-                    """
-                    This is the css file, where all flags that can be used on musify
-                    are laid out and styled.
-                    Every flag has two upper case letters, thus I assume they follow the alpha_2
-                    https://musify.club/content/flags.min.css
-                    """
-
-                    country = pycountry.countries.get(alpha_2=list(country_set)[0])
-
-            # get all additional sources
-            additional_source: BeautifulSoup
-            for additional_source in icon_list.find_all("a", {"class", "link"}):
-                href = additional_source.get("href")
-                if href is None:
-                    continue
-                new_src = Source.match_url(href, referer_page=cls.SOURCE_TYPE)
-                if new_src is None:
-                    continue
-                source_list.append(new_src)
-
-        note_soup: BeautifulSoup = soup.find(id="text-main")
-        if note_soup is not None:
-            notes.html = note_soup.decode_contents()
-
-        return Artist(
-            _id=url.musify_id,
-            name=name,
-            country=country,
-            source_list=source_list,
-            notes=notes
-        )
-
-    @classmethod
-    def _fetch_artist_from_source(cls, source: Source, stop_at_level: int = 1) -> Artist:
-        """
-        fetches artist from source
-
-        [x] discography
-        [x] attributes
-        [] picture gallery
-
-        Args:
-            source (Source): the source to fetch
-            stop_at_level: int = 1: if it is false, every album from discograohy will be fetched. Defaults to False.
-
-        Returns:
-            Artist: the artist fetched
-        """
-
-        url = cls.parse_url(source.url)
-
-        artist = cls.get_artist_attributes(url)
-
-        discography: List[Album] = cls.get_discography(url, artist.name)
-        artist.main_album_collection.extend(discography)
-        
-        return artist
-
-    @classmethod
-    def parse_song_card(cls, song_card: BeautifulSoup) -> Song:
+    def _parse_song_card(self, song_card: BeautifulSoup) -> Song:
         """
             <div id="playerDiv3051" class="playlist__item" itemprop="track" itemscope="itemscope" itemtype="http://schema.org/MusicRecording" data-artist="Linkin Park" data-name="Papercut">
                 <div id="play_3051" class="playlist__control play" data-url="/track/play/3051/linkin-park-papercut.mp3" data-position="1" data-title="Linkin Park - Papercut" title="Слушать Linkin Park - Papercut">
@@ -814,8 +585,8 @@ class Musify(Page):
                 track_anchor: BeautifulSoup = anchor_list[-1]
                 href: str = track_anchor.get("href")
                 if href is not None:
-                    current_url = cls.HOST + href
-                    source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href))
+                    current_url = self.HOST + href
+                    source_list.append(Source(self.SOURCE_TYPE, self.HOST + href))
                 song_name = parse_title(track_anchor.get_text(strip=True))
 
             # artist
@@ -827,7 +598,7 @@ class Musify(Page):
                 if meta_artist_src is not None:
                     meta_artist_url = meta_artist_src.get("content")
                     if meta_artist_url is not None:
-                        _artist_src = [Source(cls.SOURCE_TYPE, cls.HOST + meta_artist_url)]
+                        _artist_src = [Source(self.SOURCE_TYPE, self.HOST + meta_artist_url)]
 
                 meta_artist_name = artist_span.find("meta", {"itemprop": "name"})
                 if meta_artist_name is not None:
@@ -854,9 +625,9 @@ class Musify(Page):
                 download_href = download_anchor.get("href")
                 if download_href is not None and current_url is not None:
                     source_list.append(Source(
-                        cls.SOURCE_TYPE,
+                        self.SOURCE_TYPE,
                         url=current_url,
-                        adio_url=cls.HOST + download_href
+                        adio_url=self.HOST + download_href
                     ))
 
         return Song(
@@ -866,8 +637,322 @@ class Musify(Page):
             source_list=source_list
         )
 
-    @classmethod
-    def _parse_album(cls, soup: BeautifulSoup) -> Album:
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        """
+        fetches album from source:
+        eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
+
+        /html/musify/album_overview.html
+        - [x] tracklist
+        - [x] attributes
+        - [ ] ratings
+
+        :param stop_at_level:
+        :param source:
+        :return:
+        """
+
+        url = parse_url(source.url)
+
+        endpoint = self.HOST + "/release/" + url.name_with_id
+        r = self.connection.get(endpoint)
+        if r is None:
+            return Album()
+
+        soup = BeautifulSoup(r.content, "html.parser")
+
+        album = self._parse_album(soup)
+
+        # <div class="card"><div class="card-body">...</div></div>
+        cards_soup: BeautifulSoup = soup.find("div", {"class": "card-body"})
+        if cards_soup is not None:
+            card_soup: BeautifulSoup
+            for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
+                new_song = self._parse_song_card(card_soup)
+                album.song_collection.append(new_song)
+        
+        if stop_at_level > 1:
+            song: Song
+            for song in album.song_collection:
+                sources = song.source_collection.get_sources_from_page(self.SOURCE_TYPE)
+                for source in sources:
+                    song.merge(self.fetch_song(source=source))
+        
+        album.update_tracksort()
+
+        return album
+    
+    def _get_artist_attributes(self, url: MusifyUrl) -> Artist:
+        """
+        fetches the main Artist attributes from this endpoint
+        https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent
+        it needs to parse html
+
+        :param url:
+        :return:
+        """
+
+        r = self.connection.get(f"https://musify.club/{url.source_type.value}/{url.name_with_id}?_pjax=#bodyContent")
+        if r is None:
+            return Artist()
+
+        soup = self.get_soup_from_response(r)
+
+        """
+        <ol class="breadcrumb" itemscope="" itemtype="http://schema.org/BreadcrumbList">
+            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/" itemprop="item"><span itemprop="name">Главная</span><meta content="1" itemprop="position"/></a></li>
+            <li class="breadcrumb-item" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="/artist" itemprop="item"><span itemprop="name">Исполнители</span><meta content="2" itemprop="position"/></a></li>
+            <li class="breadcrumb-item active">Ghost Bath</li>
+        </ol>
+        
+        <ul class="nav nav-tabs nav-fill">
+            <li class="nav-item"><a class="active nav-link" href="/artist/ghost-bath-280348">песни (41)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/releases">альбомы (12)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/clips">видеоклипы (23)</a></li>
+            <li class="nav-item"><a class="nav-link" href="/artist/ghost-bath-280348/photos">фото (38)</a></li>
+        </ul>
+        
+        <header class="content__title">
+            <h1>Ghost Bath</h1>
+            <div class="actions">
+                ...
+            </div>
+        </header>
+        
+        <ul class="icon-list">
+            <li>
+                <i class="zmdi zmdi-globe zmdi-hc-fw" title="Страна"></i> 
+                <i class="flag-icon US shadow"></i>
+                Соединенные Штаты
+            </li>
+        </ul>
+        """
+        name = None
+        source_list: List[Source] = []
+        country = None
+        notes: FormattedText = FormattedText()
+
+        breadcrumbs: BeautifulSoup = soup.find("ol", {"class": "breadcrumb"})
+        if breadcrumbs is not None:
+            breadcrumb_list: List[BeautifulSoup] = breadcrumbs.find_all("li", {"class": "breadcrumb-item"}, recursive=False)
+            if len(breadcrumb_list) == 3:
+                name = breadcrumb_list[-1].get_text(strip=True)
+            else:
+                self.LOGGER.debug("breadcrumb layout on artist page changed")
+
+        nav_tabs: BeautifulSoup = soup.find("ul", {"class": "nav-tabs"})
+        if nav_tabs is not None:
+            list_item: BeautifulSoup
+            for list_item in nav_tabs.find_all("li", {"class": "nav-item"}, recursive=False):
+                if not list_item.get_text(strip=True).startswith("песни"):
+                    # "песни" translates to "songs"
+                    continue
+
+                anchor: BeautifulSoup = list_item.find("a")
+                if anchor is None:
+                    continue
+                href = anchor.get("href")
+                if href is None:
+                    continue
+
+                source_list.append(Source(
+                    self.SOURCE_TYPE,
+                    self.HOST + href
+                ))
+
+        content_title: BeautifulSoup = soup.find("header", {"class": "content__title"})
+        if content_title is not None:
+            h1_name: BeautifulSoup = content_title.find("h1", recursive=False)
+            if h1_name is not None:
+                name = h1_name.get_text(strip=True)
+
+        # country and sources
+        icon_list: BeautifulSoup = soup.find("ul", {"class": "icon-list"})
+        if icon_list is not None:
+            country_italic: BeautifulSoup = icon_list.find("i", {"class", "flag-icon"})
+            if country_italic is not None:
+                style_classes: set = {'flag-icon', 'shadow'}
+                classes: set = set(country_italic.get("class"))
+
+                country_set: set = classes.difference(style_classes)
+                if len(country_set) != 1:
+                    self.LOGGER.debug("the country set contains multiple values")
+                if len(country_set) != 0:
+                    """
+                    This is the css file, where all flags that can be used on musify
+                    are laid out and styled.
+                    Every flag has two upper case letters, thus I assume they follow the alpha_2
+                    https://musify.club/content/flags.min.css
+                    """
+
+                    country = pycountry.countries.get(alpha_2=list(country_set)[0])
+
+            # get all additional sources
+            additional_source: BeautifulSoup
+            for additional_source in icon_list.find_all("a", {"class", "link"}):
+                href = additional_source.get("href")
+                if href is None:
+                    continue
+                new_src = Source.match_url(href, referer_page=self.SOURCE_TYPE)
+                if new_src is None:
+                    continue
+                source_list.append(new_src)
+
+        note_soup: BeautifulSoup = soup.find(id="text-main")
+        if note_soup is not None:
+            notes.html = note_soup.decode_contents()
+
+        return Artist(
+            name=name,
+            country=country,
+            source_list=source_list,
+            notes=notes
+        )
+
+    def _parse_album_card(self, album_card: BeautifulSoup, artist_name: str = None) -> Album:
+        """
+        <div class="card release-thumbnail" data-type="2">
+            <a href="/release/ghost-bath-self-loather-2021-1554266">
+                <img alt="Self Loather" class="card-img-top lozad" data-src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/>
+                <noscript><img alt="Self Loather" src="https://40s-a.musify.club/img/70/24826582/62624396.jpg"/></noscript>
+            </a>
+            <div class="card-body">
+                <h4 class="card-subtitle">
+                <a href="/release/ghost-bath-self-loather-2021-1554266">Self Loather</a>
+                </h4>
+            </div>
+            <div class="card-footer"><p class="card-text"><a href="/albums/2021">2021</a></p></div>
+            <div class="card-footer">
+                <p class="card-text genre__labels">
+                <a href="/genre/depressive-black-132">Depressive Black</a><a href="/genre/post-black-metal-295">Post-Black Metal</a> </p>
+            </div>
+            <div class="card-footer">
+                <small><i class="zmdi zmdi-calendar" title="Добавлено"></i> 13.11.2021</small>
+                <small><i class="zmdi zmdi-star zmdi-hc-fw" title="Рейтинг"></i> 5,88</small>
+            </div>
+        </div>
+        """
+
+        _id: Optional[str] = None
+        name: str = None
+        source_list: List[Source] = []
+        timestamp: Optional[ID3Timestamp] = None
+        album_status = None
+
+        def set_name(new_name: str):
+            nonlocal name
+            nonlocal artist_name
+            
+            # example of just setting not working:
+            # https://musify.club/release/unjoy-eurythmie-psychonaut-4-tired-numb-still-alive-2012-324067
+            if new_name.count(" - ") != 1:
+                name = new_name
+                return
+            
+            potential_artist_list, potential_name = new_name.split(" - ")
+            unified_artist_list = string_processing.unify(potential_artist_list)
+            if artist_name is not None:
+                if string_processing.unify(artist_name) not in unified_artist_list:
+                    name = new_name
+                    return
+                
+                name = potential_name
+                return
+            
+            name = new_name
+
+        album_status_id = album_card.get("data-type")
+        if album_status_id.isdigit():
+            album_status_id = int(album_status_id)
+        album_type = ALBUM_TYPE_MAP[album_status_id]
+
+        if album_status_id == 5:
+            album_status = AlbumStatus.BOOTLEG
+
+        def parse_release_anchor(_anchor: BeautifulSoup, text_is_name=False):
+            nonlocal _id
+            nonlocal name
+            nonlocal source_list
+
+            if _anchor is None:
+                return
+
+            href = _anchor.get("href")
+            if href is not None:
+                # add url to sources
+                source_list.append(Source(
+                    self.SOURCE_TYPE,
+                    self.HOST + href
+                ))
+
+                # split id from url
+                split_href = href.split("-")
+                if len(split_href) > 1:
+                    _id = split_href[-1]
+
+            if not text_is_name:
+                return
+
+            set_name(_anchor.text)
+
+        anchor_list = album_card.find_all("a", recursive=False)
+        if len(anchor_list) > 0:
+            anchor = anchor_list[0]
+            parse_release_anchor(anchor)
+
+            thumbnail: BeautifulSoup = anchor.find("img")
+            if thumbnail is not None:
+                alt = thumbnail.get("alt")
+                if alt is not None:
+                    set_name(alt)
+
+                image_url = thumbnail.get("src")
+        else:
+            self.LOGGER.debug("the card has no thumbnail or url")
+
+        card_body = album_card.find("div", {"class": "card-body"})
+        if card_body is not None:
+            parse_release_anchor(card_body.find("a"), text_is_name=True)
+
+        def parse_small_date(small_soup: BeautifulSoup):
+            """
+            <small>
+                <i class="zmdi zmdi-calendar" title="Добавлено"></i>
+                13.11.2021
+            </small>
+            """
+            nonlocal timestamp
+
+            italic_tagging_soup: BeautifulSoup = small_soup.find("i")
+            if italic_tagging_soup is None:
+                return
+            if italic_tagging_soup.get("title") != "Добавлено":
+                # "Добавлено" can be translated to "Added (at)"
+                return
+
+            raw_time = small_soup.text.strip()
+            timestamp = ID3Timestamp.strptime(raw_time, "%d.%m.%Y")
+
+        # parse small date
+        card_footer_list = album_card.find_all("div", {"class": "card-footer"})
+        if len(card_footer_list) != 3:
+            self.LOGGER.debug("there are not exactly 3 card footers in a card")
+
+        if len(card_footer_list) > 0:
+            for any_small_soup in card_footer_list[-1].find_all("small"):
+                parse_small_date(any_small_soup)
+        else:
+            self.LOGGER.debug("there is not even 1 footer in the album card")
+
+        return Album(
+            title=name,
+            source_list=source_list,
+            date=timestamp,
+            album_type=album_type,
+            album_status=album_status
+        )
+
+    def _parse_album(self, soup: BeautifulSoup) -> Album:
         name: str = None
         source_list: List[Source] = []
         artist_list: List[Artist] = []
@@ -894,7 +979,7 @@ class Musify(Page):
                 artist_source_list: List[Source] = []
 
                 if href is not None:
-                    artist_source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + href.strip()))
+                    artist_source_list.append(Source(self.SOURCE_TYPE, self.HOST + href.strip()))
 
                 span: BeautifulSoup = anchor.find("span")
                 if span is not None:
@@ -903,14 +988,14 @@ class Musify(Page):
                         source_list=artist_source_list
                     ))
         else:
-            cls.LOGGER.debug("there are not 4 breadcrumb items, which shouldn't be the case")
+            self.LOGGER.debug("there are not 4 breadcrumb items, which shouldn't be the case")
 
         # meta
         meta_url: BeautifulSoup = soup.find("meta", {"itemprop": "url"})
         if meta_url is not None:
             url = meta_url.get("content")
             if url is not None:
-                source_list.append(Source(cls.SOURCE_TYPE, cls.HOST + url))
+                source_list.append(Source(self.SOURCE_TYPE, self.HOST + url))
 
         meta_name: BeautifulSoup = soup.find("meta", {"itemprop": "name"})
         if meta_name is not None:
@@ -930,7 +1015,7 @@ class Musify(Page):
                 if artist_url_meta is not None:
                     artist_href = artist_url_meta.get("content")
                     if artist_href is not None:
-                        artist_source_list.append(Source(cls.SOURCE_TYPE, url=cls.HOST + artist_href))
+                        artist_source_list.append(Source(self.SOURCE_TYPE, url=self.HOST + artist_href))
 
                 artist_meta_name = artist_anchor.find("meta", {"itemprop": "name"})
                 if artist_meta_name is not None:
@@ -948,7 +1033,7 @@ class Musify(Page):
                     try:
                         date = ID3Timestamp.strptime(raw_datetime, "%Y-%m-%d")
                     except ValueError:
-                        cls.LOGGER.debug(f"Raw datetime doesn't match time format %Y-%m-%d: {raw_datetime}")
+                        self.LOGGER.debug(f"Raw datetime doesn't match time format %Y-%m-%d: {raw_datetime}")
 
         return Album(
             title=name,
@@ -957,66 +1042,69 @@ class Musify(Page):
             date=date
         )
 
-    @classmethod
-    def _fetch_album_from_source(cls, source: Source, stop_at_level: int = 1) -> Album:
+    def _get_discography(self, url: MusifyUrl, artist_name: str = None, stop_at_level: int = 1) -> List[Album]:
         """
-        fetches album from source:
-        eg. 'https://musify.club/release/linkin-park-hybrid-theory-2000-188'
-
-        /html/musify/album_overview.html
-        - [x] tracklist
-        - [ ] attributes
-        - [ ] ratings
-
-        :param stop_at_level:
-        :param source:
-        :return:
+        POST https://musify.club/artist/filteralbums
+        ArtistID: 280348
+        SortOrder.Property: dateCreated
+        SortOrder.IsAscending: false
+        X-Requested-With: XMLHttpRequest
         """
 
-        url = cls.parse_url(source.url)
+        endpoint = self.HOST + "/" + url.source_type.value + "/filteralbums"
 
-        endpoint = cls.HOST + "/release/" + url.name_with_id
-        r = cls.get_request(endpoint)
+        r = self.connection.post(url=endpoint, json={
+            "ArtistID": str(url.musify_id),
+            "SortOrder.Property": "dateCreated",
+            "SortOrder.IsAscending": False,
+            "X-Requested-With": "XMLHttpRequest"
+        })
         if r is None:
-            return Album()
+            return []
+        soup: BeautifulSoup = BeautifulSoup(r.content, features="html.parser")
 
-        soup = BeautifulSoup(r.content, "html.parser")
+        discography: List[Album] = []
+        for card_soup in soup.find_all("div", {"class": "card"}):
+            new_album: Album = self._parse_album_card(card_soup, artist_name)
+            album_source: Source
+            
+            if stop_at_level > 1:
+                for album_source in new_album.source_collection.get_sources_from_page(self.SOURCE_TYPE):
+                    new_album.merge(self.fetch_album(album_source, stop_at_level=stop_at_level-1))
+            
+            discography.append(new_album)
 
-        album = cls._parse_album(soup)
+        return discography
 
-        # <div class="card"><div class="card-body">...</div></div>
-        cards_soup: BeautifulSoup = soup.find("div", {"class": "card-body"})
-        if cards_soup is not None:
-            card_soup: BeautifulSoup
-            for card_soup in cards_soup.find_all("div", {"class": "playlist__item"}):
-                new_song = cls.parse_song_card(card_soup)
-                album.song_collection.append(new_song)
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        """
+        fetches artist from source
+
+        [x] discography
+        [x] attributes
+        [] picture gallery
+
+        Args:
+            source (Source): the source to fetch
+            stop_at_level: int = 1: if it is false, every album from discograohy will be fetched. Defaults to False.
+
+        Returns:
+            Artist: the artist fetched
+        """
+
+        url = parse_url(source.url)
+
+        artist = self._get_artist_attributes(url)
+
+        discography: List[Album] = self._get_discography(url, artist.name)
+        artist.main_album_collection.extend(discography)
         
-        if stop_at_level > 1:
-            song: Song
-            for song in album.song_collection:
-                sources = song.source_collection.get_sources_from_page(cls.SOURCE_TYPE)
-                for source in sources:
-                    song.merge(cls._fetch_song_from_source(source=source))
-        
-        album.update_tracksort()
+        return artist
 
-        return album
-
-    @classmethod
-    def _get_type_of_url(cls, url: str) -> Optional[Union[Type[Song], Type[Album], Type[Artist], Type[Label]]]:
-        url: MusifyUrl = cls.parse_url(url)
-        
-        if url.source_type == MusifyTypes.ARTIST:
-            return Artist
-        if url.source_type == MusifyTypes.RELEASE:
-            return Album
-        if url.source_type == MusifyTypes.SONG:
-            return Song
-        return None
+    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
+        return Label()
     
-    @classmethod
-    def _download_song_to_targets(cls, source: Source, target: Target, desc: str = None) -> DownloadResult:
+    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """
         https://musify.club/track/im-in-a-coffin-life-never-was-waste-of-skin-16360302
         https://musify.club/track/dl/16360302/im-in-a-coffin-life-never-was-waste-of-skin.mp3
@@ -1024,18 +1112,12 @@ class Musify(Page):
         endpoint = source.audio_url
 
         if source.audio_url is None:
-            url: MusifyUrl = cls.parse_url(source.url)
+            url: MusifyUrl = parse_url(source.url)
             if url.source_type != MusifyTypes.SONG:
                 return DownloadResult(error_message=f"The url is not of the type Song: {source.url}")
 
             endpoint = f"https://musify.club/track/dl/{url.musify_id}/{url.name_without_id}.mp3"
 
-            cls.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
+            self.LOGGER.warning(f"The source has no audio link. Falling back to {endpoint}.")
 
-        r = cls.get_request(endpoint, stream=True)
-        if r is None:
-            return DownloadResult(error_message=f"couldn't connect to {endpoint}")
-
-        if target.stream_into(r, desc=desc):
-            return DownloadResult(total=1)
-        return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
+        return self.connection.stream_into(endpoint, target, raw_url=True)
