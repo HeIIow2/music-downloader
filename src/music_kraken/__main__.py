@@ -1,4 +1,4 @@
-if __name__ == "__main__":
+def cli():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '-p', '--force-post-process',
+        '-m', '--force-post-process',
         action="store_true",
         help="If a to downloaded thing is skipped due to being found on disc,\nit will still update the metadata accordingly."
     )
@@ -123,3 +123,7 @@ if __name__ == "__main__":
         direct_download_url=arguments.url,
         process_metadata_anyway=arguments.force_post_process or arguments.test
     )
+
+
+if __name__ == "__main__":
+    cli()
