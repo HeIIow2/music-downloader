@@ -122,3 +122,5 @@ have fun :3
 """.strip()
 
 FFMPEG_BINARY: Path = PATHS_SECTION.FFMPEG_BINARY.object_from_value
+
+HASNT_YET_STARTED: bool = MISC_SECTION.HASNT_YET_STARTED.object_from_value

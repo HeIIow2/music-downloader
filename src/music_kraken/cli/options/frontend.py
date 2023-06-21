@@ -183,3 +183,5 @@ def set_frontend(silent: bool = False):
     shell = FrontendSelection()
     shell.choose(silent=silent)
     
+    return 0
+    

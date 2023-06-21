@@ -3,6 +3,12 @@ from .base_classes import Section, IntAttribute, ListAttribute, BoolAttribute
 
 class MiscSection(Section):
     def __init__(self):
+        self.HASNT_YET_STARTED = BoolAttribute(
+            name="hasnt_yet_started",
+            description="If you did already run, and configured everything, this is false.",
+            value="true"
+        )
+        
         self.ENABLE_RESULT_HISTORY = BoolAttribute(
             name="result_history",
             description="If enabled, you can go back to the previous results.\n"
@@ -52,6 +58,7 @@ class MiscSection(Section):
         )
 
         self.attribute_list = [
+            self.HASNT_YET_STARTED,
             self.ENABLE_RESULT_HISTORY,
             self.HISTORY_LENGTH,
             self.HAPPY_MESSAGES,

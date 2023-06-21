@@ -3,8 +3,10 @@ from pathlib import Path
 import re
 
 from .utils import cli_function
+from .options.first_config import initial_config
 
-from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH, HELP_MESSAGE
+from ..utils.config import set_name_to_value, write_config
+from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH, HELP_MESSAGE, HASNT_YET_STARTED
 from ..utils.regex import URL_PATTERN
 from ..utils.string_processing import fit_to_file_system
 from ..utils.support_classes import Query, DownloadResult
@@ -391,6 +393,18 @@ def download(
         command_list: List[str] = None,
         process_metadata_anyway: bool = False,
 ):
+    if HASNT_YET_STARTED:
+        code = initial_config()
+        if code == 0:
+            set_name_to_value("hasnt_yet_started", "false")
+            write_config()
+            print("Restart the programm to use it.")
+            return code 
+        
+        print("Something went wrong configuring.")
+        return code
+        
+    
     shell = Downloader(genre=genre, process_metadata_anyway=process_metadata_anyway)
     
     if command_list is not None:
