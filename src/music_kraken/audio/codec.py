@@ -1,9 +1,8 @@
 from typing import List, Tuple
 from tqdm import tqdm
 from ffmpeg_progress_yield import FfmpegProgress
-import subprocess
 
-from ..utils.shared import BITRATE, AUDIO_FORMAT, CODEX_LOGGER as LOGGER
+from ..utils.shared import BITRATE, AUDIO_FORMAT, CODEX_LOGGER as LOGGER, FFMPEG_BINARY
 from ..objects import Target
 
 
@@ -36,7 +35,7 @@ def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str =
     
     # build the ffmpeg command
     ffmpeg_command = [
-        "ffmpeg", 
+        str(FFMPEG_BINARY), 
         "-i", str(target.file_path), 
         "-af", select, 
         "-b", str(bitrate_b),

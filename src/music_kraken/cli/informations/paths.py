@@ -10,7 +10,8 @@ def all_paths():
         "Music dir": LOCATIONS.MUSIC_DIRECTORY,
         "Log file": shared.LOG_PATH,
         "Conf dir": LOCATIONS.CONFIG_DIRECTORY,
-        "Conf file": LOCATIONS.CONFIG_FILE
+        "Conf file": LOCATIONS.CONFIG_FILE,
+        "FFMPEG bin": LOCATIONS.FFMPEG_BIN,
     }
 
 

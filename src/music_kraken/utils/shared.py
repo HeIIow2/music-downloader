@@ -120,3 +120,5 @@ to download:
 
 have fun :3
 """.strip()
+
+FFMPEG_BINARY: Path = PATHS_SECTION.FFMPEG_BINARY.object_from_value

@@ -38,12 +38,19 @@ class PathsSection(Section):
                 r'^\.'  # is hidden/starts with a "."
             ]
         )
+        
+        self.FFMPEG_BINARY = PathAttribute(
+            name="ffmpeg_binary",
+            description="Set the path to the ffmpeg binary.",
+            value=str(LOCATIONS.FFMPEG_BIN)
+        )
 
         self.attribute_list = [
             self.MUSIC_DIRECTORY,
             self.TEMP_DIRECTORY,
             self.LOG_PATH,
-            self.NOT_A_GENRE_REGEX
+            self.NOT_A_GENRE_REGEX,
+            self.FFMPEG_BINARY
         ]
 
         super().__init__()
