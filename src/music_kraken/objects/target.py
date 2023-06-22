@@ -1,11 +1,15 @@
 from pathlib import Path
 from typing import List, Tuple, TextIO
+import logging
 
 import requests
 from tqdm import tqdm
 
 from .parents import DatabaseObject
 from ..utils import shared
+
+
+LOGGER = logging.getLogger("target")
 
 
 class Target(DatabaseObject):
@@ -67,6 +71,7 @@ class Target(DatabaseObject):
 
     def copy_content(self, copy_to: "Target"):
         if not self.exists:
+            LOGGER.warning(f"No file exists at: {self.file_path}")
             return
 
         with open(self.file_path, "rb") as read_from:
