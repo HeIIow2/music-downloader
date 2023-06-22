@@ -100,6 +100,12 @@ class ConnectionSection(Section):
                         "Hidden instances (.onion) will only work, when setting 'tor=true'.",
             value="https://pipedapi.kavin.rocks"
         )
+
+        self.SLEEP_AFTER_YOUTUBE_403 = FloatAttribute(
+            name="sleep_after_youtube_403",
+            description="The time to wait, after youtube returned 403 (in seconds)",
+            value="20"
+        )
         
         self.ALL_YOUTUBE_URLS = UrlListAttribute(
             name="youtube_url",
@@ -126,6 +132,7 @@ class ConnectionSection(Section):
             self.SHOW_DOWNLOAD_ERRORS_THRESHOLD,
             self.INVIDIOUS_INSTANCE,
             self.PIPED_INSTANCE,
+            self.SLEEP_AFTER_YOUTUBE_403,
             self.ALL_YOUTUBE_URLS,
             self.SPONSOR_BLOCK
         ]

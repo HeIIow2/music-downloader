@@ -20,7 +20,7 @@ from ..objects import (
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
-from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK, PIPED_INSTANCE
+from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK, PIPED_INSTANCE, SLEEP_AFTER_YOUTUBE_403
 
 
 """
@@ -148,7 +148,8 @@ class YouTube(Page):
 
         self.download_connection: Connection = Connection(
             host="https://www.youtube.com/",
-            logger=self.LOGGER
+            logger=self.LOGGER,
+            sleep_after_404=SLEEP_AFTER_YOUTUBE_403
         )
         
         # the stuff with the connection is, to ensure sponsorblock uses the proxies, my programm does
@@ -422,11 +423,8 @@ class YouTube(Page):
 
         endpoint = audio_format["url"]
 
-        self.download_connection.stream_into(endpoint, target, description=desc, raw_url=True)
+        return self.download_connection.stream_into(endpoint, target, description=desc, raw_url=True)
 
-        if self.download_connection.get(endpoint, stream=True, raw_url=True):
-            return DownloadResult(total=1)
-        return DownloadResult(error_message=f"Streaming to the file went wrong: {endpoint}, {str(target.file_path)}")
 
     def get_skip_intervals(self, song: Song, source: Source) -> List[Tuple[float, float]]:
         if not ENABLE_SPONSOR_BLOCK:

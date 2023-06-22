@@ -22,7 +22,8 @@ class Connection:
             logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
             accepted_response_codes: Set[int] = None,
-            semantic_not_found: bool = True
+            semantic_not_found: bool = True,
+            sleep_after_404: float = 0.0
     ):
         if proxies is None:
             proxies = PROXIES_LIST
@@ -39,6 +40,7 @@ class Connection:
 
         self.ACCEPTED_RESPONSE_CODES = accepted_response_codes or {200}
         self.SEMANTIC_NOT_FOUND = semantic_not_found
+        self.sleep_after_404 = sleep_after_404
 
         self.session = requests.Session()
         self.session.headers = self.get_header(**self.HEADER_VALUES)
@@ -86,9 +88,11 @@ class Connection:
             headers: dict,
             refer_from_origin: bool = True,
             raw_url: bool = False,
-            wait_on_403: bool = True,
+            sleep_after_404: float = None,
             **kwargs
     ) -> Optional[requests.Response]:
+        if sleep_after_404 is None:
+            sleep_after_404 = self.sleep_after_404
         if try_count >= self.TRIES:
             return
 
@@ -127,9 +131,9 @@ class Connection:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
                                 f"at {url}. ({try_count}-{self.TRIES})")
             self.LOGGER.debug(r.content)
-            if wait_on_403:
-                self.LOGGER.warning(f"Waiting for 5 seconds.")
-                time.sleep(5)
+            if sleep_after_404 != 0:
+                self.LOGGER.warning(f"Waiting for {sleep_after_404} seconds.")
+                time.sleep(sleep_after_404)
 
         self.rotate()
 
@@ -140,6 +144,7 @@ class Connection:
             url=url,
             timeout=timeout,
             headers=headers,
+            sleep_after_404=sleep_after_404,
             **kwargs
         )
 
