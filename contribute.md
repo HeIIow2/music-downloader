@@ -7,6 +7,7 @@ If something is missing, like attributes for an object feel free to either add i
 So here is a List of what you can do:
 
 1. [implement a new page like e.g. Soundcloud](#add-a-new-page)
+2. [help securing this programm](#find-a-security-vulnerability)
 
 ## Add a new Page
 
@@ -29,3 +30,14 @@ in the [page module](src/music_kraken/pages).
   - [musify.club](src/music_kraken/pages/musify.py) _(heavily making use of web scraping)_
   - [YouTube](src/music_kraken/pages/youtube.py) _(using both invidious and piped)_
   - [Metal Archives](src/music_kraken/pages/youtube.py)
+
+## Find a security vulnerability
+
+I take security seriously. Really.
+
+If you find a vulnerability that is rather critical, [write me on matrix](https://matrix.to/#/@hellow_2:matrix.org).
+Under vulnerability counts:
+
+- If there is a bug, which makes music_kraken ignore a proxy/tor setting.
+
+BUT... There could be more stuff, that falls under security.
