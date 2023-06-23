@@ -56,9 +56,69 @@ Function | Explanation
 `sort()` | takes the same arguments than `list.sort`, and does the same
 `__iter__()` | allows you to use collections e.g. a for loop
 
-## Options
+### Appending and Merging data
 
-## Metadata
+If you want to append for example a Song to an Album, you obviously need to check beforehand if the Song already exists in the Album, and if so, you need to merge their data in one Song object, to not loose any Information.
+
+This is how I solve this problem:
+
+```mermaid
+---
+title: "Collection.append(music_object: MusicObject)"
+---
+flowchart TD
+    exist("""
+<b>Check if music_object already exists.</b>
+<hr>
+Gets all indexing values with <code>music_object.indexing_values</code>.
+If any returned value exists in <code>Collection._attribute_to_object_map</code>, 
+the music_object exists
+    """)
+
+    subgraph merge["Merging"]
+
+    _merge("""merges the passed in object in the already 
+    existing whith <code>existing.merge(new)</code>""")
+
+    _map("""In case a new source or something simmilar
+    has been addet, it maps the existing object again.
+    """)
+
+    _merge --> _map
+
+    end
+
+    subgraph add["Adding"]
+
+    __map("""map the values from <code>music_object.indexing_values</code>
+    to <code>Collection._attribute_to_object_map</code> by writing
+    those values in the map as keys, and the class I wanna add as values.
+    """)
+
+    _add("""add the new music object to <code>_data</code>""")
+
+    __map --> _add 
+
+    end
+
+    exist-->|"if it doesn't exist"|add --> return
+    exist-->|"if already exists"|merge --> return
+```
+
+This is Implemented in [music_kraken.objects.Collection.append()](documentation/objects.md#collection). The merging which is mentioned in the flowchart is explained in the documentation of [DatabaseObject.merge()](documentation/objects.md#databaseobjectmerge).
+
+The <u>indexing values</u> are defined in the superclass [DatabaseObject](documentation/objects.md#databaseobject) and get implemented for each Object seperately. I will just give as example its implementation for the `Song` class:
+
+```python
+@property
+def indexing_values(self) -> List[Tuple[str, object]]:
+    return [
+        ('id', self.id),
+        ('title', self.unified_title),
+        ('barcode', self.barcode),
+        *[('url', source.url) for source in self.source_collection]
+    ]
+```
 
 ## Song
 

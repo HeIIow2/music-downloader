@@ -1,18 +1,31 @@
-> IMPORTANT NOTE: heavily outdated sorryyyyy
-
 # How to contribute
 
 I am always happy about pull requests.  
 
-If something is missing, like attributes for an object feel free to either add it youreself or open an issue :3
+If something is missing, like attributes for an object feel free to either add it yourself or open an issue, if you choose to just change it, beware that something may have to change. :3
 
-If you wanna contribute, this is for you. Some options will follow:
+So here is a List of what you can do:
 
-## Add an audio/metadata source
+1. [implement a new page like e.g. Soundcloud](#add-a-new-page)
 
-The audio and Metadata Sources all inherint the class `Page` in [abstract.py](src/music_kraken/pages/abstract.py)
+## Add a new Page
 
-You can create a subclass of this class for for example youtube or musify or whatever.  
-I documented the function it should have in the docstrings of [abstract.py](src/music_kraken/pages/abstract.py). If you are unsure about how it works, look at either the doccumentation *(will get more detailed soon)* or an [example](src/music_kraken/pages/encyclopaedia_metallum.py). For trying you're class you can make a skript simmilar to [this one](src/metal_archives.py). Make sure it is in the same directory though.
+The audio and Metadata Sources all inherit from the class `Page`, which can be found in [abstract.py](src/music_kraken/pages/abstract.py).
 
-> Read the part of the documentation, I already have written. 
+You can create a subclass of this class for, for example `YouTube` or `Musify` or whatever. 
+
+1. Just create a new file with the name `your_page.py`
+in the [page module](src/music_kraken/pages). 
+2. Then you can simply copy the contents of the [preset](src/music_kraken/pages/preset.py) over to your file.
+3. All the functions you need to implement, can be found in the [preset](src/music_kraken/pages/preset.py).
+
+### Important notes
+
+- There is no need to check if you for example added a source of a song twice. I do much post-processing to the data you scrape in the page classes. You can see what exactly I do in [abstract.py](src/music_kraken/pages/abstract.py).
+- Use the connection class how it is laid out in the preset to make the request. This will take care of retrying requests, rotating proxies, consistent use of tor (if selected in the config). You have:
+  - `connection.get()`
+  - `connection.post()`
+- Look at the code of the pages I already have implemented. Namely:
+  - [musify.club](src/music_kraken/pages/musify.py) _(heavily making use of web scraping)_
+  - [YouTube](src/music_kraken/pages/youtube.py) _(using both invidious and piped)_
+  - [Metal Archives](src/music_kraken/pages/youtube.py)
