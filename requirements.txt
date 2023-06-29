@@ -2,8 +2,6 @@ requests~=2.28.1
 mutagen~=1.46.0
 musicbrainzngs~=0.7.1
 jellyfish~=0.9.0
-pydub~=0.25.1
-youtube_dl
 beautifulsoup4~=4.11.1
 pycountry~=22.3.5
 python-dateutil~=2.8.2
@@ -11,7 +9,6 @@ pandoc~=2.3
 SQLAlchemy~=2.0.7
 setuptools~=60.2.0
 tqdm~=4.65.0
-peewee~=3.15.4
 ffmpeg-python~=0.2.0
 platformdirs~=3.2.0
 transliterate~=1.10.2
