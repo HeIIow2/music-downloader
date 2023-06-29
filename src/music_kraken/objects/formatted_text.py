@@ -1,4 +1,4 @@
-import pandoc
+import markups
 
 """
 TODO
@@ -10,11 +10,7 @@ https://pandoc.org/installing.html
 
 
 class FormattedText:
-    """
-    the self.html value should be saved to the database
-    """
-    
-    doc = None
+    html: str
 
     def __init__(
             self,
@@ -22,6 +18,8 @@ class FormattedText:
             markdown: str = None,
             html: str = None
     ) -> None:
+        self.html = ""
+        
         self.set_plaintext(plaintext)
         self.set_markdown(markdown)
         self.set_html(html)
@@ -58,7 +56,7 @@ class FormattedText:
 
     @property
     def is_empty(self) -> bool:
-        return self.doc is None
+        return self.html == ""
 
     def __eq__(self, other) -> False:
         if type(other) != type(self):

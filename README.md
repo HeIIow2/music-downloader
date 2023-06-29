@@ -7,6 +7,7 @@
     - [Dependencies](#dependencies)
     - [Notes for WSL](#notes-for-wsl)
   - [Quick-Guide](#quick-guide)
+    - [Query](#query)
   - [CONTRIBUTE](#contribute)
   - [Matrix Space](#matrix-space)
   - [TODO till the next release](#todo-till-the-next-release)
@@ -83,7 +84,7 @@ I am happy about every pull request. To contribute look [here](contribute.md).
 
 ## Matrix Space
 
-<img align="right" src="assets/element_logo.png" width=100>
+<img align="right" src="assets/element_logo.png" width=100 />
 
 I decided against creating a discord server, due to piracy communities get often banned from discord. A good and free Alternative are Matrix Spaces. I reccomend the use of the Client [Element](https://element.io/download). It is completely open source.
 
@@ -94,7 +95,7 @@ I decided against creating a discord server, due to piracy communities get often
 > These Points will most likely  be in the changelogs.
 
 - [x] Update the Documentation of the new cli.
-- [ ] Migrate away from pandoc, to a more lightweight alternative, that can be installed over PiPY.
+- [ ] Migrate away from pandoc, to a more lightweight alternative, that can be installed over PiPY, this could be feezable https://pypi.org/project/Markups/
 - [ ] Update the Documentation of the internal structure. _(could be pushed back one release)_
 
 ---
