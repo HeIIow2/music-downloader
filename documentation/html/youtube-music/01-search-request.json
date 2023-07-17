@@ -1,0 +1,148 @@
+{
+	"POST": {
+		"scheme": "https",
+		"host": "music.youtube.com",
+		"filename": "/youtubei/v1/search",
+		"query": {
+            // ctoken has the same value than continuation, you can just use an empty string, at least once
+			"ctoken":       "Eq4DEhVTd2lzcyB1bmQgZGllIEFuZGVyZW4alANFZ1dLQVFJSUFVZ1VhZ3dRQXhBRUVBa1FDaEFGRUJXQ0FRdFlkbGxCZVVWbFpEbDJZNElCQzE4dFZURktTbFpRYjJNMGdnRUxaV0pRVDJaMFZWbGlkazJDQVF0dk9YQnFVVWxGWVY4eWQ0SUJDelJzWm5Nd2JWOXFUMFJuZ2dFTFFVUjZVM2x3WDNoRVpIT0NBUXMxV0V0SldrMXlTWEEwU1lJQkMzVk9TRk5YUm5aaVYxVTBnZ0VMZWxJNE4yMUpiWFE1U1hlQ0FRdFNjMjh0VDE5VlZERnFUWUlCQ3pOeFRsOXFhbVJyYW1FMGdnRUxkME4wTFZsUlgwaHVjRldDQVF0c1ZuZGZZUzE1YUhSTWE0SUJDMEZ5VFc4NVFrTlJWMnMwZ2dFTFExUTJRMjE1ZDFCRVFtLUNBUXROVm1SRVdtSkxiR1ZsWjRJQkMyNDNVbmhoU20wNU9HMUpnZ0VMUVhoMFgxSlJXWHBpVkhPQ0FRdHBhM05LTVdGWkxYRjVNSUlCQzFjMmRqQkJNMGR1WTBWdhjx6tAu",
+			"continuation": "Eq4DEhVTd2lzcyB1bmQgZGllIEFuZGVyZW4alANFZ1dLQVFJSUFVZ1VhZ3dRQXhBRUVBa1FDaEFGRUJXQ0FRdFlkbGxCZVVWbFpEbDJZNElCQzE4dFZURktTbFpRYjJNMGdnRUxaV0pRVDJaMFZWbGlkazJDQVF0dk9YQnFVVWxGWVY4eWQ0SUJDelJzWm5Nd2JWOXFUMFJuZ2dFTFFVUjZVM2x3WDNoRVpIT0NBUXMxV0V0SldrMXlTWEEwU1lJQkMzVk9TRk5YUm5aaVYxVTBnZ0VMZWxJNE4yMUpiWFE1U1hlQ0FRdFNjMjh0VDE5VlZERnFUWUlCQ3pOeFRsOXFhbVJyYW1FMGdnRUxkME4wTFZsUlgwaHVjRldDQVF0c1ZuZGZZUzE1YUhSTWE0SUJDMEZ5VFc4NVFrTlJWMnMwZ2dFTFExUTJRMjE1ZDFCRVFtLUNBUXROVm1SRVdtSkxiR1ZsWjRJQkMyNDNVbmhoU20wNU9HMUpnZ0VMUVhoMFgxSlJXWHBpVkhPQ0FRdHBhM05LTVdGWkxYRjVNSUlCQzFjMmRqQkJNMGR1WTBWdhjx6tAu",
+			"type":         "next",
+			"itct":         "CAwQybcCIhMIkL7e75uWgAMVHNQRCB2bYQhT",    // you can get away with simply not sending this
+			"key":          "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30", // can be gotten through index.html
+			"prettyPrint":  "false"
+		},
+		"remote": {
+			"Address": "142.250.181.238:443"
+		}
+	}
+}
+
+
+{
+  "context": {
+    "client": {
+      "hl": "en",
+      "gl": "DE",
+      "remoteHost": "87.123.241.77",
+      "deviceMake": "",
+      "deviceModel": "",
+      "visitorData": "CgtiTUxaTHpoXzk1Zyia59WlBg%3D%3D",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0,gzip(gfe)",
+      "clientName": "WEB_REMIX",
+      "clientVersion": "1.20230710.01.00",
+      "osName": "X11",
+      "osVersion": "",
+      "originalUrl": "https://music.youtube.com/",
+      "platform": "DESKTOP",
+      "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+      "configInfo": {
+        "appInstallData": "CJrn1aUGEP61rwUQqcSvBRClma8FEL22rgUQ8LavBRCEtq8FEJLLrwUQvb3-EhCWzq8FEN62rwUQ65OuBRCMy68FEKXC_hIQ5LP-EhDDt_4SEOC2rwUQ1NOvBRCst68FEOe6rwUQos2vBRCMt68FEMy3_hIQ-LWvBRDyqK8FEMyu_hIQhtn-EhDqw68FEKqy_hIQ_bj9EhDM364FELiLrgUQ3M-vBRC0pq8FEOTO_hIQj8OvBRC0ya8F", // You can ignore those thingies, and simply replace them with empty stings
+        "coldConfigData": "CJrn1aUGEOu6rQUQ65OuBRC9tq4FEKT-rgUQ0puvBRC2nq8FEOiorwUQ8qivBRCaq68FEK-srwUQjLevBRDiuq8FEMq_rwUQnsevBRC0ya8FENfKrwUQjMuvBRCSy68FEKLNrwUQ3M-vBRCK0a8FEMjTrwUQ1NOvBRoyQU53R2I4WHo1cUc1NHdmSkloXzJVd0FoWks5RVZfRTdwZ2JYcDgtVlpDN3ZiUS1Rc2ciMkFOd0diOFh6NXFHNTR3ZkpJaF8yVXdBaFpLOUVWX0U3cGdiWHA4LVZaQzd2YlEtUXNnKjxDQU1TS0EwWGdwYW9Bc2dXX2dXZkJJOFNuUXE4RHhVVGtvTFFETE5IcjdZR3VWM2VZcDB2aVNlUHVRUT0%3D",
+        "coldHashData": "CJrn1aUGEhM2OTg5NTQ4NzgzNzUxODI2NDY4GJrn1aUGMjJBTndHYjhYejVxRzU0d2ZKSWhfMlV3QWhaSzlFVl9FN3BnYlhwOC1WWkM3dmJRLVFzZzoyQU53R2I4WHo1cUc1NHdmSkloXzJVd0FoWks5RVZfRTdwZ2JYcDgtVlpDN3ZiUS1Rc2dCPENBTVNLQTBYZ3Bhb0FzZ1dfZ1dmQkk4U25RcThEeFVUa29MUURMTkhyN1lHdVYzZVlwMHZpU2VQdVFRPQ%3D%3D",
+        "hotHashData": "CJrn1aUGEhM3ODUyNzA2MTg5MTM0NTU5OTc2GJrn1aUGKJTk_BIo3JP9EijGsv0SKKq0_RIonpH-Eiiarf4SKL29_hIo3c7-Eijkzv4SKKnT_hIo99f-EiiR2P4SKMPY_hIohtn-EiiX2f4SKI7a_hIoktr-EijI3P4SMjJBTndHYjhYejVxRzU0d2ZKSWhfMlV3QWhaSzlFVl9FN3BnYlhwOC1WWkM3dmJRLVFzZzoyQU53R2I4WHo1cUc1NHdmSkloXzJVd0FoWks5RVZfRTdwZ2JYcDgtVlpDN3ZiUS1Rc2dCKENBTVNHUTBQMklfNUZjb0FxRGtWQ28zaXpReUw3Z0hGa0FEaDBBST0%3D"
+      },
+      "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
+      "timeZone": "Atlantic/Jan_Mayen",
+      "browserName": "Firefox",
+      "browserVersion": "115.0",
+      "acceptHeader": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "deviceExperimentId": "ChxOekkxTmpnek16UTRNVFl4TkRrek1ETTVOdz09EJrn1aUGGJrn1aUG",
+      "screenWidthPoints": 584,
+      "screenHeightPoints": 939,
+      "screenPixelDensity": 1,
+      "screenDensityFloat": 1,
+      "utcOffsetMinutes": 120,
+      "musicAppInfo": {
+        "pwaInstallabilityStatus": "PWA_INSTALLABILITY_STATUS_UNKNOWN",
+        "webDisplayMode": "WEB_DISPLAY_MODE_BROWSER",
+        "storeDigitalGoodsApiSupportStatus": {
+          "playStoreDigitalGoodsApiSupportStatus": "DIGITAL_GOODS_API_SUPPORT_STATUS_UNSUPPORTED"
+        }
+      }
+    },
+    "user": { "lockedSafetyMode": false },
+    "request": {
+      "useSsl": true,
+      "internalExperimentFlags": [],
+      "consistencyTokenJars": []
+    },
+    "adSignalsInfo": {
+      "params": [                                               // "params are not necesarily needed
+        { "key": "dt", "value": "1689613211113" },
+        { "key": "flash", "value": "0" },
+        { "key": "frm", "value": "0" },
+        { "key": "u_tz", "value": "120" },
+        { "key": "u_his", "value": "5" },
+        { "key": "u_h", "value": "1024" },
+        { "key": "u_w", "value": "1280" },
+        { "key": "u_ah", "value": "1024" },
+        { "key": "u_aw", "value": "1280" },
+        { "key": "u_cd", "value": "24" },
+        { "key": "bc", "value": "31" },
+        { "key": "bih", "value": "939" },
+        { "key": "biw", "value": "584" },
+        { "key": "brdim", "value": "0,0,0,0,1280,0,1280,1024,584,939" },
+        { "key": "vis", "value": "1" },
+        { "key": "wgl", "value": "true" },
+        { "key": "ca_type", "value": "image" }
+      ]
+    }
+  }
+}
+
+
+{
+    "context": {
+      "client": {
+        "hl": "en",
+        "gl": "DE",
+        "remoteHost": "87.123.241.77",
+        "deviceMake": "",
+        "deviceModel": "",
+        "visitorData": "CgtiTUxaTHpoXzk1Zyia59WlBg%3D%3D",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0,gzip(gfe)",
+        "clientName": "WEB_REMIX",
+        "clientVersion": "1.20230710.01.00",
+        "osName": "X11",
+        "osVersion": "",
+        "originalUrl": "https://music.youtube.com/",
+        "platform": "DESKTOP",
+        "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+        "configInfo": {
+            "appInstallData": "",
+            "coldConfigData": "",
+            "coldHashData": "",
+            "hotHashData": ""
+        },
+        "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
+        "timeZone": "Atlantic/Jan_Mayen",
+        "browserName": "Firefox",
+        "browserVersion": "115.0",
+        "acceptHeader": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "deviceExperimentId": "ChxOekkxTmpnek16UTRNVFl4TkRrek1ETTVOdz09EJrn1aUGGJrn1aUG",
+        "screenWidthPoints": 584,
+        "screenHeightPoints": 939,
+        "screenPixelDensity": 1,
+        "screenDensityFloat": 1,
+        "utcOffsetMinutes": 120,
+        "musicAppInfo": {
+          "pwaInstallabilityStatus": "PWA_INSTALLABILITY_STATUS_UNKNOWN",
+          "webDisplayMode": "WEB_DISPLAY_MODE_BROWSER",
+          "storeDigitalGoodsApiSupportStatus": {
+            "playStoreDigitalGoodsApiSupportStatus": "DIGITAL_GOODS_API_SUPPORT_STATUS_UNSUPPORTED"
+          }
+        }
+      },
+      "user": { "lockedSafetyMode": false },
+      "request": {
+        "useSsl": true,
+        "internalExperimentFlags": [],
+        "consistencyTokenJars": []
+      },
+      "adSignalsInfo": {
+        "params": []
+      }
+    }
+  }
+  

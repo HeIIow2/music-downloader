@@ -30,7 +30,12 @@ class YoutubeMusicConnection(Connection):
     103.82
 
     --> average delay in between: 1.8875 min
-    --> 
+    -->
+
+    ===API=KEY===
+    AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30
+    can be found at `view-source:https://music.youtube.com/`
+    search for: "innertubeApiKey"
     """
     def __init__(self, logger: logging.Logger):
         super().__init__(
