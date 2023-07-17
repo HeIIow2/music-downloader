@@ -3,6 +3,7 @@ from typing import List, Dict, Callable, Optional, Set
 from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
 
+import threading
 import requests
 from tqdm import tqdm
 
@@ -23,7 +24,9 @@ class Connection:
             header_values: Dict[str, str] = None,
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True,
-            sleep_after_404: float = 0.0
+            sleep_after_404: float = 0.0,
+            hearthbeat: bool = False,
+            hearthbeat_interval = 0
     ):
         if proxies is None:
             proxies = PROXIES_LIST
@@ -46,6 +49,36 @@ class Connection:
         self.session.headers = self.get_header(**self.HEADER_VALUES)
         self.session.proxies = self.rotating_proxy.current_proxy
 
+        self.session_is_occupied: bool = False
+
+        self.hearthbeat_thread = None
+        if hearthbeat:
+            self.hearthbeat_thread = threading.Thread(target=self._hearthbeat_loop, args=(hearthbeat_interval, ), daemon=True)
+            self.hearthbeat_thread.start()
+
+
+    def hearthbeat_failed(self):
+        self.LOGGER.warning(f"I just died... (The hearthbeat failed)")
+
+
+    def hearthbeat(self):
+        # Your code to send heartbeat requests goes here
+        print("the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting hearthbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
+
+    def _hearthbeat_loop(self, interval: float):
+        def hearthbeat_wrapper():
+            self.session_is_occupied = True
+            self.LOGGER.info(f"I am living. (sending a hearthbeat)")
+            self.hearthbeat()
+            self.LOGGER.debug(f"finished the hearthbeat")
+            self.session_is_occupied = False
+
+        while True:
+            hearthbeat_wrapper()
+            time.sleep(interval)
+
+
+    
     def base_url(self, url: ParseResult = None):
         if url is None:
             url = self.HOST
@@ -89,6 +122,7 @@ class Connection:
             refer_from_origin: bool = True,
             raw_url: bool = False,
             sleep_after_404: float = None,
+            is_hearthbeat: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         if sleep_after_404 is None:
@@ -111,6 +145,10 @@ class Connection:
 
         connection_failed = False
         try:
+            while self.session_is_occupied and not is_hearthbeat:
+                if self.session_is_occupied and not is_hearthbeat:
+                    self.LOGGER.info(f"Waiting for the hearthbeat to finish.")
+
             r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
 
             if r.status_code in accepted_response_codes:
@@ -145,6 +183,7 @@ class Connection:
             timeout=timeout,
             headers=headers,
             sleep_after_404=sleep_after_404,
+            is_hearthbeat=is_hearthbeat,
             **kwargs
         )
 

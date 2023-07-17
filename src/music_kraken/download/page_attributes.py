@@ -5,23 +5,31 @@ from ..objects import DatabaseObject, Source
 from ..utils.enums.source import SourcePages
 from ..utils.support_classes import Query, DownloadResult
 from ..utils.exception.download import UrlNotFoundException
-from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, INDEPENDENT_DB_OBJECTS
+from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, INDEPENDENT_DB_OBJECTS
+
+DEBUGGING_PAGE = YoutubeMusic
 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
     YouTube,
+    YoutubeMusic
 }
 
 AUDIO_PAGES: Set[Type[Page]] = {
     Musify,
     YouTube,
+    YoutubeMusic
 }
 
 SHADY_PAGES: Set[Type[Page]] = {
     Musify,
 }
 
+if DEBUGGING_PAGE is not None:
+    print(f"The DEBUGGING_PAGE is not None, but {DEBUGGING_PAGE}. Only using this page")
+    ALL_PAGES = {DEBUGGING_PAGE}
+    AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
 
 
 class Pages:
