@@ -90,6 +90,11 @@ class LoggingSection(Section):
             description="The logger for the youtube scraper.",
             value="youtube"
         )
+        self.YOUTUBE_MUSIC_LOGGER = LoggerAttribute(
+            name="youtube_music_logger",
+            description="The logger for the youtube music scraper.\n(The scraper is seperate to the youtube scraper)",
+            value="youtube_music"
+        )
         self.ENCYCLOPAEDIA_METALLUM_LOGGER = LoggerAttribute(
             name="metal_archives_logger",
             description="The logger for the metal archives scraper.",
@@ -114,6 +119,7 @@ class LoggingSection(Section):
             self.DATABASE_LOGGER,
             self.MUSIFY_LOGGER,
             self.YOUTUBE_LOGGER,
+            self.YOUTUBE_MUSIC_LOGGER,
             self.ENCYCLOPAEDIA_METALLUM_LOGGER,
             self.GENIUS_LOGGER
         ]

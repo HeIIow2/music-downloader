@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 import logging
 import json
 
-from music_kraken.utils.shared import PROXIES_LIST, YOUTUBE_LOGGER
+from music_kraken.utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER
 
 
 from ..objects import Source, DatabaseObject
@@ -62,7 +62,7 @@ class YoutubeMusicConnection(Connection):
 class YoutubeMusic(Page):
     # CHANGE
     SOURCE_TYPE = SourcePages.PRESET
-    LOGGER = YOUTUBE_LOGGER
+    LOGGER = YOUTUBE_MUSIC_LOGGER
 
     def __init__(self, *args, **kwargs):
         self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER)
