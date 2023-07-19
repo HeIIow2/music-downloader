@@ -25,8 +25,7 @@ class Connection:
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True,
             sleep_after_404: float = 0.0,
-            hearthbeat: bool = False,
-            hearthbeat_interval = 0
+            hearthbeat_interval = 0,
     ):
         if proxies is None:
             proxies = PROXIES_LIST
@@ -52,10 +51,15 @@ class Connection:
         self.session_is_occupied: bool = False
 
         self.hearthbeat_thread = None
-        if hearthbeat:
-            self.hearthbeat_thread = threading.Thread(target=self._hearthbeat_loop, args=(hearthbeat_interval, ), daemon=True)
-            self.hearthbeat_thread.start()
+        self.hearthbeat_interval = hearthbeat_interval
 
+
+    def start_hearthbeat(self):
+        if self.hearthbeat_interval <= 0:
+            self.LOGGER.warning(f"Can't start a hearthbeat with {self.hearthbeat_interval}s in between.")
+
+        self.hearthbeat_thread = threading.Thread(target=self._hearthbeat_loop, args=(self.hearthbeat_interval, ), daemon=True)
+        self.hearthbeat_thread.start()
 
     def hearthbeat_failed(self):
         self.LOGGER.warning(f"I just died... (The hearthbeat failed)")
@@ -145,9 +149,10 @@ class Connection:
 
         connection_failed = False
         try:
-            while self.session_is_occupied and not is_hearthbeat:
-                if self.session_is_occupied and not is_hearthbeat:
-                    self.LOGGER.info(f"Waiting for the hearthbeat to finish.")
+            if self.session_is_occupied and not is_hearthbeat:
+                self.LOGGER.info(f"Waiting for the hearthbeat to finish.")
+                while self.session_is_occupied and not is_hearthbeat:
+                    pass
 
             r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
 

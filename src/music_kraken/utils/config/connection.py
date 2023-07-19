@@ -106,6 +106,12 @@ class ConnectionSection(Section):
             description="The time to wait, after youtube returned 403 (in seconds)",
             value="20"
         )
+
+        self.YOUTUBE_MUSIC_API_KEY = StringAttribute(
+            name="youtube_music_api_key",
+            description="This is the API key used by YouTube-Music internally.\nDw. if it is empty, Rachel will fetch it automatically for you <333\n(she will also update outdated api keys/those that don't work)",
+            value="AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30"
+        )
         
         self.ALL_YOUTUBE_URLS = UrlListAttribute(
             name="youtube_url",
@@ -133,6 +139,7 @@ class ConnectionSection(Section):
             self.INVIDIOUS_INSTANCE,
             self.PIPED_INSTANCE,
             self.SLEEP_AFTER_YOUTUBE_403,
+            self.YOUTUBE_MUSIC_API_KEY,
             self.ALL_YOUTUBE_URLS,
             self.SPONSOR_BLOCK
         ]
