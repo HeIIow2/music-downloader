@@ -53,6 +53,10 @@ class Connection:
         self.hearthbeat_thread = None
         self.hearthbeat_interval = hearthbeat_interval
 
+    @property
+    def user_agent(self) -> str:
+        return self.session.headers.get("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
+
 
     def start_hearthbeat(self):
         if self.hearthbeat_interval <= 0:

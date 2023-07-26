@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Set, Type
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse, quote
 import logging
 import random
 import json
@@ -7,8 +7,9 @@ from dataclasses import dataclass
 import re
 
 from ..utils.exception.config import SettingValueError
-from ..utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER
+from ..utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
 from ..utils.config import CONNECTION_SECTION, write_config
+from ..utils.functions import get_current_millis
 
 from ..objects import Source, DatabaseObject
 from .abstract import Page
@@ -23,6 +24,11 @@ from ..objects import (
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
+
+
+def get_youtube_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
+    return urlunparse(("https", "music.youtube.com", path, params, query, fragment))
+
 
 class YoutubeMusicConnection(Connection):
     """
@@ -72,20 +78,76 @@ class YouTubeMusicCredentials:
     # It is probably not strictly necessary, but hey :))
     ctoken: str
 
+    # the context in requests
+    context: dict
+
 
 class YoutubeMusic(Page):
     # CHANGE
-    SOURCE_TYPE = SourcePages.PRESET
+    SOURCE_TYPE = SourcePages.YOUTUBE
     LOGGER = YOUTUBE_MUSIC_LOGGER
 
     def __init__(self, *args, **kwargs):
         self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER)
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=CONNECTION_SECTION.YOUTUBE_MUSIC_API_KEY.object_from_value,
-            ctoken=""
+            ctoken="",
+            context= {
+                "client": {
+                    "hl": "en",
+                    "gl": "DE",
+                    "remoteHost": "87.123.241.77",
+                    "deviceMake": "",
+                    "deviceModel": "",
+                    "visitorData": "CgtiTUxaTHpoXzk1Zyia59WlBg%3D%3D",
+                    "userAgent": self.connection.user_agent,
+                    "clientName": "WEB_REMIX",
+                    "clientVersion": "1.20230710.01.00",
+                    "osName": "X11",
+                    "osVersion": "",
+                    "originalUrl": "https://music.youtube.com/",
+                    "platform": "DESKTOP",
+                    "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+                    "configInfo": {
+                        "appInstallData": "",
+                        "coldConfigData": "",
+                        "coldHashData": "",
+                        "hotHashData": ""
+                    },
+                    "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
+                    "timeZone": "Atlantic/Jan_Mayen",
+                    "browserName": "Firefox",
+                    "browserVersion": "115.0",
+                    "acceptHeader": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                    "deviceExperimentId": "ChxOekkxTmpnek16UTRNVFl4TkRrek1ETTVOdz09EJrn1aUGGJrn1aUG",
+                    "screenWidthPoints": 584,
+                    "screenHeightPoints": 939,
+                    "screenPixelDensity": 1,
+                    "screenDensityFloat": 1,
+                    "utcOffsetMinutes": 120,
+                    "musicAppInfo": {
+                        "pwaInstallabilityStatus": "PWA_INSTALLABILITY_STATUS_UNKNOWN",
+                        "webDisplayMode": "WEB_DISPLAY_MODE_BROWSER",
+                        "storeDigitalGoodsApiSupportStatus": {
+                            "playStoreDigitalGoodsApiSupportStatus": "DIGITAL_GOODS_API_SUPPORT_STATUS_UNSUPPORTED"
+                        }
+                    }
+                },
+                "user": { "lockedSafetyMode": False },
+                "request": {
+                    "useSsl": True,
+                    "internalExperimentFlags": [],
+                    "consistencyTokenJars": []
+                },
+                "adSignalsInfo": {
+                    "params": []
+                }
+            }
         )
 
-        if self.credentials.api_key == "":
+        self.start_millis = get_current_millis()
+
+        if self.credentials.api_key == "" or DEBUG:
             self._fetch_from_main_page()
         
         super().__init__(*args, **kwargs)
@@ -132,12 +194,64 @@ class YoutubeMusic(Page):
         else:
             self.LOGGER.error(f"Couldn't find an API-KEY for {type(self).__name__}. :((")
 
+        # context
+        context_pattern = r"(?<=\"INNERTUBE_CONTEXT\":{)(.*?)(?=},\"INNERTUBE_CONTEXT_CLIENT_NAME\":)"
+        found_context = False
+        for context_string in re.findall(context_pattern, content):
+            try:
+                context = json.loads("{" + context_string + "}")
+                found_context
+            except json.decoder.JSONDecodeError:
+                continue
+
+            self.credentials.context = context
+            break
+
+        if not found_context:
+            self.LOGGER.warning(f"Couldn't find a context for {type(self).__name__}.")
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return super().get_source_type(source)
     
     def general_search(self, search_query: str) -> List[DatabaseObject]:
-        return []
+        self.LOGGER.info(f"general search for {search_query}")
+        print(self.credentials)
+
+        urlescaped_query: str = quote(search_query.strip().replace(" ", "+"))
+
+        LAST_EDITED_TIME = get_current_millis() - random.randint(0, 20)
+        _estimated_time = sum(len(search_query) * random.randint(50, 100) for _ in search_query.strip())
+        FIRST_EDITED_TIME = LAST_EDITED_TIME - _estimated_time if LAST_EDITED_TIME - self.start_millis > _estimated_time else random.randint(50, 100)
+
+        # construct the request
+        r = self.connection.post(
+            url=get_youtube_url(path="/youtubei/v1/search", query=f"key={self.credentials.api_key}&prettyPrint=false"),
+            json={
+                "context": {**self.credentials.context, "adSignalsInfo":{"params":[]}},
+                "query": search_query,
+                "suggestStats": {
+                    "clientName": "youtube-music",
+                    "firstEditTimeMsec": FIRST_EDITED_TIME,
+                    "inputMethod": "KEYBOARD",
+                    "lastEditTimeMsec":	LAST_EDITED_TIME,
+                    "originalQuery": search_query,
+                    "parameterValidationStatus": "VALID_PARAMETERS",
+                    "searchMethod": "ENTER_KEY",
+                    "validationStatus":	"VALID",
+                    "zeroPrefixEnabled": True,
+                    "availableSuggestions": []
+                }
+            },
+            headers={
+                "Referer": get_youtube_url(path=f"/search", query=f"q={urlescaped_query}")
+            }
+        )
+
+        print(r)
+
+        return [
+            Song(title="Lore Ipsum")
+        ]
     
     def label_search(self, label: Label) -> List[Label]:
         return []
