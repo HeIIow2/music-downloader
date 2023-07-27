@@ -4,7 +4,7 @@
 
 what is it | query | file
 ---|---|---
-general search response | `psychonaut 4`, [general-result.json](general-result.json)
+general search response | `psychonaut 4` | [general-result.json](general-result.json)
 
 ## A general search yields
 

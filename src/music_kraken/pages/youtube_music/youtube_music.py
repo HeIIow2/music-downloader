@@ -27,6 +27,8 @@ from ...objects import (
 from ...connection import Connection
 from ...utils.support_classes import DownloadResult
 
+from ._list_render import parse_renderer
+
 
 def get_youtube_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
     return urlunparse(("https", "music.youtube.com", path, params, query, fragment))
@@ -265,9 +267,10 @@ class YoutubeMusic(Page):
             for i, content in enumerate(renderer_list):
                 dump_to_file(f"{i}-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
 
-        return [
-            Song(title="Lore Ipsum")
-        ]
+        results = []
+        results.extend(parse_renderer(renderer_list[1]))
+
+        return results
     
     def label_search(self, label: Label) -> List[Label]:
         return []
