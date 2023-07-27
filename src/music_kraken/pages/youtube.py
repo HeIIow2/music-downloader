@@ -238,6 +238,10 @@ class YouTube(Page):
                 for artist_name in music_track["artist"].split(" x "):
                     artist_list.append(Artist(name=artist_name))
 
+        # if all attempts to get a clean artis name (mainly striping topic or getting the stuff in the api) fail, just add an artist with the name of the uploader channel
+        if len(artist_list) == 0:
+            artist_list.append(Artist(_author))
+
         return Song(
             title=title,
             source_list=[Source(
