@@ -6,14 +6,16 @@ import json
 from dataclasses import dataclass
 import re
 
-from ..utils.exception.config import SettingValueError
-from ..utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
-from ..utils.config import CONNECTION_SECTION, write_config
-from ..utils.functions import get_current_millis
+from ...utils.exception.config import SettingValueError
+from ...utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
+from ...utils.config import CONNECTION_SECTION, write_config
+from ...utils.functions import get_current_millis
+if DEBUG:
+    from ...utils.debug_utils import dump_to_file
 
-from ..objects import Source, DatabaseObject
-from .abstract import Page
-from ..objects import (
+from ...objects import Source, DatabaseObject
+from ..abstract import Page
+from ...objects import (
     Artist,
     Source,
     SourcePages,
@@ -22,8 +24,8 @@ from ..objects import (
     Label,
     Target
 )
-from ..connection import Connection
-from ..utils.support_classes import DownloadResult
+from ...connection import Connection
+from ...utils.support_classes import DownloadResult
 
 
 def get_youtube_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
@@ -41,11 +43,15 @@ class YoutubeMusicConnection(Connection):
 
     --> average delay in between: 1.8875 min
     """
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger, accept_language: str):
+        # https://stackoverflow.com/questions/30561260/python-change-accept-language-using-requests
         super().__init__(
             host="https://music.youtube.com/",
             logger=logger,
             hearthbeat_interval=113.25,
+            header_values={
+                "Accept-Language": accept_language
+            }
         )
 
         # cookie consent for youtube
@@ -88,7 +94,7 @@ class YoutubeMusic(Page):
     LOGGER = YOUTUBE_MUSIC_LOGGER
 
     def __init__(self, *args, **kwargs):
-        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER)
+        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER, accept_language="en-US,en;q=0.5")
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=CONNECTION_SECTION.YOUTUBE_MUSIC_API_KEY.object_from_value,
             ctoken="",
@@ -214,6 +220,7 @@ class YoutubeMusic(Page):
         return super().get_source_type(source)
     
     def general_search(self, search_query: str) -> List[DatabaseObject]:
+        search_query = search_query.strip()
         self.LOGGER.info(f"general search for {search_query}")
         print(self.credentials)
 
@@ -249,7 +256,14 @@ class YoutubeMusic(Page):
             }
         )
 
-        print(r)
+        self.LOGGER.debug(str(r))
+        # dump_to_file(f"{search_query}.json", r.content, is_json=True)
+
+        renderer_list = r.json().get("contents", {}).get("tabbedSearchResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer").get("content", {}).get("sectionListRenderer", {}).get("contents", [])
+        
+        if DEBUG:
+            for i, content in enumerate(renderer_list):
+                dump_to_file(f"{i}-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
 
         return [
             Song(title="Lore Ipsum")
