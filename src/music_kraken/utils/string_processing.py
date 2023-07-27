@@ -1,7 +1,13 @@
+from typing import Tuple
+
 from transliterate.exceptions import LanguageDetectionError
 from transliterate import translit
-
 from pathvalidate import sanitize_filename
+
+
+COMMON_TITLE_APPENDIX_LIST: Tuple[str, ...] = (
+    "(official video)",
+)
 
 
 def unify(string: str) -> str:
@@ -33,3 +39,32 @@ def fit_to_file_system(string: str) -> str:
     string = sanitize_filename(string)
 
     return string
+
+
+def clean_song_title(raw_song_title: str, artist_name: str) -> str:
+    """
+    This function cleans common naming "conventions" for non clean song titles, like the title of youtube videos
+    
+    cleans:
+
+    - `artist - song` -> `song`
+    - `song (Official Video)` -> `song`
+    - ` song` -> `song`
+    - `song (prod. some producer)`
+    """
+    raw_song_title = raw_song_title.strip()
+    artist_name = artist_name.strip()
+
+    # Clean official Video appendix
+    for dirty_appendix in COMMON_TITLE_APPENDIX_LIST:
+        if raw_song_title.lower().endswith(dirty_appendix):
+            raw_song_title = raw_song_title[:-len(dirty_appendix)].strip()
+
+    # Remove artist from the start of the title
+    if raw_song_title.lower().startswith(artist_name.lower()):
+        raw_song_title = raw_song_title[len(artist_name):].strip()
+
+        if raw_song_title.startswith("-"):
+            raw_song_title = raw_song_title[1:].strip()
+
+    return raw_song_title.strip()

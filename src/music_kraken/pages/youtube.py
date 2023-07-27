@@ -19,6 +19,7 @@ from ..objects import (
     ID3Timestamp
 )
 from ..connection import Connection
+from ..utils.string_processing import clean_song_title
 from ..utils.support_classes import DownloadResult
 from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK, PIPED_INSTANCE, SLEEP_AFTER_YOUTUBE_403
 
@@ -226,6 +227,10 @@ class YouTube(Page):
             ))
 
         else:
+            # If the song is not a topic song in the beginning, it cleans the title. If it is from a topic channel, it is clean anyways
+            # If cleaned data is returned by the api, it will be overridden in the next step anyways
+            title = clean_song_title(title, _author)
+
             for music_track in data.get("musicTracks", []):
                 title = music_track["song"]
                 license_str = music_track["license"]
