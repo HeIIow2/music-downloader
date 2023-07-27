@@ -223,9 +223,11 @@ class YoutubeMusic(Page):
         _estimated_time = sum(len(search_query) * random.randint(50, 100) for _ in search_query.strip())
         FIRST_EDITED_TIME = LAST_EDITED_TIME - _estimated_time if LAST_EDITED_TIME - self.start_millis > _estimated_time else random.randint(50, 100)
 
+        query_continue = "" if self.credentials.ctoken == "" else f"&ctoken={self.credentials.ctoken}&continuation={self.credentials.ctoken}"
+
         # construct the request
         r = self.connection.post(
-            url=get_youtube_url(path="/youtubei/v1/search", query=f"key={self.credentials.api_key}&prettyPrint=false"),
+            url=get_youtube_url(path="/youtubei/v1/search", query=f"key={self.credentials.api_key}&prettyPrint=false"+query_continue),
             json={
                 "context": {**self.credentials.context, "adSignalsInfo":{"params":[]}},
                 "query": search_query,
