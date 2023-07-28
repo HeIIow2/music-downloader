@@ -274,11 +274,17 @@ class YoutubeMusic(Page):
         cant use fixed indices, because if something has no entries, the list dissappears
         instead I have to try parse everything, and just reject community playlists and profiles.
         """
+
+        for renderer in renderer_list:
+            results.extend(parse_renderer(renderer))
+
+        """
         results.extend(parse_renderer(renderer_list[1]))
         results.extend(parse_renderer(renderer_list[2]))
         results.extend(parse_renderer(renderer_list[4]))
         results.extend(parse_renderer(renderer_list[6]))
-
+        """
+        
         return results
     
     def label_search(self, label: Label) -> List[Label]:

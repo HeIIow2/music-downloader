@@ -112,6 +112,12 @@ class ConnectionSection(Section):
             description="This is the API key used by YouTube-Music internally.\nDw. if it is empty, Rachel will fetch it automatically for you <333\n(she will also update outdated api keys/those that don't work)",
             value="AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30"
         )
+
+        self.YOUTUBE_MUSIC_CLEAN_DATA = BoolAttribute(
+            name="youtube_music_clean_data",
+            description="If set to true, it exclusively fetches artists/albums/songs, not things like user channels etc.",
+            value="true"
+        )
         
         self.ALL_YOUTUBE_URLS = UrlListAttribute(
             name="youtube_url",
@@ -140,6 +146,7 @@ class ConnectionSection(Section):
             self.PIPED_INSTANCE,
             self.SLEEP_AFTER_YOUTUBE_403,
             self.YOUTUBE_MUSIC_API_KEY,
+            self.YOUTUBE_MUSIC_CLEAN_DATA,
             self.ALL_YOUTUBE_URLS,
             self.SPONSOR_BLOCK
         ]
