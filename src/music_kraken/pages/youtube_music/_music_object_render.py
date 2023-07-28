@@ -23,20 +23,33 @@ class PageType(Enum):
     ALBUM = "MUSIC_PAGE_TYPE_ALBUM"
     CHANNEL = "MUSIC_PAGE_TYPE_USER_CHANNEL"
     PLAYLIST = "MUSIC_PAGE_TYPE_PLAYLIST"
+    SONG = "song"
 
 
 def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
-    navigation_endpoint = run_element.get("navigationEndpoint", {}).get("browseEndpoint", {})
+    if "navigationEndpoint" not in run_element:
+        return
     
-    page_type_string = navigation_endpoint.get("browseEndpointContextSupportedConfigs", {}).get("browseEndpointContextMusicConfig", {}).get("pageType", "")
-    element_type = PageType(page_type_string)
+    _temp_nav = run_element.get("navigationEndpoint", {})
+    is_video = "watchEndpoint" in _temp_nav
+
+    navigation_endpoint = _temp_nav.get("watchEndpoint" if is_video else "browseEndpoint", {})
     
-    element_id = navigation_endpoint.get("browseId")
+    element_type = PageType.SONG
+    if not is_video:
+        page_type_string = navigation_endpoint.get("browseEndpointContextSupportedConfigs", {}).get("browseEndpointContextMusicConfig", {}).get("pageType", "")
+        element_type = PageType(page_type_string)
+    
+    element_id = navigation_endpoint.get("videoId" if is_video else "browseId")
     element_text =  run_element.get("text")
 
     if element_id is None or element_text is None:
         LOGGER.warning("Couldn't find either the id or text of a Youtube music element.")
         return
+    
+    if is_video:
+        source = Source(SOURCE_PAGE, f"https://music.youtube.com/watch?v={element_id}")
+        return Song(title=element_text, source_list=[source])
 
     if element_type == PageType.ARTIST or element_type == PageType.CHANNEL:
         source = Source(SOURCE_PAGE, f"https://music.youtube.com/channel/{element_id}")
@@ -53,9 +66,6 @@ def parse_run_list(run_list: List[dict]) -> List[DatabaseObject]:
     music_object_list: List[DatabaseObject] = []
 
     for run_renderer in run_list:
-        if "navigationEndpoint" not in run_renderer:
-            continue
-
         music_object = parse_run_element(run_renderer)
         if music_object is None:
             continue
