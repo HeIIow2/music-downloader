@@ -65,10 +65,20 @@ def music_responsive_list_item_renderer(renderer: dict) -> List[DatabaseObject]:
     
     return results
 
+
+def music_shelf_renderer(renderer: dict) -> List[DatabaseObject]:
+    result = []
+    for subrenderer in renderer.get("contents"):
+        result.extend(parse_renderer(subrenderer))
+    
+    return result
+
+
 RENDERER_PARSERS = {
     "musicCardShelfRenderer": music_card_shelf_renderer,
     "musicResponsiveListItemRenderer": music_responsive_list_item_renderer,
-    "musicResponsiveListItemFlexColumnRenderer": music_responsive_list_item_flex_column_renderer
+    "musicResponsiveListItemFlexColumnRenderer": music_responsive_list_item_flex_column_renderer,
+    "musicShelfRenderer": music_card_shelf_renderer,
 }
 
 def parse_renderer(renderer: dict) -> List[DatabaseObject]:

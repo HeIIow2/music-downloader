@@ -268,7 +268,16 @@ class YoutubeMusic(Page):
                 dump_to_file(f"{i}-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
 
         results = []
+
+        """
+        TODO
+        cant use fixed indices, because if something has no entries, the list dissappears
+        instead I have to try parse everything, and just reject community playlists and profiles.
+        """
         results.extend(parse_renderer(renderer_list[1]))
+        results.extend(parse_renderer(renderer_list[2]))
+        results.extend(parse_renderer(renderer_list[4]))
+        results.extend(parse_renderer(renderer_list[6]))
 
         return results
     
