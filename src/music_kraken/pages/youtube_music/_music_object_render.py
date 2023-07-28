@@ -25,6 +25,7 @@ class PageType(Enum):
     PLAYLIST = "MUSIC_PAGE_TYPE_PLAYLIST"
     SONG = "MUSIC_VIDEO_TYPE_ATV"
     VIDEO = "MUSIC_VIDEO_TYPE_UGC"
+    OFFICIAL_MUSIC_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
 
 
 def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
@@ -49,7 +50,7 @@ def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
         LOGGER.warning("Couldn't find either the id or text of a Youtube music element.")
         return
     
-    if element_type == PageType.SONG or (element_type == PageType.VIDEO and not YOUTUBE_MUSIC_CLEAN_DATA):
+    if element_type == PageType.SONG or (element_type == PageType.VIDEO and not YOUTUBE_MUSIC_CLEAN_DATA) or (element_type == PageType.OFFICIAL_MUSIC_VIDEO and not YOUTUBE_MUSIC_CLEAN_DATA):
         source = Source(SOURCE_PAGE, f"https://music.youtube.com/watch?v={element_id}")
         return Song(title=element_text, source_list=[source])
 

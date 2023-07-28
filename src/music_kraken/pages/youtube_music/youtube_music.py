@@ -223,8 +223,6 @@ class YoutubeMusic(Page):
     
     def general_search(self, search_query: str) -> List[DatabaseObject]:
         search_query = search_query.strip()
-        self.LOGGER.info(f"general search for {search_query}")
-        print(self.credentials)
 
         urlescaped_query: str = quote(search_query.strip().replace(" ", "+"))
 
@@ -259,7 +257,6 @@ class YoutubeMusic(Page):
         )
 
         self.LOGGER.debug(str(r))
-        # dump_to_file(f"{search_query}.json", r.content, is_json=True)
 
         renderer_list = r.json().get("contents", {}).get("tabbedSearchResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer").get("content", {}).get("sectionListRenderer", {}).get("contents", [])
         
@@ -270,7 +267,6 @@ class YoutubeMusic(Page):
         results = []
 
         """
-        TODO
         cant use fixed indices, because if something has no entries, the list dissappears
         instead I have to try parse everything, and just reject community playlists and profiles.
         """
@@ -278,13 +274,6 @@ class YoutubeMusic(Page):
         for renderer in renderer_list:
             results.extend(parse_renderer(renderer))
 
-        """
-        results.extend(parse_renderer(renderer_list[1]))
-        results.extend(parse_renderer(renderer_list[2]))
-        results.extend(parse_renderer(renderer_list[4]))
-        results.extend(parse_renderer(renderer_list[6]))
-        """
-        
         return results
     
     def label_search(self, label: Label) -> List[Label]:

@@ -76,7 +76,7 @@ class Connection:
     def _hearthbeat_loop(self, interval: float):
         def hearthbeat_wrapper():
             self.session_is_occupied = True
-            self.LOGGER.info(f"I am living. (sending a hearthbeat)")
+            self.LOGGER.debug(f"I am living. (sending a hearthbeat)")
             self.hearthbeat()
             self.LOGGER.debug(f"finished the hearthbeat")
             self.session_is_occupied = False

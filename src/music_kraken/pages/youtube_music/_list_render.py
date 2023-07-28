@@ -79,6 +79,8 @@ RENDERER_PARSERS = {
     "musicResponsiveListItemRenderer": music_responsive_list_item_renderer,
     "musicResponsiveListItemFlexColumnRenderer": music_responsive_list_item_flex_column_renderer,
     "musicShelfRenderer": music_card_shelf_renderer,
+
+    "itemSectionRenderer": lambda _: [],
 }
 
 def parse_renderer(renderer: dict) -> List[DatabaseObject]:

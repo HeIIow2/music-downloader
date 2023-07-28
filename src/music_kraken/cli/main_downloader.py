@@ -214,12 +214,15 @@ class Downloader:
         artist = None if not "a" in key_text else Artist(name=key_text["a"], dynamic=True)
         
         if song is not None:
-            song.album_collection.append(album)
-            song.main_artist_collection.append(artist)
+            if album is not None:
+                song.album_collection.append(album)
+            if artist is not None:
+                song.main_artist_collection.append(artist)
             return Query(raw_query=query, music_object=song)
         
         if album is not None:
-            album.artist_collection.append(artist)
+            if artist is not None:
+                album.artist_collection.append(artist)
             return Query(raw_query=query, music_object=album)
         
         if artist is not None:
