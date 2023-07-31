@@ -28,6 +28,7 @@ from ...connection import Connection
 from ...utils.support_classes import DownloadResult
 
 from ._list_render import parse_renderer
+from .super_youtube import SuperYouTube
 
 
 def get_youtube_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
@@ -90,9 +91,9 @@ class YouTubeMusicCredentials:
     context: dict
 
 
-class YoutubeMusic(Page):
+class YoutubeMusic(SuperYouTube):
     # CHANGE
-    SOURCE_TYPE = SourcePages.YOUTUBE
+    SOURCE_TYPE = SourcePages.YOUTUBE_MUSIC
     LOGGER = YOUTUBE_MUSIC_LOGGER
 
     def __init__(self, *args, **kwargs):
@@ -275,18 +276,7 @@ class YoutubeMusic(Page):
             results.extend(parse_renderer(renderer))
 
         return results
-    
-    def label_search(self, label: Label) -> List[Label]:
-        return []
-    
-    def artist_search(self, artist: Artist) -> List[Artist]:
-        return []
-    
-    def album_search(self, album: Album) -> List[Album]:
-        return []
-    
-    def song_search(self, song: Song) -> List[Song]:
-        return []
+
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
@@ -296,9 +286,3 @@ class YoutubeMusic(Page):
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
         return Artist()
-
-    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
-        return Label()
-
-    def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
-        return DownloadResult()
