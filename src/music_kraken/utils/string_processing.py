@@ -34,7 +34,7 @@ def fit_to_file_system(string: str) -> str:
 
         string = string[1:]
 
-    string = string.replace("/", "|").replace("\\", "|")
+    string = string.replace("/", "_").replace("\\", "_")
 
     string = sanitize_filename(string)
 
