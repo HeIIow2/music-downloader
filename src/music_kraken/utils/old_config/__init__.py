@@ -1,10 +1,10 @@
-from .logging import LOGGING_SECTION
-from .audio import AUDIO_SECTION
-from .connection import CONNECTION_SECTION
-from .misc import MISC_SECTION
-from .paths import PATHS_SECTION
+from .sections.logging import LOGGING_SECTION
+from .sections.audio import AUDIO_SECTION
+from .sections.connection import CONNECTION_SECTION
+from .sections.misc import MISC_SECTION
+from .sections.paths import PATHS_SECTION
 
-from .paths import LOCATIONS
+from .sections.paths import LOCATIONS
 from .config import Config
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from ..path_manager import LOCATIONS
-from .base_classes import Section, StringAttribute, ListAttribute
+from ...path_manager import LOCATIONS
+from ..base_classes import Section, StringAttribute, ListAttribute
 
 
 class PathAttribute(StringAttribute):

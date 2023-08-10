@@ -1,6 +1,6 @@
 import logging
 
-from .base_classes import (
+from ..base_classes import (
     SingleAttribute,
     FloatAttribute,
     StringAttribute,
@@ -10,8 +10,8 @@ from .base_classes import (
     BoolAttribute,
     ListAttribute
 )
-from ...utils.enums.album import AlbumType
-from ...utils.exception.config import SettingValueError
+from ...enums.album import AlbumType
+from ...exception.config import SettingValueError
 
 # Only the formats with id3 metadata can be used
 # https://www.audioranger.com/audio-formats.php

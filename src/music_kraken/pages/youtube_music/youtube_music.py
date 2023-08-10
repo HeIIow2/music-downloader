@@ -8,7 +8,7 @@ import re
 
 from ...utils.exception.config import SettingValueError
 from ...utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
-from ...utils.config import CONNECTION_SECTION, write_config
+from ...utils.old_config import CONNECTION_SECTION, write_config
 from ...utils.functions import get_current_millis
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -279,10 +279,13 @@ class YoutubeMusic(SuperYouTube):
 
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
+        print(source)
         return Song()
 
     def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
         return Album()
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        print("fuck you")
+        print(source)
         return Artist()

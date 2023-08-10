@@ -6,11 +6,11 @@ import os
 from ..exception.config import SettingNotFound, SettingValueError
 from ..path_manager import LOCATIONS
 from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PREFIX
-from .audio import AUDIO_SECTION
-from .logging import LOGGING_SECTION
-from .connection import CONNECTION_SECTION
-from .misc import MISC_SECTION
-from .paths import PATHS_SECTION
+from .sections.audio import AUDIO_SECTION
+from .sections.logging import LOGGING_SECTION
+from .sections.connection import CONNECTION_SECTION
+from .sections.misc import MISC_SECTION
+from .sections.paths import PATHS_SECTION
 
 
 LOGGER = logging.getLogger("config")

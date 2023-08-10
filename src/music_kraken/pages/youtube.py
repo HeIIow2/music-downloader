@@ -67,17 +67,6 @@ class YouTube(SuperYouTube):
 
         super().__init__(*args, **kwargs)
 
-    def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
-        _url_type = {
-            YouTubeUrlType.CHANNEL: Artist,
-            YouTubeUrlType.PLAYLIST: Album,
-            YouTubeUrlType.VIDEO: Song,
-        }
-        
-        parsed = YouTubeUrl(source.url)
-        if parsed.url_type in _url_type:
-            return _url_type[parsed.url_type]
-
     def general_search(self, search_query: str) -> List[DatabaseObject]:
         return self.artist_search(Artist(name=search_query, dynamic=True))
     

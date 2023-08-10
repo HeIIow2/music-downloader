@@ -3,7 +3,7 @@ import logging
 import gc
 import musicbrainzngs
 
-from .utils.config import read_config
+from .utils.old_config import read_config
 from .utils.shared import MODIFY_GC
 from . import cli
 

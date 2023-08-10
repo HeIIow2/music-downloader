@@ -1,9 +1,9 @@
 from urllib.parse import urlparse, ParseResult
 import re
 
-from .base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute, StringAttribute
-from ..regex import URL_PATTERN
-from ..exception.config import SettingValueError
+from ..base_classes import Section, FloatAttribute, IntAttribute, BoolAttribute, ListAttribute, StringAttribute
+from ...regex import URL_PATTERN
+from ...exception.config import SettingValueError
 
 
 class ProxAttribute(ListAttribute):

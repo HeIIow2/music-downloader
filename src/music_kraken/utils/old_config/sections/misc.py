@@ -1,4 +1,4 @@
-from .base_classes import Section, IntAttribute, ListAttribute, BoolAttribute
+from ..base_classes import Section, IntAttribute, ListAttribute, BoolAttribute
 
 
 class MiscSection(Section):

@@ -33,3 +33,10 @@ def fit_to_file_system(string: str) -> str:
     string = sanitize_filename(string)
 
     return string
+
+
+def comment(uncommented_string: str) -> str:
+    _fragments = uncommented_string.split("\n")
+    _fragments = ["# " + frag for frag in _fragments]
+    return "\n".join(_fragments)
+

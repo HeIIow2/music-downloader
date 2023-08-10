@@ -1,7 +1,7 @@
 import logging
 from typing import Callable
 
-from .base_classes import SingleAttribute, StringAttribute, Section, Description, EmptyLine
+from ..base_classes import SingleAttribute, StringAttribute, Section, Description, EmptyLine
 
 LOG_LEVELS = {
     "CRITICAL": 50,

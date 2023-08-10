@@ -50,11 +50,16 @@ class YouTubeUrl:
     """
     
     def __init__(self, url: str) -> None:
+        self.SOURCE_TYPE = SourcePages.YOUTUBE
+
         """
         Raises Index exception for wrong url, and value error for not found enum type
         """
         self.id = ""
         parsed = urlparse(url=url)
+
+        if parsed.netloc == "music.youtube.com":
+            self.SOURCE_TYPE = SourcePages.YOUTUBE_MUSIC
         
         self.url_type: YouTubeUrlType
         
@@ -134,6 +139,19 @@ class SuperYouTube(Page):
         # the stuff with the connection is, to ensure sponsorblock uses the proxies, my programm does
         _sponsorblock_connection: Connection = Connection(host="https://sponsor.ajay.app/")
         self.sponsorblock_client = sponsorblock.Client(session=_sponsorblock_connection.session)
+
+
+    def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
+        _url_type = {
+            YouTubeUrlType.CHANNEL: Artist,
+            YouTubeUrlType.PLAYLIST: Album,
+            YouTubeUrlType.VIDEO: Song,
+        }
+        
+        parsed = YouTubeUrl(source.url)
+        if parsed.url_type in _url_type:
+            return _url_type[parsed.url_type]
+
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """

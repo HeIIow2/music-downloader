@@ -5,7 +5,7 @@ import re
 from .utils import cli_function
 from .options.first_config import initial_config
 
-from ..utils.config import set_name_to_value, write_config
+from ..utils.old_config import set_name_to_value, write_config
 from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH, HELP_MESSAGE, HASNT_YET_STARTED
 from ..utils.regex import URL_PATTERN
 from ..utils.string_processing import fit_to_file_system
