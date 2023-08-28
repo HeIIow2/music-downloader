@@ -75,6 +75,9 @@ class Pages:
             return music_object
         
         for source_page in music_object.source_collection.source_pages:
+            if source_page not in self._source_to_page:
+                continue
+
             page_type = self._source_to_page[source_page]
             
             if page_type in self._pages_set:
