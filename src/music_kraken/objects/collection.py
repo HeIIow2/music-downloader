@@ -1,8 +1,11 @@
-from typing import List, Iterable, Dict
+from typing import List, Iterable, Dict, TypeVar, Generic
 from collections import defaultdict
 from dataclasses import dataclass
 
 from .parents import DatabaseObject
+
+
+T = TypeVar('T', bound=DatabaseObject)
 
 
 @dataclass
@@ -12,21 +15,21 @@ class AppendResult:
     was_the_same: bool
 
 
-class Collection:
+class Collection(Generic[T]):
     """
     This a class for the iterables
     like tracklist or discography
     """
-    _data: List[DatabaseObject]
+    _data: List[T]
 
     _by_url: dict
     _by_attribute: dict
 
-    def __init__(self, data: List[DatabaseObject] = None, element_type=None, *args, **kwargs) -> None:
+    def __init__(self, data: List[T] = None, element_type=None, *args, **kwargs) -> None:
         # Attribute needs to point to
         self.element_type = element_type
 
-        self._data: List[DatabaseObject] = list()
+        self._data: List[T] = list()
 
         """
         example of attribute_to_object_map
@@ -40,7 +43,7 @@ class Collection:
         }
         ```
         """
-        self._attribute_to_object_map: Dict[str, Dict[object, DatabaseObject]] = defaultdict(dict)
+        self._attribute_to_object_map: Dict[str, Dict[object, T]] = defaultdict(dict)
         self._used_ids: set = set()
 
         if data is not None:
@@ -49,7 +52,7 @@ class Collection:
     def sort(self, reverse: bool = False, **kwargs):
         self._data.sort(reverse=reverse, **kwargs)
 
-    def map_element(self, element: DatabaseObject):
+    def map_element(self, element: T):
         for name, value in element.indexing_values:
             if value is None:
                 continue
@@ -58,7 +61,7 @@ class Collection:
 
         self._used_ids.add(element.id)
 
-    def unmap_element(self, element: DatabaseObject):
+    def unmap_element(self, element: T):
         for name, value in element.indexing_values:
             if value is None:
                 continue
@@ -70,7 +73,7 @@ class Collection:
                     except KeyError:
                         pass
 
-    def append(self, element: DatabaseObject, merge_on_conflict: bool = True,
+    def append(self, element: T, merge_on_conflict: bool = True,
                merge_into_existing: bool = True) -> AppendResult:
         """
         :param element:
@@ -117,7 +120,7 @@ class Collection:
 
         return AppendResult(False, element, False)
 
-    def extend(self, element_list: Iterable[DatabaseObject], merge_on_conflict: bool = True,
+    def extend(self, element_list: Iterable[T], merge_on_conflict: bool = True,
                merge_into_existing: bool = True):
         for element in element_list:
             self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
@@ -138,7 +141,7 @@ class Collection:
 
         return self._data[key]
 
-    def __setitem__(self, key, value: DatabaseObject):
+    def __setitem__(self, key, value: T):
         if type(key) != int:
             return ValueError("key needs to be an integer")
 
@@ -149,7 +152,7 @@ class Collection:
         self._data[key] = value
 
     @property
-    def shallow_list(self) -> List[DatabaseObject]:
+    def shallow_list(self) -> List[T]:
         """
         returns a shallow copy of the data list
         """

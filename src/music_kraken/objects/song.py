@@ -82,11 +82,11 @@ class Song(MainObject):
         self.notes: FormattedText = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.target_collection: Collection = Collection(data=target_list, element_type=Target)
-        self.lyrics_collection: Collection = Collection(data=lyrics_list, element_type=Lyrics)
-        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-        self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
-        self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
+        self.target_collection: Collection[Target] = Collection(data=target_list, element_type=Target)
+        self.lyrics_collection: Collection[Lyrics] = Collection(data=lyrics_list, element_type=Lyrics)
+        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
+        self.main_artist_collection: Collection[Artist] = Collection(data=main_artist_list, element_type=Artist)
+        self.feature_artist_collection: Collection[Artist] = Collection(data=feature_artist_list, element_type=Artist)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -255,9 +255,9 @@ class Album(MainObject):
         self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.song_collection: Collection = Collection(data=song_list, element_type=Song)
-        self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
-        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+        self.song_collection: Collection[Song] = Collection(data=song_list, element_type=Song)
+        self.artist_collection: Collection[Artist] = Collection(data=artist_list, element_type=Artist)
+        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -481,9 +481,9 @@ class Artist(MainObject):
         self.general_genre = general_genre
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.feature_song_collection: Collection = Collection(data=feature_song_list, element_type=Song)
-        self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
-        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+        self.feature_song_collection: Collection[Song] = Collection(data=feature_song_list, element_type=Song)
+        self.main_album_collection: Collection[Album] = Collection(data=main_album_list, element_type=Album)
+        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
     def compile(self, merge_into: bool = False):
         """
@@ -685,8 +685,8 @@ class Label(MainObject):
         self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-        self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
+        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
+        self.current_artist_collection: Collection[Artist] = Collection(data=current_artist_list, element_type=Artist)
 
     def _build_recursive_structures(self, build_version: int, merge: False):
         if build_version == self.build_version:
