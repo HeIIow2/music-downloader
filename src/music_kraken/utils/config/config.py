@@ -42,7 +42,7 @@ class Config:
 
         self._length = 0
         self._section_list: List[Section] = []
-        self._name_section_map: Dict[str, Section] = dict()
+        self.name_section_map: Dict[str, Section] = dict()
 
         for element in self.config_elements:
             if not isinstance(element, Section):
@@ -50,12 +50,12 @@ class Config:
 
             self._section_list.append(element)
             for name in element.name_attribute_map:
-                if name in self._name_section_map:
+                if name in self.name_section_map:
                     raise ValueError(f"Two sections have the same name: "
                                      f"{name}: "
-                                     f"{element.__class__.__name__} {self._name_section_map[name].__class__.__name__}")
+                                     f"{element.__class__.__name__} {self.name_section_map[name].__class__.__name__}")
 
-                self._name_section_map[name] = element
+                self.name_section_map[name] = element
                 self._length += 1
 
     def set_name_to_value(self, name: str, value: str, silent: bool = True):
@@ -65,7 +65,7 @@ class Config:
         :param value:
         :return:
         """
-        if name not in self._name_section_map:
+        if name not in self.name_section_map:
             if silent:
                 LOGGER.warning(f"The setting \"{name}\" is either deprecated, or doesn't exist.")
                 return
@@ -73,7 +73,7 @@ class Config:
 
         LOGGER.debug(f"setting: {name} value: {value}")
 
-        self._name_section_map[name].modify_setting(setting_name=name, new_value=value)
+        self.name_section_map[name].modify_setting(setting_name=name, new_value=value)
 
     def __len__(self):
         return self._length
