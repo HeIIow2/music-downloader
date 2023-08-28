@@ -87,7 +87,7 @@ def cli():
         logging.getLogger().setLevel(logging.DEBUG)
 
     from . import cli
-    from .utils.old_config import read_config
+    from .utils.config import read_config
     from .utils import shared
     
     if arguments.r:

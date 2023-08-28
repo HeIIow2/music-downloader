@@ -19,7 +19,7 @@ class Locations:
 
         self.CONFIG_DIRECTORY = get_config_directory(str(application_name))
         self.CONFIG_DIRECTORY.mkdir(exist_ok=True, parents=True)
-        self.CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.toml")
+        self.CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
         self.LEGACY_CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
         
         self.FFMPEG_BIN = Path(FFmpeg(enable_log=False).get_ffmpeg_bin())

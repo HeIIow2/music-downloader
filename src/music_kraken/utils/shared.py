@@ -5,7 +5,7 @@ from typing import List, Tuple, Set, Dict
 from urllib.parse import ParseResult
 
 from .path_manager import LOCATIONS
-from .old_config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
+from .config import LOGGING_SECTION, AUDIO_SECTION, CONNECTION_SECTION, MISC_SECTION, PATHS_SECTION
 from .enums.album import AlbumType
 
 CONFIG_FILE = LOCATIONS.CONFIG_FILE

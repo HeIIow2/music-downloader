@@ -8,7 +8,7 @@ import re
 
 from ...utils.exception.config import SettingValueError
 from ...utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
-from ...utils.old_config import CONNECTION_SECTION, write_config
+from ...utils.config import CONNECTION_SECTION, write_config
 from ...utils.functions import get_current_millis
 if DEBUG:
     from ...utils.debug_utils import dump_to_file

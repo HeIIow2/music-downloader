@@ -1,6 +1,6 @@
 from ..utils import cli_function
 
-from ...utils.old_config import config, write_config
+from ...utils.config import config, write_config
 from ...utils import exception
 
 
