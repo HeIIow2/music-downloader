@@ -1,10 +1,12 @@
-from typing import Tuple, Type, Dict, List, Set
+from typing import Tuple, Type, Dict, Set
 
 from .results import SearchResults
 from ..objects import DatabaseObject, Source
+
 from ..utils.enums.source import SourcePages
 from ..utils.support_classes import Query, DownloadResult
 from ..utils.exception.download import UrlNotFoundException
+
 from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, INDEPENDENT_DB_OBJECTS
 
 DEBUGGING_PAGE = YoutubeMusic

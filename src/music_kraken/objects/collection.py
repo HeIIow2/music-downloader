@@ -1,4 +1,4 @@
-from typing import List, Iterable, Dict, TypeVar, Generic
+from typing import List, Iterable, Dict, TypeVar, Generic, Iterator
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -125,7 +125,7 @@ class Collection(Generic[T]):
         for element in element_list:
             self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         for element in self.shallow_list:
             yield element
 
@@ -135,7 +135,7 @@ class Collection(Generic[T]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> T:
         if type(key) != int:
             return ValueError("key needs to be an integer")
 

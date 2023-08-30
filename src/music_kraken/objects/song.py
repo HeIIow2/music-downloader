@@ -18,7 +18,8 @@ from .parents import MainObject, DatabaseObject
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
-from ..utils.shared import SORT_BY_ALBUM_TYPE, SORT_BY_DATE
+
+from ..utils import settings
 
 """
 All Objects dependent 
@@ -473,10 +474,7 @@ class Artist(MainObject):
         i mean do as you want but there is no strict rule about em so good luck
         """
         self.notes: FormattedText = notes or FormattedText()
-        """
-        TODO
-        implement in db
-        """
+
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
 
@@ -515,7 +513,7 @@ class Artist(MainObject):
             AlbumType.STUDIO_ALBUM: 0,
             AlbumType.EP: 0,
             AlbumType.SINGLE: 1
-        }) if SORT_BY_ALBUM_TYPE else defaultdict(lambda: 0)
+        }) if settings["sort_album_by_type"] else defaultdict(lambda: 0)
 
         sections = defaultdict(list)
 
@@ -528,7 +526,7 @@ class Artist(MainObject):
             # album is just a value used in loops
             nonlocal album
 
-            if SORT_BY_DATE:
+            if settings["sort_by_date"]:
                 _section.sort(key=lambda _album: _album.date, reverse=True)
 
             new_last_albumsort = last_albumsort
