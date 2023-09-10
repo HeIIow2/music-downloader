@@ -5,6 +5,7 @@ import random
 import json
 from dataclasses import dataclass
 import re
+import requests
 
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
@@ -59,11 +60,25 @@ class YoutubeMusicConnection(Connection):
 
         # cookie consent for youtube
         # https://stackoverflow.com/a/66940841/16804841
+        """     
         self.session.cookies.set(
-            name='CONSENT', value='YES+cb.20210328-17-p0.en-GB+FX+{}'.format(random.randint(100, 999)),
+            name='CONSENT', 
+            value='YES+cb.20250328-17-p0.en-GB+FX+{}'.format(random.randint(100, 999)),
+            path='/', domain='.youtube.com'
+        ) 
+
+        self.session.cookies.set(
+            name='CONSENT', 
+            value='YES+cb.20250328-17-p0.en-GB+FX+{}'.format(random.randint(100, 999)),
             path='/', domain='.youtube.com'
         )
-        self.start_hearthbeat()
+        """
+        self.session.cookies.set(
+            name='CONSENT', 
+            value='PENDING+258',
+            path='/', domain='.youtube.com'
+        )
+        # self.start_hearthbeat()
 
     def hearthbeat(self):
         r = self.get("https://music.youtube.com/verify_session", is_hearthbeat=True)
@@ -118,11 +133,38 @@ class YoutubeMusic(SuperYouTube):
         can be found at `view-source:https://music.youtube.com/`
         search for: "innertubeApiKey"
         """
+
         r = self.connection.get("https://music.youtube.com/")
         if r is None:
             return
         
+        if urlparse(r.url).netloc == "consent.youtube.com":
+            r = self.connection.post("https://consent.youtube.com/save", data={
+                'gl': 'DE',
+                'm': '0',
+                'app': '0',
+                'pc': 'ytm',
+                'continue': 'https://music.youtube.com/?cbrd=1',
+                'x': '6',
+                'bl': 'boq_identityfrontenduiserver_20230905.04_p0',
+                'hl': 'en',
+                'src': '1',
+                'cm': '2',
+                'set_ytc': 'true',
+                'set_apyt': 'true',
+                'set_eom': 'false'
+            })
+            if r is None:
+                return
+
+        r = self.connection.get("https://music.youtube.com/")
+        if r is None:
+            return
+
         content = r.text
+
+        if DEBUG:
+            dump_to_file(f"youtube_music_index.html", r.text, exit_after_dump=False)
 
         # api key
         api_key_pattern = (
@@ -155,10 +197,10 @@ class YoutubeMusic(SuperYouTube):
         # context
         context_pattern = r"(?<=\"INNERTUBE_CONTEXT\":{)(.*?)(?=},\"INNERTUBE_CONTEXT_CLIENT_NAME\":)"
         found_context = False
-        for context_string in re.findall(context_pattern, content):
+        for context_string in re.findall(context_pattern, content, re.M):
             try:
                 youtube_settings["youtube_music_innertube_context"] = json.loads("{" + context_string + "}")
-                found_context
+                found_context = True
             except json.decoder.JSONDecodeError:
                 continue
 

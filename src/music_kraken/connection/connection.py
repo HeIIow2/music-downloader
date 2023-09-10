@@ -229,7 +229,7 @@ class Connection:
     def post(
             self,
             url: str,
-            json: dict,
+            json: dict = None,
             refer_from_origin: bool = True,
             stream: bool = False,
             accepted_response_codes: set = None,
