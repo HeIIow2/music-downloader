@@ -3,7 +3,8 @@ from typing import Optional, List, Union, Iterable, Callable
 from dataclasses import dataclass
 import logging
 import toml
-from copy import deepcopy
+from copy import deepcopy, copy
+from urllib.parse import urlparse, urlunparse, ParseResult
 
 from ...exception.config import SettingValueError
 from ..utils import comment
@@ -20,7 +21,6 @@ def comment_string(uncommented: str) -> str:
     processed_lines: List[str] = []
 
     for line in unprocessed_lines:
-        line: str = line.strip()
         if line.startswith(COMMENT_PREFIX) or line == "":
             processed_lines.append(line)
             continue
@@ -56,17 +56,14 @@ class Attribute:
 
         self.name = name
 
-        self.raw_data = {name: default_value}
-        self.value = None
+        self.value = self._recursive_parse_object(default_value, self.parse_simple_value)
 
         self.description: Optional[str] = description
         self.loaded_settings: dict = None
 
     def initialize_from_config(self, loaded_settings: dict):
         self.loaded_settings = loaded_settings
-
-        if not self.load_toml(self.raw_data):
-            logging.warning(f"Couldn't load the initial value of {self.name}: {self.raw_data[self.name]}")
+        self.loaded_settings.__setitem__(self.name, self.value, True)
 
     def unparse_simple_value(self, value: any) -> any:
         return value
@@ -75,18 +72,27 @@ class Attribute:
         return value
     
     def _recursive_parse_object(self, __object, callback: Callable):
+        __object = copy(__object)
+
         if isinstance(__object, dict):
             for key, value in __object.items():
                 __object[key] = self._recursive_parse_object(value, callback)
 
             return __object
         
-        if isinstance(__object, Union[list, tuple]):
+        if isinstance(__object, list) or (isinstance(__object, tuple) and not isinstance(__object, ParseResult)):
             for i, item in enumerate(__object):
                 __object[i] = self._recursive_parse_object(item, callback)
             return __object
 
         return callback(__object)
+    
+    def parse(self, unparsed_value):
+        self.value = self._recursive_parse_object(unparsed_value, self.parse_simple_value)
+        return self.value
+
+    def unparse(self, parsed_value):
+        return self._recursive_parse_object(parsed_value, self.unparse_simple_value)
 
     def load_toml(self, loaded_toml: dict) -> bool:
         """
@@ -97,17 +103,13 @@ class Attribute:
             LOGGER.warning(f"No setting by the name {self.name} found in the settings file.")
             self.loaded_settings.__setitem__(self.name, self.value, True)
             return
-        
-        self.raw_data = loaded_toml[self.name]
 
-        _object = deepcopy(loaded_toml[self.name])
         try:
-            parsed_object = self._recursive_parse_object(_object, self.parse_simple_value)
+            self.parse(loaded_toml[self.name])
         except SettingValueError as settings_error:
             logging.warning(settings_error)
             return False
-
-        self.value = parsed_object
+        
         self.loaded_settings.__setitem__(self.name, self.value, True)
         
         return True
@@ -120,8 +122,9 @@ class Attribute:
         if self.description is not None:
             string += comment(self.description) + "\n"
         
-        string += toml.dumps(self.raw_data)
+        string += toml.dumps({self.name: self.unparse(self.value)})
 
+        # print(string)
         return string
 
     def __str__(self):

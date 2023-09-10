@@ -16,10 +16,13 @@ class ConfigDict(dict):
     def __getattribute__(self, __name: str) -> Any:
         return super().__getattribute__(__name)
     
-    def __setitem__(self, __key: Any, __value: Any, from_attribute: bool = False) -> None:
+    def __setitem__(self, __key: Any, __value: Any, from_attribute: bool = False, is_parsed: bool = False) -> None:
         if not from_attribute:
             attribute: Attribute = self.config_reference.attribute_map[__key]
-            attribute.load_toml({attribute.name: __value})
+            if is_parsed:
+                attribute.value = __value
+            else:
+                attribute.parse(__value)
             self.config_reference.write()
 
             __value = attribute.value
@@ -44,7 +47,7 @@ class Config:
 
     @property
     def toml_string(self):
-        return "\n\n".join(component.toml_string for component in self.component_list)
+        return "\n".join(component.toml_string for component in self.component_list)
 
     def write(self):
         with self.config_file.open("w") as conf_file:

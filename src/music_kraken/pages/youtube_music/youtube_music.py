@@ -89,7 +89,7 @@ class YouTubeMusicCredentials:
 
     # the context in requests
     context: dict
-    
+
 
 class YoutubeMusic(SuperYouTube):
     # CHANGE
@@ -235,6 +235,5 @@ class YoutubeMusic(SuperYouTube):
         return Album()
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
-        print("fuck you")
         print(source)
         return Artist()

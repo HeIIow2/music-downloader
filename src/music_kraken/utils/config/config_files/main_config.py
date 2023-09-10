@@ -19,12 +19,14 @@ The changes you make to the comments, will be discarded, next time you run music
 
 Latest reset: {datetime.now()}
 
-_________           __           
-\\_   ___ \\  __ __ _/  |_   ____  
-/    \\  \\/ |  |  \\\\   __\\_/ __ \\ 
-\\     \\____|  |  / |  |  \\  ___/ 
- \\______  /|____/  |__|   \\___  >
-        \\/                    \\/ 
+   _____              
+  / ____|              
+ | |  __   __ _  _   _ 
+ | | |_ | / _` || | | |
+ | |__| || (_| || |_| |
+  \_____| \__,_| \__, |
+                  __/ |
+                 |___/ 
 """),
 
     Attribute(name="hasnt_yet_started", default_value=False, description="This will be set automatically, to look if it needs to run the scripts that run on start."),
@@ -74,10 +76,10 @@ all the error messages are shown."""),
 
     EmptyLine(),
 
-    PathAttribute(name="music_directory", default_value=LOCATIONS.MUSIC_DIRECTORY, description="The directory, all the music will be downloaded to."),
-    PathAttribute(name="temp_directory", default_value=LOCATIONS.TEMP_DIRECTORY, description="All temporary stuff is gonna be dumped in this directory."),
-    PathAttribute(name="log_file", default_value=LOCATIONS.get_log_file("download_logs.log")),
-    PathAttribute(name="ffmpeg_binary", default_value=LOCATIONS.FFMPEG_BIN, description="Set the path to the ffmpeg binary."),
+    PathAttribute(name="music_directory", default_value=LOCATIONS.MUSIC_DIRECTORY.resolve(), description="The directory, all the music will be downloaded to."),
+    PathAttribute(name="temp_directory", default_value=LOCATIONS.TEMP_DIRECTORY.resolve(), description="All temporary stuff is gonna be dumped in this directory."),
+    PathAttribute(name="log_file", default_value=LOCATIONS.get_log_file("download_logs.log").resolve()),
+    PathAttribute(name="ffmpeg_binary", default_value=LOCATIONS.FFMPEG_BIN.resolve(), description="Set the path to the ffmpeg binary."),
     Attribute(
         name="not_a_genre_regex",
         description="These regular expressions tell music-kraken, which sub-folders of the music-directory\n"

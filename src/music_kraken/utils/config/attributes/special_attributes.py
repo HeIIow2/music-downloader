@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Optional, Dict, Set
 from urllib.parse import urlparse, urlunparse
 import logging
@@ -16,11 +16,13 @@ class UrlAttribute(Attribute):
 
 
 class PathAttribute(Attribute):
-    def parse_simple_value(self, value: any) -> any:
+    def parse_simple_value(self, value: any) -> Path:
+        if isinstance(value, Path) or isinstance(value, PosixPath):
+            return value
         return Path(value)
     
-    def unparse_simple_value(self, value: any) -> any:
-        return value.resolve()
+    def unparse_simple_value(self, value: Path) -> any:
+        return str(value.resolve())
 
 
 
