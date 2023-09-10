@@ -16,12 +16,15 @@ class ConfigDict(dict):
     def __getattribute__(self, __name: str) -> Any:
         return super().__getattribute__(__name)
     
-    def __setitem__(self, __key: Any, __value: Any) -> None:
-        attribute: Attribute = self.config_reference.attribute_map[__key]
-        attribute.load_toml({attribute.name: __value})
-        self.config_reference.write()
+    def __setitem__(self, __key: Any, __value: Any, from_attribute: bool = False) -> None:
+        if not from_attribute:
+            attribute: Attribute = self.config_reference.attribute_map[__key]
+            attribute.load_toml({attribute.name: __value})
+            self.config_reference.write()
 
-        return super().__setitem__(__key, attribute.value)
+            __value = attribute.value
+
+        return super().__setitem__(__key, __value)
 
 
 class Config:
@@ -29,15 +32,15 @@ class Config:
         self.config_file: Path = config_file
 
         self.component_list: Tuple[Union[Attribute, Description, EmptyLine]] = componet_list
-        self.loaded_settings: dict = {}
+        self.loaded_settings: ConfigDict = ConfigDict(self)
 
         self.attribute_map = {}
         for component in self.component_list:
             if not isinstance(component, Attribute):
                 continue
             
+            component.initialize_from_config(self.loaded_settings)
             self.attribute_map[component.name] = component
-            self.loaded_settings[component.name] = component.value
 
     @property
     def toml_string(self):
@@ -59,4 +62,4 @@ class Config:
 
         for component in self.component_list:
             if isinstance(component, Attribute):
-                component.load_toml(toml_data, self.loaded_settings)
+                component.load_toml(toml_data)

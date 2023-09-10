@@ -89,7 +89,7 @@ class YouTubeMusicCredentials:
 
     # the context in requests
     context: dict
-
+    
 
 class YoutubeMusic(SuperYouTube):
     # CHANGE
@@ -101,57 +101,7 @@ class YoutubeMusic(SuperYouTube):
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=youtube_settings["youtube_music_api_key"],
             ctoken="",
-            context= {
-                "client": {
-                    "hl": "en",
-                    "gl": "DE",
-                    "remoteHost": "87.123.241.77",
-                    "deviceMake": "",
-                    "deviceModel": "",
-                    "visitorData": "CgtiTUxaTHpoXzk1Zyia59WlBg%3D%3D",
-                    "userAgent": self.connection.user_agent,
-                    "clientName": "WEB_REMIX",
-                    "clientVersion": "1.20230710.01.00",
-                    "osName": "X11",
-                    "osVersion": "",
-                    "originalUrl": "https://music.youtube.com/",
-                    "platform": "DESKTOP",
-                    "clientFormFactor": "UNKNOWN_FORM_FACTOR",
-                    "configInfo": {
-                        "appInstallData": "",
-                        "coldConfigData": "",
-                        "coldHashData": "",
-                        "hotHashData": ""
-                    },
-                    "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
-                    "timeZone": "Atlantic/Jan_Mayen",
-                    "browserName": "Firefox",
-                    "browserVersion": "115.0",
-                    "acceptHeader": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                    "deviceExperimentId": "ChxOekkxTmpnek16UTRNVFl4TkRrek1ETTVOdz09EJrn1aUGGJrn1aUG",
-                    "screenWidthPoints": 584,
-                    "screenHeightPoints": 939,
-                    "screenPixelDensity": 1,
-                    "screenDensityFloat": 1,
-                    "utcOffsetMinutes": 120,
-                    "musicAppInfo": {
-                        "pwaInstallabilityStatus": "PWA_INSTALLABILITY_STATUS_UNKNOWN",
-                        "webDisplayMode": "WEB_DISPLAY_MODE_BROWSER",
-                        "storeDigitalGoodsApiSupportStatus": {
-                            "playStoreDigitalGoodsApiSupportStatus": "DIGITAL_GOODS_API_SUPPORT_STATUS_UNSUPPORTED"
-                        }
-                    }
-                },
-                "user": { "lockedSafetyMode": False },
-                "request": {
-                    "useSsl": True,
-                    "internalExperimentFlags": [],
-                    "consistencyTokenJars": []
-                },
-                "adSignalsInfo": {
-                    "params": []
-                }
-            }
+            context=youtube_settings["youtube_music_innertube_context"]
         )
 
         self.start_millis = get_current_millis()
@@ -207,12 +157,12 @@ class YoutubeMusic(SuperYouTube):
         found_context = False
         for context_string in re.findall(context_pattern, content):
             try:
-                context = json.loads("{" + context_string + "}")
+                youtube_settings["youtube_music_innertube_context"] = json.loads("{" + context_string + "}")
                 found_context
             except json.decoder.JSONDecodeError:
                 continue
 
-            self.credentials.context = context
+            self.credentials.context = youtube_settings["youtube_music_innertube_context"]
             break
 
         if not found_context:

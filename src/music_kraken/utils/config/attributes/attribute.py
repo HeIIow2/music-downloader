@@ -57,9 +57,16 @@ class Attribute:
         self.name = name
 
         self.raw_data = {name: default_value}
-        self.value = default_value
+        self.value = None
 
         self.description: Optional[str] = description
+        self.loaded_settings: dict = None
+
+    def initialize_from_config(self, loaded_settings: dict):
+        self.loaded_settings = loaded_settings
+
+        if not self.load_toml(self.raw_data):
+            logging.warning(f"Couldn't load the initial value of {self.name}: {self.raw_data[self.name]}")
 
     def unparse_simple_value(self, value: any) -> any:
         return value
@@ -81,28 +88,27 @@ class Attribute:
 
         return callback(__object)
 
-    def load_toml(self, loaded_toml: dict, loaded_settings: dict) -> bool:
+    def load_toml(self, loaded_toml: dict) -> bool:
         """
         returns true if succesfull
         """
 
         if self.name not in loaded_toml:
             LOGGER.warning(f"No setting by the name {self.name} found in the settings file.")
-            loaded_settings[self.name] = self.value
+            self.loaded_settings.__setitem__(self.name, self.value, True)
             return
         
         self.raw_data = loaded_toml[self.name]
 
         _object = deepcopy(loaded_toml[self.name])
         try:
-            self._recursive_parse_object(_object, self.parse_simple_value)
+            parsed_object = self._recursive_parse_object(_object, self.parse_simple_value)
         except SettingValueError as settings_error:
             logging.warning(settings_error)
             return False
 
-        self.value = _object
-
-        loaded_settings[self.name] = self.value
+        self.value = parsed_object
+        self.loaded_settings.__setitem__(self.name, self.value, True)
         
         return True
 

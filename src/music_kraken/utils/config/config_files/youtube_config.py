@@ -30,7 +30,59 @@ Dw. if it is empty, Rachel will fetch it automatically for you <333
         "https://www.youtu.be/"
     ], description="""This is used to detect, if an url is from youtube, or any alternativ frontend.
 If any instance seems to be missing, run music kraken with the -f flag."""),
-    Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos.")
+    Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos."),
+
+    Attribute(name="youtube_music_innertube_context", default_value={
+                "client": {
+                    "hl": "en",
+                    "gl": "DE",
+                    "remoteHost": "87.123.241.77",
+                    "deviceMake": "",
+                    "deviceModel": "",
+                    "visitorData": "CgtiTUxaTHpoXzk1Zyia59WlBg%3D%3D",
+                    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+                    "clientName": "WEB_REMIX",
+                    "clientVersion": "1.20230710.01.00",
+                    "osName": "X11",
+                    "osVersion": "",
+                    "originalUrl": "https://music.youtube.com/",
+                    "platform": "DESKTOP",
+                    "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+                    "configInfo": {
+                        "appInstallData": "",
+                        "coldConfigData": "",
+                        "coldHashData": "",
+                        "hotHashData": ""
+                    },
+                    "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
+                    "timeZone": "Atlantic/Jan_Mayen",
+                    "browserName": "Firefox",
+                    "browserVersion": "115.0",
+                    "acceptHeader": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                    "deviceExperimentId": "ChxOekkxTmpnek16UTRNVFl4TkRrek1ETTVOdz09EJrn1aUGGJrn1aUG",
+                    "screenWidthPoints": 584,
+                    "screenHeightPoints": 939,
+                    "screenPixelDensity": 1,
+                    "screenDensityFloat": 1,
+                    "utcOffsetMinutes": 120,
+                    "musicAppInfo": {
+                        "pwaInstallabilityStatus": "PWA_INSTALLABILITY_STATUS_UNKNOWN",
+                        "webDisplayMode": "WEB_DISPLAY_MODE_BROWSER",
+                        "storeDigitalGoodsApiSupportStatus": {
+                            "playStoreDigitalGoodsApiSupportStatus": "DIGITAL_GOODS_API_SUPPORT_STATUS_UNSUPPORTED"
+                        }
+                    }
+                },
+                "user": { "lockedSafetyMode": False },
+                "request": {
+                    "useSsl": True,
+                    "internalExperimentFlags": [],
+                    "consistencyTokenJars": []
+                },
+                "adSignalsInfo": {
+                    "params": []
+                }
+            }, description="Don't bother about this. It is something technical, but if you wanna change the innertube requests... go on.")
 ], LOCATIONS.get_config_file("youtube"))
 
 
@@ -43,3 +95,4 @@ class SettingsStructure(TypedDict):
     youtube_music_clean_data: bool
     youtube_url: List[ParseResult]
     use_sponsor_block: bool
+    youtube_music_innertube_context: dict

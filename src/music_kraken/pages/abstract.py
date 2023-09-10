@@ -22,7 +22,6 @@ from ..objects import (
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
-from ..utils import shared
 from ..utils.config import main_settings
 from ..utils.support_classes import Query, DownloadResult
 
@@ -352,7 +351,7 @@ class Page:
             if self.NO_ADDITIONAL_DATA_FROM_SONG:
                 skip_next_details = True
             
-            if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
+            if not download_all and music_object.album_type.value in main_settings["album_type_blacklist"]:
                 return DownloadResult()
 
         if not isinstance(music_object, Song) or not self.NO_ADDITIONAL_DATA_FROM_SONG:
@@ -398,7 +397,7 @@ class Page:
             return DownloadResult(error_message=f"No source found for {song.title} as {self.__class__.__name__}.")
 
         temp_target: Target = Target(
-            path=shared.TEMP_DIR,
+            path=main_settings["temp_directory"],
             file=str(random.randint(0, 999999))
         )
         
