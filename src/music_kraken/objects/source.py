@@ -4,7 +4,8 @@ from typing import List, Dict, Set, Tuple, Optional
 from urllib.parse import urlparse
 
 from ..utils.enums.source import SourcePages, SourceTypes
-from ..utils.shared import ALL_YOUTUBE_URLS
+from ..utils.config import youtube_settings
+
 from .metadata import Mapping, Metadata
 from .parents import DatabaseObject
 from .collection import Collection
@@ -54,7 +55,7 @@ class Source(DatabaseObject):
         if "musify" in parsed.netloc:
             return cls(SourcePages.MUSIFY, url, referer_page=referer_page)
 
-        if parsed.netloc in [_url.netloc for _url in ALL_YOUTUBE_URLS]:
+        if parsed.netloc in [_url.netloc for _url in youtube_settings['youtube_url']]:
             return cls(SourcePages.YOUTUBE, url, referer_page=referer_page)
 
         if url.startswith("https://www.deezer"):

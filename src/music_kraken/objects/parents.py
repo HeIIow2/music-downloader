@@ -4,7 +4,10 @@ from typing import Optional, Dict, Tuple, List
 
 from .metadata import Metadata
 from .option import Options
-from ..utils.shared import ID_RANGE, OBJECT_LOGGER as LOGGER
+from ..utils.config import main_settings, logging_settings
+
+
+LOGGER = logging_settings["object_logger"]
 
 
 class DatabaseObject:
@@ -25,7 +28,7 @@ class DatabaseObject:
             64 bit integer, but this is defined in shared.py in ID_BITS
             the range is defined in the Tuple ID_RANGE
             """
-            _id = random.randint(*ID_RANGE)
+            _id = random.randint(*main_settings['id_bits'])
             self.automatic_id = True
             LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 

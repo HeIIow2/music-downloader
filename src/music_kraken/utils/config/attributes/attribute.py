@@ -1,60 +1,123 @@
 import re
+from typing import Optional, List, Union, Iterable, Callable
+from dataclasses import dataclass
+import logging
+import toml
+from copy import deepcopy
 
 from ...exception.config import SettingValueError
 from ..utils import comment
 
 
+LOGGER = logging.getLogger("config")
+
+COMMENT_PREFIX = "#"
+
+
+def comment_string(uncommented: str) -> str:
+    unprocessed_lines = uncommented.split("\n")
+
+    processed_lines: List[str] = []
+
+    for line in unprocessed_lines:
+        line: str = line.strip()
+        if line.startswith(COMMENT_PREFIX) or line == "":
+            processed_lines.append(line)
+            continue
+
+        line = COMMENT_PREFIX + " " + line
+        processed_lines.append(line)
+
+    return "\n".join(processed_lines)
+
+
+@dataclass
 class Description:
-    def __init__(self, string: str) -> None:
-        self.string = string
+    description: str
 
     @property
-    def config_string(self) -> str:
-        return comment(self.string)
+    def toml_string(self):
+        return comment_string(self.description)
+
+
+class EmptyLine(Description):
+    def __init__(self):
+        self.description = ""
+
 
 
 class Attribute:
-    pattern: str = r'^.*a$'
-    rule: str = "This is a default string, it has no rule."
-    string_value: str = ""
-
-    def __init__(self, name: str, description: str, pattern: str = None, rule: str = None) -> None:
-        if pattern is not None:
-            self.pattern = pattern
-        if rule is not None:
-            self.rule = rule
+    def __init__(
+            self,
+            name: str,
+            default_value: any,
+            description: Optional[str] = None,
+        ):
 
         self.name = name
-        self.description = description
 
-    def validate(self, input_string: str) -> bool:
-        return re.match(self.REGEX, input_string) is None
+        self.raw_data = {name: default_value}
+        self.value = default_value
+
+        self.description: Optional[str] = description
+
+    def unparse_simple_value(self, value: any) -> any:
+        return value
+
+    def parse_simple_value(self, value: any) -> any:
+        return value
     
-    def output_parse(self):
-        return self.string_value.strip()
+    def _recursive_parse_object(self, __object, callback: Callable):
+        if isinstance(__object, dict):
+            for key, value in __object.items():
+                __object[key] = self._recursive_parse_object(value, callback)
 
-    def input_parse(self, input_string: str) -> str:
-        match_result = re.match(self.pattern, input_string)
-
-        if match_result is None:
-            raise SettingValueError(
-                setting_name=self.name,
-                setting_value=input_string,
-                rule=self.rule
-            )
+            return __object
         
-        return match_result.string
+        if isinstance(__object, Union[list, tuple]):
+            for i, item in enumerate(__object):
+                __object[i] = self._recursive_parse_object(item, callback)
+            return __object
+
+        return callback(__object)
+
+    def load_toml(self, loaded_toml: dict, loaded_settings: dict) -> bool:
+        """
+        returns true if succesfull
+        """
+
+        if self.name not in loaded_toml:
+            LOGGER.warning(f"No setting by the name {self.name} found in the settings file.")
+            loaded_settings[self.name] = self.value
+            return
+        
+        self.raw_data = loaded_toml[self.name]
+
+        _object = deepcopy(loaded_toml[self.name])
+        try:
+            self._recursive_parse_object(_object, self.parse_simple_value)
+        except SettingValueError as settings_error:
+            logging.warning(settings_error)
+            return False
+
+        self.value = _object
+
+        loaded_settings[self.name] = self.value
+        
+        return True
+
 
     @property
-    def value(self) -> str:
-        raise NotImplementedError()
-    
-    @property
-    def config_string(self) -> str:
-        return NotImplementedError()
+    def toml_string(self) -> str:
+        string = ""
 
+        if self.description is not None:
+            string += comment(self.description) + "\n"
+        
+        string += toml.dumps(self.raw_data)
 
+        return string
 
-attr = Attribute(name="hello world", description="fuck you", value="defaulte")
-attr.input_parse("fafda")
-attr.input_parse("eeee")
+    def __str__(self):
+        return f"{self.description}\n{self.name}={self.value}"
+

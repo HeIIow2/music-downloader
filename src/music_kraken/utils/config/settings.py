@@ -4,9 +4,6 @@ from urllib.parse import ParseResult
 from logging import Logger
 from pathlib import Path
 
-from .sections.paths import LOCATIONS
-from .config import Config
-from .base_classes import Section, Attribute
 
 
 class SettingsStructure(TypedDict):
@@ -62,34 +59,3 @@ class SettingsStructure(TypedDict):
     log_file: Path
     not_a_genre_regex: List[str]
     ffmpeg_binary: Path
-
-
-settings: SettingsStructure = {}
-
-
-config = Config()
-set_name_to_value = config.set_name_to_value
-
-
-def read_config():
-    if not LOCATIONS.CONFIG_FILE.is_file():
-        write_config()
-    config.read_from_config_file(LOCATIONS.CONFIG_FILE)
-
-
-def write_config():
-    config.write_to_config_file(LOCATIONS.CONFIG_FILE)
-
-
-def load():
-    read_config()
-
-    for section in config.config_elements:
-        if not isinstance(section, Section):
-            continue
-
-        for attribute in section.attribute_list:
-            if not isinstance(attribute, Attribute):
-                continue
-
-            settings[attribute.name] = attribute.object_from_value

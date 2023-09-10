@@ -8,7 +8,7 @@ import requests
 from tqdm import tqdm
 
 from .rotating import RotatingProxy
-from ..utils.shared import PROXIES_LIST, CHUNK_SIZE
+from ..utils.config import main_settings
 from ..utils.support_classes import DownloadResult
 from ..objects import Target
 
@@ -18,7 +18,7 @@ class Connection:
             self,
             host: str,
             proxies: List[dict] = None,
-            tries: int = (len(PROXIES_LIST) + 1) * 4,
+            tries: int = (len(main_settings["proxies"]) + 1) * 4,
             timeout: int = 7,
             logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
@@ -28,7 +28,7 @@ class Connection:
             hearthbeat_interval = 0,
     ):
         if proxies is None:
-            proxies = PROXIES_LIST
+            proxies = main_settings["proxies"]
         if header_values is None:
             header_values = dict()
 
@@ -266,7 +266,7 @@ class Connection:
             timeout: float = None,
             headers: dict = None,
             raw_url: bool = False,
-            chunk_size: int = CHUNK_SIZE,
+            chunk_size: int = main_settings["chunk_size"],
             try_count: int = 0,
             progress: int = 0,
             **kwargs

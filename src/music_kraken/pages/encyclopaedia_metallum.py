@@ -5,7 +5,7 @@ import pycountry
 from urllib.parse import urlparse
 
 from ..connection import Connection
-from ..utils.shared import ENCYCLOPAEDIA_METALLUM_LOGGER
+from ..utils.config import logging_settings
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
@@ -108,12 +108,12 @@ def _album_from_json(album_html=None, release_type=None, artist_html=None) -> Al
 
 class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
-    LOGGER = ENCYCLOPAEDIA_METALLUM_LOGGER
+    LOGGER = logging_settings["metal_archives_logger"]
     
     def __init__(self, **kwargs):
         self.connection: Connection = Connection(
             host="https://www.metal-archives.com/",
-            logger=ENCYCLOPAEDIA_METALLUM_LOGGER
+            logger=self.LOGGER
         )
         
         super().__init__(**kwargs)

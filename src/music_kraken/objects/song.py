@@ -19,7 +19,7 @@ from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
 
-from ..utils import settings
+from ..utils.config import main_settings
 
 """
 All Objects dependent 
@@ -513,7 +513,7 @@ class Artist(MainObject):
             AlbumType.STUDIO_ALBUM: 0,
             AlbumType.EP: 0,
             AlbumType.SINGLE: 1
-        }) if settings["sort_album_by_type"] else defaultdict(lambda: 0)
+        }) if main_settings["sort_album_by_type"] else defaultdict(lambda: 0)
 
         sections = defaultdict(list)
 
@@ -526,7 +526,7 @@ class Artist(MainObject):
             # album is just a value used in loops
             nonlocal album
 
-            if settings["sort_by_date"]:
+            if main_settings["sort_by_date"]:
                 _section.sort(key=lambda _album: _album.date, reverse=True)
 
             new_last_albumsort = last_albumsort

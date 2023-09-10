@@ -23,7 +23,7 @@ from ..objects import (
     DatabaseObject,
     Lyrics
 )
-from ..utils.shared import MUSIFY_LOGGER
+from ..utils.config import logging_settings
 from ..utils import string_processing, shared
 from ..utils.support_classes import DownloadResult, Query
 
@@ -95,7 +95,7 @@ def parse_url(url: str) -> MusifyUrl:
     try:
         type_enum = MusifyTypes(path[1])
     except ValueError as e:
-        MUSIFY_LOGGER.warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
+        logging_settings["musify_logger"].warning(f"{path[1]} is not yet implemented, add it to MusifyTypes")
         raise e
 
     return MusifyUrl(
@@ -110,7 +110,7 @@ def parse_url(url: str) -> MusifyUrl:
 class Musify(Page):
     # CHANGE
     SOURCE_TYPE = SourcePages.MUSIFY
-    LOGGER = MUSIFY_LOGGER
+    LOGGER = logging_settings["musify_logger"]
     
     HOST = "https://musify.club"
     

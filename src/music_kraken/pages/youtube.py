@@ -20,7 +20,7 @@ from ..objects import (
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
-from ..utils.shared import YOUTUBE_LOGGER, INVIDIOUS_INSTANCE, BITRATE, ENABLE_SPONSOR_BLOCK, PIPED_INSTANCE, SLEEP_AFTER_YOUTUBE_403
+from ..utils.config import youtube_settings, main_settings, logging_settings
 
 from .youtube_music.super_youtube import SuperYouTube, YouTubeUrl, get_invidious_url, YouTubeUrlType
 
@@ -34,13 +34,13 @@ from .youtube_music.super_youtube import SuperYouTube, YouTubeUrl, get_invidious
 
 
 def get_piped_url(path: str = "", params: str = "", query: str = "", fragment: str = "") -> str:
-    return urlunparse((PIPED_INSTANCE.scheme, PIPED_INSTANCE.netloc, path, params, query, fragment))
+    return urlunparse((youtube_settings["piped_instance"].scheme, youtube_settings["piped_instance"].netloc, path, params, query, fragment))
 
 
 class YouTube(SuperYouTube):
     # CHANGE
     SOURCE_TYPE = SourcePages.YOUTUBE
-    LOGGER = YOUTUBE_LOGGER
+    LOGGER = logging_settings["youtube_logger"]
 
     NO_ADDITIONAL_DATA_FROM_SONG = True
 
@@ -58,7 +58,7 @@ class YouTube(SuperYouTube):
         self.download_connection: Connection = Connection(
             host="https://www.youtube.com/",
             logger=self.LOGGER,
-            sleep_after_404=SLEEP_AFTER_YOUTUBE_403
+            sleep_after_404=youtube_settings["sleep_after_youtube_403"]
         )
         
         # the stuff with the connection is, to ensure sponsorblock uses the proxies, my programm does
@@ -307,7 +307,7 @@ class YouTube(SuperYouTube):
 
             bitrate = int(possible_format.get("bitrate", 0))
 
-            if bitrate >= BITRATE:
+            if bitrate >= main_settings["bitrate"]:
                 best_bitrate = bitrate
                 audio_format = possible_format
                 break
@@ -325,7 +325,7 @@ class YouTube(SuperYouTube):
 
 
     def get_skip_intervals(self, song: Song, source: Source) -> List[Tuple[float, float]]:
-        if not ENABLE_SPONSOR_BLOCK:
+        if not youtube_settings["use_sponsor_block"]:
             return []
         
         parsed = YouTubeUrl(source.url)

@@ -3,11 +3,22 @@ import logging
 import gc
 import musicbrainzngs
 
-from .utils.config import read_config
-from .utils.shared import MODIFY_GC
+from .utils.config import logging_settings, main_settings, read_config
+read_config()
 from . import cli
 
-if MODIFY_GC:
+
+# configure logger default
+logging.basicConfig(
+    level=logging_settings['log_level'],
+    format=logging_settings['logging_format'],
+    handlers=[
+        logging.FileHandler(main_settings['log_file']),
+        logging.StreamHandler()
+    ]
+)
+
+if main_settings['modify_gc']:
     """
     At the start I modify the garbage collector to run a bit fewer times.
     This should increase speed:
@@ -21,6 +32,3 @@ if MODIFY_GC:
     gen1 = gen1 * 2
     gen2 = gen2 * 2
     gc.set_threshold(allocs, gen1, gen2)
-
-logging.getLogger("musicbrainzngs").setLevel(logging.WARNING)
-musicbrainzngs.set_useragent("metadata receiver", "0.1", "https://github.com/HeIIow2/music-downloader")

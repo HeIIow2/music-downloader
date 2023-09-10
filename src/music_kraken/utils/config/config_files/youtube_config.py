@@ -1,0 +1,45 @@
+from typing import TypedDict, List
+from urllib.parse import ParseResult
+from logging import Logger
+from pathlib import Path
+
+from ...path_manager import LOCATIONS
+from ..config import Config
+from ..attributes.attribute import Attribute
+from ..attributes.special_attributes import SelectAttribute, PathAttribute, UrlAttribute
+
+
+config = Config([
+    UrlAttribute(name="invidious_instance", default_value="https://yt.artemislena.eu", description="""This is an attribute, where you can define the invidious instances,
+the youtube downloader should use.
+Here is a list of active ones: https://docs.invidious.io/instances/
+Instances that use cloudflare or have source code changes could cause issues.
+Hidden instances (.onion) will only work, when setting 'tor=true'."""),
+    UrlAttribute(name="piped_instance", default_value="https://piped-api.privacy.com.de", description="""This is an attribute, where you can define the pioed instances,
+the youtube downloader should use.
+Here is a list of active ones: https://github.com/TeamPiped/Piped/wiki/Instances
+Instances that use cloudflare or have source code changes could cause issues.
+Hidden instances (.onion) will only work, when setting 'tor=true"""),
+    Attribute(name="sleep_after_youtube_403", default_value=30, description="The time to wait, after youtube returned 403 (in seconds)"),
+    Attribute(name="youtube_music_api_key", default_value="AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30", description="""This is the API key used by YouTube-Music internally.
+Dw. if it is empty, Rachel will fetch it automatically for you <333
+(she will also update outdated api keys/those that don't work)"""),
+    Attribute(name="youtube_music_clean_data", default_value=True, description="If set to true, it exclusively fetches artists/albums/songs, not things like user channels etc."),
+    UrlAttribute(name="youtube_url", default_value=[
+        "https://www.youtube.com/",
+        "https://www.youtu.be/"
+    ], description="""This is used to detect, if an url is from youtube, or any alternativ frontend.
+If any instance seems to be missing, run music kraken with the -f flag."""),
+    Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos.")
+], LOCATIONS.get_config_file("youtube"))
+
+
+class SettingsStructure(TypedDict):
+    # youtube
+    invidious_instance: ParseResult
+    piped_instance: ParseResult
+    sleep_after_youtube_403: float
+    youtube_music_api_key: str
+    youtube_music_clean_data: bool
+    youtube_url: List[ParseResult]
+    use_sponsor_block: bool

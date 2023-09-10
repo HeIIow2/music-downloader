@@ -7,7 +7,8 @@ from dataclasses import dataclass
 import re
 
 from ...utils.exception.config import SettingValueError
-from ...utils.shared import PROXIES_LIST, YOUTUBE_MUSIC_LOGGER, DEBUG
+from ...utils.config import main_settings, youtube_settings, logging_settings
+from ...utils.shared import DEBUG
 from ...utils.config import CONNECTION_SECTION, write_config
 from ...utils.functions import get_current_millis
 if DEBUG:
@@ -94,7 +95,7 @@ class YouTubeMusicCredentials:
 class YoutubeMusic(SuperYouTube):
     # CHANGE
     SOURCE_TYPE = SourcePages.YOUTUBE_MUSIC
-    LOGGER = YOUTUBE_MUSIC_LOGGER
+    LOGGER = logging_settings["youtube_music_logger"]
 
     def __init__(self, *args, **kwargs):
         self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER, accept_language="en-US,en;q=0.5")
