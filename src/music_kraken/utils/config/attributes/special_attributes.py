@@ -143,7 +143,7 @@ class AudioFormatAttribute(Attribute):
 
 class LoggerAttribute(Attribute):
     def parse_simple_value(self, value: str) -> logging.Logger:
-        return logging.getLogger(self.value)
+        return logging.getLogger(value)
     
     def unparse_simple_value(self, value: logging.Logger) -> any:
         return value.name

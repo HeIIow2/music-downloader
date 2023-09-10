@@ -1,7 +1,7 @@
 from typing import List, Optional
 from enum import Enum
 
-from ...utils.shared import YOUTUBE_MUSIC_LOGGER as LOGGER, YOUTUBE_MUSIC_CLEAN_DATA
+from ...utils.config import youtube_settings, logging_settings
 from ...objects import Source, DatabaseObject
 from ..abstract import Page
 from ...objects import (
@@ -13,6 +13,8 @@ from ...objects import (
     Label,
     Target
 )
+
+LOGGER = logging_settings["youtube_music_logger"]
 
 
 SOURCE_PAGE = SourcePages.YOUTUBE_MUSIC
@@ -50,15 +52,15 @@ def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
         LOGGER.warning("Couldn't find either the id or text of a Youtube music element.")
         return
     
-    if element_type == PageType.SONG or (element_type == PageType.VIDEO and not YOUTUBE_MUSIC_CLEAN_DATA) or (element_type == PageType.OFFICIAL_MUSIC_VIDEO and not YOUTUBE_MUSIC_CLEAN_DATA):
+    if element_type == PageType.SONG or (element_type == PageType.VIDEO and not youtube_settings["youtube_music_clean_data"]) or (element_type == PageType.OFFICIAL_MUSIC_VIDEO and not youtube_settings["youtube_music_clean_data"]):
         source = Source(SOURCE_PAGE, f"https://music.youtube.com/watch?v={element_id}")
         return Song(title=element_text, source_list=[source])
 
-    if element_type == PageType.ARTIST or (element_type == PageType.CHANNEL and not YOUTUBE_MUSIC_CLEAN_DATA):
+    if element_type == PageType.ARTIST or (element_type == PageType.CHANNEL and not youtube_settings["youtube_music_clean_data"]):
         source = Source(SOURCE_PAGE, f"https://music.youtube.com/channel/{element_id}")
         return Artist(name=element_text, source_list=[source])
     
-    if element_type == PageType.ALBUM or (element_type == PageType.PLAYLIST and not YOUTUBE_MUSIC_CLEAN_DATA):
+    if element_type == PageType.ALBUM or (element_type == PageType.PLAYLIST and not youtube_settings["youtube_music_clean_data"]):
         source = Source(SOURCE_PAGE, f"https://music.youtube.com/playlist?list={element_id}")
         return Album(title=element_text, source_list=[source])
     

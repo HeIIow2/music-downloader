@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Type
 from enum import Enum
 
-from ...utils.shared import YOUTUBE_MUSIC_LOGGER as LOGGER
+from ...utils.config import logging_settings
 from ...objects import Source, DatabaseObject
 from ..abstract import Page
 from ...objects import (
@@ -14,6 +14,9 @@ from ...objects import (
     Target
 )
 from ._music_object_render import parse_run_list, parse_run_element
+
+
+LOGGER = logging_settings["youtube_music_logger"]
 
 
 def music_card_shelf_renderer(renderer: dict) -> List[DatabaseObject]:

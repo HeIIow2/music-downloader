@@ -9,7 +9,6 @@ import re
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
 from ...utils.shared import DEBUG
-from ...utils.config import CONNECTION_SECTION, write_config
 from ...utils.functions import get_current_millis
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -100,7 +99,7 @@ class YoutubeMusic(SuperYouTube):
     def __init__(self, *args, **kwargs):
         self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER, accept_language="en-US,en;q=0.5")
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
-            api_key=CONNECTION_SECTION.YOUTUBE_MUSIC_API_KEY.object_from_value,
+            api_key=youtube_settings["youtube_music_api_key"],
             ctoken="",
             context= {
                 "client": {
@@ -191,7 +190,7 @@ class YoutubeMusic(SuperYouTube):
             api_key = api_keys[0]
             
             try:
-                CONNECTION_SECTION.YOUTUBE_MUSIC_API_KEY.set_value(api_key)
+                youtube_settings["youtube_music_api_key"] = api_key
             except SettingValueError:
                 continue
 
@@ -199,7 +198,6 @@ class YoutubeMusic(SuperYouTube):
             break
 
         if found_a_good_api_key:
-            write_config()
             self.LOGGER.info(f"Found a valid API-KEY for {type(self).__name__}: \"{api_key}\"")
         else:
             self.LOGGER.error(f"Couldn't find an API-KEY for {type(self).__name__}. :((")

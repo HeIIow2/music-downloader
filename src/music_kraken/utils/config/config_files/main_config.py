@@ -103,6 +103,7 @@ all the error messages are shown."""),
     ], description="""Just some nice and wholesome messages.
 If your mindset has traits of a [file corruption], you might not agree.
 But anyways... Freedom of thought, so go ahead and change the messages."""),
+    Attribute(name="modify_gc", default_value=True),
     Attribute(name="id_bits", default_value=64, description="I really dunno why I even made this a setting.. Modifying this is a REALLY dumb idea."),
     Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
 

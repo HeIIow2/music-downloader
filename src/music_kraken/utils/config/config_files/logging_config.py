@@ -18,7 +18,7 @@ config = Config([
 Reference for the logging formats: https://docs.python.org/3/library/logging.html#logrecord-attributes"""),
     IntegerSelect(
         name="log_level",
-        default_value=str(logging.INFO),
+        default_value=logging.INFO,
         options={
             "CRITICAL": 50,
             "ERROR": 40,
