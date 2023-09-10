@@ -28,9 +28,6 @@ def write_config():
     for section in _sections:
         section.write()
 
-def set_name_to_value():
-    pass
-
 main_settings: main_config.SettingsStructure = main_config.config.loaded_settings
 logging_settings: logging_config.SettingsStructure = logging_config.config.loaded_settings
 youtube_settings: youtube_config.SettingsStructure = youtube_config.config.loaded_settings

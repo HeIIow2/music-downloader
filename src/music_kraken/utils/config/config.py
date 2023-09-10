@@ -44,7 +44,7 @@ class Config:
 
     @property
     def toml_string(self):
-        "\n\n".join(component.toml_string for component in self.component_list)
+        return "\n\n".join(component.toml_string for component in self.component_list)
 
     def write(self):
         with self.config_file.open("w") as conf_file:
