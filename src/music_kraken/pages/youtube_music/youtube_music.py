@@ -266,6 +266,32 @@ class YoutubeMusic(SuperYouTube):
 
         return results
 
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        # construct the request
+        url = urlparse(source.url)
+        browse_id = url.path.replace("/channel/", "")
+
+        # POST https://music.youtube.com/youtubei/v1/browse?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30&prettyPrint=false
+        r = self.connection.post(
+            url=get_youtube_url(path="/youtubei/v1/browse", query=f"key={self.credentials.api_key}&prettyPrint=false"),
+            json={
+                "browseId": browse_id,
+                "context": {**self.credentials.context, "adSignalsInfo":{"params":[]}}
+            }
+        )
+        if r is None:
+            return Artist()
+
+        if DEBUG:
+            dump_to_file(f"{browse_id}.json", r.text, is_json=True, exit_after_dump=False)
+
+        renderer_list = r.json().get("contents", {}).get("singleColumnBrowseResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer", {}).get("content", {}).get("sectionListRenderer", {}).get("contents", [])
+
+        if DEBUG:
+            for i, content in enumerate(renderer_list):
+                dump_to_file(f"{i}-artists-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
+
+        return Artist()
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)
@@ -274,6 +300,3 @@ class YoutubeMusic(SuperYouTube):
     def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
         return Album()
 
-    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
-        print(source)
-        return Artist()
