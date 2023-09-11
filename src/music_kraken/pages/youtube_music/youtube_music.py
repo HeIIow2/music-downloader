@@ -248,8 +248,6 @@ class YoutubeMusic(SuperYouTube):
             }
         )
 
-        self.LOGGER.debug(str(r))
-
         renderer_list = r.json().get("contents", {}).get("tabbedSearchResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer").get("content", {}).get("sectionListRenderer", {}).get("contents", [])
         
         if DEBUG:
