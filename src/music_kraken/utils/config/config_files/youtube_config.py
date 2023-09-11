@@ -32,6 +32,10 @@ Dw. if it is empty, Rachel will fetch it automatically for you <333
 If any instance seems to be missing, run music kraken with the -f flag."""),
     Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos."),
 
+    Attribute(name="youtube_music_consent_cookies", default_value={
+        "CONSENT": "PENDING+258"
+    }, description="The cookie with the key CONSENT says to what stuff you agree. Per default you decline all cookies, but it honestly doesn't matter."),
+
     Attribute(name="youtube_music_innertube_context", default_value={
                 "client": {
                     "hl": "en",
@@ -96,3 +100,4 @@ class SettingsStructure(TypedDict):
     youtube_url: List[ParseResult]
     use_sponsor_block: bool
     youtube_music_innertube_context: dict
+    youtube_music_consent_cookies: dict

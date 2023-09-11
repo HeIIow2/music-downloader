@@ -59,25 +59,13 @@ class YoutubeMusicConnection(Connection):
         )
 
         # cookie consent for youtube
-        # https://stackoverflow.com/a/66940841/16804841
-        """     
-        self.session.cookies.set(
-            name='CONSENT', 
-            value='YES+cb.20250328-17-p0.en-GB+FX+{}'.format(random.randint(100, 999)),
-            path='/', domain='.youtube.com'
-        ) 
-
-        self.session.cookies.set(
-            name='CONSENT', 
-            value='YES+cb.20250328-17-p0.en-GB+FX+{}'.format(random.randint(100, 999)),
-            path='/', domain='.youtube.com'
-        )
-        """
-        self.session.cookies.set(
-            name='CONSENT', 
-            value='PENDING+258',
-            path='/', domain='.youtube.com'
-        )
+        # https://stackoverflow.com/a/66940841/16804841 doesn't work
+        for cookie_key, cookie_value in youtube_settings["youtube_music_consent_cookies"].items():
+            self.session.cookies.set(
+                name=cookie_key, 
+                value=cookie_value,
+                path='/', domain='.youtube.com'
+            )
         # self.start_hearthbeat()
 
     def hearthbeat(self):
@@ -112,7 +100,7 @@ class YoutubeMusic(SuperYouTube):
     LOGGER = logging_settings["youtube_music_logger"]
 
     def __init__(self, *args, **kwargs):
-        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER, accept_language="en-US,en;q=0.5")
+        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER, accept_language="en-US,en;q=0.5")        
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=youtube_settings["youtube_music_api_key"],
             ctoken="",
@@ -139,6 +127,7 @@ class YoutubeMusic(SuperYouTube):
             return
         
         if urlparse(r.url).netloc == "consent.youtube.com":
+            self.LOGGER.info(f"Making cookie consent request for {type(self).__name__}.")
             r = self.connection.post("https://consent.youtube.com/save", data={
                 'gl': 'DE',
                 'm': '0',
@@ -156,6 +145,17 @@ class YoutubeMusic(SuperYouTube):
             })
             if r is None:
                 return
+            
+            # load cookie dict from settings
+            cookie_dict = youtube_settings["youtube_music_consent_cookies"]
+            
+            for cookie in r.cookies:
+                cookie_dict[cookie.name] = cookie.value
+            for cookie in self.connection.session.cookies:
+                cookie_dict[cookie.name] = cookie.value
+            
+            # save cookies in settings
+            youtube_settings["youtube_music_consent_cookies"] = cookie_dict
 
         r = self.connection.get("https://music.youtube.com/")
         if r is None:
