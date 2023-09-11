@@ -4,6 +4,7 @@ from typing import Optional, Dict, Tuple, List
 
 from .metadata import Metadata
 from .option import Options
+from ..utils.shared import HIGHEST_ID
 from ..utils.config import main_settings, logging_settings
 
 
@@ -28,7 +29,7 @@ class DatabaseObject:
             64 bit integer, but this is defined in shared.py in ID_BITS
             the range is defined in the Tuple ID_RANGE
             """
-            _id = random.randint(0, main_settings['id_bits'])
+            _id = random.randint(0, HIGHEST_ID)
             self.automatic_id = True
             LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 

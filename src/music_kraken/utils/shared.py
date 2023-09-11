@@ -1,19 +1,17 @@
-import logging
 import random
-from pathlib import Path
-from typing import List, Tuple, Set, Dict
-from urllib.parse import ParseResult
 
-from .path_manager import LOCATIONS
-from .config import main_settings, logging_settings, youtube_settings
-from .enums.album import AlbumType
+from .config import main_settings
 
 DEBUG = True
+DEBUG_YOUTUBE_INITILIZING = DEBUG and False 
 if DEBUG:
     print("DEBUG ACTIVE")
 
 def get_random_message() -> str:
     return random.choice(main_settings['happy_messages'])
+
+
+HIGHEST_ID = 2**main_settings['id_bits']
 
 
 HELP_MESSAGE = """

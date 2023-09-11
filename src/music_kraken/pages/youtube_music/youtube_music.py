@@ -5,11 +5,10 @@ import random
 import json
 from dataclasses import dataclass
 import re
-import requests
 
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
-from ...utils.shared import DEBUG
+from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITILIZING
 from ...utils.functions import get_current_millis
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -109,7 +108,7 @@ class YoutubeMusic(SuperYouTube):
 
         self.start_millis = get_current_millis()
 
-        if self.credentials.api_key == "" or DEBUG:
+        if self.credentials.api_key == "" or DEBUG_YOUTUBE_INITILIZING:
             self._fetch_from_main_page()
         
         super().__init__(*args, **kwargs)
@@ -218,6 +217,7 @@ class YoutubeMusic(SuperYouTube):
 
         urlescaped_query: str = quote(search_query.strip().replace(" ", "+"))
 
+        # approximate the ammount of time it would take to type the search, because google for some reason tracks that
         LAST_EDITED_TIME = get_current_millis() - random.randint(0, 20)
         _estimated_time = sum(len(search_query) * random.randint(50, 100) for _ in search_query.strip())
         FIRST_EDITED_TIME = LAST_EDITED_TIME - _estimated_time if LAST_EDITED_TIME - self.start_millis > _estimated_time else random.randint(50, 100)
