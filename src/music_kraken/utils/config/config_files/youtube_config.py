@@ -10,6 +10,9 @@ from ..attributes.special_attributes import SelectAttribute, PathAttribute, UrlA
 
 
 config = Config([
+    Attribute(name="use_youtube_alongside_youtube_music", default_value=False, description="""If set to true, it will search youtube through invidious and piped,
+despite a direct wrapper for the youtube music INNERTUBE api being implemented.
+I my INNERTUBE api wrapper doesn't work, set this to true."""),
     UrlAttribute(name="invidious_instance", default_value="https://yt.artemislena.eu", description="""This is an attribute, where you can define the invidious instances,
 the youtube downloader should use.
 Here is a list of active ones: https://docs.invidious.io/instances/
@@ -91,7 +94,7 @@ If any instance seems to be missing, run music kraken with the -f flag."""),
 
 
 class SettingsStructure(TypedDict):
-    # youtube
+    use_youtube_alongside_youtube_music: bool
     invidious_instance: ParseResult
     piped_instance: ParseResult
     sleep_after_youtube_403: float

@@ -3,6 +3,7 @@ from typing import Tuple, Type, Dict, Set
 from .results import SearchResults
 from ..objects import DatabaseObject, Source
 
+from ..utils.config import youtube_settings
 from ..utils.enums.source import SourcePages
 from ..utils.support_classes import Query, DownloadResult
 from ..utils.exception.download import UrlNotFoundException
@@ -21,9 +22,11 @@ if DEBUG_PAGES:
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
-    # YouTube,
     YoutubeMusic
 }
+
+if youtube_settings["use_youtube_alongside_youtube_music"]:
+    ALL_PAGES.add(YouTube)
 
 AUDIO_PAGES: Set[Type[Page]] = {
     Musify,
