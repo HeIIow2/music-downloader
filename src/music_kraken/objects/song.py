@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Type
 
 import pycountry
 
@@ -108,6 +108,19 @@ class Song(MainObject):
             for album in self.album_collection:
                 artist.main_album_collection.append(album, merge_on_conflict=merge, merge_into_existing=False)
                 artist._build_recursive_structures(build_version=build_version, merge=merge)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            return
+
+        if object_type is Artist:
+            self.main_artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            self.album_collection.extend(object_list)
+            return
+        
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -279,6 +292,22 @@ class Album(MainObject):
         for label in self.label_collection:
             label.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             label._build_recursive_structures(build_version=build_version, merge=merge)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            self.song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            self.artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -483,6 +512,23 @@ class Artist(MainObject):
         self.main_album_collection: Collection[Album] = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            # this doesn't really make sense
+            # self.feature_song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            return
+
+        if object_type is Album:
+            self.main_album_collection.extend(object_list)
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
+
     def compile(self, merge_into: bool = False):
         """
         compiles the recursive structures,
@@ -685,6 +731,18 @@ class Label(MainObject):
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection[Artist] = Collection(data=current_artist_list, element_type=Artist)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            return
+
+        if object_type is Artist:
+            self.current_artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            self.album_collection.extend(object_list)
+            return
 
     def _build_recursive_structures(self, build_version: int, merge: False):
         if build_version == self.build_version:

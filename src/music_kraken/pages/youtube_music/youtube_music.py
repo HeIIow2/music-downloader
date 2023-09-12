@@ -267,6 +267,8 @@ class YoutubeMusic(SuperYouTube):
         return results
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        artist = Artist()
+
         # construct the request
         url = urlparse(source.url)
         browse_id = url.path.replace("/channel/", "")
@@ -280,7 +282,7 @@ class YoutubeMusic(SuperYouTube):
             }
         )
         if r is None:
-            return Artist()
+            return artist
 
         if DEBUG:
             dump_to_file(f"{browse_id}.json", r.text, is_json=True, exit_after_dump=False)
@@ -301,9 +303,9 @@ class YoutubeMusic(SuperYouTube):
         for renderer in renderer_list:
             results.extend(parse_renderer(renderer))
 
-        print(results)
+        artist.add_list_of_other_objects(results)        
 
-        return Artist()
+        return artist
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)

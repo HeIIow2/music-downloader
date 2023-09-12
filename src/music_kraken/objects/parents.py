@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from typing import Optional, Dict, Tuple, List
+from typing import Optional, Dict, Tuple, List, Type
 
 from .metadata import Metadata
 from .option import Options
@@ -128,6 +128,18 @@ class DatabaseObject:
         """
         
         self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        pass
+
+    def add_list_of_other_objects(self, object_list: List["DatabaseObject"]):
+        d: Dict[Type[DatabaseObject], List[DatabaseObject]] = defaultdict(list)
+
+        for db_object in object_list:
+            d[type(db_object)].append(db_object)
+
+        for key, value in d.items():
+            self._add_other_db_objects(key, value)
 
 
 class MainObject(DatabaseObject):
