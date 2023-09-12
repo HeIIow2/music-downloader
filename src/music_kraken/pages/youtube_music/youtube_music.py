@@ -65,7 +65,7 @@ class YoutubeMusicConnection(Connection):
                 value=cookie_value,
                 path='/', domain='.youtube.com'
             )
-        # self.start_heartbeat()
+
 
     def heartbeat(self):
         r = self.get("https://music.youtube.com/verify_session", is_heartbeat=True)
@@ -290,6 +290,18 @@ class YoutubeMusic(SuperYouTube):
         if DEBUG:
             for i, content in enumerate(renderer_list):
                 dump_to_file(f"{i}-artists-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
+
+        results = []
+
+        """
+        cant use fixed indices, because if something has no entries, the list dissappears
+        instead I have to try parse everything, and just reject community playlists and profiles.
+        """
+
+        for renderer in renderer_list:
+            results.extend(parse_renderer(renderer))
+
+        print(results)
 
         return Artist()
     
