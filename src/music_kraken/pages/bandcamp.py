@@ -1,6 +1,7 @@
 from typing import List, Optional, Type
 from urllib.parse import urlparse
 import logging
+from enum import Enum
 
 
 from ..objects import Source, DatabaseObject
@@ -17,6 +18,16 @@ from ..objects import (
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
 from ..utils.config import main_settings, logging_settings
+from ..utils.shared import DEBUG
+if DEBUG:
+    from ..utils.debug_utils import dump_to_file
+
+
+class BandcampTypes(Enum):
+    ARTIST = "b"
+    ALBUM = "a"
+    SONG = "t"
+
 
 class Bandcamp(Page):
     # CHANGE
@@ -33,9 +44,73 @@ class Bandcamp(Page):
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return super().get_source_type(source)
+
+    def _parse_autocomplete_api_result(self, data: dict) -> DatabaseObject:
+        try:
+            object_type = BandcampTypes(data["type"])
+        except ValueError:
+            print(data["type"])
+            return
+
+        url = data["item_url_root"]
+        if "item_url_path" in data:
+            url = data["item_url_path"]
+
+        source_list = [Source(self.SOURCE_TYPE, url)]
+        name = data["name"]
+
+        if data.get("is_label", False):
+            return Label(
+                name=name,
+                source_list=source_list
+            )
+
+        if object_type is BandcampTypes.ARTIST:
+            return Artist(
+                name=name,
+                source_list=source_list
+            )
+
+        if object_type is BandcampTypes.ALBUM:
+            return Album(
+                title=name,
+                source_list=source_list,
+                artist_list=[
+                    Artist(
+                        name=data["band_name"],
+                        source_list=[
+                            Source(self.SOURCE_TYPE, data["item_url_root"])
+                        ]
+                    )
+                ]
+            )
+
+        if object_type is BandcampTypes.SONG:
+            print("NEEDING TO IMPLEMENT SONG")
     
-    def general_search(self, search_query: str) -> List[DatabaseObject]:
-        return []
+    def general_search(self, search_query: str, filter_string: str = "") -> List[DatabaseObject]:
+        results = []
+
+        r = self.connection.post("https://bandcamp.com/api/bcsearch_public_api/1/autocomplete_elastic", json={
+            "fan_id": None,
+            "full_page": True,
+            "search_filter": filter_string,
+            "search_text": search_query,
+        })
+        if r is None:
+            return results
+
+        if DEBUG:
+            dump_to_file("bandcamp_response.json", r.text, is_json=True, exit_after_dump=False)
+
+        data = r.json()
+
+        for element in data.get("auto", {}).get("results", []):
+            r = self._parse_autocomplete_api_result(element)
+            if r is not None:
+                results.append(r)
+
+        return results
     
     def label_search(self, label: Label) -> List[Label]:
         return []
