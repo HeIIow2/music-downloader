@@ -401,11 +401,8 @@ def download(
             main_settings["hasnt_yet_started"] = False
             write_config()
             print("Restart the programm to use it.")
-            return code 
-        
-        print("Something went wrong configuring.")
-        return code
-        
+        else:
+            print("Something went wrong configuring.")
     
     shell = Downloader(genre=genre, process_metadata_anyway=process_metadata_anyway)
     
