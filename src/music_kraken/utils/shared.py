@@ -16,8 +16,7 @@ def get_random_message() -> str:
 HIGHEST_ID = 2**main_settings['id_bits']
 
 
-HELP_MESSAGE = """
-to search:
+HELP_MESSAGE = """to search:
 > s: {query or url}
 > s: https://musify.club/release/some-random-release-183028492
 > s: #a {artist} #r {release} #t {track}
@@ -28,5 +27,4 @@ to download:
 > d: 1
 > d: https://musify.club/release/some-random-release-183028492
 
-have fun :3
-""".strip()
+have fun :3""".strip()

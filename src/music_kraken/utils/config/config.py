@@ -1,6 +1,7 @@
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Union, List
 from pathlib import Path
 import logging
+from datetime import datetime
 
 import toml
 
@@ -31,10 +32,26 @@ class ConfigDict(dict):
 
 
 class Config:
-    def __init__(self, componet_list: Tuple[Union[Attribute, Description, EmptyLine]], config_file: Path) -> None:
+    def __init__(self, component_list: Tuple[Union[Attribute, Description, EmptyLine]], config_file: Path) -> None:
         self.config_file: Path = config_file
 
-        self.component_list: Tuple[Union[Attribute, Description, EmptyLine]] = componet_list
+        self.component_list: List[Union[Attribute, Description, EmptyLine]] = [
+            Description(f"""IMPORTANT: If you modify this file, the changes for the actual setting, will be kept as is.
+The changes you make to the comments, will be discarded, next time you run music-kraken. Have fun!
+
+Latest reset: {datetime.now()}
+
+   _____              
+  / ____|              
+ | |  __   __ _  _   _ 
+ | | |_ | / _` || | | |
+ | |__| || (_| || |_| |
+  \_____| \__,_| \__, |
+                  __/ |
+                 |___/ 
+""")]
+
+        self.component_list.extend(component_list)
         self.loaded_settings: ConfigDict = ConfigDict(self)
 
         self.attribute_map = {}

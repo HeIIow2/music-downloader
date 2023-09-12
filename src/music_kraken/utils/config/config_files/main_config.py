@@ -1,5 +1,4 @@
 from typing import TypedDict, List
-from datetime import datetime
 from urllib.parse import ParseResult
 from logging import Logger
 from pathlib import Path
@@ -14,21 +13,6 @@ from ..attributes.special_attributes import (
 )
 
 config = Config([
-    Description(f"""IMPORTANT: If you modify this file, the changes for the actual setting, will be kept as is.
-The changes you make to the comments, will be discarded, next time you run music-kraken. Have fun!
-
-Latest reset: {datetime.now()}
-
-   _____              
-  / ____|              
- | |  __   __ _  _   _ 
- | | |_ | / _` || | | |
- | |__| || (_| || |_| |
-  \_____| \__,_| \__, |
-                  __/ |
-                 |___/ 
-"""),
-
     Attribute(name="hasnt_yet_started", default_value=False, description="This will be set automatically, to look if it needs to run the scripts that run on start."),
     Attribute(name="bitrate", default_value=125, description="Streams the audio with given bitrate [kB/s]. Can't stream with a higher Bitrate, than the audio source provides."),
     AudioFormatAttribute(name="audio_format", default_value="mp3", description="""Music Kraken will stream the audio into this format.
