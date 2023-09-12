@@ -256,7 +256,37 @@ class Bandcamp(Page):
 
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)
-        return Song()
+
+        r = self.connection.get(source.url)
+        if r is None:
+            return Song()
+        
+        soup = self.get_soup_from_response(r)
+
+        data_container = soup.find("script", {"type": "application/ld+json"})
+        
+        if DEBUG:
+            dump_to_file("bandcamp_song_data.json", data_container.text, is_json=True, exit_after_dump=False)
+
+        data = json.loads(data_container.text)
+        album_data = data["inAlbum"]
+        artist_data = data["byArtist"]
+
+        song = Song(
+            title=data["name"],
+            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]))],
+            album_list=[Album(
+                title=album_data["name"],
+                date=ID3Timestamp.strptime(data["datePublished"], "%d %b %Y %H:%M:%S %Z"),
+                source_list=[Source(self.SOURCE_TYPE, album_data["@id"])]
+            )],
+            main_artist_list=[Artist(
+                name=artist_data["name"],
+                source_list=[Source(self.SOURCE_TYPE, artist_data["@id"])]  
+            )]
+        )
+
+        return song
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         return DownloadResult()
