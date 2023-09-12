@@ -113,16 +113,16 @@ class Bandcamp(Page):
         return results
     
     def label_search(self, label: Label) -> List[Label]:
-        return []
+        return self.general_search(artist.name, filter_string="b")
     
     def artist_search(self, artist: Artist) -> List[Artist]:
-        return []
+        return self.general_search(artist.name, filter_string="b")
     
     def album_search(self, album: Album) -> List[Album]:
-        return []
+        return self.general_search(artist.name, filter_string="a")
     
     def song_search(self, song: Song) -> List[Song]:
-        return []
+        return self.general_search(artist.name, filter_string="t")
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
