@@ -467,7 +467,8 @@ class Artist(MainObject):
         "formed_in": ID3Timestamp(),
         "notes": FormattedText(),
         "lyrical_themes": [],
-        "general_genre": ""
+        "general_genre": "",
+        "unformated_location": None,
     }
 
     DOWNWARDS_COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
@@ -489,6 +490,7 @@ class Artist(MainObject):
             country: CountryTyping = None,
             formed_in: ID3Timestamp = None,
             label_list: List['Label'] = None,
+            unformated_location: str = None,
             **kwargs
     ):
         MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
@@ -519,6 +521,8 @@ class Artist(MainObject):
         self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
         self.contact_collection: Collection[Label] = Collection(data=contact_list, element_type=Contact)
+
+        self.unformated_location: Optional[str] = unformated_location
 
     def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
         if object_type is Song:

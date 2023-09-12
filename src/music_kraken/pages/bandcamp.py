@@ -1,6 +1,6 @@
 from typing import List, Optional, Type
 from urllib.parse import urlparse
-import logging
+import json
 from enum import Enum
 from bs4 import BeautifulSoup
 
@@ -145,6 +145,10 @@ class Bandcamp(Page):
     
     def song_search(self, song: Song) -> List[Song]:
         return self.general_search(song.title, filter_string="t")
+    
+
+    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
+        return Label()
 
     def _parse_artist_details(self, soup: BeautifulSoup) -> Artist:
         name: str = None
@@ -203,15 +207,48 @@ class Bandcamp(Page):
 
         return artist
     
+    def _parse_track_element(self, track: dict) -> Optional[Song]:
+        return Song(
+            title=track["item"]["name"],
+            source_list=[Source(self.SOURCE_TYPE, track["item"]["mainEntityOfPage"])],
+            tracksort=track["position"]
+        )
+
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        print(source)
+        album = Album()
+
+        r = self.connection.get(source.url)
+        if r is None:
+            return album
+        
+        soup = self.get_soup_from_response(r)
+
+        if DEBUG:
+            # dump_to_file("album_page.html", r.text, exit_after_dump=False)
+            pass
+
+        data_container = soup.find("script", {"type": "application/ld+json"})
+        
+        if DEBUG:
+            dump_to_file("album_data.json", data_container.text, is_json=True, exit_after_dump=False)
+
+        data = json.loads(data_container.text)
+
+        for i, track_json in enumerate(data.get("track", {}).get("itemListElement", [])):
+            if DEBUG:
+                dump_to_file(f"album_track_{i}.json", json.dumps(track_json), is_json=True, exit_after_dump=False)
+
+            try:
+                album.song_collection.append(self._parse_track_element(track_json))
+            except KeyError:
+                continue
+
+        return album
+
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)
         return Song()
-
-    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
-        return Album()
-
-    def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
-        return Label()
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         return DownloadResult()
