@@ -43,6 +43,15 @@ class Bandcamp(Page):
         super().__init__(*args, **kwargs)
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
+        parsed_url = urlparse(source.url)
+
+        if parsed_url.path == "":
+            return Artist
+        if parsed_url.path.startswith("/album/"):
+            return Album
+        if parsed_url.path.startswith("/track/"):
+            return Song
+        
         return super().get_source_type(source)
 
     def _parse_autocomplete_api_result(self, data: dict) -> DatabaseObject:
@@ -135,14 +144,30 @@ class Bandcamp(Page):
     def song_search(self, song: Song) -> List[Song]:
         return self.general_search(song.title, filter_string="t")
     
+
+    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
+        artist = Artist()
+
+        r = self.connection.get(source.url)
+        if r is None:
+            return artist
+        
+        soup = self.get_soup_from_response(r)
+        data_container = soup.find("div", {"id": "pagedata"})
+        data = data_container["data-blob"]
+        
+        if DEBUG:
+            dump_to_file("artist_page.html", r.text, exit_after_dump=False)
+            dump_to_file("bandcamp_artis.json", data, is_json=True, exit_after_dump=False)
+
+        return artist
+    
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
+        print(source)
         return Song()
 
     def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
         return Album()
-
-    def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
-        return Artist()
 
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
