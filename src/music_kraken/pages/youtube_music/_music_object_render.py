@@ -28,6 +28,8 @@ class PageType(Enum):
     SONG = "MUSIC_VIDEO_TYPE_ATV"
     VIDEO = "MUSIC_VIDEO_TYPE_UGC"
     OFFICIAL_MUSIC_VIDEO = "MUSIC_VIDEO_TYPE_OMV"
+    # returns this type if you search for the band Queen
+    # S = "MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC"
 
 
 def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
@@ -43,7 +45,10 @@ def parse_run_element(run_element: dict) -> Optional[DatabaseObject]:
     page_type_string = navigation_endpoint.get("watchEndpointMusicSupportedConfigs", {}).get("watchEndpointMusicConfig", {}).get("musicVideoType", "")
     if not is_video:
         page_type_string = navigation_endpoint.get("browseEndpointContextSupportedConfigs", {}).get("browseEndpointContextMusicConfig", {}).get("pageType", "")
-    element_type = PageType(page_type_string)
+    try:
+        element_type = PageType(page_type_string)
+    except ValueError:
+        return
     
     element_id = navigation_endpoint.get("videoId" if is_video else "browseId")
     element_text =  run_element.get("text")

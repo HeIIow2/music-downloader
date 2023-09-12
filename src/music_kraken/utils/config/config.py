@@ -13,8 +13,8 @@ class ConfigDict(dict):
 
         super().__init__(*args, **kwargs)
 
-    def __getattribute__(self, __name: str) -> Any:
-        return super().__getattribute__(__name)
+    def __getitem__(self, __name: str) -> Any:
+        return super().__getitem__(__name)
     
     def __setitem__(self, __key: Any, __value: Any, from_attribute: bool = False, is_parsed: bool = False) -> None:
         if not from_attribute:

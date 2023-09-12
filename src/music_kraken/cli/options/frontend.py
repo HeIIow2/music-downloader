@@ -1,11 +1,13 @@
 from typing import Dict, List
 from dataclasses import dataclass
 from collections import defaultdict
+from urllib.parse import urlparse
 
 from ..utils import cli_function
 
 from ...objects import Country
 from ...utils import config, write_config
+from ...utils.config import youtube_settings
 from ...connection import Connection
 
 
@@ -35,7 +37,15 @@ class FrontendInstance:
     def add_instance(self, instance: Instance):
         self.all_instances.append(instance)
         
-        config.set_name_to_value("youtube_url", instance.uri)
+        youtube_lists = youtube_settings["youtube_url"]
+        existing_netlocs = set(tuple(url.netloc for url in youtube_lists))
+
+        parsed_instance = urlparse(instance.uri)
+        instance_netloc = parsed_instance.netloc
+        
+        if instance_netloc not in existing_netlocs:
+            youtube_lists.append(parsed_instance)
+            youtube_settings.__setitem__("youtube_url", youtube_lists, is_parsed=True)
         
         for region in instance.regions:
             self.region_instances[region].append(instance)
@@ -45,8 +55,7 @@ class FrontendInstance:
             print(f"Downloading {type(self).__name__} instances...")
             
     def set_instance(self, instance: Instance):
-        config.set_name_to_value(self.SETTING_NAME, instance.uri)
-        write_config()
+        youtube_settings.__setitem__(self.SETTING_NAME,  instance.uri)
     
     def _choose_country(self) -> List[Instance]:
         print("Input the country code, an example would be \"US\"")
