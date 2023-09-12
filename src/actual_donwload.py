@@ -3,7 +3,7 @@ import music_kraken
 
 if __name__ == "__main__":
     normally_download = [
-        "s: #a Ghost Bath",
+        "s: #a Favorite #r Anarcho",
         "1",
         "d: 1, 5"
     ]
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ]
 
     youtube_music_test = [
-        "s: psychonaut 4",
+        "s: #a Favorite #r Anarcho",
         "0"
     ]
 

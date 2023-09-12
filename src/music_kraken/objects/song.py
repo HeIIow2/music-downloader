@@ -113,6 +113,10 @@ class Song(MainObject):
         if object_type is Song:
             return
 
+        if object_type is Lyrics:
+            self.lyrics_collection.extend(object_list)
+            return
+
         if object_type is Artist:
             self.main_artist_collection.extend(object_list)
             return

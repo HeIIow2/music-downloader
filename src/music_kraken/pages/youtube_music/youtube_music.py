@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Set, Type
-from urllib.parse import urlparse, urlunparse, quote
+from urllib.parse import urlparse, urlunparse, quote, parse_qs
 import logging
 import random
 import json
@@ -273,7 +273,6 @@ class YoutubeMusic(SuperYouTube):
         url = urlparse(source.url)
         browse_id = url.path.replace("/channel/", "")
 
-        # POST https://music.youtube.com/youtubei/v1/browse?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30&prettyPrint=false
         r = self.connection.post(
             url=get_youtube_url(path="/youtubei/v1/browse", query=f"key={self.credentials.api_key}&prettyPrint=false"),
             json={
@@ -307,10 +306,48 @@ class YoutubeMusic(SuperYouTube):
 
         return artist
     
+    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
+        album = Album()
+
+        parsed_url = urlparse(source.url)
+        list_id_list = parse_qs(parsed_url.query)['list']
+        if len(list_id_list) <= 0:
+            return album
+        browse_id = list_id_list[0]
+
+        r = self.connection.post(
+            url=get_youtube_url(path="/youtubei/v1/browse", query=f"key={self.credentials.api_key}&prettyPrint=false"),
+            json={
+                "browseId": browse_id,
+                "context": {**self.credentials.context, "adSignalsInfo":{"params":[]}}
+            }
+        )
+        if r is None:
+            return album
+
+        if DEBUG:
+            dump_to_file(f"{browse_id}.json", r.text, is_json=True, exit_after_dump=False)
+
+        renderer_list = r.json().get("contents", {}).get("singleColumnBrowseResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer", {}).get("content", {}).get("sectionListRenderer", {}).get("contents", [])
+
+        if DEBUG:
+            for i, content in enumerate(renderer_list):
+                dump_to_file(f"{i}-album-renderer.json", json.dumps(content), is_json=True, exit_after_dump=False)
+
+        results = []
+
+        """
+        cant use fixed indices, because if something has no entries, the list dissappears
+        instead I have to try parse everything, and just reject community playlists and profiles.
+        """
+
+        for renderer in renderer_list:
+            results.extend(parse_renderer(renderer))
+
+        album.add_list_of_other_objects(results)  
+
+        return album
+
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)
         return Song()
-
-    def fetch_album(self, source: Source, stop_at_level: int = 1) -> Album:
-        return Album()
-
