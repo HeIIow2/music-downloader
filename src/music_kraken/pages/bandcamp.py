@@ -14,7 +14,8 @@ from ..objects import (
     Album,
     Label,
     Target,
-    Contact
+    Contact,
+    ID3Timestamp
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
@@ -224,16 +225,23 @@ class Bandcamp(Page):
         
         soup = self.get_soup_from_response(r)
 
-        if DEBUG:
-            # dump_to_file("album_page.html", r.text, exit_after_dump=False)
-            pass
-
         data_container = soup.find("script", {"type": "application/ld+json"})
         
         if DEBUG:
             dump_to_file("album_data.json", data_container.text, is_json=True, exit_after_dump=False)
 
         data = json.loads(data_container.text)
+        artist_data = data["byArtist"]
+
+        album = Album(
+            title=data["name"],
+            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]))],
+            date=ID3Timestamp.strptime(data["datePublished"], "%d %b %Y %H:%M:%S %Z"),
+            artist_list=[Artist(
+                name=artist_data["name"],
+                source_list=[Source(self.SOURCE_TYPE, artist_data["@id"])]
+            )]
+        )
 
         for i, track_json in enumerate(data.get("track", {}).get("itemListElement", [])):
             if DEBUG:
