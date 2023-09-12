@@ -2,9 +2,9 @@ import random
 
 from .config import main_settings
 
-DEBUG = False
+DEBUG = True
 DEBUG_YOUTUBE_INITIALIZING = DEBUG and False 
-DEBUG_PAGES = DEBUG and False
+DEBUG_PAGES = DEBUG and True
 
 if DEBUG:
     print("DEBUG ACTIVE")

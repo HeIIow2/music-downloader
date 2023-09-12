@@ -79,6 +79,11 @@ Reference for the logging formats: https://docs.python.org/3/library/logging.htm
         description="The logger for the genius scraper",
         default_value="genius"
     ),
+    LoggerAttribute(
+        name="bandcamp_logger",
+        description="The logger for the bandcamp scraper",
+        default_value="bandcamp"
+    )
 
 ], LOCATIONS.get_config_file("logging"))
 
@@ -97,3 +102,4 @@ class SettingsStructure(TypedDict):
     youtube_music_logger: Logger
     metal_archives_logger: Logger
     genius_logger: Logger
+    bandcamp_logger: Logger

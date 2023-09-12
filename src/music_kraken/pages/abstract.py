@@ -220,7 +220,7 @@ class Page:
         
         if type(music_object) in search_functions:
             r = search_functions[type(music_object)](music_object)
-            if len(r) > 0:
+            if r is not None and len(r) > 0:
                 return r
             
         r = []

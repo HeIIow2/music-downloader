@@ -29,8 +29,7 @@ if __name__ == "__main__":
     ]
 
     youtube_music_test = [
-        "s: #a Favorite #r Anarcho",
-        "0"
+        "s: #a Favorite #r Anarcho"
     ]
 
     music_kraken.cli.download(genre="test", command_list=youtube_music_test, process_metadata_anyway=True)

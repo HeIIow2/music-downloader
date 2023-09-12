@@ -9,20 +9,14 @@ from ..utils.support_classes import Query, DownloadResult
 from ..utils.exception.download import UrlNotFoundException
 from ..utils.shared import DEBUG_PAGES
 
-from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, INDEPENDENT_DB_OBJECTS
-
-if DEBUG_PAGES:
-    DEBUGGING_PAGE = YoutubeMusic
-    print(f"Only downloading from page {DEBUGGING_PAGE}.")
-
-    ALL_PAGES = {DEBUGGING_PAGE}
-    AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
+from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, Bandcamp, INDEPENDENT_DB_OBJECTS
 
 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
-    YoutubeMusic
+    YoutubeMusic,
+    Bandcamp
 }
 
 if youtube_settings["use_youtube_alongside_youtube_music"]:
@@ -31,12 +25,20 @@ if youtube_settings["use_youtube_alongside_youtube_music"]:
 AUDIO_PAGES: Set[Type[Page]] = {
     Musify,
     YouTube,
-    YoutubeMusic
+    YoutubeMusic,
+    Bandcamp
 }
 
 SHADY_PAGES: Set[Type[Page]] = {
     Musify,
 }
+
+if DEBUG_PAGES:
+    DEBUGGING_PAGE = Bandcamp
+    print(f"Only downloading from page {DEBUGGING_PAGE}.")
+
+    ALL_PAGES = {DEBUGGING_PAGE}
+    AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
 
 class Pages:
     def __init__(self, exclude_pages: Set[Type[Page]] = None, exclude_shady: bool = False) -> None:
