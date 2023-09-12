@@ -3,7 +3,7 @@ import random
 from .config import main_settings
 
 DEBUG = True
-DEBUG_YOUTUBE_INITILIZING = DEBUG and False 
+DEBUG_YOUTUBE_INITIALIZING = DEBUG and False 
 if DEBUG:
     print("DEBUG ACTIVE")
 

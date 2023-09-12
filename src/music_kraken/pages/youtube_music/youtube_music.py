@@ -8,7 +8,7 @@ import re
 
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
-from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITILIZING
+from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITIALIZING
 from ...utils.functions import get_current_millis
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -37,7 +37,7 @@ def get_youtube_url(path: str = "", params: str = "", query: str = "", fragment:
 
 class YoutubeMusicConnection(Connection):
     """
-    ===Hearthbeat=timings=for=YOUTUBEMUSIC===
+    ===heartbeat=timings=for=YOUTUBEMUSIC===
     96.27
     98.16
     100.04
@@ -51,7 +51,7 @@ class YoutubeMusicConnection(Connection):
         super().__init__(
             host="https://music.youtube.com/",
             logger=logger,
-            hearthbeat_interval=113.25,
+            heartbeat_interval=113.25,
             header_values={
                 "Accept-Language": accept_language
             }
@@ -65,12 +65,12 @@ class YoutubeMusicConnection(Connection):
                 value=cookie_value,
                 path='/', domain='.youtube.com'
             )
-        # self.start_hearthbeat()
+        # self.start_heartbeat()
 
-    def hearthbeat(self):
-        r = self.get("https://music.youtube.com/verify_session", is_hearthbeat=True)
+    def heartbeat(self):
+        r = self.get("https://music.youtube.com/verify_session", is_heartbeat=True)
         if r is None:
-            self.hearthbeat_failed()
+            self.heartbeat_failed()
         
         string = r.content.decode("utf-8")
 
@@ -78,7 +78,7 @@ class YoutubeMusicConnection(Connection):
         success: bool = data["success"]
 
         if not success:
-            self.hearthbeat_failed()
+            self.heartbeat_failed()
 
 
 @dataclass
@@ -108,7 +108,7 @@ class YoutubeMusic(SuperYouTube):
 
         self.start_millis = get_current_millis()
 
-        if self.credentials.api_key == "" or DEBUG_YOUTUBE_INITILIZING:
+        if self.credentials.api_key == "" or DEBUG_YOUTUBE_INITIALIZING:
             self._fetch_from_main_page()
         
         super().__init__(*args, **kwargs)

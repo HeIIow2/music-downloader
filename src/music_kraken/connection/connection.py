@@ -25,7 +25,7 @@ class Connection:
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True,
             sleep_after_404: float = 0.0,
-            hearthbeat_interval = 0,
+            heartbeat_interval = 0,
     ):
         if proxies is None:
             proxies = main_settings["proxies"]
@@ -50,39 +50,39 @@ class Connection:
 
         self.session_is_occupied: bool = False
 
-        self.hearthbeat_thread = None
-        self.hearthbeat_interval = hearthbeat_interval
+        self.heartbeat_thread = None
+        self.heartbeat_interval = heartbeat_interval
 
     @property
     def user_agent(self) -> str:
         return self.session.headers.get("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
 
 
-    def start_hearthbeat(self):
-        if self.hearthbeat_interval <= 0:
-            self.LOGGER.warning(f"Can't start a hearthbeat with {self.hearthbeat_interval}s in between.")
+    def start_heartbeat(self):
+        if self.heartbeat_interval <= 0:
+            self.LOGGER.warning(f"Can't start a heartbeat with {self.heartbeat_interval}s in between.")
 
-        self.hearthbeat_thread = threading.Thread(target=self._hearthbeat_loop, args=(self.hearthbeat_interval, ), daemon=True)
-        self.hearthbeat_thread.start()
+        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval, ), daemon=True)
+        self.heartbeat_thread.start()
 
-    def hearthbeat_failed(self):
-        self.LOGGER.warning(f"I just died... (The hearthbeat failed)")
+    def heartbeat_failed(self):
+        self.LOGGER.warning(f"I just died... (The heartbeat failed)")
 
 
-    def hearthbeat(self):
+    def heartbeat(self):
         # Your code to send heartbeat requests goes here
-        print("the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting hearthbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
+        print("the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting heartbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
 
-    def _hearthbeat_loop(self, interval: float):
-        def hearthbeat_wrapper():
+    def _heartbeat_loop(self, interval: float):
+        def heartbeat_wrapper():
             self.session_is_occupied = True
-            self.LOGGER.debug(f"I am living. (sending a hearthbeat)")
-            self.hearthbeat()
-            self.LOGGER.debug(f"finished the hearthbeat")
+            self.LOGGER.debug(f"I am living. (sending a heartbeat)")
+            self.heartbeat()
+            self.LOGGER.debug(f"finished the heartbeat")
             self.session_is_occupied = False
 
         while True:
-            hearthbeat_wrapper()
+            heartbeat_wrapper()
             time.sleep(interval)
 
 
@@ -130,7 +130,7 @@ class Connection:
             refer_from_origin: bool = True,
             raw_url: bool = False,
             sleep_after_404: float = None,
-            is_hearthbeat: bool = False,
+            is_heartbeat: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         if sleep_after_404 is None:
@@ -153,9 +153,9 @@ class Connection:
 
         connection_failed = False
         try:
-            if self.session_is_occupied and not is_hearthbeat:
-                self.LOGGER.info(f"Waiting for the hearthbeat to finish.")
-                while self.session_is_occupied and not is_hearthbeat:
+            if self.session_is_occupied and not is_heartbeat:
+                self.LOGGER.info(f"Waiting for the heartbeat to finish.")
+                while self.session_is_occupied and not is_heartbeat:
                     pass
 
             r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
@@ -184,6 +184,9 @@ class Connection:
 
         self.rotate()
 
+        if self.heartbeat_interval > 0 and self.heartbeat_thread is None:
+            self.start_heartbeat()
+
         return self._request(
             request=request,
             try_count=try_count+1,
@@ -192,7 +195,7 @@ class Connection:
             timeout=timeout,
             headers=headers,
             sleep_after_404=sleep_after_404,
-            is_hearthbeat=is_hearthbeat,
+            is_heartbeat=is_heartbeat,
             **kwargs
         )
 
