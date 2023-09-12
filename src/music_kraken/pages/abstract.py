@@ -22,9 +22,9 @@ from ..objects import (
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
-from ..utils import shared
-from ..utils.shared import DOWNLOAD_PATH, DOWNLOAD_FILE, AUDIO_FORMAT
+from ..utils.config import main_settings
 from ..utils.support_classes import Query, DownloadResult
+
 
 INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
 INDEPENDENT_DB_TYPES = Union[Type[Song], Type[Album], Type[Artist], Type[Label]]
@@ -44,7 +44,7 @@ class NamingDict(dict):
         self.object_mappings: Dict[str, DatabaseObject] = object_mappings or dict()
         
         super().__init__(values)
-        self["audio_format"] = AUDIO_FORMAT
+        self["audio_format"] = main_settings["audio_format"]
         
     def add_object(self, music_object: DatabaseObject):
         self.object_mappings[type(music_object).__name__.lower()] = music_object
@@ -351,7 +351,7 @@ class Page:
             if self.NO_ADDITIONAL_DATA_FROM_SONG:
                 skip_next_details = True
             
-            if not download_all and music_object.album_type in shared.ALBUM_TYPE_BLACKLIST:
+            if not download_all and music_object.album_type.value in main_settings["album_type_blacklist"]:
                 return DownloadResult()
 
         if not isinstance(music_object, Song) or not self.NO_ADDITIONAL_DATA_FROM_SONG:
@@ -380,12 +380,12 @@ class Page:
         if song.genre is None:
             song.genre = naming_dict["genre"]
 
-        path_parts = Formatter().parse(DOWNLOAD_PATH)
-        file_parts = Formatter().parse(DOWNLOAD_FILE)
+        path_parts = Formatter().parse(main_settings["download_path"])
+        file_parts = Formatter().parse(main_settings["download_file"])
         new_target = Target(
             relative_to_music_dir=True,
-            path=DOWNLOAD_PATH.format(**{part[1]: naming_dict[part[1]] for part in path_parts}),
-            file=DOWNLOAD_FILE.format(**{part[1]: naming_dict[part[1]] for part in file_parts})
+            path=main_settings["download_path"].format(**{part[1]: naming_dict[part[1]] for part in path_parts}),
+            file=main_settings["download_file"].format(**{part[1]: naming_dict[part[1]] for part in file_parts})
         )
 
 
@@ -397,7 +397,7 @@ class Page:
             return DownloadResult(error_message=f"No source found for {song.title} as {self.__class__.__name__}.")
 
         temp_target: Target = Target(
-            path=shared.TEMP_DIR,
+            path=main_settings["temp_directory"],
             file=str(random.randint(0, 999999))
         )
         

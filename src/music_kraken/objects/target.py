@@ -6,7 +6,7 @@ import requests
 from tqdm import tqdm
 
 from .parents import DatabaseObject
-from ..utils import shared
+from ..utils.config import main_settings, logging_settings
 
 
 LOGGER = logging.getLogger("target")
@@ -36,7 +36,7 @@ class Target(DatabaseObject):
     ) -> None:
         super().__init__(dynamic=dynamic)
         self._file: Path = Path(file)
-        self._path: Path = Path(shared.MUSIC_DIR, path) if relative_to_music_dir else Path(path)
+        self._path: Path = Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path)
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
 
@@ -95,13 +95,13 @@ class Target(DatabaseObject):
                 """
                 with tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024, desc=desc) as t:
 
-                    for chunk in r.iter_content(chunk_size=shared.CHUNK_SIZE):
+                    for chunk in r.iter_content(chunk_size=main_settings["chunk_size"]):
                         size = f.write(chunk)
                         t.update(size)
                 return True
 
             except requests.exceptions.Timeout:
-                shared.DOWNLOAD_LOGGER.error("Stream timed out.")
+                logging_settings["download_logger"].error("Stream timed out.")
                 return False
 
     def open(self, file_mode: str, **kwargs) -> TextIO:

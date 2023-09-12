@@ -11,6 +11,7 @@ class SourceTypes(Enum):
 class SourcePages(Enum):
     YOUTUBE = "youtube"
     MUSIFY = "musify"
+    YOUTUBE_MUSIC = "youtube music"
     GENIUS = "genius"
     MUSICBRAINZ = "musicbrainz"
     ENCYCLOPAEDIA_METALLUM = "encyclopaedia metallum"

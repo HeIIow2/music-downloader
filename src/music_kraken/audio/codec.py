@@ -2,11 +2,14 @@ from typing import List, Tuple
 from tqdm import tqdm
 from ffmpeg_progress_yield import FfmpegProgress
 
-from ..utils.shared import BITRATE, AUDIO_FORMAT, CODEX_LOGGER as LOGGER, FFMPEG_BINARY
+from ..utils.config import main_settings, logging_settings
 from ..objects import Target
 
 
-def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str = AUDIO_FORMAT, interval_list: List[Tuple[float, float]] = None):
+LOGGER = logging_settings["codex_logger"]
+
+
+def correct_codec(target: Target, bitrate_kb: int = main_settings["bitrate"], audio_format: str = main_settings["audio_format"], interval_list: List[Tuple[float, float]] = None):
     if not target.exists:
         LOGGER.warning(f"Target doesn't exist: {target.file_path}")
         return
@@ -35,7 +38,7 @@ def correct_codec(target: Target, bitrate_kb: int = BITRATE, audio_format: str =
     
     # build the ffmpeg command
     ffmpeg_command = [
-        str(FFMPEG_BINARY), 
+        str(main_settings["ffmpeg_binary"]), 
         "-i", str(target.file_path), 
         "-af", select, 
         "-b", str(bitrate_b),

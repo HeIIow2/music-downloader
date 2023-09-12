@@ -68,3 +68,10 @@ def clean_song_title(raw_song_title: str, artist_name: str) -> str:
             raw_song_title = raw_song_title[1:].strip()
 
     return raw_song_title.strip()
+
+    
+def comment(uncommented_string: str) -> str:
+    _fragments = uncommented_string.split("\n")
+    _fragments = ["# " + frag for frag in _fragments]
+    return "\n".join(_fragments)
+

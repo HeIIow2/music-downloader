@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import List
 import logging
 
-from ..utils.shared import (
-    TAGGING_LOGGER as LOGGER
-)
+from ..utils.config import logging_settings
 from ..objects import Song, Target, Metadata
+
+
+LOGGER = logging_settings["tagging_logger"]
 
 
 class AudioMetadata:

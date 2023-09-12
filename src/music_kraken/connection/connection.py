@@ -3,11 +3,12 @@ from typing import List, Dict, Callable, Optional, Set
 from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
 
+import threading
 import requests
 from tqdm import tqdm
 
 from .rotating import RotatingProxy
-from ..utils.shared import PROXIES_LIST, CHUNK_SIZE
+from ..utils.config import main_settings
 from ..utils.support_classes import DownloadResult
 from ..objects import Target
 
@@ -17,16 +18,17 @@ class Connection:
             self,
             host: str,
             proxies: List[dict] = None,
-            tries: int = (len(PROXIES_LIST) + 1) * 4,
+            tries: int = (len(main_settings["proxies"]) + 1) * 4,
             timeout: int = 7,
             logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True,
-            sleep_after_404: float = 0.0
+            sleep_after_404: float = 0.0,
+            heartbeat_interval = 0,
     ):
         if proxies is None:
-            proxies = PROXIES_LIST
+            proxies = main_settings["proxies"]
         if header_values is None:
             header_values = dict()
 
@@ -46,6 +48,45 @@ class Connection:
         self.session.headers = self.get_header(**self.HEADER_VALUES)
         self.session.proxies = self.rotating_proxy.current_proxy
 
+        self.session_is_occupied: bool = False
+
+        self.heartbeat_thread = None
+        self.heartbeat_interval = heartbeat_interval
+
+    @property
+    def user_agent(self) -> str:
+        return self.session.headers.get("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
+
+
+    def start_heartbeat(self):
+        if self.heartbeat_interval <= 0:
+            self.LOGGER.warning(f"Can't start a heartbeat with {self.heartbeat_interval}s in between.")
+
+        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval, ), daemon=True)
+        self.heartbeat_thread.start()
+
+    def heartbeat_failed(self):
+        self.LOGGER.warning(f"I just died... (The heartbeat failed)")
+
+
+    def heartbeat(self):
+        # Your code to send heartbeat requests goes here
+        print("the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting heartbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
+
+    def _heartbeat_loop(self, interval: float):
+        def heartbeat_wrapper():
+            self.session_is_occupied = True
+            self.LOGGER.debug(f"I am living. (sending a heartbeat)")
+            self.heartbeat()
+            self.LOGGER.debug(f"finished the heartbeat")
+            self.session_is_occupied = False
+
+        while True:
+            heartbeat_wrapper()
+            time.sleep(interval)
+
+
+    
     def base_url(self, url: ParseResult = None):
         if url is None:
             url = self.HOST
@@ -89,6 +130,7 @@ class Connection:
             refer_from_origin: bool = True,
             raw_url: bool = False,
             sleep_after_404: float = None,
+            is_heartbeat: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
         if sleep_after_404 is None:
@@ -111,6 +153,11 @@ class Connection:
 
         connection_failed = False
         try:
+            if self.session_is_occupied and not is_heartbeat:
+                self.LOGGER.info(f"Waiting for the heartbeat to finish.")
+                while self.session_is_occupied and not is_heartbeat:
+                    pass
+
             r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
 
             if r.status_code in accepted_response_codes:
@@ -137,6 +184,9 @@ class Connection:
 
         self.rotate()
 
+        if self.heartbeat_interval > 0 and self.heartbeat_thread is None:
+            self.start_heartbeat()
+
         return self._request(
             request=request,
             try_count=try_count+1,
@@ -145,6 +195,7 @@ class Connection:
             timeout=timeout,
             headers=headers,
             sleep_after_404=sleep_after_404,
+            is_heartbeat=is_heartbeat,
             **kwargs
         )
 
@@ -181,7 +232,7 @@ class Connection:
     def post(
             self,
             url: str,
-            json: dict,
+            json: dict = None,
             refer_from_origin: bool = True,
             stream: bool = False,
             accepted_response_codes: set = None,
@@ -218,7 +269,7 @@ class Connection:
             timeout: float = None,
             headers: dict = None,
             raw_url: bool = False,
-            chunk_size: int = CHUNK_SIZE,
+            chunk_size: int = main_settings["chunk_size"],
             try_count: int = 0,
             progress: int = 0,
             **kwargs

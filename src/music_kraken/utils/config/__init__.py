@@ -1,25 +1,33 @@
-from .logging import LOGGING_SECTION
-from .audio import AUDIO_SECTION
-from .connection import CONNECTION_SECTION
-from .misc import MISC_SECTION
-from .paths import PATHS_SECTION
+from typing import Tuple
 
-from .paths import LOCATIONS
 from .config import Config
+from .config_files import (
+    main_config,
+    logging_config,
+    youtube_config,
+)
 
-
-config = Config()
-
+_sections: Tuple[Config, ...] = (
+    main_config.config,
+    logging_config.config,
+    youtube_config.config
+)
 
 def read_config():
-    if not LOCATIONS.CONFIG_FILE.is_file():
-        write_config()
-    config.read_from_config_file(LOCATIONS.CONFIG_FILE)
+    for section in _sections:
+        section.read()
 
+    # special cases
+    if main_settings['tor']:
+        main_settings['proxies'] = {
+            'http': f'socks5h://127.0.0.1:{main_settings["tor_port"]}',
+            'https': f'socks5h://127.0.0.1:{main_settings["tor_port"]}'
+        }
 
 def write_config():
-    config.write_to_config_file(LOCATIONS.CONFIG_FILE)
+    for section in _sections:
+        section.write()
 
-set_name_to_value = config.set_name_to_value
-
-read_config()
+main_settings: main_config.SettingsStructure = main_config.config.loaded_settings
+logging_settings: logging_config.SettingsStructure = logging_config.config.loaded_settings
+youtube_settings: youtube_config.SettingsStructure = youtube_config.config.loaded_settings

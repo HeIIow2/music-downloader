@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Type
 
 import pycountry
 
@@ -18,7 +18,8 @@ from .parents import MainObject, DatabaseObject
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
-from ..utils.shared import SORT_BY_ALBUM_TYPE, SORT_BY_DATE
+
+from ..utils.config import main_settings
 
 """
 All Objects dependent 
@@ -82,11 +83,11 @@ class Song(MainObject):
         self.notes: FormattedText = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.target_collection: Collection = Collection(data=target_list, element_type=Target)
-        self.lyrics_collection: Collection = Collection(data=lyrics_list, element_type=Lyrics)
-        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-        self.main_artist_collection = Collection(data=main_artist_list, element_type=Artist)
-        self.feature_artist_collection = Collection(data=feature_artist_list, element_type=Artist)
+        self.target_collection: Collection[Target] = Collection(data=target_list, element_type=Target)
+        self.lyrics_collection: Collection[Lyrics] = Collection(data=lyrics_list, element_type=Lyrics)
+        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
+        self.main_artist_collection: Collection[Artist] = Collection(data=main_artist_list, element_type=Artist)
+        self.feature_artist_collection: Collection[Artist] = Collection(data=feature_artist_list, element_type=Artist)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -107,6 +108,23 @@ class Song(MainObject):
             for album in self.album_collection:
                 artist.main_album_collection.append(album, merge_on_conflict=merge, merge_into_existing=False)
                 artist._build_recursive_structures(build_version=build_version, merge=merge)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            return
+
+        if object_type is Lyrics:
+            self.lyrics_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            self.main_artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            self.album_collection.extend(object_list)
+            return
+        
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -255,9 +273,9 @@ class Album(MainObject):
         self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.song_collection: Collection = Collection(data=song_list, element_type=Song)
-        self.artist_collection: Collection = Collection(data=artist_list, element_type=Artist)
-        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+        self.song_collection: Collection[Song] = Collection(data=song_list, element_type=Song)
+        self.artist_collection: Collection[Artist] = Collection(data=artist_list, element_type=Artist)
+        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -278,6 +296,22 @@ class Album(MainObject):
         for label in self.label_collection:
             label.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
             label._build_recursive_structures(build_version=build_version, merge=merge)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            self.song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            self.artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -473,17 +507,31 @@ class Artist(MainObject):
         i mean do as you want but there is no strict rule about em so good luck
         """
         self.notes: FormattedText = notes or FormattedText()
-        """
-        TODO
-        implement in db
-        """
+
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.feature_song_collection: Collection = Collection(data=feature_song_list, element_type=Song)
-        self.main_album_collection: Collection = Collection(data=main_album_list, element_type=Album)
-        self.label_collection: Collection = Collection(data=label_list, element_type=Label)
+        self.feature_song_collection: Collection[Song] = Collection(data=feature_song_list, element_type=Song)
+        self.main_album_collection: Collection[Album] = Collection(data=main_album_list, element_type=Album)
+        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            # this doesn't really make sense
+            # self.feature_song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            return
+
+        if object_type is Album:
+            self.main_album_collection.extend(object_list)
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
 
     def compile(self, merge_into: bool = False):
         """
@@ -515,7 +563,7 @@ class Artist(MainObject):
             AlbumType.STUDIO_ALBUM: 0,
             AlbumType.EP: 0,
             AlbumType.SINGLE: 1
-        }) if SORT_BY_ALBUM_TYPE else defaultdict(lambda: 0)
+        }) if main_settings["sort_album_by_type"] else defaultdict(lambda: 0)
 
         sections = defaultdict(list)
 
@@ -528,7 +576,7 @@ class Artist(MainObject):
             # album is just a value used in loops
             nonlocal album
 
-            if SORT_BY_DATE:
+            if main_settings["sort_by_date"]:
                 _section.sort(key=lambda _album: _album.date, reverse=True)
 
             new_last_albumsort = last_albumsort
@@ -685,8 +733,20 @@ class Label(MainObject):
         self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.album_collection: Collection = Collection(data=album_list, element_type=Album)
-        self.current_artist_collection: Collection = Collection(data=current_artist_list, element_type=Artist)
+        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
+        self.current_artist_collection: Collection[Artist] = Collection(data=current_artist_list, element_type=Artist)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        if object_type is Song:
+            return
+
+        if object_type is Artist:
+            self.current_artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            self.album_collection.extend(object_list)
+            return
 
     def _build_recursive_structures(self, build_version: int, merge: False):
         if build_version == self.build_version:

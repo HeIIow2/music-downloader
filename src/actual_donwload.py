@@ -3,7 +3,7 @@ import music_kraken
 
 if __name__ == "__main__":
     normally_download = [
-        "s: #a Ghost Bath",
+        "s: #a Favorite #r Anarcho",
         "1",
         "d: 1, 5"
     ]
@@ -28,4 +28,9 @@ if __name__ == "__main__":
         "d: 5"
     ]
 
-    music_kraken.cli.download(genre="test", command_list=download_youtube_playlist, process_metadata_anyway=True)
+    youtube_music_test = [
+        "s: #a Favorite #r Anarcho",
+        "0"
+    ]
+
+    music_kraken.cli.download(genre="test", command_list=youtube_music_test, process_metadata_anyway=True)

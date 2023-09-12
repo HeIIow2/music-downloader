@@ -1,127 +1,68 @@
-from typing import Union, Tuple, Dict, Iterable, List
-from datetime import datetime
+from typing import Any, Tuple, Union
+from pathlib import Path
 import logging
-import os
 
-from ..exception.config import SettingNotFound, SettingValueError
-from ..path_manager import LOCATIONS
-from .base_classes import Description, Attribute, Section, EmptyLine, COMMENT_PREFIX
-from .audio import AUDIO_SECTION
-from .logging import LOGGING_SECTION
-from .connection import CONNECTION_SECTION
-from .misc import MISC_SECTION
-from .paths import PATHS_SECTION
+import toml
+
+from .attributes.attribute import Attribute, Description, EmptyLine
 
 
-LOGGER = logging.getLogger("config")
+class ConfigDict(dict):
+    def __init__(self, config_reference: "Config", *args, **kwargs):
+        self.config_reference: Config = config_reference
+
+        super().__init__(*args, **kwargs)
+
+    def __getattribute__(self, __name: str) -> Any:
+        return super().__getattribute__(__name)
+    
+    def __setitem__(self, __key: Any, __value: Any, from_attribute: bool = False, is_parsed: bool = False) -> None:
+        if not from_attribute:
+            attribute: Attribute = self.config_reference.attribute_map[__key]
+            if is_parsed:
+                attribute.value = __value
+            else:
+                attribute.parse(__value)
+            self.config_reference.write()
+
+            __value = attribute.value
+
+        return super().__setitem__(__key, __value)
 
 
 class Config:
-    def __init__(self):
-        self.config_elements: Tuple[Union[Description, Attribute, Section], ...] = (
-            Description("IMPORTANT: If you modify this file, the changes for the actual setting, will be kept as is.\n"
-                        "The changes you make to the comments, will be discarded, next time you run music-kraken. "
-                        "Have fun!"),
-            Description(f"Latest reset: {datetime.now()}"),
-            Description("Those are all Settings for the audio codec.\n"
-                        "If you, for some reason wanna fill your drive real quickly, I mean enjoy HIFI music,\n"
-                        "feel free to tinker with the Bitrate or smth. :)"),
-            AUDIO_SECTION,
-            Description("Modify how Music-Kraken connects to the internet:"),
-            CONNECTION_SECTION,
-            Description("Modify all your paths, except your config file..."),
-            PATHS_SECTION,
-            Description("For all your Logging needs.\n"
-                        "If you found a bug, and wan't to report it, please set the Logging level to 0,\n"
-                        "reproduce the bug, and attach the logfile in the bugreport. ^w^"),
-            LOGGING_SECTION,
-            Description("If there are stupid settings, they are here."),
-            MISC_SECTION,
-            Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
-        )
+    def __init__(self, componet_list: Tuple[Union[Attribute, Description, EmptyLine]], config_file: Path) -> None:
+        self.config_file: Path = config_file
 
-        self._length = 0
-        self._section_list: List[Section] = []
-        self._name_section_map: Dict[str, Section] = dict()
+        self.component_list: Tuple[Union[Attribute, Description, EmptyLine]] = componet_list
+        self.loaded_settings: ConfigDict = ConfigDict(self)
 
-        for element in self.config_elements:
-            if not isinstance(element, Section):
+        self.attribute_map = {}
+        for component in self.component_list:
+            if not isinstance(component, Attribute):
                 continue
-
-            self._section_list.append(element)
-            for name in element.name_attribute_map:
-                if name in self._name_section_map:
-                    raise ValueError(f"Two sections have the same name: "
-                                     f"{name}: "
-                                     f"{element.__class__.__name__} {self._name_section_map[name].__class__.__name__}")
-
-                self._name_section_map[name] = element
-                self._length += 1
-
-    def set_name_to_value(self, name: str, value: str, silent: bool = True):
-        """
-        :raises SettingValueError, SettingNotFound:
-        :param name:
-        :param value:
-        :return:
-        """
-        if name not in self._name_section_map:
-            if silent:
-                LOGGER.warning(f"The setting \"{name}\" is either deprecated, or doesn't exist.")
-                return
-            raise SettingNotFound(setting_name=name)
-
-        LOGGER.debug(f"setting: {name} value: {value}")
-
-        self._name_section_map[name].modify_setting(setting_name=name, new_value=value)
-
-    def __len__(self):
-        return self._length
+            
+            component.initialize_from_config(self.loaded_settings)
+            self.attribute_map[component.name] = component
 
     @property
-    def config_string(self) -> str:
-        return "\n\n".join(str(element) for element in self.config_elements)
+    def toml_string(self):
+        return "\n".join(component.toml_string for component in self.component_list)
 
-    def _parse_conf_line(self, line: str, index: int):
-        """
-        :raises SettingValueError, SettingNotFound:
-        :param line:
-        :param index:
-        :return:
-        """
-        line = line.strip()
-        if line.startswith(COMMENT_PREFIX):
+    def write(self):
+        with self.config_file.open("w") as conf_file:
+            conf_file.write(self.toml_string)
+
+    def read(self):
+        if not self.config_file.is_file():
+            logging.info(f"Config file at '{self.config_file}' doesn't exist => generating")
+            self.write()
             return
+        
+        toml_data = {}
+        with self.config_file.open("r") as conf_file:
+            toml_data = toml.load(conf_file)
 
-        if line == "":
-            return
-
-        if "=" not in line:
-            """
-            TODO
-            No value error but custom conf error
-            """
-            raise ValueError(f"Couldn't find the '=' in line {index}.")
-
-        line_segments = line.split("=")
-        name = line_segments[0]
-        value = "=".join(line_segments[1:])
-
-        self.set_name_to_value(name, value)
-
-    def read_from_config_file(self, path: os.PathLike):
-        with open(path, "r", encoding=LOCATIONS.FILE_ENCODING) as conf_file:
-            for section in self._section_list:
-                section.reset_list_attribute()
-
-            for i, line in enumerate(conf_file):
-                self._parse_conf_line(line, i+1)
-
-    def write_to_config_file(self, path: os.PathLike):
-        with open(path, "w", encoding=LOCATIONS.FILE_ENCODING) as conf_file:
-            conf_file.write(self.config_string)
-
-    def __iter__(self) -> Iterable[Attribute]:
-        for section in self._section_list:
-            for name, attribute in section.name_attribute_map.items():
-                yield attribute
+        for component in self.component_list:
+            if isinstance(component, Attribute):
+                component.load_toml(toml_data)

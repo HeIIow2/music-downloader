@@ -5,8 +5,7 @@ import re
 from .utils import cli_function
 from .options.first_config import initial_config
 
-from ..utils.config import set_name_to_value, write_config
-from ..utils.shared import MUSIC_DIR, NOT_A_GENRE_REGEX, ENABLE_RESULT_HISTORY, HISTORY_LENGTH, HELP_MESSAGE, HASNT_YET_STARTED
+from ..utils.config import write_config, main_settings
 from ..utils.regex import URL_PATTERN
 from ..utils.string_processing import fit_to_file_system
 from ..utils.support_classes import Query, DownloadResult
@@ -95,12 +94,12 @@ def get_existing_genre() -> List[str]:
     existing_genres: List[str] = []
 
     # get all subdirectories of MUSIC_DIR, not the files in the dir.
-    existing_subdirectories: List[Path] = [f for f in MUSIC_DIR.iterdir() if f.is_dir()]
+    existing_subdirectories: List[Path] = [f for f in main_settings["music_directory"].iterdir() if f.is_dir()]
 
     for subdirectory in existing_subdirectories:
         name: str = subdirectory.name
 
-        if not any(re.match(regex_pattern, name) for regex_pattern in NOT_A_GENRE_REGEX):
+        if not any(re.match(regex_pattern, name) for regex_pattern in main_settings["not_a_genre_regex"]):
             existing_genres.append(name)
 
     existing_genres.sort()
@@ -133,7 +132,7 @@ def get_genre():
         
 def help_message():
     print()
-    print(HELP_MESSAGE)
+    print(main_settings["happy_messages"])
     print()
 
 
@@ -187,18 +186,18 @@ class Downloader:
         print()
 
     def set_current_options(self, current_options: Results):
-        if ENABLE_RESULT_HISTORY:
+        if main_settings["result_history"]:
             self._result_history.append(current_options)
             
-        if HISTORY_LENGTH != -1:
-            if len(self._result_history) > HISTORY_LENGTH:
+        if main_settings["history_length"] != -1:
+            if len(self._result_history) > main_settings["history_length"]:
                 self._result_history.pop(0)
         
         self.current_results = current_options
         
     def previous_option(self) -> bool:
-        if not ENABLE_RESULT_HISTORY:
-            print("History is turned of.\nGo to settings, and change the value at 'result_history' to 'true'.")
+        if not main_settings["result_history"]:
+            print("History is turned of.\nGo to main_settings, and change the value at 'result_history' to 'true'.")
             return False
         
         if len(self._result_history) <= 1:
@@ -214,12 +213,15 @@ class Downloader:
         artist = None if not "a" in key_text else Artist(name=key_text["a"], dynamic=True)
         
         if song is not None:
-            song.album_collection.append(album)
-            song.main_artist_collection.append(artist)
+            if album is not None:
+                song.album_collection.append(album)
+            if artist is not None:
+                song.main_artist_collection.append(artist)
             return Query(raw_query=query, music_object=song)
         
         if album is not None:
-            album.artist_collection.append(artist)
+            if artist is not None:
+                album.artist_collection.append(artist)
             return Query(raw_query=query, music_object=album)
         
         if artist is not None:
@@ -393,10 +395,10 @@ def download(
         command_list: List[str] = None,
         process_metadata_anyway: bool = False,
 ):
-    if HASNT_YET_STARTED:
+    if main_settings["hasnt_yet_started"]:
         code = initial_config()
         if code == 0:
-            set_name_to_value("hasnt_yet_started", "false")
+            main_settings["hasnt_yet_started"] = False
             write_config()
             print("Restart the programm to use it.")
             return code 

@@ -20,8 +20,12 @@ class Locations:
         self.CONFIG_DIRECTORY = get_config_directory(str(application_name))
         self.CONFIG_DIRECTORY.mkdir(exist_ok=True, parents=True)
         self.CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
+        self.LEGACY_CONFIG_FILE = Path(self.CONFIG_DIRECTORY, f"{application_name}.conf")
         
         self.FFMPEG_BIN = Path(FFmpeg(enable_log=False).get_ffmpeg_bin())
+
+    def get_config_file(self, config_name: str) -> Path:
+        return Path(self.CONFIG_DIRECTORY, f"{config_name}.toml")
 
     def get_log_file(self, file_name: os.PathLike) -> Path:
         return Path(self.TEMP_DIRECTORY, file_name)

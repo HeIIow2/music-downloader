@@ -1,11 +1,14 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-from ...utils.shared import SHOW_DOWNLOAD_ERRORS_THRESHOLD, DOWNLOAD_LOGGER as LOGGER
+from ...utils.config import main_settings, logging_settings
 from ...objects import Target
 
 UNIT_PREFIXES: List[str] = ["", "k", "m", "g", "t"]
 UNIT_DIVISOR = 1024
+
+
+LOGGER = logging_settings["download_logger"]
 
 
 @dataclass
@@ -44,7 +47,7 @@ class DownloadResult:
         if self.is_fatal_error:
             return True
 
-        return self.failure_percentage > SHOW_DOWNLOAD_ERRORS_THRESHOLD
+        return self.failure_percentage > main_settings["show_download_errors_threshold"]
 
     def _size_val_unit_pref_ind(self, val: float, ind: int) -> Tuple[float, int]:
         if val < UNIT_DIVISOR:

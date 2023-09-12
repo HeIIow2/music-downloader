@@ -1,10 +1,14 @@
 import random
 from collections import defaultdict
-from typing import Optional, Dict, Tuple, List
+from typing import Optional, Dict, Tuple, List, Type
 
 from .metadata import Metadata
 from .option import Options
-from ..utils.shared import ID_RANGE, OBJECT_LOGGER as LOGGER
+from ..utils.shared import HIGHEST_ID
+from ..utils.config import main_settings, logging_settings
+
+
+LOGGER = logging_settings["object_logger"]
 
 
 class DatabaseObject:
@@ -25,7 +29,7 @@ class DatabaseObject:
             64 bit integer, but this is defined in shared.py in ID_BITS
             the range is defined in the Tuple ID_RANGE
             """
-            _id = random.randint(*ID_RANGE)
+            _id = random.randint(0, HIGHEST_ID)
             self.automatic_id = True
             LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 
@@ -124,6 +128,18 @@ class DatabaseObject:
         """
         
         self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
+
+    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
+        pass
+
+    def add_list_of_other_objects(self, object_list: List["DatabaseObject"]):
+        d: Dict[Type[DatabaseObject], List[DatabaseObject]] = defaultdict(list)
+
+        for db_object in object_list:
+            d[type(db_object)].append(db_object)
+
+        for key, value in d.items():
+            self._add_other_db_objects(key, value)
 
 
 class MainObject(DatabaseObject):
