@@ -12,12 +12,16 @@ from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, 
 
 if DEBUG_PAGES:
     DEBUGGING_PAGE = YoutubeMusic
+    print(f"Only downloading from page {DEBUGGING_PAGE}.")
+
+    ALL_PAGES = {DEBUGGING_PAGE}
+    AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
 
 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
-    YouTube,
+    # YouTube,
     YoutubeMusic
 }
 
@@ -30,12 +34,6 @@ AUDIO_PAGES: Set[Type[Page]] = {
 SHADY_PAGES: Set[Type[Page]] = {
     Musify,
 }
-
-if DEBUGGING_PAGE is not None:
-    print(f"The DEBUGGING_PAGE is not None, but {DEBUGGING_PAGE}. Only using this page")
-    ALL_PAGES = {DEBUGGING_PAGE}
-    AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
-
 
 class Pages:
     def __init__(self, exclude_pages: Set[Type[Page]] = None, exclude_shady: bool = False) -> None:
