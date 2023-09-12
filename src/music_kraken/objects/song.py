@@ -8,6 +8,7 @@ from ..utils.enums.album import AlbumType, AlbumStatus
 from .collection import Collection
 from .formatted_text import FormattedText
 from .lyrics import Lyrics
+from .contact import Contact
 from .metadata import (
     Mapping as id3Mapping,
     ID3Timestamp,
@@ -481,6 +482,7 @@ class Artist(MainObject):
             source_list: List[Source] = None,
             feature_song_list: List[Song] = None,
             main_album_list: List[Album] = None,
+            contact_list: List[Contact] = None,
             notes: FormattedText = None,
             lyrical_themes: List[str] = None,
             general_genre: str = "",
@@ -515,6 +517,8 @@ class Artist(MainObject):
         self.feature_song_collection: Collection[Song] = Collection(data=feature_song_list, element_type=Song)
         self.main_album_collection: Collection[Album] = Collection(data=main_album_list, element_type=Album)
         self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
+
+        self.contact_collection: Collection[Label] = Collection(data=contact_list, element_type=Contact)
 
     def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
         if object_type is Song:
@@ -628,7 +632,8 @@ class Artist(MainObject):
         return [
             ('id', self.id),
             ('name', self.unified_name),
-            *[('url', source.url) for source in self.source_collection]
+            *[('url', source.url) for source in self.source_collection],
+            *[('contact', contact.value) for contact in self.contact_collection]
         ]
 
     @property
