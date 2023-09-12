@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 import json
 from enum import Enum
 from bs4 import BeautifulSoup
+import pycountry
+import demjson3
 
 from ..objects import Source, DatabaseObject
 from .abstract import Page
@@ -15,7 +17,9 @@ from ..objects import (
     Label,
     Target,
     Contact,
-    ID3Timestamp
+    ID3Timestamp,
+    Lyrics,
+    FormattedText
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
@@ -254,6 +258,17 @@ class Bandcamp(Page):
 
         return album
 
+    def _fetch_lyrics(self, soup: BeautifulSoup) -> List[Lyrics]:
+        track_lyrics = soup.find("div", {"class": "lyricsText"})
+        if track_lyrics:
+            self.LOGGER.debug(" Lyrics retrieved..")
+            return [Lyrics(FormattedText(
+                html=track_lyrics.prettify()
+            ), pycountry.languages.get(alpha_2="en"))]
+        
+        return []
+        
+
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         print(source)
 
@@ -264,17 +279,28 @@ class Bandcamp(Page):
         soup = self.get_soup_from_response(r)
 
         data_container = soup.find("script", {"type": "application/ld+json"})
-        
+        other_data = {}
+
+        other_data_list = soup.select("script[data-tralbum]")
+        if len(other_data_list) > 0:
+            other_data = json.loads(other_data_list[0]["data-tralbum"])
+
         if DEBUG:
             dump_to_file("bandcamp_song_data.json", data_container.text, is_json=True, exit_after_dump=False)
+            dump_to_file("bandcamp_song_data_other.json", json.dumps(other_data), is_json=True, exit_after_dump=False)
+            dump_to_file("bandcamp_song_page.html", r.text, exit_after_dump=False)
 
         data = json.loads(data_container.text)
         album_data = data["inAlbum"]
         artist_data = data["byArtist"]
 
+        mp3_url = None
+        for key, value in other_data.get("trackinfo", [{}])[0].get("file", {"": None}).items():
+            mp3_url = value
+
         song = Song(
             title=data["name"],
-            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]))],
+            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]), adio_url=mp3_url)],
             album_list=[Album(
                 title=album_data["name"],
                 date=ID3Timestamp.strptime(data["datePublished"], "%d %b %Y %H:%M:%S %Z"),
@@ -283,10 +309,14 @@ class Bandcamp(Page):
             main_artist_list=[Artist(
                 name=artist_data["name"],
                 source_list=[Source(self.SOURCE_TYPE, artist_data["@id"])]  
-            )]
+            )],
+            lyrics_list=self._fetch_lyrics(soup=soup)
         )
+
 
         return song
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
-        return DownloadResult()
+        if source.audio_url is None:
+            return DownloadResult(error_message="Couldn't find download link.")
+        return self.connection.stream_into(url=source.audio_url, target=target, description=desc)
