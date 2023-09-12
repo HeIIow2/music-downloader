@@ -2,7 +2,7 @@ from typing import List, Optional, Type
 from urllib.parse import urlparse
 import logging
 from enum import Enum
-
+from bs4 import BeautifulSoup
 
 from ..objects import Source, DatabaseObject
 from .abstract import Page
@@ -13,7 +13,8 @@ from ..objects import (
     Song,
     Album,
     Label,
-    Target
+    Target,
+    Contact
 )
 from ..connection import Connection
 from ..utils.support_classes import DownloadResult
@@ -33,6 +34,7 @@ class Bandcamp(Page):
     # CHANGE
     SOURCE_TYPE = SourcePages.BANDCAMP
     LOGGER = logging_settings["bandcamp_logger"]
+    HOST = "https://onlysmile.bandcamp.com"
 
     def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
@@ -143,7 +145,45 @@ class Bandcamp(Page):
     
     def song_search(self, song: Song) -> List[Song]:
         return self.general_search(song.title, filter_string="t")
+
+    def _parse_artist_details(self, soup: BeautifulSoup) -> Artist:
+        name: str = None
+        source_list: List[Source] = []
+        contact_list: List[Contact] = []
+        
+        band_name_location: BeautifulSoup = soup.find("p", {"id": "band-name-location"})
+        if band_name_location is not None:
+            title_span = band_name_location.find("span", {"class": "title"})
+            if title_span is not None:
+                name = title_span.text.strip()
+        
+        link_container: BeautifulSoup = soup.find("ol", {"id": "band-links"})
+        if link_container is not None:
+            li: BeautifulSoup
+            for li in link_container.find_all("a"):
+                if li is None and li['href'] is not None:
+                    continue
+
+                source_list.append(Source.match_url(li['href'], referer_page=self.SOURCE_TYPE))
+
+        return Artist(
+            name=name,
+            source_list=source_list
+        )
     
+    def _parse_song_list(self, soup: BeautifulSoup) -> List[Album]:
+        title = None
+        source_list: List[Source] = []
+
+        a = soup.find("a")
+        if a is not None and a["href"] is not None:
+            source_list.append(Source(self.SOURCE_TYPE, self.HOST + a["href"]))
+        
+        title_p = soup.find("p", {"class": "title"})
+        if title_p is not None:
+            title = title_p.text.strip()
+
+        return Album(title=title, source_list=source_list)
 
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
         artist = Artist()
@@ -153,12 +193,13 @@ class Bandcamp(Page):
             return artist
         
         soup = self.get_soup_from_response(r)
-        data_container = soup.find("div", {"id": "pagedata"})
-        data = data_container["data-blob"]
-        
+
         if DEBUG:
             dump_to_file("artist_page.html", r.text, exit_after_dump=False)
-            dump_to_file("bandcamp_artis.json", data, is_json=True, exit_after_dump=False)
+
+        artist = self._parse_artist_details(soup=soup.find("div", {"id": "bio-container"}))
+        for subsoup in soup.find("ol", {"id": "music-grid"}).find_all("li"):
+            artist.main_album_collection.append(self._parse_song_list(soup=subsoup))
 
         return artist
     
