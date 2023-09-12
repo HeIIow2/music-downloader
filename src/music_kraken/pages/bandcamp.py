@@ -86,7 +86,18 @@ class Bandcamp(Page):
             )
 
         if object_type is BandcampTypes.SONG:
-            print("NEEDING TO IMPLEMENT SONG")
+            return Song(
+                title=name,
+                source_list=source_list,
+                main_artist_list=[
+                    Artist(
+                        name=data["band_name"],
+                        source_list=[
+                            Source(self.SOURCE_TYPE, data["item_url_root"])
+                        ]
+                    )
+                ]
+            )
     
     def general_search(self, search_query: str, filter_string: str = "") -> List[DatabaseObject]:
         results = []
@@ -113,16 +124,16 @@ class Bandcamp(Page):
         return results
     
     def label_search(self, label: Label) -> List[Label]:
-        return self.general_search(artist.name, filter_string="b")
+        return self.general_search(label.name, filter_string="b")
     
     def artist_search(self, artist: Artist) -> List[Artist]:
         return self.general_search(artist.name, filter_string="b")
     
     def album_search(self, album: Album) -> List[Album]:
-        return self.general_search(artist.name, filter_string="a")
+        return self.general_search(album.title, filter_string="a")
     
     def song_search(self, song: Song) -> List[Song]:
-        return self.general_search(artist.name, filter_string="t")
+        return self.general_search(song.title, filter_string="t")
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         return Song()
