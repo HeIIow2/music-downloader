@@ -15,7 +15,7 @@ from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
-    YoutubeMusic,
+    # YoutubeMusic,
     Bandcamp
 }
 
@@ -97,7 +97,11 @@ class Pages:
         if not isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             return DownloadResult(error_message=f"{type(music_object).__name__} can't be downloaded.")
         
-        _page_types = set(self._source_to_page[src] for src in music_object.source_collection.source_pages)
+        _page_types = set()
+        for src in music_object.source_collection.source_pages:
+            if src in self._source_to_page:
+                _page_types.add(self._source_to_page[src])
+
         audio_pages = self._audio_pages_set.intersection(_page_types)
         
         for download_page in audio_pages:

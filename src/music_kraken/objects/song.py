@@ -649,11 +649,12 @@ class Artist(MainObject):
 
         return metadata
 
-    def __str__(self):
+    def __str__(self, include_notes: bool = False):
         string = self.name or ""
-        plaintext_notes = self.notes.get_plaintext()
-        if plaintext_notes is not None:
-            string += "\n" + plaintext_notes
+        if include_notes:
+            plaintext_notes = self.notes.get_plaintext()
+            if plaintext_notes is not None:
+                string += "\n" + plaintext_notes
         return string
 
     def __repr__(self):

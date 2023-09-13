@@ -153,11 +153,12 @@ def build_new_object(new_object: DatabaseObject) -> DatabaseObject:
     
     return new_object
 
-def merge_together(old_object: DatabaseObject, new_object: DatabaseObject) -> DatabaseObject:
+def merge_together(old_object: DatabaseObject, new_object: DatabaseObject, do_compile: bool = True) -> DatabaseObject:
     new_object = clean_object(new_object)
     
     old_object.merge(new_object)
-    old_object.compile(merge_into=False)
+    if do_compile:
+        old_object.compile(merge_into=False)
     
     return old_object
 
@@ -246,7 +247,7 @@ class Page:
         return []
     
 
-    def fetch_details(self, music_object: DatabaseObject, stop_at_level: int = 1) -> DatabaseObject:
+    def fetch_details(self, music_object: DatabaseObject, stop_at_level: int = 1, post_process: bool = True) -> DatabaseObject:
         """
         when a music object with lacking data is passed in, it returns
         the SAME object **(no copy)** with more detailed data.
@@ -270,22 +271,22 @@ class Page:
         if isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             source: Source
             for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
-                new_music_object.merge(
-                    self.fetch_object_from_source(
-                        source=source, 
-                        enforce_type=type(music_object), 
-                        stop_at_level=stop_at_level, 
-                        post_process=False
-                    )
-                )
+                new_music_object.merge(self.fetch_object_from_source(
+                    source=source, 
+                    enforce_type=type(music_object), 
+                    stop_at_level=stop_at_level, 
+                    post_process=False
+                ))
 
-        return merge_together(music_object, new_music_object)
+        return merge_together(music_object, new_music_object, do_compile=post_process)
 
     def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
-        obj_type = self.get_source_type(source)
-        
+        obj_type = self.get_source_type(
+            source)
+        print("obj type", obj_type, self)
         if obj_type is None:
             return None
+
         if enforce_type != obj_type and enforce_type is not None:
             self.LOGGER.warning(f"Object type isn't type to enforce: {enforce_type}, {obj_type}")
             return None
@@ -298,12 +299,20 @@ class Page:
             Artist: self.fetch_artist,
             Label: self.fetch_label
         }
-        
+     
         if obj_type in fetch_map:
             music_object = fetch_map[obj_type](source, stop_at_level)
         else:
             self.LOGGER.warning(f"Can't fetch details of type: {obj_type}")
             return None
+
+        if stop_at_level > 1:
+            collection: Collection
+            for collection_str in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
+                collection = music_object.__getattribute__(collection_str)
+
+                for sub_element in collection:
+                    sub_element.merge(self.fetch_details(sub_element, stop_at_level=stop_at_level-1, post_process=False))
 
         if post_process and music_object:
             return build_new_object(music_object)
@@ -323,6 +332,10 @@ class Page:
         return Label()
 
     def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
+        # print("downloading")
+        
+        self.fetch_details(music_object, stop_at_level=2)
+
         naming_dict: NamingDict = NamingDict({"genre": genre})
           
         def fill_naming_objects(naming_music_object: DatabaseObject):

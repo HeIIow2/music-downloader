@@ -81,6 +81,8 @@ class Collection(Generic[T]):
         :param merge_into_existing:
         :return did_not_exist:
         """
+        if element is None:
+            return AppendResult(False, None, False)
 
         # if the element type has been defined in the initializer it checks if the type matches
         if self.element_type is not None and not isinstance(element, self.element_type):

@@ -31,7 +31,7 @@ class DatabaseObject:
             """
             _id = random.randint(0, HIGHEST_ID)
             self.automatic_id = True
-            LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
+            # LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
         self.id: Optional[int] = _id

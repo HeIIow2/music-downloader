@@ -4,7 +4,7 @@ from .config import main_settings
 
 DEBUG = True
 DEBUG_YOUTUBE_INITIALIZING = DEBUG and False 
-DEBUG_PAGES = DEBUG and True
+DEBUG_PAGES = DEBUG and False
 
 if DEBUG:
     print("DEBUG ACTIVE")

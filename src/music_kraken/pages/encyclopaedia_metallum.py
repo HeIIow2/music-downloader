@@ -22,6 +22,10 @@ from ..objects import (
     Options,
     DatabaseObject
 )
+from ..utils.shared import DEBUG
+if DEBUG:
+    from ..utils.debug_utils import dump_to_file
+
 
 
 ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
@@ -264,20 +268,33 @@ class EncyclopaediaMetallum(Page):
 
         soup = self.get_soup_from_response(r)
 
+        if DEBUG:
+            dump_to_file(f"ma_artist_sources_{ma_artist_id}.html", soup.prettify(), exit_after_dump=False)
+
         if soup.find("span", {"id": "noLinks"}) is not None:
             return []
 
-        artist_source = soup.find("div", {"id": "band_links_Official"})
-        """
-        TODO
-        add a Label object to add the label sources from
-        TODO
-        maybe do merchandice stuff
-        """
+        source_list = []
+
+        link_table: BeautifulSoup = soup.find("table", {"id": "linksTablemain"})
+        if link_table is not None:
+            for tr in link_table.find_all("tr"):
+                anchor: BeautifulSoup = tr.find("a")
+                if anchor is None:
+                    continue
+
+                href = anchor["href"]
+                if href is not None:
+                    source_list.append(Source.match_url(href, referer_page=self.SOURCE_TYPE))
+
+        # The following code is only legacy code, which I just kep because it doesn't harm.
+        # The way ma returns sources changed.
+        artist_source = soup.find("div", {"id": "band_links"})
+
         merchandice_source = soup.find("div", {"id": "band_links_Official_merchandise"})
         label_source = soup.find("div", {"id": "band_links_Labels"})
 
-        source_list = []
+
 
         if artist_source is not None:
             for tr in artist_source.find_all("td"):
@@ -287,6 +304,8 @@ class EncyclopaediaMetallum(Page):
                     continue
 
                 source_list.append(Source.match_url(url, referer_page=self.SOURCE_TYPE))
+
+        print(source_list)
 
         return source_list
 

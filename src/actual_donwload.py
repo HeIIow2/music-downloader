@@ -35,4 +35,10 @@ if __name__ == "__main__":
         "d: 2"
     ]
 
-    music_kraken.cli.download(genre="test", command_list=youtube_music_test, process_metadata_anyway=True)
+    cross_download = [
+        "s: #a Psychonaut 4",
+        "2",
+        "d: 0"
+    ]
+
+    music_kraken.cli.download(genre="test", command_list=cross_download, process_metadata_anyway=True)

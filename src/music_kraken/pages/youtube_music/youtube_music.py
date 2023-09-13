@@ -71,8 +71,9 @@ class YoutubeMusicConnection(Connection):
         r = self.get("https://music.youtube.com/verify_session", is_heartbeat=True)
         if r is None:
             self.heartbeat_failed()
+            return
         
-        string = r.content.decode("utf-8")
+        string = r.text
 
         data = json.loads(string[string.index("{"):])
         success: bool = data["success"]
@@ -247,6 +248,9 @@ class YoutubeMusic(SuperYouTube):
                 "Referer": get_youtube_url(path=f"/search", query=f"q={urlescaped_query}")
             }
         )
+
+        if r is None:
+            return []
 
         renderer_list = r.json().get("contents", {}).get("tabbedSearchResultsRenderer", {}).get("tabs", [{}])[0].get("tabRenderer").get("content", {}).get("sectionListRenderer", {}).get("contents", [])
         

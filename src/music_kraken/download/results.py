@@ -27,7 +27,7 @@ class Results:
         self._page_by_index = dict()
     
     def get_music_object_by_index(self, index: int) -> Tuple[Type[Page], DatabaseObject]:
-        # if this throws a key error, either the formated generator needs to be iterated, or the option doesn't exist.
+        # if this throws a key error, either the formatted generator needs to be iterated, or the option doesn't exist.
         return self._page_by_index[index], self._by_index[index]
     
     def delete_details(self, exclude_index: int):
