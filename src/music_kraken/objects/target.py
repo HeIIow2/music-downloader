@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from .parents import DatabaseObject
 from ..utils.config import main_settings, logging_settings
+from ..utils.string_processing import fit_to_file_system
 
 
 LOGGER = logging.getLogger("target")
@@ -35,8 +36,8 @@ class Target(DatabaseObject):
             relative_to_music_dir: bool = False
     ) -> None:
         super().__init__(dynamic=dynamic)
-        self._file: Path = Path(file)
-        self._path: Path = Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path)
+        self._file: Path = Path(fit_to_file_system(file))
+        self._path: Path = fit_to_file_system(Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path))
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
 

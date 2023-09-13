@@ -281,9 +281,8 @@ class Page:
         return merge_together(music_object, new_music_object, do_compile=post_process)
 
     def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
-        obj_type = self.get_source_type(
-            source)
-        print("obj type", obj_type, self)
+        obj_type = self.get_source_type(source)
+
         if obj_type is None:
             return None
 
@@ -334,7 +333,7 @@ class Page:
     def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         # print("downloading")
         
-        self.fetch_details(music_object, stop_at_level=2)
+        # self.fetch_details(music_object, stop_at_level=1)
 
         naming_dict: NamingDict = NamingDict({"genre": genre})
           

@@ -3,7 +3,7 @@ import logging
 import gc
 import musicbrainzngs
 
-from .utils.shared import DEBUG
+from .utils.shared import DEBUG, DEBUG_LOGGIN
 from .utils.config import logging_settings, main_settings, read_config
 read_config()
 from . import cli
@@ -11,7 +11,7 @@ from . import cli
 
 # configure logger default
 logging.basicConfig(
-    level=logging_settings['log_level'] if not DEBUG else logging.DEBUG,
+    level=logging_settings['log_level'] if not DEBUG_LOGGIN else logging.DEBUG,
     format=logging_settings['logging_format'],
     handlers=[
         logging.FileHandler(main_settings['log_file']),
