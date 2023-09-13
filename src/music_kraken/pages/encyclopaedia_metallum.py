@@ -92,7 +92,7 @@ def _album_from_json(album_html=None, release_type=None, artist_html=None) -> Al
     # <a href="https://www.metal-archives.com/albums/Ghost_Bath/Self_Loather/970834">Self Loather</a>'
     soup = BeautifulSoup(album_html, 'html.parser')
     anchor = soup.find('a')
-    album_name = anchor.text
+    album_name = anchor.text.strip()
     album_url = anchor.get('href')
     album_id = album_url.split("/")[-1]
 
@@ -304,9 +304,7 @@ class EncyclopaediaMetallum(Page):
                     continue
 
                 source_list.append(Source.match_url(url, referer_page=self.SOURCE_TYPE))
-
-        print(source_list)
-
+                
         return source_list
 
     def _parse_artist_attributes(self, artist_soup: BeautifulSoup) -> Artist:

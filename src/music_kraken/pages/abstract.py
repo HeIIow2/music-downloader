@@ -24,6 +24,7 @@ from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils.config import main_settings
 from ..utils.support_classes import Query, DownloadResult
+from ..utils.string_processing import fit_to_file_system
 
 
 INDEPENDENT_DB_OBJECTS = Union[Label, Album, Artist, Song]
@@ -53,17 +54,12 @@ class NamingDict(dict):
         return type(self)(super().copy(), self.object_mappings.copy())
     
     def __getitem__(self, key: str) -> str:
-        return super().__getitem__(key)
+        return fit_to_file_system(super().__getitem__(key))
     
     def default_value_for_name(self, name: str) -> str:
         return f'Various {name.replace("_", " ").title()}'
 
     def __missing__(self, key: str) -> str:
-        """
-        TODO 
-        add proper logging
-        """
-        
         if "." not in key:
             if key not in self.CUSTOM_KEYS:
                 return self.default_value_for_name(key)
@@ -331,10 +327,6 @@ class Page:
         return Label()
 
     def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
-        # print("downloading")
-        
-        # self.fetch_details(music_object, stop_at_level=1)
-
         naming_dict: NamingDict = NamingDict({"genre": genre})
           
         def fill_naming_objects(naming_music_object: DatabaseObject):

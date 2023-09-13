@@ -223,7 +223,7 @@ class Bandcamp(Page):
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
         artist = Artist()
 
-        r = self.connection.get(source.url)
+        r = self.connection.get(_parse_artist_url(source.url))
         if r is None:
             return artist
         

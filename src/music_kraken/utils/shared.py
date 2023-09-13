@@ -2,7 +2,7 @@ import random
 
 from .config import main_settings
 
-DEBUG = True
+DEBUG = False
 DEBUG_LOGGIN = DEBUG and False
 DEBUG_YOUTUBE_INITIALIZING = DEBUG and False 
 DEBUG_PAGES = DEBUG and False

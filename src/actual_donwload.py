@@ -43,8 +43,9 @@ if __name__ == "__main__":
 
     bandcamp_test = [
         "s: #a Ghost Bath",
+        "3",
         "d: 0"
     ]
 
     
-    music_kraken.cli.download(genre="test", command_list=cross_download, process_metadata_anyway=True)
+    music_kraken.cli.download(genre="test", command_list=bandcamp_test, process_metadata_anyway=True)
