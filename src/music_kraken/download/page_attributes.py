@@ -15,7 +15,7 @@ from ..pages import Page, EncyclopaediaMetallum, Musify, YouTube, YoutubeMusic, 
 ALL_PAGES: Set[Type[Page]] = {
     EncyclopaediaMetallum,
     Musify,
-    # YoutubeMusic,
+    YoutubeMusic,
     Bandcamp
 }
 
