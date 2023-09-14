@@ -5,8 +5,8 @@ from .parents import DatabaseObject
 
 
 class Contact(DatabaseObject):
-    COLLECTION_ATTRIBUTES = tuple()
-    SIMPLE_ATTRIBUTES = {
+    COLLECTION_STRING_ATTRIBUTES = tuple()
+    SIMPLE_STRING_ATTRIBUTES = {
         "contact_method": None,
         "value": None,
     }

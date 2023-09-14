@@ -8,8 +8,8 @@ from .formatted_text import FormattedText
 
 
 class Lyrics(DatabaseObject):
-    COLLECTION_ATTRIBUTES = ("source_collection",)
-    SIMPLE_ATTRIBUTES = {
+    COLLECTION_STRING_ATTRIBUTES = ("source_collection",)
+    SIMPLE_STRING_ATTRIBUTES = {
         "text": FormattedText(),
         "language": None
     }

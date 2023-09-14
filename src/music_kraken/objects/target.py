@@ -22,11 +22,11 @@ class Target(DatabaseObject):
     ```
     """
 
-    SIMPLE_ATTRIBUTES = {
+    SIMPLE_STRING_ATTRIBUTES = {
         "_file": None,
         "_path": None
     }
-    COLLECTION_ATTRIBUTES = tuple()
+    COLLECTION_STRING_ATTRIBUTES = tuple()
 
     def __init__(
             self,

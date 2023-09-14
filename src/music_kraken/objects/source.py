@@ -19,8 +19,8 @@ class Source(DatabaseObject):
     Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
     ```
     """
-    COLLECTION_ATTRIBUTES = tuple()
-    SIMPLE_ATTRIBUTES = {
+    COLLECTION_STRING_ATTRIBUTES = tuple()
+    SIMPLE_STRING_ATTRIBUTES = {
         "page_enum": None,
         "url": None,
         "referer_page": None,

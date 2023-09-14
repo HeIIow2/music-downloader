@@ -15,7 +15,7 @@ from .metadata import (
     Metadata
 )
 from .option import Options
-from .parents import MainObject, DatabaseObject
+from .parents import MainObject, DatabaseObject, StaticAttribute
 from .source import Source, SourceCollection
 from .target import Target
 from ..utils.string_processing import unify
@@ -36,10 +36,10 @@ class Song(MainObject):
     tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
     """
 
-    COLLECTION_ATTRIBUTES = (
+    COLLECTION_STRING_ATTRIBUTES = (
         "lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection",
         "source_collection")
-    SIMPLE_ATTRIBUTES = {
+    SIMPLE_STRING_ATTRIBUTES = {
         "title": None,
         "unified_title": None,
         "isrc": None,
@@ -49,7 +49,23 @@ class Song(MainObject):
         "notes": FormattedText()
     }
     
-    UPWARDS_COLLECTION_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
+
+    STATIC_ATTRIBUTES = [
+        StaticAttribute(name="title", weight=.5),
+        StaticAttribute(name="unified_title", weight=.3),
+        StaticAttribute(name="isrc", weight=1),
+        StaticAttribute(name="length"),
+        StaticAttribute(name="tracksort", default_value=0),
+        StaticAttribute(name="genre"),
+        StaticAttribute(name="notes", default_value=FormattedText()),
+
+        StaticAttribute(name="source_collection", is_collection=True),
+        StaticAttribute(name="lyrics_collection", is_collection=True),
+        StaticAttribute(name="album_collection", is_collection=True, is_upwards_collection=True),
+        StaticAttribute(name="main_artist_collection", is_collection=True, is_upwards_collection=True),
+        StaticAttribute(name="feature_artist_collection", is_collection=True, is_upwards_collection=True)
+    ]
 
     def __init__(
             self,
@@ -212,8 +228,8 @@ All objects dependent on Album
 
 
 class Album(MainObject):
-    COLLECTION_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
-    SIMPLE_ATTRIBUTES = {
+    COLLECTION_STRING_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
+    SIMPLE_STRING_ATTRIBUTES = {
         "title": None,
         "unified_title": None,
         "album_status": None,
@@ -225,8 +241,25 @@ class Album(MainObject):
         "notes": FormattedText()
     }
 
-    DOWNWARDS_COLLECTION_ATTRIBUTES = ("song_collection", )
-    UPWARDS_COLLECTION_ATTRIBUTES = ("artist_collection", "label_collection")
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("artist_collection", "label_collection")
+
+    STATIC_ATTRIBUTES = [
+        StaticAttribute(name="title", weight=.5),
+        StaticAttribute(name="unified_title", weight=.3),
+        StaticAttribute(name="language"),
+        StaticAttribute(name="barcode", weight=1),
+        StaticAttribute(name="albumsort"),
+        StaticAttribute(name="album_status"),
+        StaticAttribute(name="album_type", default_value=AlbumType.OTHER),
+        StaticAttribute(name="date", default_value=ID3Timestamp()),
+        StaticAttribute(name="notes", default_value=FormattedText()),
+
+        StaticAttribute(name="source_collection", is_collection=True),
+        StaticAttribute(name="song_collection", is_collection=True, is_downwards_collection=True),
+        StaticAttribute(name="artist_collection", is_collection=True, is_upwards_collection=True),
+        StaticAttribute(name="label_collection", is_collection=True, is_upwards_collection=True),
+    ]
 
     def __init__(
             self,
@@ -454,13 +487,13 @@ All objects dependent on Artist
 
 
 class Artist(MainObject):
-    COLLECTION_ATTRIBUTES = (
+    COLLECTION_STRING_ATTRIBUTES = (
         "feature_song_collection",
         "main_album_collection",
         "label_collection",
         "source_collection"
     )
-    SIMPLE_ATTRIBUTES = {
+    SIMPLE_STRING_ATTRIBUTES = {
         "name": None,
         "unified_name": None,
         "country": None,
@@ -471,8 +504,26 @@ class Artist(MainObject):
         "unformated_location": None,
     }
 
-    DOWNWARDS_COLLECTION_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
-    UPWARDS_COLLECTION_ATTRIBUTES = ("label_collection", )
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("label_collection", )
+
+
+    STATIC_ATTRIBUTES = [
+        StaticAttribute(name="name", weight=.5),
+        StaticAttribute(name="unified_name", weight=.3),
+        StaticAttribute(name="country"),
+        StaticAttribute(name="formed_in", default_value=ID3Timestamp()),
+        StaticAttribute(name="lyrical_themes", default_value=[]),
+        StaticAttribute(name="general_genre", default_value=""),
+        StaticAttribute(name="notes", default_value=FormattedText()),
+        StaticAttribute(name="unformated_location"),
+
+        StaticAttribute(name="source_collection", is_collection=True),
+        StaticAttribute(name="contact_collection", is_collection=True),
+        StaticAttribute(name="feature_song_collection", is_collection=True, is_downwards_collection=True),
+        StaticAttribute(name="main_album_collection", is_collection=True, is_downwards_collection=True),
+        StaticAttribute(name="label_collection", is_collection=True, is_upwards_collection=True),
+    ]
 
     def __init__(
             self,
@@ -713,14 +764,23 @@ Label
 
 
 class Label(MainObject):
-    COLLECTION_ATTRIBUTES = ("album_collection", "current_artist_collection")
-    SIMPLE_ATTRIBUTES = {
+    COLLECTION_STRING_ATTRIBUTES = ("album_collection", "current_artist_collection")
+    SIMPLE_STRING_ATTRIBUTES = {
         "name": None,
         "unified_name": None,
         "notes": FormattedText()
     }
 
-    DOWNWARDS_COLLECTION_ATTRIBUTES = COLLECTION_ATTRIBUTES
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = COLLECTION_STRING_ATTRIBUTES
+
+    STATIC_ATTRIBUTES = [
+        StaticAttribute(name="name", weight=.5),
+        StaticAttribute(name="unified_name", weight=.3),
+        StaticAttribute(name="notes", default_value=FormattedText()),
+
+        StaticAttribute(name="album_collection", is_collection=True, is_downwards_collection=True),
+        StaticAttribute(name="current_artist_collection", is_collection=True, is_downwards_collection=True),
+    ]
 
     def __init__(
             self,

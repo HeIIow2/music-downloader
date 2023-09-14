@@ -303,7 +303,7 @@ class Page:
 
         if stop_at_level > 1:
             collection: Collection
-            for collection_str in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
+            for collection_str in music_object.DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:
                 collection = music_object.__getattribute__(collection_str)
 
                 for sub_element in collection:
@@ -332,7 +332,7 @@ class Page:
         def fill_naming_objects(naming_music_object: DatabaseObject):
             nonlocal naming_dict
             
-            for collection_name in naming_music_object.UPWARDS_COLLECTION_ATTRIBUTES:
+            for collection_name in naming_music_object.UPWARDS_COLLECTION_STRING_ATTRIBUTES:
                 collection: Collection = getattr(naming_music_object, collection_name)
                 
                 if collection.empty:
@@ -368,7 +368,7 @@ class Page:
 
         download_result: DownloadResult = DownloadResult()
 
-        for collection_name in music_object.DOWNWARDS_COLLECTION_ATTRIBUTES:
+        for collection_name in music_object.DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:
             collection: Collection = getattr(music_object, collection_name)
 
             sub_ordered_music_object: DatabaseObject

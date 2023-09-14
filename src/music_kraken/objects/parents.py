@@ -1,6 +1,7 @@
 import random
 from collections import defaultdict
-from typing import Optional, Dict, Tuple, List, Type
+from typing import Optional, Dict, Tuple, List, Type, Generic, TypeVar, Any
+from dataclasses import dataclass
 
 from .metadata import Metadata
 from .option import Options
@@ -10,15 +11,46 @@ from ..utils.config import main_settings, logging_settings
 
 LOGGER = logging_settings["object_logger"]
 
+T = TypeVar('T')
+
+@dataclass
+class StaticAttribute(Generic[T]):
+    name: str
+
+    default_value: Any = None
+    weight: float = 0
+
+    is_simple: bool = True
+
+    is_collection: bool = False
+    is_downwards_collection: bool = False
+    is_upwards_collection: bool = False
+
+
+
+class Attribute(Generic[T]):
+    def __init__(self, database_object: "DatabaseObject", static_attribute: StaticAttribute) -> None:
+        self.database_object: DatabaseObject = database_object
+        self.static_attribute: StaticAttribute = static_attribute
+
+    def get(self) -> T:
+        return self.database_object.__getattribute__(self.name)
+    
+    def set(self, value: T):
+        self.database_object.__setattr__(self.name, value)
+
+
 
 class DatabaseObject:
-    COLLECTION_ATTRIBUTES: tuple = tuple()
-    SIMPLE_ATTRIBUTES: dict = dict()
+    COLLECTION_STRING_ATTRIBUTES: tuple = tuple()
+    SIMPLE_STRING_ATTRIBUTES: dict = dict()
 
     # contains all collection attributes, which describe something "smaller"
     # e.g. album has songs, but not artist.
-    DOWNWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
-    UPWARDS_COLLECTION_ATTRIBUTES: tuple = tuple()
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES: tuple = tuple()
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES: tuple = tuple()
+
+    STATIC_ATTRIBUTES: List[StaticAttribute] = list()
 
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs) -> None:
         self.automatic_id: bool = False
@@ -33,12 +65,42 @@ class DatabaseObject:
             self.automatic_id = True
             # LOGGER.debug(f"Id for {type(self).__name__} isn't set. Setting to {_id}")
 
+        self._attributes: List[Attribute] = []
+        self._simple_attribute_list: List[Attribute] = []
+        self._collection_attributes: List[Attribute] = []
+        self._downwards_collection_attributes: List[Attribute] = []
+        self._upwards_collection_attributes: List[Attribute] = []
+
+        for static_attribute in self.STATIC_ATTRIBUTES:
+            attribute: Attribute = Attribute(self, static_attribute)
+            self._attributes.append(attribute)
+            
+            if static_attribute.is_simple:
+                self._simple_attribute_list.append(attribute)
+            else:
+                if static_attribute.is_collection:
+                    self._collection_attributes.append(attribute)
+                    if static_attribute.is_upwards_collection:
+                        self._upwards_collection_attributes.append(attribute)
+                    if static_attribute.is_downwards_collection:
+                        self._downwards_collection_attributes.append(attribute)
+
+
         # The id can only be None, if the object is dynamic (self.dynamic = True)
         self.id: Optional[int] = _id
 
         self.dynamic = dynamic
-        
         self.build_version = -1
+
+    @property
+    def upwards_collection(self) -> "Collection":
+        for attribute in self._upwards_collection_attributes:
+            yield attribute.get()
+
+    @property
+    def downwards_collection(self) -> "Collection":
+        for attribute in self._downwards_collection_attributes:
+            yield attribute.get()
 
     def __hash__(self):
         if self.dynamic:
@@ -89,10 +151,10 @@ class DatabaseObject:
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
             return
 
-        for collection in type(self).COLLECTION_ATTRIBUTES:
+        for collection in type(self).COLLECTION_STRING_ATTRIBUTES:
             getattr(self, collection).extend(getattr(other, collection))
 
-        for simple_attribute, default_value in type(self).SIMPLE_ATTRIBUTES.items():
+        for simple_attribute, default_value in type(self).SIMPLE_STRING_ATTRIBUTES.items():
             if getattr(other, simple_attribute) == default_value:
                 continue
 
@@ -100,7 +162,7 @@ class DatabaseObject:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
     def strip_details(self):
-        for collection in type(self).DOWNWARDS_COLLECTION_ATTRIBUTES:
+        for collection in type(self).DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:
             getattr(self, collection).clear()
 
     @property
