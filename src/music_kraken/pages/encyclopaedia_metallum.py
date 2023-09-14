@@ -462,10 +462,6 @@ class EncyclopaediaMetallum(Page):
             artist.notes = band_notes
 
         discography: List[Album] = self._fetch_artist_discography(artist_id)
-        if stop_at_level > 1:
-            for album in discography:
-                for source in album.source_collection.get_sources_from_page(self.SOURCE_TYPE):
-                    album.merge(self._fetch_album_from_source(source, stop_at_level=stop_at_level-1))
         artist.main_album_collection.extend(discography)
 
         return artist
@@ -586,13 +582,7 @@ class EncyclopaediaMetallum(Page):
 
         soup = self.get_soup_from_response(r)
         
-        album = self._parse_album_attributes(soup, stop_at_level=stop_at_level)
-        
-        if stop_at_level > 1:
-            for song in album.song_collection:
-                for source in song.source_collection.get_sources_from_page(self.SOURCE_TYPE):
-                    song.merge(self._fetch_song_from_source(source=source, stop_at_level=stop_at_level-1))
-                    
+        album = self._parse_album_attributes(soup, stop_at_level=stop_at_level)       
         return album
     
     def _fetch_lyrics(self, song_id: str) -> Optional[Lyrics]:
