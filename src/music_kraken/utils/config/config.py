@@ -51,7 +51,7 @@ class Config:
 
     def write(self):
         with self.config_file.open("w") as conf_file:
-            conf_file.write(self.toml_string)
+            conf_file.write(self.toml_string, encoding="utf-8")
 
     def read(self):
         if not self.config_file.is_file():
