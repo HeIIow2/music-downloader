@@ -50,8 +50,8 @@ class Config:
         return "\n".join(component.toml_string for component in self.component_list)
 
     def write(self):
-        with self.config_file.open("w") as conf_file:
-            conf_file.write(self.toml_string, encoding="utf-8")
+        with self.config_file.open("w", encoding="utf-8") as conf_file:
+            conf_file.write(self.toml_string)
 
     def read(self):
         if not self.config_file.is_file():
@@ -60,7 +60,7 @@ class Config:
             return
         
         toml_data = {}
-        with self.config_file.open("r") as conf_file:
+        with self.config_file.open("r", encoding="utf-8") as conf_file:
             toml_data = toml.load(conf_file)
 
         for component in self.component_list:

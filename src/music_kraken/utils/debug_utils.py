@@ -11,7 +11,7 @@ def dump_to_file(file_name: str, payload: str, is_json: bool = False, exit_after
     if is_json:
         payload = json.dumps(json.loads(payload), indent=4)
 
-    with path.open("w") as f:
+    with path.open("w", encoding="utf-8") as f:
         f.write(payload)
 
     if exit_after_dump:

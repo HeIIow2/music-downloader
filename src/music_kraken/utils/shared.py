@@ -13,6 +13,8 @@ def get_random_message() -> str:
     return random.choice(main_settings['happy_messages'])
 
 
+ENCODING = "utf-8"
+
 HIGHEST_ID = 2**main_settings['id_bits']
 
 

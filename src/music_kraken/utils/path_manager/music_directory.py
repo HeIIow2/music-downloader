@@ -27,7 +27,7 @@ def get_xdg_music_directory() -> Path:
 
     def get_music_dir_from_xdg_file(xdg_file_path: os.PathLike) -> Optional[Path]:
         try:
-            with open(xdg_file_path, 'r') as f:
+            with open(xdg_file_path, 'r', encoding="utf-8") as f:
                 data = "[XDG_USER_DIRS]\n" + f.read()
             config = configparser.ConfigParser(allow_no_value=True)
             config.read_string(data)
