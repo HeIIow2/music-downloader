@@ -119,7 +119,6 @@ b1.contain_collection_inside(b11)
 b.contain_collection_inside(b1)
 b.contain_collection_inside(c1)
 
-
 c.contain_collection_inside(c1)
 c.contain_collection_inside(c2)
 
