@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from .parents import DatabaseObject
 from ..utils.config import main_settings, logging_settings
+from ..utils.string_processing import fit_to_file_system
 
 
 LOGGER = logging.getLogger("target")
@@ -35,8 +36,8 @@ class Target(DatabaseObject):
             relative_to_music_dir: bool = False
     ) -> None:
         super().__init__(dynamic=dynamic)
-        self._file: Path = Path(file)
-        self._path: Path = Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path)
+        self._file: Path = Path(fit_to_file_system(file))
+        self._path: Path = fit_to_file_system(Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path))
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
 
@@ -58,8 +59,8 @@ class Target(DatabaseObject):
     @property
     def size(self) -> int:
         """
-        returns the size the downloaded autio takes up in bytes
-        returns 0 if the file doesn't exsit
+        returns the size the downloaded audio takes up in bytes
+        returns 0 if the file doesn't exist
         """
         if not self.exists:
             return 0
@@ -74,7 +75,7 @@ class Target(DatabaseObject):
             LOGGER.warning(f"No file exists at: {self.file_path}")
             return
 
-        with open(self.file_path, "rb") as read_from:
+        with self.open("rb") as read_from:
             copy_to.create_path()
             with open(copy_to.file_path, "wb") as write_to:
                 write_to.write(read_from.read())
@@ -87,7 +88,7 @@ class Target(DatabaseObject):
 
         total_size = int(r.headers.get('content-length'))
 
-        with open(self.file_path, 'wb') as f:
+        with self.open('wb') as f:
             try:
                 """
                 https://en.wikipedia.org/wiki/Kilobyte
