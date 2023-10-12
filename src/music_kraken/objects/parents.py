@@ -11,16 +11,14 @@ from ..utils.config import main_settings, logging_settings
 
 LOGGER = logging_settings["object_logger"]
 
-T = TypeVar('T')
+P = TypeVar('P')
 
 @dataclass
-class StaticAttribute(Generic[T]):
+class StaticAttribute(Generic[P]):
     name: str
 
     default_value: Any = None
     weight: float = 0
-
-    is_simple: bool = True
 
     is_collection: bool = False
     is_downwards_collection: bool = False
@@ -28,15 +26,21 @@ class StaticAttribute(Generic[T]):
 
 
 
-class Attribute(Generic[T]):
+
+
+class Attribute(Generic[P]):
     def __init__(self, database_object: "DatabaseObject", static_attribute: StaticAttribute) -> None:
         self.database_object: DatabaseObject = database_object
         self.static_attribute: StaticAttribute = static_attribute
 
-    def get(self) -> T:
+    @property
+    def name(self) -> str:
+        return self.static_attribute.name
+
+    def get(self) -> P:
         return self.database_object.__getattribute__(self.name)
     
-    def set(self, value: T):
+    def set(self, value: P):
         self.database_object.__setattr__(self.name, value)
 
 
@@ -75,16 +79,15 @@ class DatabaseObject:
             attribute: Attribute = Attribute(self, static_attribute)
             self._attributes.append(attribute)
             
-            if static_attribute.is_simple:
-                self._simple_attribute_list.append(attribute)
-            else:
+            if static_attribute.is_collection:
                 if static_attribute.is_collection:
                     self._collection_attributes.append(attribute)
                     if static_attribute.is_upwards_collection:
                         self._upwards_collection_attributes.append(attribute)
                     if static_attribute.is_downwards_collection:
                         self._downwards_collection_attributes.append(attribute)
-
+            else:
+                self._simple_attribute_list.append(attribute)
 
         # The id can only be None, if the object is dynamic (self.dynamic = True)
         self.id: Optional[int] = _id
@@ -100,6 +103,11 @@ class DatabaseObject:
     @property
     def downwards_collection(self) -> "Collection":
         for attribute in self._downwards_collection_attributes:
+            yield attribute.get()
+
+    @property
+    def all_collections(self) -> "Collection":
+        for attribute in self._collection_attributes:
             yield attribute.get()
 
     def __hash__(self):
@@ -151,8 +159,10 @@ class DatabaseObject:
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
             return
 
-        for collection in type(self).COLLECTION_STRING_ATTRIBUTES:
-            getattr(self, collection).extend(getattr(other, collection))
+        for collection in self._collection_attributes:
+            if hasattr(self, collection.name) and hasattr(other, collection.name):
+                if collection.get() is not getattr(other, collection.name):
+                    collection.get().extend(getattr(other, collection.name))
 
         for simple_attribute, default_value in type(self).SIMPLE_STRING_ATTRIBUTES.items():
             if getattr(other, simple_attribute) == default_value:

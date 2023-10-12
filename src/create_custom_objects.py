@@ -1,63 +1,104 @@
-from music_kraken import objects, recurse
+from music_kraken.objects import (
+    Song,
+    Album,
+    Artist,
+    Label,
+    Source,
+    DatabaseObject
+)
+from music_kraken.utils.enums import SourcePages
 
-import pycountry
 
-
-song = objects.Song(
-    genre="HS Core",
-    title="Vein Deep in the Solution",
-    length=666,
-    isrc="US-S1Z-99-00001",
-    tracksort=2,
-    target=[
-        objects.Target(file="song.mp3", path="example")
-    ],
-    lyrics_list=[
-        objects.Lyrics(text="these are some depressive lyrics", language="en"),
-        objects.Lyrics(text="Dies sind depressive Lyrics", language="de")
-    ],
-    source_list=[
-        objects.Source(objects.SourcePages.YOUTUBE, "https://youtu.be/dfnsdajlhkjhsd"),
-        objects.Source(objects.SourcePages.MUSIFY, "https://ln.topdf.de/Music-Kraken/")
-    ],
-    album_list=[
-        objects.Album(
-            title="One Final Action",
-            date=objects.ID3Timestamp(year=1986, month=3, day=1),
-            language=pycountry.languages.get(alpha_2="en"),
-            label_list=[
-                objects.Label(name="an album label")
+only_smile = Artist(
+    name="Only Smile",
+    source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
+    main_album_list=[
+        Album(
+            title="Few words...",
+            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/few-words")],
+            song_list=[
+                Song(title="Everything will be fine"),
+                Song(title="Only Smile"),
+                Song(title="Dear Diary"),
+                Song(title="Sad Story")
             ],
-            source_list=[
-                    objects.Source(objects.SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/albums/I%27m_in_a_Coffin/One_Final_Action/207614")
-                ]
-        ),
-    ],
-    main_artist_list=[
-        objects.Artist(
-            name="I'm in a coffin",
-            source_list=[
-                objects.Source(
-                    objects.SourcePages.ENCYCLOPAEDIA_METALLUM,
-                    "https://www.metal-archives.com/bands/I%27m_in_a_Coffin/127727"
-                    )
-            ],
-            label_list=[
-                objects.Label(name="Depressive records")
+            artist_list=[
+                Artist(
+                    name="Only Smile",
+                    source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
+                    main_album_list=[
+                        Album(
+                            title="Few words...",
+                            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/few-words")],
+                            song_list=[
+                                Song(title="Everything will be fine"),
+                                Song(title="Only Smile"),
+                                Song(title="Dear Diary"),
+                                Song(title="Sad Story")
+                            ],
+                            artist_list=[
+                                Artist(
+                                    name="Only Smile",
+                                    source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")]
+                                )
+                            ]
+                        ),
+                        Album(
+                            title="Your best friend",
+                            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/your-best-friend")]
+                        )
+                    ]
+                ),
+                Artist(
+                    name="Only Smile",
+                    source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
+                    main_album_list=[
+                        Album(
+                            title="Few words...",
+                            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/few-words")],
+                            song_list=[
+                                Song(title="Everything will be fine"),
+                                Song(title="Only Smile"),
+                                Song(title="Dear Diary"),
+                                Song(title="Sad Story")
+                            ],
+                            artist_list=[
+                                Artist(
+                                    name="Only Smile",
+                                    source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")]
+                                )
+                            ]
+                        ),
+                        Album(
+                            title="Your best friend",
+                            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/your-best-friend")]
+                        )
+                    ]
+                )
             ]
         ),
-        objects.Artist(name="some_split_artist")
-    ],
-    feature_artist_list=[
-        objects.Artist(
-            name="Ruffiction",
-            label_list=[
-                objects.Label(name="Ruffiction Productions")
-            ]
+        Album(
+            title="Your best friend",
+            source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/album/your-best-friend")]
         )
-    ],
+    ]
 )
 
-song.compile()
 
-print(song.options)
+objects_by_id = {}
+
+def add_to_objects_dump(db_obj: DatabaseObject):
+    objects_by_id[db_obj.id] = db_obj
+
+    for collection in db_obj.all_collections:
+        for new_db_obj in collection:
+            if new_db_obj.id not in objects_by_id:
+                add_to_objects_dump(new_db_obj)
+
+
+add_to_objects_dump(only_smile)
+
+for _id, _object in objects_by_id.items():
+    print(_id, _object, sep=": ")
+
+print(only_smile)

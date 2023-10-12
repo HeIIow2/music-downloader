@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Tuple, Type
 import pycountry
 
 from ..utils.enums.album import AlbumType, AlbumStatus
-from .collection import Collection
+from .collection import Collection, CollectionHooks
 from .formatted_text import FormattedText
 from .lyrics import Lyrics
 from .contact import Contact
@@ -86,7 +86,7 @@ class Song(MainObject):
             notes: FormattedText = None,
             **kwargs
     ) -> None:
-        MainObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
+        super().__init__(_id=_id, dynamic=dynamic, **kwargs)
         # attributes
         self.title: str = title
         self.unified_title: str = unified_title
@@ -102,9 +102,23 @@ class Song(MainObject):
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.target_collection: Collection[Target] = Collection(data=target_list, element_type=Target)
         self.lyrics_collection: Collection[Lyrics] = Collection(data=lyrics_list, element_type=Lyrics)
-        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
+
+        # main_artist_collection = album.artist collection
         self.main_artist_collection: Collection[Artist] = Collection(data=main_artist_list, element_type=Artist)
-        self.feature_artist_collection: Collection[Artist] = Collection(data=feature_artist_list, element_type=Artist)
+
+        # this album_collection equals no collection
+        self.album_collection: Collection[Album] = Collection(data=[], element_type=Album)
+        self.album_collection.sync_main_collection(self.main_artist_collection, "artist_collection")
+        self.album_collection.extend(album_list)
+        # self.album_collection.sync_collection("song_collection")
+        # self.album_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_album_append)
+
+        # on feature_artist_collection append, append self to artist self
+        self.feature_artist_collection: Collection[Artist] = Collection(data=[], element_type=Artist)
+        def on_feature_artist_append(event, new_object: Artist, *args, **kwargs):
+            new_object.feature_song_collection.append(self, no_hook=True)
+        self.feature_artist_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_feature_artist_append)
+        self.feature_artist_collection.extend(feature_artist_list)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -307,8 +321,13 @@ class Album(MainObject):
         self.notes = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.song_collection: Collection[Song] = Collection(data=song_list, element_type=Song)
+        
         self.artist_collection: Collection[Artist] = Collection(data=artist_list, element_type=Artist)
+        
+        self.song_collection: Collection[Song] = Collection(data=[], element_type=Song)
+        self.song_collection.sync_main_collection(self.artist_collection, "main_artist_collection")
+        self.song_collection.extend(song_list)
+        
         self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
@@ -565,15 +584,28 @@ class Artist(MainObject):
 
         self.lyrical_themes: List[str] = lyrical_themes or []
         self.general_genre = general_genre
+        self.unformated_location: Optional[str] = unformated_location
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.feature_song_collection: Collection[Song] = Collection(data=feature_song_list, element_type=Song)
-        self.main_album_collection: Collection[Album] = Collection(data=main_album_list, element_type=Album)
-        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
-
         self.contact_collection: Collection[Label] = Collection(data=contact_list, element_type=Contact)
 
-        self.unformated_location: Optional[str] = unformated_location
+        self.feature_song_collection: Collection[Song] = Collection(data=[], element_type=Song)
+        def on_feature_song_append(event, new_object: Song, *args, **kwargs):
+            new_object.feature_artist_collection.append(self, no_hook=True)
+        self.feature_song_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_feature_song_append)
+        self.feature_song_collection.extend(feature_song_list)
+        
+        self.main_album_collection: Collection[Album] = Collection(data=[], element_type=Album)
+        def on_album_append(event, new_object: Album, *args, **kwargs):
+            new_object.artist_collection.append(self, no_hook=True)
+        self.main_album_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_album_append)
+        self.main_album_collection.extend(main_album_list)
+
+        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
+        def on_label_append(event, new_object: Label, *args, **kwargs):
+            new_object.current_artist_collection.append(self, no_hook=True)
+        self.label_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_label_append)
+
 
     def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
         if object_type is Song:

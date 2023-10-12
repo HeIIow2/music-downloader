@@ -1,12 +1,15 @@
 import logging
-
 import gc
-import musicbrainzngs
+import sys
 
 from .utils.shared import DEBUG, DEBUG_LOGGIN
 from .utils.config import logging_settings, main_settings, read_config
 read_config()
 from . import cli
+
+
+# I am SO sorry
+print(sys.setrecursionlimit(500))
 
 
 # configure logger default

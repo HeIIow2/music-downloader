@@ -140,6 +140,9 @@ def clean_object(dirty_object: DatabaseObject) -> DatabaseObject:
             Song: Collection(element_type=Song)
         }
 
+        if isinstance(dirty_object, Song):
+            return dirty_object
+
         _clean_music_object(dirty_object, collections)
     return dirty_object
     
@@ -153,7 +156,7 @@ def merge_together(old_object: DatabaseObject, new_object: DatabaseObject, do_co
     new_object = clean_object(new_object)
     
     old_object.merge(new_object)
-    if do_compile:
+    if do_compile and False:
         old_object.compile(merge_into=False)
     
     return old_object
@@ -274,7 +277,7 @@ class Page:
                     post_process=False
                 ))
 
-        return merge_together(music_object, new_music_object, do_compile=post_process)
+        return music_object.merge(new_music_object)
 
     def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
         obj_type = self.get_source_type(source)
@@ -308,10 +311,7 @@ class Page:
 
                 for sub_element in collection:
                     sub_element.merge(self.fetch_details(sub_element, stop_at_level=stop_at_level-1, post_process=False))
-
-        if post_process and music_object:
-            return build_new_object(music_object)
-
+        
         return music_object
     
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:

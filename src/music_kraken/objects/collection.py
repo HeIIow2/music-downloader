@@ -3,6 +3,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 from .parents import DatabaseObject
+from ..utils.hooks import HookEventTypes, Hooks, Event
+
+
+class CollectionHooks(HookEventTypes):
+    APPEND_NEW = "append_new"
 
 
 T = TypeVar('T', bound=DatabaseObject)
@@ -46,6 +51,8 @@ class Collection(Generic[T]):
         self._attribute_to_object_map: Dict[str, Dict[object, T]] = defaultdict(dict)
         self._used_ids: set = set()
 
+        self.hooks: Hooks = Hooks(self)
+
         if data is not None:
             self.extend(data, merge_on_conflict=True)
 
@@ -74,7 +81,7 @@ class Collection(Generic[T]):
                         pass
 
     def append(self, element: T, merge_on_conflict: bool = True,
-               merge_into_existing: bool = True) -> AppendResult:
+               merge_into_existing: bool = True, no_hook: bool = False) -> AppendResult:
         """
         :param element:
         :param merge_on_conflict:
@@ -83,6 +90,10 @@ class Collection(Generic[T]):
         """
         if element is None:
             return AppendResult(False, None, False)
+
+        for existing_element in self._data:
+            if element is existing_element:
+                return AppendResult(False, None, False)
 
         # if the element type has been defined in the initializer it checks if the type matches
         if self.element_type is not None and not isinstance(element, self.element_type):
@@ -117,18 +128,60 @@ class Collection(Generic[T]):
                 self.map_element(element)
                 return AppendResult(True, existing_object, False)
 
+        if not no_hook:
+            self.hooks.trigger_event(CollectionHooks.APPEND_NEW, new_object=element)
         self._data.append(element)
         self.map_element(element)
 
         return AppendResult(False, element, False)
 
     def extend(self, element_list: Iterable[T], merge_on_conflict: bool = True,
-               merge_into_existing: bool = True):
+               merge_into_existing: bool = True, no_hook: bool = False):
+        if element_list is None:
+            return
+        if len(element_list) <= 0:
+            return
+        if element_list is self:
+            return
         for element in element_list:
-            self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing)
+            self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing, no_hook=no_hook)
+
+    def sync_collection(self, collection_attribute: str):
+        def on_append(event: Event, new_object: T, *args, **kwargs):
+            new_collection = new_object.__getattribute__(collection_attribute)
+            if self is new_collection:
+                return
+
+            self.extend(new_object.__getattribute__(collection_attribute), no_hook=True)
+            new_object.__setattr__(collection_attribute, self)
+
+        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
+
+    def sync_main_collection(self, main_collection: "Collection", collection_attribute: str):
+        def on_append(event: Event, new_object: T, *args, **kwargs):
+            new_collection = new_object.__getattribute__(collection_attribute)
+            if main_collection is new_collection:
+                return
+    
+            main_collection.extend(new_object.__getattribute__(collection_attribute), no_hook=True)
+            new_object.__setattr__(collection_attribute, main_collection)
+
+        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
+
+    """
+        def on_append(event: Event, new_object: T, *args, **kwargs):
+            new_collection: Collection = new_object.__getattribute__(collection_attribute)
+            if self is new_collection:
+                return
+    
+            self.extend(new_collection.shallow_list, no_hook=False)
+            new_object.__setattr__(collection_attribute, self)
+
+        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
+    """
 
     def __iter__(self) -> Iterator[T]:
-        for element in self.shallow_list:
+        for element in self._data:
             yield element
 
     def __str__(self) -> str:
