@@ -91,10 +91,8 @@ def cli():
     from .utils import shared
     
     if arguments.r:
-        import os
-        if os.path.exists(shared.CONFIG_FILE):
-            os.remove(shared.CONFIG_FILE)
-        read_config()
+        from .utils.config import write_config
+        write_config()
         
         exit()
 
