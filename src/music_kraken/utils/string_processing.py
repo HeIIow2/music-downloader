@@ -1,4 +1,5 @@
-from typing import Tuple
+from typing import Tuple, Union
+from pathlib import Path
 
 from transliterate.exceptions import LanguageDetectionError
 from transliterate import translit
@@ -25,23 +26,26 @@ def unify(string: str) -> str:
     return string.lower()
 
 
-def fit_to_file_system(string: str) -> str:
-    string = string.strip()
-    string = string.strip(".")
+def fit_to_file_system(string: Union[str, Path]) -> Union[str, Path]:
+    def fit_string(string: str) -> str:
+        if string == "/":
+            return "/"
+        string = string.strip()
 
-    """
-    while string[0] == ".":
-        if len(string) == 0:
-            return string
+        while string[0] == ".":
+            if len(string) == 0:
+                return string
 
-        string = string[1:]
-    """
+            string = string[1:]
 
-    string = string.replace("/", "_").replace("\\", "_")
+        string = string.replace("/", "_").replace("\\", "_")
+        string = sanitize_filename(string)
+        return string
 
-    string = sanitize_filename(string)
-
-    return string
+    if isinstance(string, Path):
+        return Path(*(fit_string(part) for part in string.parts))
+    else:
+        return fit_string(string)
 
 
 def clean_song_title(raw_song_title: str, artist_name: str) -> str:
