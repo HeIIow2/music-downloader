@@ -6,9 +6,10 @@ from music_kraken.objects import (
     Source,
     DatabaseObject
 )
+from music_kraken.objects.new_collection import Collection
 from music_kraken.utils.enums import SourcePages
 
-
+"""
 only_smile = Artist(
     name="Only Smile",
     source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
@@ -102,3 +103,47 @@ for _id, _object in objects_by_id.items():
     print(_id, _object, sep=": ")
 
 print(only_smile)
+"""
+
+c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
+c1 = Collection([Song(title="he"), Song(title="hi5")])
+c11 = Collection([Song(title="wow how ultra subby")])
+c2 = Collection([Song(title="heeee")])
+
+b = Collection([Song(title="some b"), Song(title="other b")])
+b1 = Collection([Song(title="sub b")])
+b11 = Collection([Song(title="This shouldn't work")])
+
+b1.contain_collection_inside(b11)
+
+b.contain_collection_inside(b1)
+b.contain_collection_inside(c1)
+
+
+c.contain_collection_inside(c1)
+c.contain_collection_inside(c2)
+
+c1.contain_collection_inside(c11)
+c1.contain_collection_inside(c11)
+
+print(c.data)
+print(c1.data)
+
+c11.append(Song(title="after creation"))
+
+print()
+print(c.data, len(c))
+print(c1.data)
+
+print()
+print("c: ", c)
+print("b: ", b)
+
+c.sync_with_other_collection(b)
+print("synced: ")
+
+print("c: ", c)
+print("b: ", b)
+
+print(c.data)
+print(c._data)
