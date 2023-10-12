@@ -50,6 +50,7 @@ class Config:
         return "\n".join(component.toml_string for component in self.component_list)
 
     def write(self):
+        print(self.config_file)
         with self.config_file.open("w", encoding="utf-8") as conf_file:
             conf_file.write(self.toml_string)
 
