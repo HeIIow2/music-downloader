@@ -1,44 +1,84 @@
-from typing import List, Iterable, Iterator, Optional, TypeVar, Generic
-import guppy
-from guppy.heapy import Path
+from typing import List, Iterable, Iterator, Optional, TypeVar, Generic, Dict, Type
+from collections import defaultdict
 
 from .parents import DatabaseObject
+from ..utils.functions import replace_all_refs
 
 
 T = TypeVar('T', bound=DatabaseObject)
 
 
-hp = guppy.hpy()
-
-def _replace_all_refs(replace_with, replace):
-    """
-    NO
-    I have a very good reason to use this here
-    DONT use this anywhere else...
-
-    This replaces **ALL** references to replace with a reference to replace_with.
-
-    https://benkurtovic.com/2015/01/28/python-object-replacement.html 
-    """
-    for path in hp.iso(replace).pathsin:
-        relation = path.path[1]
-        if isinstance(relation, Path.R_INDEXVAL):
-            path.src.theone[relation.r] = replace_with
-
-
 class Collection(Generic[T]):
     _data: List[T]
+
+    _indexed_values: Dict[str, set]
+    _indexed_to_objects: Dict[any, list]
 
     shallow_list = property(fget=lambda self: self.data)
 
     def __init__(self, data: Optional[Iterable[T]]) -> None:
         self._data = []
         self.contained_collections: List[Collection[T]] = []
+
+        self._indexed_values = defaultdict(set)
+        self._indexed_to_objects = defaultdict(list)
         
         self.extend(data)
 
-    def append(self, __object: T):
+    def _map_element(self, __object: T):
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+
+            self._indexed_values[name].add(value)
+            self._indexed_to_objects[value].append(__object)
+
+    def _unmap_element(self, __object: T):
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value not in self._indexed_values[name]:
+                continue
+            
+            try:
+                self._indexed_to_objects[value].remove(__object)
+            except ValueError:
+                continue
+
+            if not len(self._indexed_to_objects[value]):
+                self._indexed_values[name].remove(value)
+
+    def _contained_in_self(self, __object: T) -> bool:
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                return True
+        return False
+
+    def _contained_in(self, __object: T) -> Optional["Collection"]:
+        if self._contained_in_self(__object):
+            return self
+        
+        for collection in self.contained_collections:
+            if collection._contained_in_self(__object):
+                return collection
+            
+        return None
+    
+    def contains(self, __object: T) -> bool:
+        return self._contained_in(__object) is not None
+
+
+    def _append(self, __object: T):
+        self._map_element(__object)
         self._data.append(__object)
+
+    def append(self, __object: Optional[T]):
+        if __object is None:
+            return
+
+        self._append(__object)
 
     def extend(self, __iterable: Optional[Iterable[T]]):
         if __iterable is None:
@@ -69,7 +109,7 @@ class Collection(Generic[T]):
 
         # now the ugly part
         # replace all refs of the other element with this one
-        _replace_all_refs(self, equal_collection)
+        replace_all_refs(self, equal_collection)
 
 
     def contain_collection_inside(self, sub_collection: "Collection"):

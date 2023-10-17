@@ -7,6 +7,7 @@ from .metadata import Metadata
 from .option import Options
 from ..utils.shared import HIGHEST_ID
 from ..utils.config import main_settings, logging_settings
+from ..utils.functions import replace_all_refs
 
 
 LOGGER = logging_settings["object_logger"]
@@ -23,9 +24,6 @@ class StaticAttribute(Generic[P]):
     is_collection: bool = False
     is_downwards_collection: bool = False
     is_upwards_collection: bool = False
-
-
-
 
 
 class Attribute(Generic[P]):
@@ -148,7 +146,7 @@ class DatabaseObject:
 
         return list()
 
-    def merge(self, other, override: bool = False):
+    def merge(self, other, override: bool = False, replace_all_refs: bool = False):
         if other is None:
             return
         
@@ -170,6 +168,9 @@ class DatabaseObject:
 
             if override or getattr(self, simple_attribute) == default_value:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
+
+        if replace_all_refs:
+            replace_all_refs(self, other)
 
     def strip_details(self):
         for collection in type(self).DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:
