@@ -25,13 +25,14 @@ class Collection(Generic[T]):
         
         self.extend(data)
 
-    def _map_element(self, __object: T):
+    def _map_element(self, __object: T, no_append: bool = True):
         for name, value in __object.indexing_values:
             if value is None:
                 continue
 
             self._indexed_values[name].add(value)
-            self._indexed_to_objects[value].append(__object)
+            if not no_append:
+                self._indexed_to_objects[value].append(__object)
 
     def _unmap_element(self, __object: T):
         for name, value in __object.indexing_values:
@@ -66,6 +67,33 @@ class Collection(Generic[T]):
             
         return None
     
+
+    def _merge_in_self(self, __object: T):
+        """
+        1. find existing objects
+        2. merge into existing object
+        3. remap existing object
+        """
+        existing_object: DatabaseObject = None
+
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                existing_object = self._indexed_to_objects[value]
+                break
+        
+        if existing_object is None:
+            return None
+    
+        existing_object.merge(__object, replace_all_refs=True)
+
+        if existing_object is not __object:
+            raise ValueError("This should NEVER happen. Merging doesn't work.")
+
+        self._map_element(existing_object)
+
+    
     def contains(self, __object: T) -> bool:
         return self._contained_in(__object) is not None
 
@@ -77,8 +105,13 @@ class Collection(Generic[T]):
     def append(self, __object: Optional[T]):
         if __object is None:
             return
+        
+        exists_in_collection = self._contained_in(__object)
 
-        self._append(__object)
+        if exists_in_collection is None:
+            self._append(__object)
+        else:
+            exists_in_collection._merge_in_self(__object)
 
     def extend(self, __iterable: Optional[Iterable[T]]):
         if __iterable is None:
