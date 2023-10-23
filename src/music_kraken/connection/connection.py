@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from .rotating import RotatingProxy
 from ..utils.config import main_settings
-from ..utils.support_classes import DownloadResult
+from ..utils.support_classes.download_result import DownloadResult
 from ..objects import Target
 
 

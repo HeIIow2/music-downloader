@@ -7,7 +7,7 @@ from .metadata import Metadata
 from .option import Options
 from ..utils.shared import HIGHEST_ID
 from ..utils.config import main_settings, logging_settings
-from ..utils.functions import replace_all_refs
+from ..utils.support_classes.hacking import MetaClass
 
 
 LOGGER = logging_settings["object_logger"]
@@ -43,7 +43,7 @@ class Attribute(Generic[P]):
 
 
 
-class DatabaseObject:
+class DatabaseObject(metaclass=MetaClass):
     COLLECTION_STRING_ATTRIBUTES: tuple = tuple()
     SIMPLE_STRING_ATTRIBUTES: dict = dict()
 
@@ -170,7 +170,7 @@ class DatabaseObject:
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
         if replace_all_refs:
-            replace_all_refs(self, other)
+            self.merge(other)
 
     def strip_details(self):
         for collection in type(self).DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:

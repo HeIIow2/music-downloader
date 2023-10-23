@@ -23,7 +23,8 @@ from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
 from ..audio import write_metadata_to_target, correct_codec
 from ..utils.config import main_settings
-from ..utils.support_classes import Query, DownloadResult
+from ..utils.support_classes.query import Query
+from ..utils.support_classes.download_result import DownloadResult
 from ..utils.string_processing import fit_to_file_system
 
 

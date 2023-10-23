@@ -2,13 +2,13 @@ from typing import List, Iterable, Iterator, Optional, TypeVar, Generic, Dict, T
 from collections import defaultdict
 
 from .parents import DatabaseObject
-from ..utils.functions import replace_all_refs
+from ..utils.support_classes.hacking import MetaClass
 
 
 T = TypeVar('T', bound=DatabaseObject)
 
 
-class Collection(Generic[T]):
+class Collection(Generic[T], metaclass=MetaClass):
     _data: List[T]
 
     _indexed_values: Dict[str, set]
@@ -109,7 +109,7 @@ class Collection(Generic[T]):
 
         # now the ugly part
         # replace all refs of the other element with this one
-        replace_all_refs(self, equal_collection)
+        self.merge(equal_collection)
 
 
     def contain_collection_inside(self, sub_collection: "Collection"):

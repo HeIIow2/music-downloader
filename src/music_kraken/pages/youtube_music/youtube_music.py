@@ -25,7 +25,7 @@ from ...objects import (
     Target
 )
 from ...connection import Connection
-from ...utils.support_classes import DownloadResult
+from ...utils.support_classes.download_result import DownloadResult
 
 from ._list_render import parse_renderer
 from .super_youtube import SuperYouTube
