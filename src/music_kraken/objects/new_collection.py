@@ -25,7 +25,7 @@ class Collection(Generic[T]):
         
         self.extend(data)
 
-    def _map_element(self, __object: T, no_append: bool = True):
+    def _map_element(self, __object: T, no_append: bool = False):
         for name, value in __object.indexing_values:
             if value is None:
                 continue
@@ -62,8 +62,7 @@ class Collection(Generic[T]):
             return self
         
         for collection in self.contained_collections:
-            if collection._contained_in_self(__object):
-                return collection
+            return collection._contained_in(__object)
             
         return None
     
@@ -80,13 +79,16 @@ class Collection(Generic[T]):
             if value is None:
                 continue
             if value in self._indexed_values[name]:
-                existing_object = self._indexed_to_objects[value]
+                existing_object = self._indexed_to_objects[value][0]
                 break
         
         if existing_object is None:
             return None
     
-        existing_object.merge(__object, replace_all_refs=True)
+        existing_object.merge(__object)
+        replace_all_refs(existing_object, __object)
+
+        print(existing_object, __object)
 
         if existing_object is not __object:
             raise ValueError("This should NEVER happen. Merging doesn't work.")

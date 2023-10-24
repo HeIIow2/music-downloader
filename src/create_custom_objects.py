@@ -107,7 +107,7 @@ print(only_smile)
 
 c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
 c1 = Collection([Song(title="he"), Song(title="hi5")])
-c11 = Collection([Song(title="wow how ultra subby")])
+c11 = Collection([Song(title="wow how ultra subby", isrc="hiii")])
 c2 = Collection([Song(title="heeee")])
 
 b = Collection([Song(title="some b"), Song(title="other b")])
@@ -130,9 +130,14 @@ print(c1.data)
 
 c11.append(Song(title="after creation"))
 
+other_song = Song(title="has same isrc", isrc="hiii", genre="hssss")
+print(c.contains(other_song))
+c.append(other_song)
+
 print()
 print(c.data, len(c))
 print(c1.data)
+print([obj.genre for obj in c.data])
 
 print()
 print("c: ", c)

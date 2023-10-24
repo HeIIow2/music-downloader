@@ -8,10 +8,6 @@ read_config()
 from . import cli
 
 
-# I am SO sorry
-print(sys.setrecursionlimit(500))
-
-
 # configure logger default
 logging.basicConfig(
     level=logging_settings['log_level'] if not DEBUG_LOGGIN else logging.DEBUG,
