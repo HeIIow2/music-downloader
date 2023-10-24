@@ -107,7 +107,7 @@ print(only_smile)
 
 c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
 c1 = Collection([Song(title="he"), Song(title="hi5")])
-c11 = Collection([Song(title="wow how ultra subby")])
+c11 = Collection([Song(title="wow how ultra subby"),Song(title="wow how ultra subby")])
 c2 = Collection([Song(title="heeee")])
 
 b = Collection([Song(title="some b"), Song(title="other b")])

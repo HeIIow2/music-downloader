@@ -10,9 +10,7 @@ class Lake:
 
     def get_real_object(self, db_object: object) -> object:
         def _get_real_id(_id: int) -> int:
-            if _id in self.redirects:
-                return _get_real_id(self.redirects[_id])
-            return _id
+            return self.redirects.get(_id, _id)
 
         _id = _get_real_id(id(db_object))
         if _id not in self.id_to_object:

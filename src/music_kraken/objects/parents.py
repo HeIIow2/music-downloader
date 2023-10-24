@@ -147,6 +147,8 @@ class DatabaseObject(metaclass=MetaClass):
         return list()
 
     def merge(self, other, override: bool = False, replace_all_refs: bool = False):
+        print("merge")
+
         if other is None:
             return
         
