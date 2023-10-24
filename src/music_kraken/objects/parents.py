@@ -153,7 +153,7 @@ class DatabaseObject(metaclass=MetaClass):
         if other is None:
             return
         
-        if self is other:
+        if self.id == other.id:
             return
         
         if not isinstance(other, type(self)):
@@ -173,7 +173,7 @@ class DatabaseObject(metaclass=MetaClass):
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
         if replace_all_refs:
-            super().merge(other)
+            self._risky_merge(other)
 
     def strip_details(self):
         for collection in type(self).DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:

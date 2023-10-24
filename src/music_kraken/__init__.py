@@ -7,6 +7,9 @@ from .utils.config import logging_settings, main_settings, read_config
 read_config()
 from . import cli
 
+if True:
+    import sys
+    sys.setrecursionlimit(100)
 
 # configure logger default
 logging.basicConfig(

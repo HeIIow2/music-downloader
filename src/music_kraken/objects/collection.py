@@ -23,6 +23,7 @@ class Collection(Generic[T], metaclass=MetaClass):
         contain_attribute_in_given: Dict[str, "Collection"] = None,
         append_object_to_attribute: Dict[str, DatabaseObject] = None
     ) -> None:
+        self._contains_ids = set()
         self._data = []
         self.upper_collections: List[Collection[T]] = []
         self.contained_collections: List[Collection[T]] = []
@@ -42,7 +43,9 @@ class Collection(Generic[T], metaclass=MetaClass):
         
         self.extend(data)
 
-    def _map_element(self, __object: T):
+    def _map_element(self, __object: T, from_map: bool = False):
+        self._contains_ids.add(__object.id)
+
         for name, value in __object.indexing_values:
             if value is None:
                 continue
@@ -50,7 +53,19 @@ class Collection(Generic[T], metaclass=MetaClass):
             self._indexed_values[name].add(value)
             self._indexed_to_objects[value].append(__object)
 
+        if not from_map:
+            for attribute, new_object in self.contain_given_in_attribute.items():
+                __object.__getattribute__(attribute).contain_collection_inside(new_object)
+            
+            for attribute, new_object in self.contain_given_in_attribute.items():
+                new_object.contain_collection_inside(__object.__getattribute__(attribute))
+
+            for attribute, new_object in self.append_object_to_attribute.items():
+                __object.__getattribute__(attribute).append(new_object, from_map = True)
+            
     def _unmap_element(self, __object: T):
+        self._contains_ids.remove(__object.id)
+
         for name, value in __object.indexing_values:
             if value is None:
                 continue
@@ -117,14 +132,16 @@ class Collection(Generic[T], metaclass=MetaClass):
             results.append(self)
 
         return results
-    
-    
-    def _merge_in_self(self, __object: T):
+      
+    def _merge_in_self(self, __object: T, from_map: bool = False):
         """
         1. find existing objects
         2. merge into existing object
         3. remap existing object
         """
+        if __object.id in self._contains_ids:
+            return
+        
         existing_object: DatabaseObject = None
 
         for name, value in __object.indexing_values:
@@ -132,45 +149,53 @@ class Collection(Generic[T], metaclass=MetaClass):
                 continue
             if value in self._indexed_values[name]:
                 existing_object = self._indexed_to_objects[value][0]
-                break
+                if existing_object == __object:
+                    return None
+                else:
+                    break
         
         if existing_object is None:
             return None
-    
+
         existing_object.merge(__object, replace_all_refs=True)
 
         # just a check if it really worked
         if existing_object.id != __object.id:
             raise ValueError("This should NEVER happen. Merging doesn't work.")
 
-        self._map_element(existing_object)
+        self._map_element(existing_object, from_map = from_map)
     
     def contains(self, __object: T) -> bool:
         return len(self._contained_in_sub(__object)) > 0
 
-    def _append(self, __object: T):
-        self._map_element(__object)
+    def _append(self, __object: T, from_map: bool = False):
+        for attribute, to_sync_with in self.sync_on_append.items():
+            to_sync_with.sync_with_other_collection(__object.__getattribute__(attribute))
+
+        self._map_element(__object, from_map=from_map)
         self._data.append(__object)
 
-    def append(self, __object: Optional[T], already_is_parent: bool = False):
+    def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
         if __object is None:
+            return
+        if __object.id in self._contains_ids:
             return
         
         exists_in_collection = self._contained_in_sub(__object)
         if len(exists_in_collection) and self is exists_in_collection[0]:
             # assuming that the object already is contained in the correct collections
             if not already_is_parent:
-                self._merge_in_self(__object)
+                self._merge_in_self(__object, from_map = from_map)
             return
 
         if not len(exists_in_collection):
-            self._append(__object)
+            self._append(__object, from_map=from_map)
         else:
-            exists_in_collection[0]._merge_in_self(__object)
+            exists_in_collection[0]._merge_in_self(__object, from_map = from_map)
 
         if not already_is_parent or not self._is_root:
             for parent_collection in self._get_parents_of_multiple_contained_children(__object):
-                parent_collection.append(__object, already_is_parent=True)
+                parent_collection.append(__object, already_is_parent=True, from_map=from_map)
 
     def extend(self, __iterable: Optional[Iterable[T]]):
         if __iterable is None:
@@ -202,7 +227,7 @@ class Collection(Generic[T], metaclass=MetaClass):
 
         # now the ugly part
         # replace all refs of the other element with this one
-        self.merge(equal_collection)
+        self._risky_merge(equal_collection)
 
 
     def contain_collection_inside(self, sub_collection: "Collection"):
