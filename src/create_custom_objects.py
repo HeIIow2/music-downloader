@@ -9,7 +9,7 @@ from music_kraken.objects import (
 from music_kraken.objects.collection import Collection
 from music_kraken.utils.enums import SourcePages
 
-"""
+
 only_smile = Artist(
     name="Only Smile",
     source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
@@ -103,7 +103,7 @@ for _id, _object in objects_by_id.items():
     print(_id, _object, sep=": ")
 
 print(only_smile)
-"""
+
 
 c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
 c1 = Collection([Song(title="he"), Song(title="hi5")])
@@ -139,7 +139,7 @@ print(other_song)
 print()
 print(c.data, len(c))
 print(c1.data)
-print([obj.genre for obj in c.data])
+print([(obj.genre or "various") + ":" + obj.title for obj in c.data])
 
 print()
 print("c: ", c)

@@ -72,16 +72,52 @@ class Collection(Generic[T], metaclass=MetaClass):
             if value in self._indexed_values[name]:
                 return True
         return False
+    
+    def _get_root_collections(self) -> List["Collection"]:
+        if not len(self.upper_collections):
+            return [self]
+        
+        root_collections = []
+        for upper_collection in self.upper_collections:
+            root_collections.extend(upper_collection._get_root_collections())
+        return root_collections
 
-    def _contained_in(self, __object: T) -> Optional["Collection"]:
+    @property
+    def _is_root(self) -> bool:
+        return len(self.upper_collections) <= 0
+
+    def _contained_in_sub(self, __object: T, break_at_first: bool = True) -> List["Collection"]:
+        results = []
+
         if self._contained_in_self(__object):
-            return self
+            return [self]
         
         for collection in self.contained_collections:
-            if collection._contained_in_self(__object):
-                return collection
+            results.extend(collection._contained_in_sub(__object, break_at_first=break_at_first))
+            if break_at_first:
+                return results
+
+        return results
+    
+    def _get_parents_of_multiple_contained_children(self, __object: T):
+        results = []
+        if len(self.contained_collections) < 2 or self._contained_in_self(__object):
+            return results
+    
+        count = 0
+
+        for collection in self.contained_collections:
+            sub_results = collection._get_parents_of_multiple_contained_children(__object)
             
-        return None
+            if len(sub_results) > 0:
+                count += 1
+                results.extend(sub_results)
+    
+        if count >= 2:
+            results.append(self)
+
+        return results
+    
     
     def _merge_in_self(self, __object: T):
         """
@@ -110,23 +146,31 @@ class Collection(Generic[T], metaclass=MetaClass):
         self._map_element(existing_object)
     
     def contains(self, __object: T) -> bool:
-        return self._contained_in(__object) is not None
-
+        return len(self._contained_in_sub(__object)) > 0
 
     def _append(self, __object: T):
         self._map_element(__object)
         self._data.append(__object)
 
-    def append(self, __object: Optional[T]):
+    def append(self, __object: Optional[T], already_is_parent: bool = False):
         if __object is None:
             return
         
-        exists_in_collection = self._contained_in(__object)
+        exists_in_collection = self._contained_in_sub(__object)
+        if len(exists_in_collection) and self is exists_in_collection[0]:
+            # assuming that the object already is contained in the correct collections
+            if not already_is_parent:
+                self._merge_in_self(__object)
+            return
 
-        if exists_in_collection is None:
+        if not len(exists_in_collection):
             self._append(__object)
         else:
-            exists_in_collection._merge_in_self(__object)
+            exists_in_collection[0]._merge_in_self(__object)
+
+        if not already_is_parent or not self._is_root:
+            for parent_collection in self._get_parents_of_multiple_contained_children(__object):
+                parent_collection.append(__object, already_is_parent=True)
 
     def extend(self, __iterable: Optional[Iterable[T]]):
         if __iterable is None:
@@ -134,6 +178,7 @@ class Collection(Generic[T], metaclass=MetaClass):
         
         for __object in __iterable:
             self.append(__object)
+
 
     def sync_with_other_collection(self, equal_collection: "Collection"):
         """

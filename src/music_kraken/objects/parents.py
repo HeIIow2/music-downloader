@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from collections import defaultdict
 from typing import Optional, Dict, Tuple, List, Type, Generic, TypeVar, Any
@@ -94,17 +95,17 @@ class DatabaseObject(metaclass=MetaClass):
         self.build_version = -1
 
     @property
-    def upwards_collection(self) -> "Collection":
+    def upwards_collection(self) -> Collection:
         for attribute in self._upwards_collection_attributes:
             yield attribute.get()
 
     @property
-    def downwards_collection(self) -> "Collection":
+    def downwards_collection(self) -> Collection:
         for attribute in self._downwards_collection_attributes:
             yield attribute.get()
 
     @property
-    def all_collections(self) -> "Collection":
+    def all_collections(self) -> Collection:
         for attribute in self._collection_attributes:
             yield attribute.get()
 

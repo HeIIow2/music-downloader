@@ -594,7 +594,7 @@ class Artist(MainObject):
         self.unformated_location: Optional[str] = unformated_location
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.contact_collection: Collection[Label] = Collection(data=contact_list, element_type=Contact)
+        self.contact_collection: Collection[Label] = Collection(data=contact_list)
 
         self.feature_song_collection: Collection[Song] = Collection(
             data=feature_song_list,
