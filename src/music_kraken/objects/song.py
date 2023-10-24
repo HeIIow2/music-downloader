@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Tuple, Type
 import pycountry
 
 from ..utils.enums.album import AlbumType, AlbumStatus
-from .collection import Collection, CollectionHooks
+from .collection import Collection
 from .formatted_text import FormattedText
 from .lyrics import Lyrics
 from .contact import Contact
@@ -100,25 +100,29 @@ class Song(MainObject):
         self.notes: FormattedText = notes or FormattedText()
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.target_collection: Collection[Target] = Collection(data=target_list, element_type=Target)
-        self.lyrics_collection: Collection[Lyrics] = Collection(data=lyrics_list, element_type=Lyrics)
+        self.target_collection: Collection[Target] = Collection(data=target_list)
+        self.lyrics_collection: Collection[Lyrics] = Collection(data=lyrics_list)
 
         # main_artist_collection = album.artist collection
-        self.main_artist_collection: Collection[Artist] = Collection(data=main_artist_list, element_type=Artist)
+        self.main_artist_collection: Collection[Artist] = Collection(data=[])
 
         # this album_collection equals no collection
-        self.album_collection: Collection[Album] = Collection(data=[], element_type=Album)
-        self.album_collection.sync_main_collection(self.main_artist_collection, "artist_collection")
-        self.album_collection.extend(album_list)
-        # self.album_collection.sync_collection("song_collection")
-        # self.album_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_album_append)
+        self.album_collection: Collection[Album] = Collection(data=album_list, 
+        contain_given_in_attribute={
+            "artist_collection": self.main_artist_collection
+        }, append_object_to_attribute={
+            "song_collection": self
+        })
 
-        # on feature_artist_collection append, append self to artist self
-        self.feature_artist_collection: Collection[Artist] = Collection(data=[], element_type=Artist)
-        def on_feature_artist_append(event, new_object: Artist, *args, **kwargs):
-            new_object.feature_song_collection.append(self, no_hook=True)
-        self.feature_artist_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_feature_artist_append)
-        self.feature_artist_collection.extend(feature_artist_list)
+        self.main_artist_collection.contain_given_in_attribute = {"main_album_collection": self.album_collection}
+        self.main_artist_collection.extend(main_artist_list)
+
+        self.feature_artist_collection: Collection[Artist] = Collection(
+            data=feature_artist_list,
+            append_object_to_attribute={
+                "feature_song_collection": self
+            }
+        )
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -322,13 +326,16 @@ class Album(MainObject):
 
         self.source_collection: SourceCollection = SourceCollection(source_list)
         
-        self.artist_collection: Collection[Artist] = Collection(data=artist_list, element_type=Artist)
+        self.artist_collection: Collection[Artist] = Collection(data=artist_list)
         
-        self.song_collection: Collection[Song] = Collection(data=[], element_type=Song)
-        self.song_collection.sync_main_collection(self.artist_collection, "main_artist_collection")
-        self.song_collection.extend(song_list)
+        self.song_collection: Collection[Song] = Collection(
+            data=song_list,
+            contain_attribute_in_given={
+                "main_artist_collection": self.artist_collection
+            }
+        )
         
-        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
+        self.label_collection: Collection[Label] = Collection(data=label_list)
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -589,22 +596,26 @@ class Artist(MainObject):
         self.source_collection: SourceCollection = SourceCollection(source_list)
         self.contact_collection: Collection[Label] = Collection(data=contact_list, element_type=Contact)
 
-        self.feature_song_collection: Collection[Song] = Collection(data=[], element_type=Song)
-        def on_feature_song_append(event, new_object: Song, *args, **kwargs):
-            new_object.feature_artist_collection.append(self, no_hook=True)
-        self.feature_song_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_feature_song_append)
-        self.feature_song_collection.extend(feature_song_list)
+        self.feature_song_collection: Collection[Song] = Collection(
+            data=feature_song_list,
+            append_object_to_attribute={
+                "feature_artist_collection": self
+            }
+        )
         
-        self.main_album_collection: Collection[Album] = Collection(data=[], element_type=Album)
-        def on_album_append(event, new_object: Album, *args, **kwargs):
-            new_object.artist_collection.append(self, no_hook=True)
-        self.main_album_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_album_append)
-        self.main_album_collection.extend(main_album_list)
+        self.main_album_collection: Collection[Album] = Collection(
+            data=main_album_list,
+            append_object_to_attribute={
+                "artist_collection": self
+            }
+        )
 
-        self.label_collection: Collection[Label] = Collection(data=label_list, element_type=Label)
-        def on_label_append(event, new_object: Label, *args, **kwargs):
-            new_object.current_artist_collection.append(self, no_hook=True)
-        self.label_collection.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_label_append)
+        self.label_collection: Collection[Label] = Collection(
+            data=label_list, 
+            append_object_to_attribute={
+                "current_artist_collection": self
+            }    
+        )
 
 
     def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):

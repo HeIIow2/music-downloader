@@ -21,7 +21,7 @@ from ..objects import (
     FormattedText
 )
 from ..connection import Connection
-from ..utils.support_classes import DownloadResult
+from ..utils.support_classes.download_result import DownloadResult
 from ..utils.config import main_settings, logging_settings
 from ..utils.shared import DEBUG
 if DEBUG:

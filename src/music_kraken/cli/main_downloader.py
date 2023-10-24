@@ -8,7 +8,8 @@ from .options.first_config import initial_config
 from ..utils.config import write_config, main_settings
 from ..utils.regex import URL_PATTERN
 from ..utils.string_processing import fit_to_file_system
-from ..utils.support_classes import Query, DownloadResult
+from ..utils.support_classes.query import Query
+from ..utils.support_classes.download_result import DownloadResult
 from ..utils.exception.download import UrlNotFoundException
 from ..download.results import Results, Option, PageResults
 from ..download.page_attributes import Pages

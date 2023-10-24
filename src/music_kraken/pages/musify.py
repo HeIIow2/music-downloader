@@ -25,7 +25,8 @@ from ..objects import (
 )
 from ..utils.config import logging_settings
 from ..utils import string_processing, shared
-from ..utils.support_classes import DownloadResult, Query
+from ..utils.support_classes.query import Query
+from ..utils.support_classes.download_result import DownloadResult
 
 """
 https://musify.club/artist/ghost-bath-280348?_pjax=#bodyContent

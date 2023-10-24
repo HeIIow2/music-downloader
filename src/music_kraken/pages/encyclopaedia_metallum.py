@@ -9,7 +9,7 @@ from ..utils.config import logging_settings
 from .abstract import Page
 from ..utils.enums.source import SourcePages
 from ..utils.enums.album import AlbumType
-from ..utils.support_classes import Query
+from ..utils.support_classes.query import Query
 from ..objects import (
     Lyrics,
     Artist,

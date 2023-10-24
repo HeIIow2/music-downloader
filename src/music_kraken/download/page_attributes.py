@@ -5,7 +5,8 @@ from ..objects import DatabaseObject, Source
 
 from ..utils.config import youtube_settings
 from ..utils.enums.source import SourcePages
-from ..utils.support_classes import Query, DownloadResult
+from ..utils.support_classes.download_result import DownloadResult
+from ..utils.support_classes.query import Query
 from ..utils.exception.download import UrlNotFoundException
 from ..utils.shared import DEBUG_PAGES
 

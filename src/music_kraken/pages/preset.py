@@ -15,7 +15,8 @@ from ..objects import (
     Target
 )
 from ..connection import Connection
-from ..utils.support_classes import DownloadResult
+from ..utils.support_classes.query import Query
+from ..utils.support_classes.download_result import DownloadResult
 
 class Preset(Page):
     # CHANGE

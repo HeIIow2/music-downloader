@@ -20,7 +20,7 @@ from ..objects import (
 )
 from ..connection import Connection
 from ..utils.string_processing import clean_song_title
-from ..utils.support_classes import DownloadResult
+from ..utils.support_classes.download_result import DownloadResult
 from ..utils.config import youtube_settings, main_settings, logging_settings
 
 from .youtube_music.super_youtube import SuperYouTube, YouTubeUrl, get_invidious_url, YouTubeUrlType
