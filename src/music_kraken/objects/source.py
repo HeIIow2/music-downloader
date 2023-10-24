@@ -124,7 +124,7 @@ class SourceCollection(Collection):
     def __init__(self, source_list: List[Source]):
         self._page_to_source_list: Dict[SourcePages, List[Source]] = defaultdict(list)
 
-        super().__init__(data=source_list, element_type=Source)
+        super().__init__(data=source_list)
 
     def map_element(self, source: Source):
         super().map_element(source)

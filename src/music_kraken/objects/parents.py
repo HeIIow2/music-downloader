@@ -172,7 +172,7 @@ class DatabaseObject(metaclass=MetaClass):
                 setattr(self, simple_attribute, getattr(other, simple_attribute))
 
         if replace_all_refs:
-            self.merge(other)
+            super().merge(other)
 
     def strip_details(self):
         for collection in type(self).DOWNWARDS_COLLECTION_STRING_ATTRIBUTES:

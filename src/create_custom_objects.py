@@ -6,7 +6,7 @@ from music_kraken.objects import (
     Source,
     DatabaseObject
 )
-from music_kraken.objects.new_collection import Collection
+from music_kraken.objects.collection import Collection
 from music_kraken.utils.enums import SourcePages
 
 """
@@ -128,11 +128,13 @@ c1.contain_collection_inside(c11)
 print(c.data)
 print(c1.data)
 
-c11.append(Song(title="after creation"))
+c.append(Song(title="after creation"))
 
 other_song = Song(title="has same isrc", isrc="hiii", genre="hssss")
 print(c.contains(other_song))
-c.append(other_song)
+c11.append(other_song)
+print(other_song)
+
 
 print()
 print(c.data, len(c))

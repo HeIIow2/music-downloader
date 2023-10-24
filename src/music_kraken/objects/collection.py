@@ -18,9 +18,9 @@ class Collection(Generic[T], metaclass=MetaClass):
 
     def __init__(
         self, data: Optional[Iterable[T]], 
-        sync_on_append: Dict[str, Collection] = None, 
-        contain_given_in_attribute: Dict[str, Collection] = None,
-        contain_attribute_in_given: Dict[str, Collection] = None,
+        sync_on_append: Dict[str, "Collection"] = None, 
+        contain_given_in_attribute: Dict[str, "Collection"] = None,
+        contain_attribute_in_given: Dict[str, "Collection"] = None,
         append_object_to_attribute: Dict[str, DatabaseObject] = None
     ) -> None:
         self._data = []
@@ -32,7 +32,7 @@ class Collection(Generic[T], metaclass=MetaClass):
         # Value: main collection to sync to
         self.sync_on_append: Dict[str, Collection] = sync_on_append or {}
         self.contain_given_in_attribute: Dict[str, Collection] = contain_given_in_attribute or {}
-        self.contain_attribute_in_given: Dict[str, Collection] = contain_given_in_attribute or {}
+        self.contain_attribute_in_given: Dict[str, Collection] = contain_attribute_in_given or {}
         self.append_object_to_attribute: Dict[str, DatabaseObject] = append_object_to_attribute or {}
 
         self.contain_self_on_append: List[str] = []
@@ -83,6 +83,32 @@ class Collection(Generic[T], metaclass=MetaClass):
             
         return None
     
+    def _merge_in_self(self, __object: T):
+        """
+        1. find existing objects
+        2. merge into existing object
+        3. remap existing object
+        """
+        existing_object: DatabaseObject = None
+
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                existing_object = self._indexed_to_objects[value][0]
+                break
+        
+        if existing_object is None:
+            return None
+    
+        existing_object.merge(__object, replace_all_refs=True)
+
+        # just a check if it really worked
+        if existing_object.id != __object.id:
+            raise ValueError("This should NEVER happen. Merging doesn't work.")
+
+        self._map_element(existing_object)
+    
     def contains(self, __object: T) -> bool:
         return self._contained_in(__object) is not None
 
@@ -94,8 +120,13 @@ class Collection(Generic[T], metaclass=MetaClass):
     def append(self, __object: Optional[T]):
         if __object is None:
             return
+        
+        exists_in_collection = self._contained_in(__object)
 
-        self._append(__object)
+        if exists_in_collection is None:
+            self._append(__object)
+        else:
+            exists_in_collection._merge_in_self(__object)
 
     def extend(self, __iterable: Optional[Iterable[T]]):
         if __iterable is None:
