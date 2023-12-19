@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from typing import List, Optional, Dict, Tuple, Type
+from typing import List, Optional, Dict, Tuple, Type, Union
 
 import pycountry
 
@@ -17,7 +17,7 @@ from .metadata import (
     Metadata
 )
 from .option import Options
-from .parents import DatabaseObject, StaticAttribute
+from .parents import OuterProxy, P
 from .source import Source, SourceCollection
 from .target import Target
 from .country import Language, Country
@@ -59,7 +59,7 @@ class Song(Base):
 
         "main_artist_collection": Collection,
         "album_collection": Collection,
-        "feature_artist_collection": Collection
+        "feature_artist_collection": Collection,
     }
 
     """
@@ -161,14 +161,10 @@ class Song(Base):
                f"by Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.main_artist_collection)}) " \
                f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
 
-    @property
-    def options(self) -> List[DatabaseObject]:
-        """
-        Return a list of related objects including the song object, album object, main artist objects, and
-        feature artist objects.
 
-        :return: a list of objects that are related to the Song object
-        """
+
+    @property
+    def options(self) -> List[P]:
         options = self.main_artist_collection.shallow_list
         options.extend(self.feature_artist_collection)
         options.extend(self.album_collection)
@@ -226,6 +222,11 @@ class Album(Base):
         "language": lambda: Language.by_alpha_2("en"),
         "date": ID3Timestamp,
         "notes": FormattedText,
+
+        "source_collection": SourceCollection,
+        "artist_collection": Collection,
+        "song_collection": Collection,
+        "label_collection": Collection,
     }
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
@@ -235,42 +236,6 @@ class Album(Base):
         self.song_collection.contain_attribute_in_given = {
             "main_artist_collection": self.artist_collection
         }
-
-    def _build_recursive_structures(self, build_version: int, merge: bool):
-        if build_version == self.build_version:
-            return
-        self.build_version = build_version
-
-        song: Song
-        for song in self.song_collection:
-            song.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            song._build_recursive_structures(build_version=build_version, merge=merge)
-
-        artist: Artist
-        for artist in self.artist_collection:
-            artist.main_album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            artist._build_recursive_structures(build_version=build_version, merge=merge)
-
-        label: Label
-        for label in self.label_collection:
-            label.album_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            label._build_recursive_structures(build_version=build_version, merge=merge)
-
-    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
-        if object_type is Song:
-            self.song_collection.extend(object_list)
-            return
-
-        if object_type is Artist:
-            self.artist_collection.extend(object_list)
-            return
-
-        if object_type is Album:
-            return
-
-        if object_type is Label:
-            self.label_collection.extend(object_list)
-            return
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -311,7 +276,7 @@ class Album(Base):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> List[DatabaseObject]:
+    def options(self) -> List[P]:
         options = self.artist_collection.shallow_list
         options.append(self)
         options.extend(self.song_collection)
@@ -434,122 +399,50 @@ class Artist(Base):
         "unformated_location": None,
     }
 
+    name: str
+    unified_name: str
+    country: Country
+    formed_in: ID3Timestamp
+    notes: FormattedText
+    lyrical_themes: List[str]
+
+    general_genre: str
+    unformated_location: str
+
+    source_collection: SourceCollection
+    contact_collection: Collection[Contact]
+
+    feature_song_collection: Collection[Song]
+    main_album_collection: Collection[Album]
+    label_collection: Collection[Label]
+
+    _default_factories = {
+        "formed_in": ID3Timestamp,
+        "notes": FormattedText,
+        "lyrical_themes": list,
+        "general_genre": lambda: "",
+        "source_collection": SourceCollection,
+        "feature_song_collection": Collection,
+        "main_album_collection": Collection,
+        "contact_collection": Collection,
+        "label_collection": Collection,
+    }
+
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("label_collection", )
 
+    def __init_collections__(self):
+        self.feature_song_collection.append_object_to_attribute = {
+            "feature_artist_collection": self
+        }
 
-    STATIC_ATTRIBUTES = [
-        StaticAttribute(name="name", weight=.5),
-        StaticAttribute(name="unified_name", weight=.3),
-        StaticAttribute(name="country"),
-        StaticAttribute(name="formed_in", default_value=ID3Timestamp()),
-        StaticAttribute(name="lyrical_themes", default_value=[]),
-        StaticAttribute(name="general_genre", default_value=""),
-        StaticAttribute(name="notes", default_value=FormattedText()),
-        StaticAttribute(name="unformated_location"),
-
-        StaticAttribute(name="source_collection", is_collection=True),
-        StaticAttribute(name="contact_collection", is_collection=True),
-        StaticAttribute(name="feature_song_collection", is_collection=True, is_downwards_collection=True),
-        StaticAttribute(name="main_album_collection", is_collection=True, is_downwards_collection=True),
-        StaticAttribute(name="label_collection", is_collection=True, is_upwards_collection=True),
-    ]
-
-    def __init__(
-            self,
-            _id: int = None,
-            dynamic: bool = False,
-            name: str = None,
-            unified_name: str = None,
-            source_list: List[Source] = None,
-            feature_song_list: List[Song] = None,
-            main_album_list: List[Album] = None,
-            contact_list: List[Contact] = None,
-            notes: FormattedText = None,
-            lyrical_themes: List[str] = None,
-            general_genre: str = "",
-            country: CountryTyping = None,
-            formed_in: ID3Timestamp = None,
-            label_list: List['Label'] = None,
-            unformated_location: str = None,
-            **kwargs
-    ):
-        Base.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
-
-        self.name: str = name
-        self.unified_name: str = unified_name
-        if unified_name is None and name is not None:
-            self.unified_name = unify(name)
-
-        """
-        TODO implement album type and notes
-        """
-        self.country: CountryTyping = country
-        self.formed_in: ID3Timestamp = formed_in
-        """
-        notes, general genre, lyrics themes are attributes
-        which are meant to only use in outputs to describe the object
-        i mean do as you want but there is no strict rule about em so good luck
-        """
-        self.notes: FormattedText = notes or FormattedText()
-
-        self.lyrical_themes: List[str] = lyrical_themes or []
-        self.general_genre = general_genre
-        self.unformated_location: Optional[str] = unformated_location
-
-        self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.contact_collection: Collection[Label] = Collection(data=contact_list)
-
-        self.feature_song_collection: Collection[Song] = Collection(
-            data=feature_song_list,
-            append_object_to_attribute={
-                "feature_artist_collection": self
-            }
-        )
+        self.main_album_collection.append_object_to_attribute = {
+            "artist_collection": self
+        }
         
-        self.main_album_collection: Collection[Album] = Collection(
-            data=main_album_list,
-            append_object_to_attribute={
-                "artist_collection": self
-            }
-        )
-
-        self.label_collection: Collection[Label] = Collection(
-            data=label_list, 
-            append_object_to_attribute={
-                "current_artist_collection": self
-            }    
-        )
-
-
-    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
-        if object_type is Song:
-            # this doesn't really make sense
-            # self.feature_song_collection.extend(object_list)
-            return
-
-        if object_type is Artist:
-            return
-
-        if object_type is Album:
-            self.main_album_collection.extend(object_list)
-            return
-
-        if object_type is Label:
-            self.label_collection.extend(object_list)
-            return
-
-    def compile(self, merge_into: bool = False):
-        """
-        compiles the recursive structures,
-        and does depending on the object some other stuff.
-
-        no need to override if only the recursive structure should be built.
-        override self.build_recursive_structures() instead
-        """
-
-        self.update_albumsort()
-        self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
+        self.label_collection.append_object_to_attribute = {
+            "current_artist_collection": self
+        }
 
     def update_albumsort(self):
         """
@@ -564,7 +457,7 @@ class Artist(Base):
         if len(self.main_album_collection) <= 0:
             return
 
-        type_section: Dict[AlbumType] = defaultdict(lambda: 2, {
+        type_section: Dict[AlbumType, int] = defaultdict(lambda: 2, {
             AlbumType.OTHER: 0,  # if I don't know it, I add it to the first section
             AlbumType.STUDIO_ALBUM: 0,
             AlbumType.EP: 0,
@@ -608,27 +501,6 @@ class Artist(Base):
         # replace the old collection with the new one
         self.main_album_collection: Collection = Collection(data=album_list, element_type=Album)
 
-
-    def _build_recursive_structures(self, build_version: int, merge: False):
-        if build_version == self.build_version:
-            return
-        self.build_version = build_version
-
-        song: Song
-        for song in self.feature_song_collection:
-            song.feature_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            song._build_recursive_structures(build_version=build_version, merge=merge)
-
-        album: Album
-        for album in self.main_album_collection:
-            album.artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            album._build_recursive_structures(build_version=build_version, merge=merge)
-
-        label: Label
-        for label in self.label_collection:
-            label.current_artist_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            label._build_recursive_structures(build_version=build_version, merge=merge)
-
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
@@ -664,15 +536,11 @@ class Artist(Base):
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
-    def options(self) -> List[DatabaseObject]:
+    def options(self) -> List[P]:
         options = [self]
         options.extend(self.main_album_collection)
         options.extend(self.feature_song_collection)
         return options
-
-    @property
-    def country_string(self):
-        return self.country.alpha_3
 
     @property
     def feature_album(self) -> Album:
@@ -712,22 +580,27 @@ Label
 
 class Label(Base):
     COLLECTION_STRING_ATTRIBUTES = ("album_collection", "current_artist_collection")
-    SIMPLE_STRING_ATTRIBUTES = {
-        "name": None,
-        "unified_name": None,
-        "notes": FormattedText()
-    }
+
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = COLLECTION_STRING_ATTRIBUTES
 
-    STATIC_ATTRIBUTES = [
-        StaticAttribute(name="name", weight=.5),
-        StaticAttribute(name="unified_name", weight=.3),
-        StaticAttribute(name="notes", default_value=FormattedText()),
+    name: str
+    unified_name: str
+    notes: FormattedText
 
-        StaticAttribute(name="album_collection", is_collection=True, is_downwards_collection=True),
-        StaticAttribute(name="current_artist_collection", is_collection=True, is_downwards_collection=True),
-    ]
+    source_collection: SourceCollection
+    contact_collection: Collection[Contact]
+
+    album_collection: Collection[Album]
+    current_artist_collection: Collection[Artist]
+
+    _default_factories = {
+        "notes": FormattedText,
+        "album_collection": Collection,
+        "current_artist_collection": Collection,
+        "source_collection": SourceCollection,
+        "contact_collection": Collection
+    }
 
     def __init__(
             self,
@@ -753,33 +626,6 @@ class Label(Base):
         self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
         self.current_artist_collection: Collection[Artist] = Collection(data=current_artist_list, element_type=Artist)
 
-    def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):
-        if object_type is Song:
-            return
-
-        if object_type is Artist:
-            self.current_artist_collection.extend(object_list)
-            return
-
-        if object_type is Album:
-            self.album_collection.extend(object_list)
-            return
-
-    def _build_recursive_structures(self, build_version: int, merge: False):
-        if build_version == self.build_version:
-            return
-        self.build_version = build_version
-
-        album: Album
-        for album in self.album_collection:
-            album.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            album._build_recursive_structures(build_version=build_version, merge=merge)
-
-        artist: Artist
-        for artist in self.current_artist_collection:
-            artist.label_collection.append(self, merge_on_conflict=merge, merge_into_existing=False)
-            artist._build_recursive_structures(build_version=build_version, merge=merge)
-
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
@@ -789,7 +635,7 @@ class Label(Base):
         ]
 
     @property
-    def options(self) -> List[DatabaseObject]:
+    def options(self) -> List[P]:
         options = [self]
         options.extend(self.current_artist_collection.shallow_list)
         options.extend(self.album_collection.shallow_list)

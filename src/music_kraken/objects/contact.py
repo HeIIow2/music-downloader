@@ -1,10 +1,10 @@
 from typing import Optional, List, Tuple
 
 from ..utils.enums.contact import ContactMethod
-from .parents import DatabaseObject
+from .parents import OuterProxy
 
 
-class Contact(DatabaseObject):
+class Contact(OuterProxy):
     COLLECTION_STRING_ATTRIBUTES = tuple()
     SIMPLE_STRING_ATTRIBUTES = {
         "contact_method": None,
@@ -18,7 +18,8 @@ class Contact(DatabaseObject):
             ('value', self.value),
         ]
 
-    def __init__(self, contact_method: ContactMethod, value: str) -> None:
+    def __init__(self, contact_method: ContactMethod, value: str, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.contact_method: ContactMethod = contact_method
         self.value: str = value
 

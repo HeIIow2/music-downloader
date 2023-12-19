@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from ...objects import DatabaseObject, Artist, Album, Song
+from ...objects import Artist, Album, Song, DatabaseObject
 
 class Query:
     def __init__(

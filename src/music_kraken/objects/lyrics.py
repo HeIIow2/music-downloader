@@ -2,12 +2,12 @@ from typing import List
 from collections import defaultdict
 import pycountry
 
-from .parents import DatabaseObject
+from .parents import OuterProxy
 from .source import Source, SourceCollection
 from .formatted_text import FormattedText
 
 
-class Lyrics(DatabaseObject):
+class Lyrics(OuterProxy):
     COLLECTION_STRING_ATTRIBUTES = ("source_collection",)
     SIMPLE_STRING_ATTRIBUTES = {
         "text": FormattedText(),
@@ -23,7 +23,7 @@ class Lyrics(DatabaseObject):
             source_list: List[Source] = None,
             **kwargs
     ) -> None:
-        DatabaseObject.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
+        super().__init__(_id=_id, dynamic=dynamic, **kwargs)
 
         self.text: FormattedText = text or FormattedText()
         self.language: pycountry.Languages = language

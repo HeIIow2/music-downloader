@@ -54,6 +54,7 @@ class Collection(Generic[T]):
             self._indexed_values[name].add(value)
             self._indexed_to_objects[value].append(__object)
 
+        print(from_map)
         if not from_map:
             for attribute, new_object in self.contain_given_in_attribute.items():
                 __object.__getattribute__(attribute).contain_collection_inside(new_object)
@@ -143,6 +144,7 @@ class Collection(Generic[T]):
         2. merge into existing object
         3. remap existing object
         """
+        self = self.__self__
         if __object.id in self._contains_ids:
             return
 
@@ -233,7 +235,7 @@ class Collection(Generic[T]):
 
         # now the ugly part
         # replace all refs of the other element with this one
-        self._risky_merge(equal_collection)
+        self = self._risky_merge(equal_collection)
 
     def contain_collection_inside(self, sub_collection: "Collection"):
         """
@@ -252,6 +254,10 @@ class Collection(Generic[T]):
 
     def __len__(self) -> int:
         return len(self._data) + sum(len(collection) for collection in self.children)
+
+    @property
+    def empty(self) -> bool:
+        return self.__len__() == 0
 
     def __iter__(self) -> Iterator[T]:
         for element in self._data:

@@ -5,7 +5,7 @@ import logging
 import requests
 from tqdm import tqdm
 
-from .parents import DatabaseObject
+from .parents import OuterProxy
 from ..utils.config import main_settings, logging_settings
 from ..utils.string_processing import fit_to_file_system
 
@@ -13,7 +13,7 @@ from ..utils.string_processing import fit_to_file_system
 LOGGER = logging.getLogger("target")
 
 
-class Target(DatabaseObject):
+class Target(OuterProxy):
     """
     create somehow like that
     ```python

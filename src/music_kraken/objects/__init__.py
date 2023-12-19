@@ -1,5 +1,5 @@
+from typing_extensions import TypeVar
 from .option import Options
-from .parents import DatabaseObject
 
 from .metadata import Metadata, Mapping as ID3Mapping, ID3Timestamp
 
@@ -19,3 +19,5 @@ from .collection import Collection
 
 from .country import Country
 from .contact import Contact
+
+from .parents import OuterProxy as DatabaseObject

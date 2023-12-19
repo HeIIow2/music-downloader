@@ -72,7 +72,6 @@ class Language:
     alpha_2: str
     alpha_3: str
     name: str
-    numeric: int
 
     @classmethod
     def by_pycountry(cls, language) -> Language:
@@ -82,12 +81,11 @@ class Language:
             alpha_2=alpha_2,
             alpha_3=language.alpha_3,
             name=language.name,
-            numeric=language.numeric,
         )
 
     @classmethod
     def by_alpha_2(cls, alpha_2: str) -> Language:
-        return cls.by_pycountry(pycountry.languages.get(alpha_2=alpha_2))
+        return cls.by_pycountry(pycountry.languages.get(alpha_2=alpha_2.upper()))
 
     @classmethod
     def by_alpha_3(cls, alpha_3: str) -> Language:

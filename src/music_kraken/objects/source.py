@@ -7,11 +7,11 @@ from ..utils.enums.source import SourcePages, SourceTypes
 from ..utils.config import youtube_settings
 
 from .metadata import Mapping, Metadata
-from .parents import DatabaseObject
+from .parents import OuterProxy
 from .collection import Collection
 
 
-class Source(DatabaseObject):
+class Source(OuterProxy):
     """
     create somehow like that
     ```python
@@ -19,6 +19,13 @@ class Source(DatabaseObject):
     Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
     ```
     """
+
+    page_enum: SourcePages
+    referer_page: SourcePages
+
+    url: str
+    audio_url: str
+
     COLLECTION_STRING_ATTRIBUTES = tuple()
     SIMPLE_STRING_ATTRIBUTES = {
         "page_enum": None,
@@ -27,21 +34,11 @@ class Source(DatabaseObject):
         "audio_url": None
     }
 
-    def __init__(
-        self,
-        page_enum: SourcePages,
-        url: str = None,
-        id_: str = None,
-        referer_page: SourcePages = None,
-        adio_url: str = None
-    ) -> None:
-        DatabaseObject.__init__(self, id_=id_)
+    def __init__(self, page_enum: SourcePages, referer_page: SourcePages = None, **kwargs) -> None:
+        if referer_page is None:
+            referer_page = page_enum
 
-        self.page_enum = page_enum
-        self.referer_page = page_enum if referer_page is None else referer_page
-
-        self.url = url
-        self.audio_url = adio_url
+        super().__init__(page_enum=page_enum, referer_page=referer_page, **kwargs)
 
     @classmethod
     def match_url(cls, url: str, referer_page: SourcePages) -> Optional["Source"]:
