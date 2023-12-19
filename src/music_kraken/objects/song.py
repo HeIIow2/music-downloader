@@ -20,6 +20,7 @@ from .option import Options
 from .parents import DatabaseObject, StaticAttribute
 from .source import Source, SourceCollection
 from .target import Target
+from .country import Language, Country
 from ..utils.string_processing import unify
 
 from .parents import OuterProxy as Base
@@ -35,11 +36,6 @@ OPTION_STRING_DELIMITER = " | "
 
 
 class Song(Base):
-    """
-    Class representing a song object, with attributes id, mb_id, title, album_name, isrc, length,
-    tracksort, genre, source_list, target, lyrics_list, album, main_artist_list, and feature_artist_list.
-    """
-
     title: str
     unified_title: str
     isrc: str
@@ -212,91 +208,33 @@ class Album(Base):
 
     title: str
     unified_title: str
-    album_status: str
+    album_status: AlbumStatus
     album_type: AlbumType
-    language: LanguageSelector
+    language: Language
+    date: ID3Timestamp
+    barcode: str
+    albumsort: int
+    notes: FormattedText
+
+    source_collection: SourceCollection
+    artist_collection: Collection[Artist]
+    song_collection: Collection[Song]
+    label_collection: Collection[Label]
 
     _default_factories = {
-        "album_type": AlbumType.OTHER
+        "album_type": lambda: AlbumType.OTHER,
+        "language": lambda: Language.by_alpha_2("en"),
+        "date": ID3Timestamp,
+        "notes": FormattedText,
     }
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("artist_collection", "label_collection")
 
-    STATIC_ATTRIBUTES = [
-        StaticAttribute(name="title", weight=.5),
-        StaticAttribute(name="unified_title", weight=.3),
-        StaticAttribute(name="language"),
-        StaticAttribute(name="barcode", weight=1),
-        StaticAttribute(name="albumsort"),
-        StaticAttribute(name="album_status"),
-        StaticAttribute(name="album_type", default_value=AlbumType.OTHER),
-        StaticAttribute(name="date", default_value=ID3Timestamp()),
-        StaticAttribute(name="notes", default_value=FormattedText()),
-
-        StaticAttribute(name="source_collection", is_collection=True),
-        StaticAttribute(name="song_collection", is_collection=True, is_downwards_collection=True),
-        StaticAttribute(name="artist_collection", is_collection=True, is_upwards_collection=True),
-        StaticAttribute(name="label_collection", is_collection=True, is_upwards_collection=True),
-    ]
-
-    def __init__(
-            self,
-            _id: int = None,
-            title: str = None,
-            unified_title: str = None,
-            language: pycountry.Languages = None,
-            date: ID3Timestamp = None,
-            barcode: str = None,
-            albumsort: int = None,
-            dynamic: bool = False,
-            source_list: List[Source] = None,
-            artist_list: List['Artist'] = None,
-            song_list: List[Song] = None,
-            album_status: AlbumStatus = None,
-            album_type: AlbumType = None,
-            label_list: List['Label'] = None,
-            notes: FormattedText = None,
-            **kwargs
-    ) -> None:
-        Base.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
-
-        self.title: str = title
-        self.unified_title: str = unified_title
-        if unified_title is None and title is not None:
-            self.unified_title = unify(title)
-
-        self.album_status: AlbumStatus = album_status
-        self.album_type: AlbumType = album_type or AlbumType.OTHER
-        self.language: pycountry.Languages = language
-        self.date: ID3Timestamp = date or ID3Timestamp()
-
-        """
-        TODO
-        find out the id3 tag for barcode and implement it
-        maybe look at how mutagen does it with easy_id3
-        """
-        self.barcode: str = barcode
-        """
-        TODO
-        implement a function in the Artist class,
-        to set albumsort with help of the release year
-        """
-        self.albumsort: Optional[int] = albumsort
-        self.notes = notes or FormattedText()
-
-        self.source_collection: SourceCollection = SourceCollection(source_list)
-        
-        self.artist_collection: Collection[Artist] = Collection(data=artist_list)
-        
-        self.song_collection: Collection[Song] = Collection(
-            data=song_list,
-            contain_attribute_in_given={
-                "main_artist_collection": self.artist_collection
-            }
-        )
-        
-        self.label_collection: Collection[Label] = Collection(data=label_list)
+    def __init_collections__(self):
+        self.song_collection.contain_attribute_in_given = {
+            "main_artist_collection": self.artist_collection
+        }
 
     def _build_recursive_structures(self, build_version: int, merge: bool):
         if build_version == self.build_version:
@@ -345,6 +283,11 @@ class Album(Base):
 
     @property
     def metadata(self) -> Metadata:
+        """
+        TODO
+        - barcode
+        :return:
+        """
         return Metadata({
             id3Mapping.ALBUM: [self.title],
             id3Mapping.COPYRIGHT: [self.copyright],
