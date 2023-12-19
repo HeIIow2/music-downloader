@@ -9,11 +9,12 @@ from .option import Options
 from ..utils.shared import HIGHEST_ID
 from ..utils.config import main_settings, logging_settings
 from ..utils.support_classes.hacking import MetaClass
-
+from ..utils.exception.objects import IsDynamicException
 
 LOGGER = logging_settings["object_logger"]
 
 P = TypeVar('P')
+
 
 @dataclass
 class StaticAttribute(Generic[P]):
@@ -27,6 +28,139 @@ class StaticAttribute(Generic[P]):
     is_upwards_collection: bool = False
 
 
+class InnerData:
+    """
+    This is the core class, which is used for every Data class.
+    The attributes are set, and can be merged.
+
+    The concept is, that the outer class proxies this class.
+    If the data in the wrapper class has to be merged, then this class is just replaced and garbage collected.
+    """
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            self.__setattr__(key, value)
+
+    def __merge__(self, __other: InnerData, override: bool = False):
+        """
+        TODO
+        is default is totally ignored
+
+        :param __other:
+        :param override:
+        :return:
+        """
+
+        for key, value in __other.__dict__.items():
+            # just set the other value if self doesn't already have it
+            if key not in self.__dict__:
+                self.__setattr__(key, value)
+                continue
+
+            # if the object of value implemented __merge__, it merges
+            existing = self.__getattribute__(key)
+            if hasattr(type(existing), "__merge__"):
+                existing.merge_into_self(value, override)
+                continue
+
+            # override the existing value if requested
+            if override:
+                self.__setattr__(key, value)
+
+
+
+class OuterProxy:
+    """
+    Wraps the inner data, and provides apis, to naturally access those values.
+    """
+
+    _default_factories: dict
+
+    def __init__(self, _id: int = None, dynamic: bool = False, **kwargs):
+        _automatic_id: bool = False
+
+        if _id is None and not dynamic:
+            """
+            generates a random integer id
+            the range is defined in the config
+            """
+            _id = random.randint(0, HIGHEST_ID)
+            _automatic_id = True
+
+        kwargs["automatic_id"] = _automatic_id
+        kwargs["id"] = _id
+        kwargs["dynamic"] = dynamic
+
+        for name, factory in type(self)._default_factories.items():
+            if name not in kwargs:
+                kwargs[name] = factory()
+
+        self._inner: InnerData = InnerData(**kwargs)
+        self.__init_collections__()
+
+        for name, data_list in kwargs.items():
+            if isinstance(data_list, list) and name.endswith("_list"):
+                collection_name = name.replace("_list", "_collection")
+
+                if collection_name not in self.__dict__:
+                    continue
+
+                collection = self.__getattribute__(collection_name)
+                collection.extend(data_list)
+
+    def __init_collections__(self):
+        pass
+
+    def __getattribute__(self, __name: str) -> Any:
+        """
+        Returns the attribute of _inner if the attribute exists,
+        else it returns the attribute of self.
+
+        That the _inner gets checked first is essential for the type hints.
+        :param __name:
+        :return:
+        """
+
+        _inner: InnerData = super().__getattribute__("_inner")
+        try:
+            return _inner.__getattribute__(__name)
+        except AttributeError:
+            return super().__getattribute__(__name)
+
+    def __setattr__(self, __name, __value):
+        if not __name.startswith("_") and hasattr(self, "_inner"):
+            _inner: InnerData = super().__getattribute__("_inner")
+            return _inner.__setattr__(__name, __value)
+
+        return super().__setattr__(__name, __value)
+
+    def __hash__(self):
+        """
+        :raise: IsDynamicException
+        :return:
+        """
+
+        if self.dynamic:
+            return id(self._inner)
+
+        return self.id
+
+    def __eq__(self, other: Any):
+        return self.__hash__() == other.__hash__()
+
+    def merge(self, __other: OuterProxy, override: bool = False):
+        """
+        1. merges the data of __other in self
+        2. replaces the data of __other with the data of self
+
+        :param __other:
+        :param override:
+        :return:
+        """
+        self._inner.__merge__(__other._inner, override=override)
+        __other._inner = self._inner
+
+
 class Attribute(Generic[P]):
     def __init__(self, database_object: "DatabaseObject", static_attribute: StaticAttribute) -> None:
         self.database_object: DatabaseObject = database_object
@@ -38,10 +172,9 @@ class Attribute(Generic[P]):
 
     def get(self) -> P:
         return self.database_object.__getattribute__(self.name)
-    
+
     def set(self, value: P):
         self.database_object.__setattr__(self.name, value)
-
 
 
 class DatabaseObject(metaclass=MetaClass):
@@ -77,7 +210,7 @@ class DatabaseObject(metaclass=MetaClass):
         for static_attribute in self.STATIC_ATTRIBUTES:
             attribute: Attribute = Attribute(self, static_attribute)
             self._attributes.append(attribute)
-            
+
             if static_attribute.is_collection:
                 if static_attribute.is_collection:
                     self._collection_attributes.append(attribute)
@@ -93,6 +226,8 @@ class DatabaseObject(metaclass=MetaClass):
 
         self.dynamic = dynamic
         self.build_version = -1
+
+        super().__init__()
 
     @property
     def upwards_collection(self) -> Collection:
@@ -114,9 +249,18 @@ class DatabaseObject(metaclass=MetaClass):
             raise TypeError("Dynamic DatabaseObjects are unhashable.")
         return self.id
 
+    def __deep_eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+
+        return super().__eq__(other)
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
+
+        if super().__eq__(other):
+            return True
 
         # add the checks for dynamic, to not throw an exception
         if not self.dynamic and not other.dynamic and self.id == other.id:
@@ -152,10 +296,10 @@ class DatabaseObject(metaclass=MetaClass):
 
         if other is None:
             return
-        
-        if self.id == other.id:
+
+        if self.__deep_eq__(other):
             return
-        
+
         if not isinstance(other, type(self)):
             LOGGER.warning(f"can't merge \"{type(other)}\" into \"{type(self)}\"")
             return
@@ -163,6 +307,7 @@ class DatabaseObject(metaclass=MetaClass):
         for collection in self._collection_attributes:
             if hasattr(self, collection.name) and hasattr(other, collection.name):
                 if collection.get() is not getattr(other, collection.name):
+                    pass
                     collection.get().extend(getattr(other, collection.name))
 
         for simple_attribute, default_value in type(self).SIMPLE_STRING_ATTRIBUTES.items():
@@ -190,7 +335,7 @@ class DatabaseObject(metaclass=MetaClass):
     @property
     def option_string(self) -> str:
         return self.__repr__()
-    
+
     def _build_recursive_structures(self, build_version: int, merge: False):
         pass
 
@@ -202,7 +347,7 @@ class DatabaseObject(metaclass=MetaClass):
         no need to override if only the recursive structure should be build.
         override self.build_recursive_structures() instead
         """
-        
+
         self._build_recursive_structures(build_version=random.randint(0, 99999), merge=merge_into)
 
     def _add_other_db_objects(self, object_type: Type["DatabaseObject"], object_list: List["DatabaseObject"]):

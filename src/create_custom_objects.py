@@ -9,7 +9,23 @@ from music_kraken.objects import (
 from music_kraken.objects.collection import Collection
 from music_kraken.utils.enums import SourcePages
 
+song = Song(title="Sad Story", isrc="testTest")
+other_song = Song(title="hihi", genre="dsbm")
 
+song.merge(other_song)
+
+print(song.__dict__)
+print(other_song.__dict__)
+
+other_song.title = ":3"
+
+print(song.__dict__)
+print(other_song.__dict__)
+
+
+print(song)
+
+"""
 only_smile = Artist(
     name="Only Smile",
     source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
@@ -100,10 +116,16 @@ def add_to_objects_dump(db_obj: DatabaseObject):
 add_to_objects_dump(only_smile)
 
 for _id, _object in objects_by_id.items():
-    print(_id, _object, sep=": ")
+    try:
+        print(_id, _object.title, sep=": ")
+    except AttributeError:
+        try:
+            print(_id, _object.name, sep=": ")
+        except AttributeError:
+            print(_id, _object, sep=": ")
 
 print(only_smile)
-
+"""
 """
 c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
 c1 = Collection([Song(title="he"), Song(title="hi5")])

@@ -121,7 +121,8 @@ class Source(DatabaseObject):
 
 
 class SourceCollection(Collection):
-    def __init__(self, source_list: List[Source]):
+    def __init__(self, source_list: List[Source] = None):
+        source_list = source_list if source_list is not None else []
         self._page_to_source_list: Dict[SourcePages, List[Source]] = defaultdict(list)
 
         super().__init__(data=source_list)

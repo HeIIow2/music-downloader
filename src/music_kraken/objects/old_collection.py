@@ -1,221 +1,256 @@
-from typing import List, Iterable, Dict, TypeVar, Generic, Iterator
+from typing import List, Iterable, Iterator, Optional, TypeVar, Generic, Dict, Type
 from collections import defaultdict
-from dataclasses import dataclass
 
 from .parents import DatabaseObject
-from ..utils.hooks import HookEventTypes, Hooks, Event
-
-
-class CollectionHooks(HookEventTypes):
-    APPEND_NEW = "append_new"
-
+from ..utils.support_classes.hacking import MetaClass
 
 T = TypeVar('T', bound=DatabaseObject)
 
 
-@dataclass
-class AppendResult:
-    was_in_collection: bool
-    current_element: DatabaseObject
-    was_the_same: bool
-
-
 class Collection(Generic[T]):
-    """
-    This a class for the iterables
-    like tracklist or discography
-    """
     _data: List[T]
 
-    _by_url: dict
-    _by_attribute: dict
+    _indexed_values: Dict[str, set]
+    _indexed_to_objects: Dict[any, list]
 
-    def __init__(self, data: List[T] = None, element_type=None, *args, **kwargs) -> None:
-        # Attribute needs to point to
-        self.element_type = element_type
+    shallow_list = property(fget=lambda self: self.data)
 
-        self._data: List[T] = list()
+    def __init__(
+            self, data: Optional[Iterable[T]] = None,
+            sync_on_append: Dict[str, "Collection"] = None,
+            contain_given_in_attribute: Dict[str, "Collection"] = None,
+            contain_attribute_in_given: Dict[str, "Collection"] = None,
+            append_object_to_attribute: Dict[str, DatabaseObject] = None
+    ) -> None:
+        self._contains_ids = set()
+        self._data = []
+        self.upper_collections: List[Collection[T]] = []
+        self.contained_collections: List[Collection[T]] = []
 
-        """
-        example of attribute_to_object_map
-        the song objects are references pointing to objects
-        in _data
-        
-        ```python
-        {
-            'id': {323: song_1, 563: song_2, 666: song_3},
-            'url': {'www.song_2.com': song_2}
-        }
-        ```
-        """
-        self._attribute_to_object_map: Dict[str, Dict[object, T]] = defaultdict(dict)
-        self._used_ids: set = set()
+        # List of collection attributes that should be modified on append
+        # Key: collection attribute (str) of appended element
+        # Value: main collection to sync to
+        self.sync_on_append: Dict[str, Collection] = sync_on_append or {}
+        self.contain_given_in_attribute: Dict[str, Collection] = contain_given_in_attribute or {}
+        self.contain_attribute_in_given: Dict[str, Collection] = contain_attribute_in_given or {}
+        self.append_object_to_attribute: Dict[str, DatabaseObject] = append_object_to_attribute or {}
 
-        self.hooks: Hooks = Hooks(self)
+        self.contain_self_on_append: List[str] = []
 
-        if data is not None:
-            self.extend(data, merge_on_conflict=True)
+        self._indexed_values = defaultdict(set)
+        self._indexed_to_objects = defaultdict(list)
 
-    def sort(self, reverse: bool = False, **kwargs):
-        self._data.sort(reverse=reverse, **kwargs)
+        self.extend(data)
 
-    def map_element(self, element: T):
-        for name, value in element.indexing_values:
+    def _map_element(self, __object: T, from_map: bool = False):
+        self._contains_ids.add(__object.id)
+
+        for name, value in __object.indexing_values:
             if value is None:
                 continue
 
-            self._attribute_to_object_map[name][value] = element
+            self._indexed_values[name].add(value)
+            self._indexed_to_objects[value].append(__object)
 
-        self._used_ids.add(element.id)
+        if not from_map:
+            for attribute, new_object in self.contain_given_in_attribute.items():
+                __object.__getattribute__(attribute).contain_collection_inside(new_object)
 
-    def unmap_element(self, element: T):
-        for name, value in element.indexing_values:
+            for attribute, new_object in self.contain_given_in_attribute.items():
+                new_object.contain_collection_inside(__object.__getattribute__(attribute))
+
+            for attribute, new_object in self.append_object_to_attribute.items():
+                __object.__getattribute__(attribute).append(new_object, from_map=True)
+
+    def _unmap_element(self, __object: T):
+        self._contains_ids.remove(__object.id)
+
+        for name, value in __object.indexing_values:
             if value is None:
                 continue
+            if value not in self._indexed_values[name]:
+                continue
 
-            if value in self._attribute_to_object_map[name]:
-                if element is self._attribute_to_object_map[name][value]:
-                    try:
-                        self._attribute_to_object_map[name].pop(value)
-                    except KeyError:
-                        pass
+            try:
+                self._indexed_to_objects[value].remove(__object)
+            except ValueError:
+                continue
 
-    def append(self, element: T, merge_on_conflict: bool = True,
-               merge_into_existing: bool = True, no_hook: bool = False) -> AppendResult:
+            if not len(self._indexed_to_objects[value]):
+                self._indexed_values[name].remove(value)
+
+    def _contained_in_self(self, __object: T) -> bool:
+        if __object.id in self._contains_ids:
+            return True
+
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                return True
+        return False
+
+    def _get_root_collections(self) -> List["Collection"]:
+        if not len(self.upper_collections):
+            return [self]
+
+        root_collections = []
+        for upper_collection in self.upper_collections:
+            root_collections.extend(upper_collection._get_root_collections())
+        return root_collections
+
+    @property
+    def _is_root(self) -> bool:
+        return len(self.upper_collections) <= 0
+
+    def _contained_in_sub(self, __object: T, break_at_first: bool = True) -> List["Collection"]:
+        results = []
+
+        if self._contained_in_self(__object):
+            return [self]
+
+        for collection in self.contained_collections:
+            results.extend(collection._contained_in_sub(__object, break_at_first=break_at_first))
+            if break_at_first:
+                return results
+
+        return results
+
+    def _get_parents_of_multiple_contained_children(self, __object: T):
+        results = []
+        if len(self.contained_collections) < 2 or self._contained_in_self(__object):
+            return results
+
+        count = 0
+
+        for collection in self.contained_collections:
+            sub_results = collection._get_parents_of_multiple_contained_children(__object)
+
+            if len(sub_results) > 0:
+                count += 1
+                results.extend(sub_results)
+
+        if count >= 2:
+            results.append(self)
+
+        return results
+
+    def _merge_in_self(self, __object: T, from_map: bool = False):
         """
-        :param element:
-        :param merge_on_conflict:
-        :param merge_into_existing:
-        :return did_not_exist:
+        1. find existing objects
+        2. merge into existing object
+        3. remap existing object
         """
-        if element is None:
-            return AppendResult(False, None, False)
-
-        for existing_element in self._data:
-            if element is existing_element:
-                return AppendResult(False, None, False)
-
-        # if the element type has been defined in the initializer it checks if the type matches
-        if self.element_type is not None and not isinstance(element, self.element_type):
-            raise TypeError(f"{type(element)} is not the set type {self.element_type}")
-        
-        # return if the same instance of the object is in the list
-        for existing in self._data:
-            if element is existing:
-                return AppendResult(True, element, True)
-
-        for name, value in element.indexing_values:
-            if value in self._attribute_to_object_map[name]:
-                existing_object = self._attribute_to_object_map[name][value]
-
-                if not merge_on_conflict:
-                    return AppendResult(True, existing_object, False)
-
-                # if the object does already exist
-                # thus merging and don't add it afterward
-                if merge_into_existing:
-                    existing_object.merge(element)
-                    # in case any relevant data has been added (e.g. it remaps the old object)
-                    self.map_element(existing_object)
-                    return AppendResult(True, existing_object, False)
-
-                element.merge(existing_object)
-
-                exists_at = self._data.index(existing_object)
-                self._data[exists_at] = element
-
-                self.unmap_element(existing_object)
-                self.map_element(element)
-                return AppendResult(True, existing_object, False)
-
-        if not no_hook:
-            self.hooks.trigger_event(CollectionHooks.APPEND_NEW, new_object=element)
-        self._data.append(element)
-        self.map_element(element)
-
-        return AppendResult(False, element, False)
-
-    def extend(self, element_list: Iterable[T], merge_on_conflict: bool = True,
-               merge_into_existing: bool = True, no_hook: bool = False):
-        if element_list is None:
+        if __object.id in self._contains_ids:
             return
-        if len(element_list) <= 0:
+
+        existing_object: DatabaseObject = None
+
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                existing_object = self._indexed_to_objects[value][0]
+                if existing_object.id == __object.id:
+                    return None
+
+                break
+
+        if existing_object is None:
+            return None
+
+        existing_object.merge(__object, replace_all_refs=True)
+
+        # just a check if it really worked
+        if existing_object.id != __object.id:
+            raise ValueError("This should NEVER happen. Merging doesn't work.")
+
+        self._map_element(existing_object, from_map=from_map)
+
+    def contains(self, __object: T) -> bool:
+        return len(self._contained_in_sub(__object)) > 0
+
+    def _append(self, __object: T, from_map: bool = False):
+        for attribute, to_sync_with in self.sync_on_append.items():
+            pass
+            to_sync_with.sync_with_other_collection(__object.__getattribute__(attribute))
+
+        self._map_element(__object, from_map=from_map)
+        self._data.append(__object)
+
+    def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
+        if __object is None:
             return
-        if element_list is self:
+        if __object.id in self._contains_ids:
             return
-        for element in element_list:
-            self.append(element, merge_on_conflict=merge_on_conflict, merge_into_existing=merge_into_existing, no_hook=no_hook)
 
-    def sync_collection(self, collection_attribute: str):
-        def on_append(event: Event, new_object: T, *args, **kwargs):
-            new_collection = new_object.__getattribute__(collection_attribute)
-            if self is new_collection:
-                return
+        exists_in_collection = self._contained_in_sub(__object)
+        if len(exists_in_collection) and self is exists_in_collection[0]:
+            # assuming that the object already is contained in the correct collections
+            if not already_is_parent:
+                self._merge_in_self(__object, from_map=from_map)
+            return
 
-            self.extend(new_object.__getattribute__(collection_attribute), no_hook=True)
-            new_object.__setattr__(collection_attribute, self)
+        if not len(exists_in_collection):
+            self._append(__object, from_map=from_map)
+        else:
+            pass
+            exists_in_collection[0]._merge_in_self(__object, from_map=from_map)
 
-        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
+        if not already_is_parent or not self._is_root:
+            for parent_collection in self._get_parents_of_multiple_contained_children(__object):
+                pass
+                parent_collection.append(__object, already_is_parent=True, from_map=from_map)
 
-    def sync_main_collection(self, main_collection: "Collection", collection_attribute: str):
-        def on_append(event: Event, new_object: T, *args, **kwargs):
-            new_collection = new_object.__getattribute__(collection_attribute)
-            if main_collection is new_collection:
-                return
-    
-            main_collection.extend(new_object.__getattribute__(collection_attribute), no_hook=True)
-            new_object.__setattr__(collection_attribute, main_collection)
+    def extend(self, __iterable: Optional[Iterable[T]]):
+        if __iterable is None:
+            return
 
-        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
+        for __object in __iterable:
+            self.append(__object)
 
-    """
-        def on_append(event: Event, new_object: T, *args, **kwargs):
-            new_collection: Collection = new_object.__getattribute__(collection_attribute)
-            if self is new_collection:
-                return
-    
-            self.extend(new_collection.shallow_list, no_hook=False)
-            new_object.__setattr__(collection_attribute, self)
+    def sync_with_other_collection(self, equal_collection: "Collection"):
+        """
+        If two collections always need to have the same values, this can be used.
 
-        self.hooks.add_event_listener(CollectionHooks.APPEND_NEW, on_append)
-    """
+        Internally:
+        1. import the data from other to self
+            - _data
+            - contained_collections
+        2. replace all refs from the other object, with refs from this object
+        """
+        if equal_collection is self:
+            return
+
+        # don't add the elements from the subelements from the other collection.
+        # this will be done in the next step.
+        self.extend(equal_collection._data)
+        # add all submodules
+        for equal_sub_collection in equal_collection.contained_collections:
+            self.contain_collection_inside(equal_sub_collection)
+
+        # now the ugly part
+        # replace all refs of the other element with this one
+        self._risky_merge(equal_collection)
+
+    def contain_collection_inside(self, sub_collection: "Collection"):
+        """
+        This collection will ALWAYS contain everything from the passed in collection
+        """
+        if sub_collection in self.contained_collections:
+            return
+
+        self.contained_collections.append(sub_collection)
+        sub_collection.upper_collections.append(self)
+
+    @property
+    def data(self) -> List[T]:
+        return [*self._data,
+                *(__object for collection in self.contained_collections for __object in collection.shallow_list)]
+
+    def __len__(self) -> int:
+        return len(self._data) + sum(len(collection) for collection in self.contained_collections)
 
     def __iter__(self) -> Iterator[T]:
         for element in self._data:
             yield element
-
-    def __str__(self) -> str:
-        return "\n".join([f"{str(j).zfill(2)}: {i.__repr__()}" for j, i in enumerate(self._data)])
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __getitem__(self, key) -> T:
-        if type(key) != int:
-            return ValueError("key needs to be an integer")
-
-        return self._data[key]
-
-    def __setitem__(self, key, value: T):
-        if type(key) != int:
-            return ValueError("key needs to be an integer")
-
-        old_item = self._data[key]
-        self.unmap_element(old_item)
-        self.map_element(value)
-
-        self._data[key] = value
-
-    @property
-    def shallow_list(self) -> List[T]:
-        """
-        returns a shallow copy of the data list
-        """
-        return self._data.copy()
-    
-    @property
-    def empty(self) -> bool:
-        return len(self._data) == 0
-
-    def clear(self):
-        self.__init__(element_type=self.element_type)
