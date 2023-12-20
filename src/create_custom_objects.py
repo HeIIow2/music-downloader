@@ -13,6 +13,7 @@ from music_kraken.objects.lint_default_factories import lint
 
 lint()
 
+"""
 song = Song(title="Sad Story", isrc="testTest")
 other_song = Song(title="hihi", genre="dsbm")
 
@@ -29,8 +30,8 @@ print(other_song.__dict__)
 
 print(song)
 print(type(song).__dict__["__annotations__"])
+"""
 
-exit()
 only_smile = Artist(
     name="Only Smile",
     source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],

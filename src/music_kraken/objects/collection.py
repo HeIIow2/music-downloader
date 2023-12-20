@@ -144,7 +144,6 @@ class Collection(Generic[T]):
         2. merge into existing object
         3. remap existing object
         """
-        self = self.__self__
         if __object.id in self._contains_ids:
             return
 

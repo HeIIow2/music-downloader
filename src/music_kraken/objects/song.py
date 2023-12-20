@@ -393,23 +393,6 @@ All objects dependent on Artist
 
 
 class Artist(Base):
-    COLLECTION_STRING_ATTRIBUTES = (
-        "feature_song_collection",
-        "main_album_collection",
-        "label_collection",
-        "source_collection"
-    )
-    SIMPLE_STRING_ATTRIBUTES = {
-        "name": None,
-        "unified_name": None,
-        "country": None,
-        "formed_in": ID3Timestamp(),
-        "notes": FormattedText(),
-        "lyrical_themes": [],
-        "general_genre": "",
-        "unformated_location": None,
-    }
-
     name: str
     unified_name: str
     country: Country
@@ -441,7 +424,7 @@ class Artist(Base):
 
         "name": lambda: None,
         "unified_name": lambda: None,
-        "country": Country,
+        "country": lambda: None,
         "unformated_location": lambda: None,
     }
 
