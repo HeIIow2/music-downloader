@@ -5,6 +5,7 @@ import pycountry
 from .parents import OuterProxy
 from .source import Source, SourceCollection
 from .formatted_text import FormattedText
+from .country import Language
 
 
 class Lyrics(OuterProxy):
@@ -12,6 +13,14 @@ class Lyrics(OuterProxy):
     SIMPLE_STRING_ATTRIBUTES = {
         "text": FormattedText(),
         "language": None
+    }
+
+    text: FormattedText
+    language: Language
+
+    _default_factories = {
+        "text": FormattedText,
+        "language": Language.by_alpha_2("en"),
     }
     
     def __init__(

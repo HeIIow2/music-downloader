@@ -54,43 +54,12 @@ class InnerData:
                 self.__setattr__(key, value)
 
 
-class Meta(type):
-    def __new__(meta, classname, bases, classDict):
-        for key, value in classDict.items():
-            if (not key.islower()) or key.startswith("_") or (key.startswith("__") and key.endswith("__")):
-                continue
-
-            if hasattr(value, "__call__") or isinstance(value, property) or isinstance(value, classmethod):
-                continue
-
-            print("hi", type(value))
-            print(key, value)
-
-        new_instance = type.__new__(meta, classname, bases, classDict)
-
-        return new_instance
-
-
-
-class OuterProxy(metaclass=Meta):
+class OuterProxy:
     """
     Wraps the inner data, and provides apis, to naturally access those values.
     """
 
     _default_factories: dict = {}
-
-    def __new__(cls, *args, **kwargs):
-        for key, value in cls.__dict__["__annotations__"].items():
-            if (not key.islower()) or key.startswith("_") or (key.startswith("__") and key.endswith("__")):
-                continue
-
-            if key in cls._default_factories:
-                continue
-
-            cls._default_factories[key] = lambda: None
-
-        return super().__new__(cls)
-
 
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs):
         _automatic_id: bool = False
@@ -106,17 +75,6 @@ class OuterProxy(metaclass=Meta):
         kwargs["automatic_id"] = _automatic_id
         kwargs["id"] = _id
         kwargs["dynamic"] = dynamic
-
-        key: str
-        for key, value in super().__getattribute__("__dict__").items():
-            if (not key.islower()) or key.startswith("_") or (key.startswith("__") and key.endswith("__")):
-                continue
-
-            if hasattr(value, "__call__") or isinstance(value, property) or isinstance(value, classmethod):
-                continue
-
-            print(type(value))
-            print(key, value)
 
         for name, factory in type(self)._default_factories.items():
             if name not in kwargs:

@@ -26,12 +26,11 @@ class Source(OuterProxy):
     url: str
     audio_url: str
 
-    COLLECTION_STRING_ATTRIBUTES = tuple()
-    SIMPLE_STRING_ATTRIBUTES = {
-        "page_enum": None,
-        "url": None,
-        "referer_page": None,
-        "audio_url": None
+    _default_factories = {
+        "page_enum": lambda: None,
+        "referer_page": lambda: None,
+        "url": str,
+        "audio_url": str,
     }
 
     def __init__(self, page_enum: SourcePages, referer_page: SourcePages = None, **kwargs) -> None:

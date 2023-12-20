@@ -22,6 +22,14 @@ class Target(OuterProxy):
     ```
     """
 
+    file: str
+    path: str
+
+    _default_factories = {
+        "file": str,
+        "path": str,
+    }
+
     SIMPLE_STRING_ATTRIBUTES = {
         "_file": None,
         "_path": None

@@ -60,6 +60,11 @@ class Song(Base):
         "main_artist_collection": Collection,
         "album_collection": Collection,
         "feature_artist_collection": Collection,
+
+        "title": lambda: None,
+        "unified_title": lambda: None,
+        "isrc": lambda: None,
+        "genre": lambda: None,
     }
 
     """
@@ -199,7 +204,7 @@ class Album(Base):
         "date": ID3Timestamp(),
         "barcode": None,
         "albumsort": None,
-        "notes": FormattedText()
+        "notes": FormattedText(),
     }
 
     title: str
@@ -227,6 +232,12 @@ class Album(Base):
         "artist_collection": Collection,
         "song_collection": Collection,
         "label_collection": Collection,
+
+        "title": lambda: None,
+        "unified_title": lambda: None,
+        "album_status": lambda: None,
+        "barcode": lambda: None,
+        "albumsort": lambda: None,
     }
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
@@ -421,11 +432,17 @@ class Artist(Base):
         "notes": FormattedText,
         "lyrical_themes": list,
         "general_genre": lambda: "",
+
         "source_collection": SourceCollection,
         "feature_song_collection": Collection,
         "main_album_collection": Collection,
         "contact_collection": Collection,
         "label_collection": Collection,
+
+        "name": lambda: None,
+        "unified_name": lambda: None,
+        "country": Country,
+        "unformated_location": lambda: None,
     }
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
@@ -599,7 +616,10 @@ class Label(Base):
         "album_collection": Collection,
         "current_artist_collection": Collection,
         "source_collection": SourceCollection,
-        "contact_collection": Collection
+        "contact_collection": Collection,
+
+        "name": lambda: None,
+        "unified_name": lambda: None,
     }
 
     def __init__(
