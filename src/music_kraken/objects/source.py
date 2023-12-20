@@ -33,11 +33,14 @@ class Source(OuterProxy):
         "audio_url": str,
     }
 
-    def __init__(self, page_enum: SourcePages, referer_page: SourcePages = None, **kwargs) -> None:
+    def __init__(self, page_enum: SourcePages, url: str, referer_page: SourcePages = None, audio_url: str = None, **kwargs) -> None:
         if referer_page is None:
             referer_page = page_enum
 
-        super().__init__(page_enum=page_enum, referer_page=referer_page, **kwargs)
+        if audio_url is None:
+            audio_url = url
+
+        super().__init__(page_enum=page_enum, url=url, referer_page=referer_page, audio_url=audio_url, **kwargs)
 
     @classmethod
     def match_url(cls, url: str, referer_page: SourcePages) -> Optional["Source"]:

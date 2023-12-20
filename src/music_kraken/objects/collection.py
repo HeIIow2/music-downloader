@@ -8,6 +8,8 @@ T = TypeVar('T', bound=OuterProxy)
 
 
 class Collection(Generic[T]):
+    __is_collection__ = True
+
     _data: List[T]
 
     _indexed_values: Dict[str, set]
@@ -54,7 +56,6 @@ class Collection(Generic[T]):
             self._indexed_values[name].add(value)
             self._indexed_to_objects[value].append(__object)
 
-        print(from_map)
         if not from_map:
             for attribute, new_object in self.contain_given_in_attribute.items():
                 __object.__getattribute__(attribute).contain_collection_inside(new_object)
@@ -181,14 +182,11 @@ class Collection(Generic[T]):
         self._data.append(__object)
 
     def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
-        if __object is None:
-            return
-
-        if __object.id in self._contains_ids:
+        if __object is None or __object.id in self._contains_ids:
             return
 
         exists_in_collection = self._contained_in_sub(__object)
-        if len(exists_in_collection) and self is exists_in_collection[0]:
+        if len(exists_in_collection) > 0 and self is exists_in_collection[0]:
             # assuming that the object already is contained in the correct collections
             if not already_is_parent:
                 self.merge_into_self(__object, from_map=from_map)
@@ -259,5 +257,5 @@ class Collection(Generic[T]):
         return self.__len__() == 0
 
     def __iter__(self) -> Iterator[T]:
-        for element in self._data:
+        for element in self.data:
             yield element

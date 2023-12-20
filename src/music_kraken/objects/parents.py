@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import random
-from collections import defaultdict
+from functools import lru_cache
+
 from typing import Optional, Dict, Tuple, List, Type, Generic, Any, TypeVar
 
 from .metadata import Metadata
@@ -87,11 +88,10 @@ class OuterProxy:
             if isinstance(data_list, list) and name.endswith("_list"):
                 collection_name = name.replace("_list", "_collection")
 
-                if collection_name not in self.__dict__:
-                    continue
-
-                collection = self.__getattribute__(collection_name)
+                collection = self._inner.__getattribute__(collection_name)
                 collection.extend(data_list)
+
+                self._inner.__setattr__(collection_name, collection)
 
     def __init_collections__(self):
         pass
@@ -105,6 +105,9 @@ class OuterProxy:
         :param __name:
         :return:
         """
+
+        if __name.startswith("__"):
+            return super().__getattribute__(__name)
 
         _inner: InnerData = super().__getattribute__("_inner")
         try:
@@ -174,3 +177,18 @@ class OuterProxy:
         """
 
         return []
+
+    @property
+    @lru_cache()
+    def all_collections(self):
+        r = []
+
+        for key in self._default_factories:
+            val = self._inner.__getattribute__(key)
+            if hasattr(val, "__is_collection__"):
+                r.append(val)
+
+        return r
+
+    def __repr__(self):
+        return f"{type(self).__name__}({', '.join(key + ': ' + str(val) for key, val in self.indexing_values)})"

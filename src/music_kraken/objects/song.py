@@ -148,6 +148,7 @@ class Song(Base):
             return main_artists
         return f"{main_artists} feat. {feature_artists}"
 
+    """
     def __str__(self) -> str:
         artist_credit_str = ""
         artist_credits = self.get_artist_credits()
@@ -155,6 +156,7 @@ class Song(Base):
             artist_credit_str = f" by {artist_credits}"
 
         return f"\"{self.title}\"{artist_credit_str}"
+    """
 
     def __repr__(self) -> str:
         return f"Song(\"{self.title}\")"
@@ -519,6 +521,7 @@ class Artist(Base):
 
         return metadata
 
+    """
     def __str__(self, include_notes: bool = False):
         string = self.name or ""
         if include_notes:
@@ -526,6 +529,7 @@ class Artist(Base):
             if plaintext_notes is not None:
                 string += "\n" + plaintext_notes
         return string
+    """
 
     def __repr__(self):
         return f"Artist(\"{self.name}\")"
