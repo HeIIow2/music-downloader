@@ -261,7 +261,7 @@ class YoutubeMusic(SuperYouTube):
         results = []
 
         """
-        cant use fixed indices, because if something has no entries, the list dissappears
+        cant use fixed indices, because if something has no entries, the list disappears
         instead I have to try parse everything, and just reject community playlists and profiles.
         """
 

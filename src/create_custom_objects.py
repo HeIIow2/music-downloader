@@ -130,7 +130,6 @@ for _id, _object in objects_by_id.items():
 
 print(only_smile)
 
-"""
 c = Collection([Song(title="hi"), Song(title="hi2"), Song(title="hi3")])
 c1 = Collection([Song(title="he"), Song(title="hi5")])
 c11 = Collection([Song(title="wow how ultra subby", isrc="hiii")])
@@ -179,4 +178,3 @@ print("b: ", b)
 
 print(c.data)
 print(c._data)
-"""

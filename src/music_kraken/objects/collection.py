@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TypeVar, Generic, Dict, Optional, Iterable, List, Iterator
 from .parents import OuterProxy
 
+
 T = TypeVar('T', bound=OuterProxy)
 
 
@@ -34,7 +35,6 @@ class Collection(Generic[T]):
         # List of collection attributes that should be modified on append
         # Key: collection attribute (str) of appended element
         # Value: main collection to sync to
-        self.sync_on_append: Dict[str, Collection] = sync_on_append or {}
         self.contain_given_in_attribute: Dict[str, Collection] = contain_given_in_attribute or {}
         self.contain_attribute_in_given: Dict[str, Collection] = contain_attribute_in_given or {}
         self.append_object_to_attribute: Dict[str, T] = append_object_to_attribute or {}
@@ -60,11 +60,11 @@ class Collection(Generic[T]):
             for attribute, new_object in self.contain_given_in_attribute.items():
                 __object.__getattribute__(attribute).contain_collection_inside(new_object)
 
-            for attribute, new_object in self.contain_given_in_attribute.items():
+            for attribute, new_object in self.contain_attribute_in_given.items():
                 new_object.contain_collection_inside(__object.__getattribute__(attribute))
 
             for attribute, new_object in self.append_object_to_attribute.items():
-                __object.__getattribute__(attribute).append(new_object, from_map=True)
+                __object.__getattribute__(attribute).append(new_object)
 
     def _unmap_element(self, __object: T):
         self._contains_ids.remove(__object.id)
@@ -94,6 +94,29 @@ class Collection(Generic[T]):
                 return True
         return False
 
+    def _contained_in_sub(self, __object: T, break_at_first: bool = True) -> List[Collection]:
+        """
+        Gets the collection this object is found in, if it is found in any.
+
+        :param __object:
+        :param break_at_first:
+        :return:
+        """
+        results = []
+
+        if self._contained_in_self(__object):
+            return [self]
+
+        print(len(self.children), id(self), ";".join(str(id(i)) for i in self.children))
+        print()
+        for collection in self.children:
+            results.extend(collection._contained_in_sub(__object, break_at_first=break_at_first))
+
+            if break_at_first:
+                return results
+
+        return results
+
     def _get_root_collections(self) -> List[Collection]:
         if not len(self.parents):
             return [self]
@@ -106,19 +129,6 @@ class Collection(Generic[T]):
     @property
     def _is_root(self) -> bool:
         return len(self.parents) <= 0
-
-    def _contained_in_sub(self, __object: T, break_at_first: bool = True) -> List[Collection]:
-        results = []
-
-        if self._contained_in_self(__object):
-            return [self]
-
-        for collection in self.children:
-            results.extend(collection._contained_in_sub(__object, break_at_first=break_at_first))
-            if break_at_first:
-                return results
-
-        return results
 
     def _get_parents_of_multiple_contained_children(self, __object: T):
         results = []
@@ -153,6 +163,7 @@ class Collection(Generic[T]):
         for name, value in __object.indexing_values:
             if value is None:
                 continue
+
             if value in self._indexed_values[name]:
                 existing_object = self._indexed_to_objects[value][0]
                 if existing_object.id == __object.id:
@@ -175,18 +186,16 @@ class Collection(Generic[T]):
         return len(self._contained_in_sub(__object)) > 0
 
     def _append(self, __object: T, from_map: bool = False):
-        for attribute, to_sync_with in self.sync_on_append.items():
-            to_sync_with.sync_with_other_collection(__object.__getattribute__(attribute))
-
         self._map_element(__object, from_map=from_map)
         self._data.append(__object)
 
     def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
+        print(__object)
         if __object is None or __object.id in self._contains_ids:
             return
 
         exists_in_collection = self._contained_in_sub(__object)
-        if len(exists_in_collection) > 0 and self is exists_in_collection[0]:
+        if len(exists_in_collection) and self is exists_in_collection[0]:
             # assuming that the object already is contained in the correct collections
             if not already_is_parent:
                 self.merge_into_self(__object, from_map=from_map)
@@ -230,15 +239,11 @@ class Collection(Generic[T]):
         for equal_sub_collection in equal_collection.children:
             self.contain_collection_inside(equal_sub_collection)
 
-        # now the ugly part
-        # replace all refs of the other element with this one
-        self = self._risky_merge(equal_collection)
-
-    def contain_collection_inside(self, sub_collection: "Collection"):
+    def contain_collection_inside(self, sub_collection: Collection):
         """
         This collection will ALWAYS contain everything from the passed in collection
         """
-        if sub_collection in self.children:
+        if self is sub_collection or sub_collection in self.children:
             return
 
         self.children.append(sub_collection)
@@ -257,5 +262,5 @@ class Collection(Generic[T]):
         return self.__len__() == 0
 
     def __iter__(self) -> Iterator[T]:
-        for element in self.data:
+        for element in self._data:
             yield element
