@@ -306,9 +306,7 @@ class Bandcamp(Page):
         track_lyrics = soup.find("div", {"class": "lyricsText"})
         if track_lyrics:
             self.LOGGER.debug(" Lyrics retrieved..")
-            return [Lyrics(FormattedText(
-                html=track_lyrics.prettify()
-            ), pycountry.languages.get(alpha_2="en"))]
+            return [Lyrics(text=FormattedText(html=track_lyrics.prettify()))]
         
         return []
         

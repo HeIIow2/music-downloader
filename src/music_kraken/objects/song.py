@@ -290,9 +290,7 @@ class Album(Base):
 
     @property
     def options(self) -> List[P]:
-        options = self.artist_collection.shallow_list
-        options.append(self)
-        options.extend(self.song_collection)
+        options = [*self.artist_collection, self, *self.song_collection]
 
         return options
 

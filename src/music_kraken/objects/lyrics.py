@@ -18,23 +18,11 @@ class Lyrics(OuterProxy):
     text: FormattedText
     language: Language
 
+    source_collection: SourceCollection
+
     _default_factories = {
         "text": FormattedText,
-        "language": Language.by_alpha_2("en"),
+        "language": lambda: Language.by_alpha_2("en"),
+
+        "source_collection": SourceCollection,
     }
-    
-    def __init__(
-            self,
-            text: FormattedText,
-            language: pycountry.Languages = pycountry.languages.get(alpha_2="en"),
-            _id: str = None,
-            dynamic: bool = False,
-            source_list: List[Source] = None,
-            **kwargs
-    ) -> None:
-        super().__init__(_id=_id, dynamic=dynamic, **kwargs)
-
-        self.text: FormattedText = text or FormattedText()
-        self.language: pycountry.Languages = language
-
-        self.source_collection: SourceCollection = SourceCollection(source_list)
