@@ -41,6 +41,7 @@ if DEBUG_PAGES:
     ALL_PAGES = {DEBUGGING_PAGE}
     AUDIO_PAGES = ALL_PAGES.union(AUDIO_PAGES)
 
+
 class Pages:
     def __init__(self, exclude_pages: Set[Type[Page]] = None, exclude_shady: bool = False) -> None:
         # initialize all page instances

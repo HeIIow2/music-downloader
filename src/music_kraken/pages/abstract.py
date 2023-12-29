@@ -174,34 +174,8 @@ class Page:
     
     # set this to true, if all song details can also be fetched by fetching album details
     NO_ADDITIONAL_DATA_FROM_SONG = False
-    
-        
-    def __init__(self):
-        super().__init__()
-    
-    """
-    CODE I NEED WHEN I START WITH MULTITHREADING
-    
-    def __init__(self, end_event: EndThread, search_queue: Queue, search_result_queue: Queue):
-        self.end_event = end_event
-        
-        self.search_queue = search_queue
-        self.search_result_queue = search_result_queue
-        
-        super().__init__()
-        
-    @property
-    def _empty_working_queues(self):
-        return self.search_queue.empty()
 
-    def run(self) -> None:
-        while bool(self.end_event) and self._empty_working_queues:
-            if not self.search_queue.empty():
-                self.search(self.search_queue.get())
-                self.search_result_queue.put(FinishedSearch())
-                continue
-    """
-    
+
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return None
       

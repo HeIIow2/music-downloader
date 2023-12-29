@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Set, Tuple, Optional
+from typing import List, Dict, Set, Tuple, Optional, Iterable
 from urllib.parse import urlparse
 
 from ..utils.enums.source import SourcePages, SourceTypes
@@ -12,14 +12,6 @@ from .collection import Collection
 
 
 class Source(OuterProxy):
-    """
-    create somehow like that
-    ```python
-    # url won't be a valid one due to it being just an example
-    Source(src="youtube", url="https://youtu.be/dfnsdajlhkjhsd")
-    ```
-    """
-
     page_enum: SourcePages
     referer_page: SourcePages
 
@@ -36,9 +28,6 @@ class Source(OuterProxy):
     def __init__(self, page_enum: SourcePages, url: str, referer_page: SourcePages = None, audio_url: str = None, **kwargs) -> None:
         if referer_page is None:
             referer_page = page_enum
-
-        if audio_url is None:
-            audio_url = url
 
         super().__init__(page_enum=page_enum, url=url, referer_page=referer_page, audio_url=audio_url, **kwargs)
 
@@ -120,16 +109,15 @@ class Source(OuterProxy):
 
 
 class SourceCollection(Collection):
-    def __init__(self, source_list: List[Source] = None):
-        source_list = source_list if source_list is not None else []
+    def __init__(self, data: Optional[Iterable[Source]] = None, **kwargs):
         self._page_to_source_list: Dict[SourcePages, List[Source]] = defaultdict(list)
 
-        super().__init__(data=source_list)
+        super().__init__(data=data, **kwargs)
 
-    def map_element(self, source: Source):
-        super().map_element(source)
+    def _map_element(self, __object: Source, **kwargs):
+        super()._map_element(__object, **kwargs)
 
-        self._page_to_source_list[source.page_enum].append(source)
+        self._page_to_source_list[__object.page_enum].append(__object)
         
     @property
     def source_pages(self) -> Set[SourcePages]:

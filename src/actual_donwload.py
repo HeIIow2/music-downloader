@@ -43,8 +43,7 @@ if __name__ == "__main__":
 
     bandcamp_test = [
         "s: #a Ghost Bath",
-        "3",
-        "d: 0"
+        "0"
     ]
 
     

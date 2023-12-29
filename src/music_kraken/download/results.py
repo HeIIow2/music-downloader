@@ -34,9 +34,6 @@ class Results:
         for index, music_object in self._by_index.items():
             if index == exclude_index:
                 continue
-            
-            music_object.strip_details()
-
 
 class SearchResults(Results):
     def __init__(

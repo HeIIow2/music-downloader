@@ -20,4 +20,6 @@ from .collection import Collection
 from .country import Country
 from .contact import Contact
 
-from .parents import OuterProxy as DatabaseObject
+from .parents import OuterProxy
+
+DatabaseObject = TypeVar('T', bound=OuterProxy)

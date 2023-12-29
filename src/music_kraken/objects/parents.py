@@ -136,7 +136,7 @@ class OuterProxy:
     def __eq__(self, other: Any):
         return self.__hash__() == other.__hash__()
 
-    def merge(self, __other: OuterProxy, override: bool = False):
+    def merge(self, __other: Optional[OuterProxy], override: bool = False):
         """
         1. merges the data of __other in self
         2. replaces the data of __other with the data of self
@@ -145,6 +145,10 @@ class OuterProxy:
         :param override:
         :return:
         """
+        if __other is None:
+            _ = "debug"
+            return
+
         self._inner.__merge__(__other._inner, override=override)
         __other._inner = self._inner
 
