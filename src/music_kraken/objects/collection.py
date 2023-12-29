@@ -107,8 +107,6 @@ class Collection(Generic[T]):
         if self._contained_in_self(__object):
             return [self]
 
-        print(len(self.children), id(self), ";".join(str(id(i)) for i in self.children))
-        print()
         for collection in self.children:
             results.extend(collection._contained_in_sub(__object, break_at_first=break_at_first))
 
@@ -186,11 +184,11 @@ class Collection(Generic[T]):
         return len(self._contained_in_sub(__object)) > 0
 
     def _append(self, __object: T, from_map: bool = False):
+        # print(self, __object)
         self._map_element(__object, from_map=from_map)
         self._data.append(__object)
 
     def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
-        print(__object)
         if __object is None or __object.id in self._contains_ids:
             return
 
@@ -264,3 +262,6 @@ class Collection(Generic[T]):
     def __iter__(self) -> Iterator[T]:
         for element in self._data:
             yield element
+
+    def __merge__(self, __other: Collection, override: bool = False):
+        self.extend(__other.shallow_list)

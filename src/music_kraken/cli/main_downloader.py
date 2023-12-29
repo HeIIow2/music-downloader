@@ -295,9 +295,6 @@ class Downloader:
         page: Type[Page]
         music_object: DatabaseObject
         
-        if self.current_results is not None:
-            self.current_results.delete_details(index)
-        
         try:
             page, music_object = self.current_results.get_music_object_by_index(index)
         except KeyError:
@@ -307,7 +304,9 @@ class Downloader:
             return
         
         self.pages.fetch_details(music_object)
-        
+
+        print(music_object)
+        print(music_object.options)
         self.set_current_options(PageResults(page, music_object.options))
         
         self.print_current_options()

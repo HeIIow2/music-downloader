@@ -47,7 +47,7 @@ class InnerData:
             # if the object of value implemented __merge__, it merges
             existing = self.__getattribute__(key)
             if hasattr(type(existing), "__merge__"):
-                existing.merge_into_self(value, override)
+                existing.__merge__(value, override)
                 continue
 
             # override the existing value if requested

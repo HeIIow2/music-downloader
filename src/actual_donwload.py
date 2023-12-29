@@ -48,3 +48,4 @@ if __name__ == "__main__":
 
     
     music_kraken.cli.download(genre="test", command_list=bandcamp_test, process_metadata_anyway=True)
+    _ = "debug"

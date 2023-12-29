@@ -446,6 +446,12 @@ class Artist(Base):
             "current_artist_collection": self
         }
 
+    @property
+    def options(self) -> List[P]:
+        options = [self, *self.main_album_collection.shallow_list, *self.feature_album]
+        print(options)
+        return options
+
     def update_albumsort(self):
         """
         This updates the albumsort attributes, of the albums in
