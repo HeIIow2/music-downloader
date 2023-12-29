@@ -31,7 +31,7 @@ print(other_song.__dict__)
 print(song)
 print(type(song).__dict__["__annotations__"])
 """
-
+"""
 only_smile = Artist(
     name="Only Smile",
     source_list=[Source(SourcePages.BANDCAMP, "https://onlysmile.bandcamp.com/")],
@@ -178,3 +178,4 @@ print("b: ", b)
 
 print(c.data)
 print(c._data)
+"""

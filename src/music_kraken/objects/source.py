@@ -12,24 +12,25 @@ from .collection import Collection
 
 
 class Source(OuterProxy):
+    url: str
+
     page_enum: SourcePages
     referer_page: SourcePages
 
-    url: str
     audio_url: str
 
     _default_factories = {
-        "page_enum": lambda: None,
-        "referer_page": lambda: None,
-        "url": str,
-        "audio_url": str,
+        "audio_url": lambda: None,
     }
 
-    def __init__(self, page_enum: SourcePages, url: str, referer_page: SourcePages = None, audio_url: str = None, **kwargs) -> None:
+    # This is automatically generated
+    def __init__(self, url: str, page_enum: SourcePages, referer_page: SourcePages = None, audio_url: str = None,
+                 **kwargs) -> None:
+
         if referer_page is None:
             referer_page = page_enum
 
-        super().__init__(page_enum=page_enum, url=url, referer_page=referer_page, audio_url=audio_url, **kwargs)
+        super().__init__(url=url, page_enum=page_enum, referer_page=referer_page, audio_url=audio_url, **kwargs)
 
     @classmethod
     def match_url(cls, url: str, referer_page: SourcePages) -> Optional["Source"]:

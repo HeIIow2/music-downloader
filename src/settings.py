@@ -1,6 +1,14 @@
-from pathlib import Path
-import tomllib
 
 
-data = tomllib.load(Path("/home/lars/music-kraken.conf").open("r"))
-print(data)
+class Foo:
+    class_attr: str
+    class_attr_two: str
+
+    def __init__(self, foo: str, bar) -> None: ...
+
+
+
+
+f = Foo("fdfasdf", ["fsd", "fsedf"])
+
+print(f)

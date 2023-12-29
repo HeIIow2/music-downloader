@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Tuple, TextIO
+from typing import List, Tuple, TextIO, Union
 import logging
 
 import requests
@@ -22,39 +24,25 @@ class Target(OuterProxy):
     ```
     """
 
-    file: str
-    path: str
+    file_path: Path
 
     _default_factories = {
-        "file": str,
-        "path": str,
     }
 
-    SIMPLE_STRING_ATTRIBUTES = {
-        "_file": None,
-        "_path": None
-    }
-    COLLECTION_STRING_ATTRIBUTES = tuple()
+    # This is automatically generated
+    def __init__(self, file_path: Union[Path, str], relative_to_music_dir: bool = False, **kwargs) -> None:
+        if not isinstance(file_path, Path):
+            file_path = Path(file_path)
 
-    def __init__(
-            self,
-            file: str = None,
-            path: str = None,
-            dynamic: bool = False,
-            relative_to_music_dir: bool = False
-    ) -> None:
-        super().__init__(dynamic=dynamic)
-        self._file: Path = Path(fit_to_file_system(file))
-        self._path: Path = fit_to_file_system(Path(main_settings["music_directory"], path) if relative_to_music_dir else Path(path))
+        if relative_to_music_dir:
+            file_path = Path(main_settings["music_directory"], file_path)
+
+        super().__init__(file_path=fit_to_file_system(file_path), **kwargs)
 
         self.is_relative_to_music_dir: bool = relative_to_music_dir
 
     def __repr__(self) -> str:
         return str(self.file_path)
-
-    @property
-    def file_path(self) -> Path:
-        return Path(self._path, self._file)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -67,8 +55,8 @@ class Target(OuterProxy):
     @property
     def size(self) -> int:
         """
-        returns the size the downloaded autio takes up in bytes
-        returns 0 if the file doesn't exsit
+        returns the size the downloaded audio takes up in bytes
+        returns 0 if the file doesn't exist
         """
         if not self.exists:
             return 0
@@ -78,7 +66,7 @@ class Target(OuterProxy):
     def create_path(self):
         self._path.mkdir(parents=True, exist_ok=True)
 
-    def copy_content(self, copy_to: "Target"):
+    def copy_content(self, copy_to: Target):
         if not self.exists:
             LOGGER.warning(f"No file exists at: {self.file_path}")
             return

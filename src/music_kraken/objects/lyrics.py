@@ -9,12 +9,6 @@ from .country import Language
 
 
 class Lyrics(OuterProxy):
-    COLLECTION_STRING_ATTRIBUTES = ("source_collection",)
-    SIMPLE_STRING_ATTRIBUTES = {
-        "text": FormattedText(),
-        "language": None
-    }
-
     text: FormattedText
     language: Language
 
@@ -26,3 +20,8 @@ class Lyrics(OuterProxy):
 
         "source_collection": SourceCollection,
     }
+
+    # This is automatically generated
+    def __init__(self, text: FormattedText = None, language: Language = None, source_list: SourceCollection = None,
+                 **kwargs) -> None:
+        super().__init__(text=text, language=language, source_list=source_list, **kwargs)

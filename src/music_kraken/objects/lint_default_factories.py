@@ -17,11 +17,13 @@ def print_lint_res(missing_values: dict):
         print(f'\t"{key}": {value},')
     print("}")
 
+# def __init__(self, foo: str, bar) -> None: ...
 
 def lint_type(cls: T):
+    all_values: dict = {}
     missing_values: dict = {}
 
-    for key, value in cls.__dict__["__annotations__"].items():
+    for key, value in cls.__annotations__.items():
         if value is None:
             continue
 
@@ -57,6 +59,34 @@ def lint_type(cls: T):
         print()
     else:
         print(f"Everything is fine at {cls.__name__}")
+
+    p = []
+    s = []
+    for key, value in cls.__annotations__.items():
+        has_default = key in cls._default_factories
+
+        if not isinstance(value, str):
+            value = value.__name__
+
+        if key.endswith("_collection"):
+            key = key.replace("_collection", "_list")
+
+            if isinstance(value, str):
+                if value.startswith("Collection[") and value.endswith("]"):
+                    value = value.replace("Collection", "List")
+
+        if isinstance(value, str) and has_default:
+            value = value + " = None"
+
+        p.append(f'{key}: {value}')
+        s.append(f'{key}={key}')
+    p.append("**kwargs")
+    s.append("**kwargs")
+
+    print("# This is automatically generated")
+    print(f"def __init__(self, {', '.join(p)}) -> None:")
+    print(f"\tsuper().__init__({', '.join(s)})")
+    print()
 
 
 def lint():

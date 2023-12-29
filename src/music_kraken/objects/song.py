@@ -61,43 +61,24 @@ class Song(Base):
         "album_collection": Collection,
         "feature_artist_collection": Collection,
 
-        "title": lambda: None,
         "unified_title": lambda: None,
         "isrc": lambda: None,
         "genre": lambda: None,
     }
 
-    """
-    COLLECTION_STRING_ATTRIBUTES = (
-        "lyrics_collection", "album_collection", "main_artist_collection", "feature_artist_collection",
-        "source_collection")
-    SIMPLE_STRING_ATTRIBUTES = {
-        "title": None,
-        "unified_title": None,
-        "isrc": None,
-        "length": None,
-        "tracksort": 0,
-        "genre": None,
-        "notes": FormattedText()
-    }
-    """
+    def __init__(self, title: str, unified_title: str = None, isrc: str = None, length: int = None, genre: str = None,
+                 note: FormattedText = None, source_list: SourceCollection = None, target_list: List[Target] = None,
+                 lyrics_list: List[Lyrics] = None, main_artist_list: List[Artist] = None,
+                 feature_artist_list: List[Artist] = None, album_list: List[Album] = None, **kwargs) -> None:
+        super().__init__(title=title, unified_title=unified_title, isrc=isrc, length=length, genre=genre, note=note,
+                         source_list=source_list, target_list=target_list, lyrics_list=lyrics_list,
+                         main_artist_list=main_artist_list, feature_artist_list=feature_artist_list,
+                         album_list=album_list, **kwargs)
+
+
     
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
-    """
-    title: str = None,
-    unified_title: str = None,
-    isrc: str = None,
-    length: int = None,
-    tracksort: int = None,
-    genre: str = None,
-    source_list: List[Source] = None,
-    target_list: List[Target] = None,
-    lyrics_list: List[Lyrics] = None,
-    album_list: List['Album'] = None,
-    main_artist_list: List['Artist'] = None,
-    feature_artist_list: List['Artist'] = None,
-    notes: FormattedText = None,
-    """
+
     def __init_collections__(self) -> None:
         self.album_collection.contain_given_in_attribute = {
             "artist_collection": self.main_artist_collection,
@@ -196,19 +177,6 @@ All objects dependent on Album
 
 
 class Album(Base):
-    COLLECTION_STRING_ATTRIBUTES = ("label_collection", "artist_collection", "song_collection")
-    SIMPLE_STRING_ATTRIBUTES = {
-        "title": None,
-        "unified_title": None,
-        "album_status": None,
-        "album_type": AlbumType.OTHER,
-        "language": None,
-        "date": ID3Timestamp(),
-        "barcode": None,
-        "albumsort": None,
-        "notes": FormattedText(),
-    }
-
     title: str
     unified_title: str
     album_status: AlbumStatus
@@ -225,6 +193,11 @@ class Album(Base):
     label_collection: Collection[Label]
 
     _default_factories = {
+        "unified_title": lambda: None,
+        "album_status": lambda: None,
+        "barcode": lambda: None,
+        "albumsort": lambda: None,
+
         "album_type": lambda: AlbumType.OTHER,
         "language": lambda: Language.by_alpha_2("en"),
         "date": ID3Timestamp,
@@ -235,12 +208,18 @@ class Album(Base):
         "song_collection": Collection,
         "label_collection": Collection,
 
-        "title": lambda: None,
-        "unified_title": lambda: None,
-        "album_status": lambda: None,
-        "barcode": lambda: None,
-        "albumsort": lambda: None,
     }
+
+    # This is automatically generated
+    def __init__(self, title: str, unified_title: str = None, album_status: AlbumStatus = None,
+                 album_type: AlbumType = None, language: Language = None, date: ID3Timestamp = None,
+                 barcode: str = None, albumsort: int = None, notes: FormattedText = None,
+                 source_list: SourceCollection = None, artist_list: List[Artist] = None, song_list: List[Song] = None,
+                 label_list: List[Label] = None, **kwargs) -> None:
+        super().__init__(title=title, unified_title=unified_title, album_status=album_status, album_type=album_type,
+                         language=language, date=date, barcode=barcode, albumsort=albumsort, notes=notes,
+                         source_list=source_list, artist_list=artist_list, song_list=song_list, label_list=label_list,
+                         **kwargs)
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("artist_collection", "label_collection")
@@ -411,6 +390,10 @@ class Artist(Base):
     label_collection: Collection[Label]
 
     _default_factories = {
+        "unified_name": lambda: None,
+        "country": lambda: None,
+        "unformated_location": lambda: None,
+
         "formed_in": ID3Timestamp,
         "notes": FormattedText,
         "lyrical_themes": list,
@@ -421,12 +404,19 @@ class Artist(Base):
         "main_album_collection": Collection,
         "contact_collection": Collection,
         "label_collection": Collection,
-
-        "name": lambda: None,
-        "unified_name": lambda: None,
-        "country": lambda: None,
-        "unformated_location": lambda: None,
     }
+
+    # This is automatically generated
+    def __init__(self, name: str, unified_name: str = None, country: Country = None, formed_in: ID3Timestamp = None,
+                 notes: FormattedText = None, lyrical_themes: List[str] = None, general_genre: str = None,
+                 unformated_location: str = None, source_list: SourceCollection = None,
+                 contact_list: List[Contact] = None, feature_song_list: List[Song] = None,
+                 main_album_list: List[Album] = None, label_list: List[Label] = None, **kwargs) -> None:
+        super().__init__(name=name, unified_name=unified_name, country=country, formed_in=formed_in, notes=notes,
+                         lyrical_themes=lyrical_themes, general_genre=general_genre,
+                         unformated_location=unformated_location, source_list=source_list, contact_list=contact_list,
+                         feature_song_list=feature_song_list, main_album_list=main_album_list, label_list=label_list,
+                         **kwargs)
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("label_collection", )
@@ -609,33 +599,15 @@ class Label(Base):
         "source_collection": SourceCollection,
         "contact_collection": Collection,
 
-        "name": lambda: None,
         "unified_name": lambda: None,
     }
 
-    def __init__(
-            self,
-            _id: int = None,
-            dynamic: bool = False,
-            name: str = None,
-            unified_name: str = None,
-            notes: FormattedText = None,
-            album_list: List[Album] = None,
-            current_artist_list: List[Artist] = None,
-            source_list: List[Source] = None,
-            **kwargs
-    ):
-        Base.__init__(self, _id=_id, dynamic=dynamic, **kwargs)
-
-        self.name: str = name
-        self.unified_name: str = unified_name
-        if unified_name is None and name is not None:
-            self.unified_name = unify(name)
-        self.notes = notes or FormattedText()
-
-        self.source_collection: SourceCollection = SourceCollection(source_list)
-        self.album_collection: Collection[Album] = Collection(data=album_list, element_type=Album)
-        self.current_artist_collection: Collection[Artist] = Collection(data=current_artist_list, element_type=Artist)
+    def __init__(self, name: str, unified_name: str = None, notes: FormattedText = None,
+                 source_list: SourceCollection = None, contact_list: List[Contact] = None,
+                 album_list: List[Album] = None, current_artist_list: List[Artist] = None, **kwargs) -> None:
+        super().__init__(name=name, unified_name=unified_name, notes=notes, source_list=source_list,
+                         contact_list=contact_list, album_list=album_list, current_artist_list=current_artist_list,
+                         **kwargs)
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
