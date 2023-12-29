@@ -184,7 +184,7 @@ class Collection(Generic[T]):
         return len(self._contained_in_sub(__object)) > 0
 
     def _append(self, __object: T, from_map: bool = False):
-        # print(self, __object)
+        print(self, __object)
         self._map_element(__object, from_map=from_map)
         self._data.append(__object)
 
@@ -264,4 +264,5 @@ class Collection(Generic[T]):
             yield element
 
     def __merge__(self, __other: Collection, override: bool = False):
+        print(__other)
         self.extend(__other.shallow_list)

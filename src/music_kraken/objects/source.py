@@ -24,7 +24,7 @@ class Source(OuterProxy):
     }
 
     # This is automatically generated
-    def __init__(self, url: str, page_enum: SourcePages, referer_page: SourcePages = None, audio_url: str = None,
+    def __init__(self, page_enum: SourcePages, url: str, referer_page: SourcePages = None, audio_url: str = None,
                  **kwargs) -> None:
 
         if referer_page is None:

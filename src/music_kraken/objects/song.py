@@ -61,15 +61,18 @@ class Song(Base):
         "album_collection": Collection,
         "feature_artist_collection": Collection,
 
+        "title": lambda: None,
         "unified_title": lambda: None,
         "isrc": lambda: None,
         "genre": lambda: None,
     }
 
-    def __init__(self, title: str, unified_title: str = None, isrc: str = None, length: int = None, genre: str = None,
-                 note: FormattedText = None, source_list: SourceCollection = None, target_list: List[Target] = None,
-                 lyrics_list: List[Lyrics] = None, main_artist_list: List[Artist] = None,
-                 feature_artist_list: List[Artist] = None, album_list: List[Album] = None, **kwargs) -> None:
+    def __init__(self, title: str = None, unified_title: str = None, isrc: str = None, length: int = None,
+                 genre: str = None, note: FormattedText = None, source_list: SourceCollection = None,
+                 target_list: List[Target] = None, lyrics_list: List[Lyrics] = None,
+                 main_artist_list: List[Artist] = None, feature_artist_list: List[Artist] = None,
+                 album_list: List[Album] = None, **kwargs) -> None:
+
         super().__init__(title=title, unified_title=unified_title, isrc=isrc, length=length, genre=genre, note=note,
                          source_list=source_list, target_list=target_list, lyrics_list=lyrics_list,
                          main_artist_list=main_artist_list, feature_artist_list=feature_artist_list,
@@ -193,6 +196,7 @@ class Album(Base):
     label_collection: Collection[Label]
 
     _default_factories = {
+        "title": lambda: None,
         "unified_title": lambda: None,
         "album_status": lambda: None,
         "barcode": lambda: None,
@@ -211,7 +215,7 @@ class Album(Base):
     }
 
     # This is automatically generated
-    def __init__(self, title: str, unified_title: str = None, album_status: AlbumStatus = None,
+    def __init__(self, title: str = None, unified_title: str = None, album_status: AlbumStatus = None,
                  album_type: AlbumType = None, language: Language = None, date: ID3Timestamp = None,
                  barcode: str = None, albumsort: int = None, notes: FormattedText = None,
                  source_list: SourceCollection = None, artist_list: List[Artist] = None, song_list: List[Song] = None,
@@ -390,6 +394,7 @@ class Artist(Base):
     label_collection: Collection[Label]
 
     _default_factories = {
+        "name": lambda: None,
         "unified_name": lambda: None,
         "country": lambda: None,
         "unformated_location": lambda: None,
@@ -407,11 +412,12 @@ class Artist(Base):
     }
 
     # This is automatically generated
-    def __init__(self, name: str, unified_name: str = None, country: Country = None, formed_in: ID3Timestamp = None,
-                 notes: FormattedText = None, lyrical_themes: List[str] = None, general_genre: str = None,
-                 unformated_location: str = None, source_list: SourceCollection = None,
+    def __init__(self, name: str = None, unified_name: str = None, country: Country = None,
+                 formed_in: ID3Timestamp = None, notes: FormattedText = None, lyrical_themes: List[str] = None,
+                 general_genre: str = None, unformated_location: str = None, source_list: SourceCollection = None,
                  contact_list: List[Contact] = None, feature_song_list: List[Song] = None,
                  main_album_list: List[Album] = None, label_list: List[Label] = None, **kwargs) -> None:
+
         super().__init__(name=name, unified_name=unified_name, country=country, formed_in=formed_in, notes=notes,
                          lyrical_themes=lyrical_themes, general_genre=general_genre,
                          unformated_location=unformated_location, source_list=source_list, contact_list=contact_list,
@@ -598,11 +604,11 @@ class Label(Base):
         "current_artist_collection": Collection,
         "source_collection": SourceCollection,
         "contact_collection": Collection,
-
+        "name": lambda: None,
         "unified_name": lambda: None,
     }
 
-    def __init__(self, name: str, unified_name: str = None, notes: FormattedText = None,
+    def __init__(self, name: str = None, unified_name: str = None, notes: FormattedText = None,
                  source_list: SourceCollection = None, contact_list: List[Contact] = None,
                  album_list: List[Album] = None, current_artist_list: List[Artist] = None, **kwargs) -> None:
         super().__init__(name=name, unified_name=unified_name, notes=notes, source_list=source_list,

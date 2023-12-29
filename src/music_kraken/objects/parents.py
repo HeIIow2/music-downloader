@@ -38,7 +38,7 @@ class InnerData:
         :return:
         """
 
-        for key, value in __other.__dict__.items():
+        for key, value in __other.__dict__.copy().items():
             # just set the other value if self doesn't already have it
             if key not in self.__dict__:
                 self.__setattr__(key, value)
@@ -78,20 +78,25 @@ class OuterProxy:
         kwargs["dynamic"] = dynamic
 
         for name, factory in type(self)._default_factories.items():
-            if name not in kwargs:
+            if kwargs.get(name, None) is None:
                 kwargs[name] = factory()
+
+        collection_data: Dict[str, list] = {}
+        for name, value in kwargs.copy().items():
+            if isinstance(value, list) and name.endswith("_list"):
+                collection_name = name.replace("_list", "_collection")
+                collection_data[collection_name] = value
+
+                del kwargs[name]
 
         self._inner: InnerData = InnerData(**kwargs)
         self.__init_collections__()
 
-        for name, data_list in kwargs.items():
-            if isinstance(data_list, list) and name.endswith("_list"):
-                collection_name = name.replace("_list", "_collection")
+        for name, data_list in collection_data.items():
+            collection = self._inner.__getattribute__(name)
+            collection.extend(data_list)
 
-                collection = self._inner.__getattribute__(collection_name)
-                collection.extend(data_list)
-
-                self._inner.__setattr__(collection_name, collection)
+            self._inner.__setattr__(name, collection)
 
     def __init_collections__(self):
         pass
@@ -106,7 +111,7 @@ class OuterProxy:
         :return:
         """
 
-        if __name.startswith("__"):
+        if __name.startswith("_"):
             return super().__getattribute__(__name)
 
         _inner: InnerData = super().__getattribute__("_inner")
