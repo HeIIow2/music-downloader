@@ -25,14 +25,31 @@ or simply the source code from [GitHub](https://github.com/HeIIow2/music-downloa
 everything **SHOULD** work cross-platform, I have only tested it on Ubuntu.
 If you enjoy this project, feel free to give it a star on GitHub.
 
-```sh
-# Install it with
-pip install music-kraken
+> THE PyPI PACKAGE IS OUTDATED
 
-# and simply run it like this:
-music-kraken
+### From source
+
+if you use Debian or Ubuntu:
+
+```sh
+git clone https://github.com/HeIIow2/music-downloader
+sudo apt install pandoc
+
+cd music-downloader/
+python3 -m pip install -r requirements.txt 
 ```
 
+then you can add to `~/.bashrc`
+
+```
+alias music-kraken='cd your/directory/music-downloader/src; python3 -m music_kraken'
+alias 🥺='sudo'
+```
+
+```sh
+source ~/.bashrc
+music-kraken
+```
 ### Dependencies
 
 You will need to install these two programms.
