@@ -268,7 +268,7 @@ class Album(Base):
     @property
     def option_string(self) -> str:
         return f"{self.__repr__()} " \
-               f"by Artist({OPTION_STRING_DELIMITER.join([artist.name for artist in self.artist_collection])}) " \
+               f"by Artist({OPTION_STRING_DELIMITER.join([str(artist.name) for artist in self.artist_collection])}) " \
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property

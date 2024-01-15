@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TypeVar, Generic, Dict, Optional, Iterable, List, Iterator
+from typing import TypeVar, Generic, Dict, Optional, Iterable, List, Iterator, Tuple
 from .parents import OuterProxy
-
 
 T = TypeVar('T', bound=OuterProxy)
 
@@ -47,6 +46,9 @@ class Collection(Generic[T]):
         self.extend(data)
 
     def _map_element(self, __object: T, from_map: bool = False):
+        if __object.id in self._contains_ids:
+            return
+
         self._contains_ids.add(__object.id)
 
         for name, value in __object.indexing_values:
@@ -67,7 +69,8 @@ class Collection(Generic[T]):
                 __object.__getattribute__(attribute).append(new_object)
 
     def _unmap_element(self, __object: T):
-        self._contains_ids.remove(__object.id)
+        if __object.id in self._contains_ids:
+            self._contains_ids.remove(__object.id)
 
         for name, value in __object.indexing_values:
             if value is None:
@@ -188,10 +191,53 @@ class Collection(Generic[T]):
         self._map_element(__object, from_map=from_map)
         self._data.append(__object)
 
+    def _find_object_in_self(self, __object: T) -> Optional[T]:
+        for name, value in __object.indexing_values:
+            if value is None:
+                continue
+            if value in self._indexed_values[name]:
+                return self._indexed_to_objects[value][0]
+
+    def _find_object(self, __object: T) -> Tuple[Collection[T], Optional[T]]:
+        other_object = self._find_object_in_self(__object)
+        if other_object is not None:
+            return self, other_object
+
+        for c in self.children:
+            o, other_object = c._find_object(__object)
+            if other_object is not None:
+                return o, other_object
+
+        return self, None
+
     def append(self, __object: Optional[T], already_is_parent: bool = False, from_map: bool = False):
+        """
+        If an object, that represents the same entity exists in a relevant collection,
+        merge into this object. (and remap)
+        Else append to this collection.
+
+        :param __object:
+        :param already_is_parent:
+        :param from_map:
+        :return:
+        """
+
         if __object is None or __object.id in self._contains_ids:
             return
 
+        append_to, existing_object = self._find_object(__object)
+
+        if existing_object is None:
+            # append
+            append_to._data.append(__object)
+        else:
+            # merge
+            append_to._unmap_element(existing_object)
+            existing_object.merge(__object)
+
+        append_to._map_element(__object, from_map=from_map)
+
+        """
         exists_in_collection = self._contained_in_sub(__object)
         if len(exists_in_collection) and self is exists_in_collection[0]:
             # assuming that the object already is contained in the correct collections
@@ -202,20 +248,20 @@ class Collection(Generic[T]):
         if not len(exists_in_collection):
             self._append(__object, from_map=from_map)
         else:
-            pass
             exists_in_collection[0].merge_into_self(__object, from_map=from_map)
 
         if not already_is_parent or not self._is_root:
             for parent_collection in self._get_parents_of_multiple_contained_children(__object):
                 pass
                 parent_collection.append(__object, already_is_parent=True, from_map=from_map)
+        """
 
-    def extend(self, __iterable: Optional[Iterable[T]]):
+    def extend(self, __iterable: Optional[Iterable[T]], from_map: bool = False):
         if __iterable is None:
             return
 
         for __object in __iterable:
-            self.append(__object)
+            self.append(__object, from_map=from_map)
 
     def sync_with_other_collection(self, equal_collection: Collection):
         """
@@ -263,6 +309,23 @@ class Collection(Generic[T]):
         for element in self._data:
             yield element
 
+        for c in self.children:
+            for element in c:
+                yield element
+
     def __merge__(self, __other: Collection, override: bool = False):
-        print(__other)
-        self.extend(__other.shallow_list)
+        self.extend(__other.shallow_list, from_map=True)
+
+    def __getitem__(self, item: int):
+        if item < len(self._data):
+            return self._data[item]
+
+        item = item - (len(self._data) - 1)
+
+        for c in self.children:
+            if item < len(c):
+                return c[item]
+
+            item = item - (len(self._data) - 1)
+
+        raise IndexError

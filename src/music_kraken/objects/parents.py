@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from functools import lru_cache
 
-from typing import Optional, Dict, Tuple, List, Type, Generic, Any, TypeVar
+from typing import Optional, Dict, Tuple, List, Type, Generic, Any, TypeVar, Set
 
 from .metadata import Metadata
 from ..utils.config import logging_settings
@@ -61,6 +61,7 @@ class OuterProxy:
     """
 
     _default_factories: dict = {}
+    _outer_attribute: Set[str] = {"options", "metadata", "indexing_values"}
 
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs):
         _automatic_id: bool = False
@@ -111,8 +112,8 @@ class OuterProxy:
         :return:
         """
 
-        if __name.startswith("_"):
-            return super().__getattribute__(__name)
+        if __name.startswith("_") or __name in self._outer_attribute:
+            return object.__getattribute__(self, __name)
 
         _inner: InnerData = super().__getattribute__("_inner")
         try:
