@@ -78,8 +78,6 @@ class Song(Base):
                          main_artist_list=main_artist_list, feature_artist_list=feature_artist_list,
                          album_list=album_list, **kwargs)
 
-
-    
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
 
     def __init_collections__(self) -> None:
@@ -152,8 +150,6 @@ class Song(Base):
                f"by Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.main_artist_collection)}) " \
                f"feat. Artist({OPTION_STRING_DELIMITER.join(artist.name for artist in self.feature_artist_collection)})"
 
-
-
     @property
     def options(self) -> List[P]:
         options = self.main_artist_collection.shallow_list
@@ -225,7 +221,7 @@ class Album(Base):
                          source_list=source_list, artist_list=artist_list, song_list=song_list, label_list=label_list,
                          **kwargs)
 
-    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection", )
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("song_collection",)
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("artist_collection", "label_collection")
 
     def __init_collections__(self):
@@ -364,7 +360,7 @@ class Album(Base):
         :return:
         """
         return len(self.artist_collection) > 1
-    
+
     @property
     def album_type_string(self) -> str:
         return self.album_type.value
@@ -425,7 +421,7 @@ class Artist(Base):
                          **kwargs)
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = ("feature_song_collection", "main_album_collection")
-    UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("label_collection", )
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("label_collection",)
 
     def __init_collections__(self):
         self.feature_song_collection.append_object_to_attribute = {
@@ -435,7 +431,7 @@ class Artist(Base):
         self.main_album_collection.append_object_to_attribute = {
             "artist_collection": self
         }
-        
+
         self.label_collection.append_object_to_attribute = {
             "current_artist_collection": self
         }
@@ -585,7 +581,6 @@ Label
 class Label(Base):
     COLLECTION_STRING_ATTRIBUTES = ("album_collection", "current_artist_collection")
 
-
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = COLLECTION_STRING_ATTRIBUTES
 
     name: str
@@ -628,5 +623,5 @@ class Label(Base):
         options = [self]
         options.extend(self.current_artist_collection.shallow_list)
         options.extend(self.album_collection.shallow_list)
-        
+
         return options

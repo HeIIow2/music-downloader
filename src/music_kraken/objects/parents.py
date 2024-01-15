@@ -63,6 +63,9 @@ class OuterProxy:
     _default_factories: dict = {}
     _outer_attribute: Set[str] = {"options", "metadata", "indexing_values"}
 
+    DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = tuple()
+    UPWARDS_COLLECTION_STRING_ATTRIBUTES = tuple()
+
     def __init__(self, _id: int = None, dynamic: bool = False, **kwargs):
         _automatic_id: bool = False
 
@@ -112,7 +115,7 @@ class OuterProxy:
         :return:
         """
 
-        if __name.startswith("_") or __name in self._outer_attribute:
+        if __name.startswith("_") or __name in self._outer_attribute or __name.isupper():
             return object.__getattribute__(self, __name)
 
         _inner: InnerData = super().__getattribute__("_inner")

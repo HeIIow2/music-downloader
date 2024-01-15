@@ -1,6 +1,7 @@
 import logging
 import random
 from copy import copy
+from pathlib import Path
 from typing import Optional, Union, Type, Dict, Set, List, Tuple
 from string import Formatter
 
@@ -363,8 +364,10 @@ class Page:
         file_parts = Formatter().parse(main_settings["download_file"])
         new_target = Target(
             relative_to_music_dir=True,
-            path=main_settings["download_path"].format(**{part[1]: naming_dict[part[1]] for part in path_parts}),
-            file=main_settings["download_file"].format(**{part[1]: naming_dict[part[1]] for part in file_parts})
+            file_path=Path(
+                main_settings["download_path"].format(**{part[1]: naming_dict[part[1]] for part in path_parts}),
+                main_settings["download_file"].format(**{part[1]: naming_dict[part[1]] for part in file_parts})
+            )
         )
 
 
@@ -376,8 +379,11 @@ class Page:
             return DownloadResult(error_message=f"No source found for {song.title} as {self.__class__.__name__}.")
 
         temp_target: Target = Target(
-            path=main_settings["temp_directory"],
-            file=str(random.randint(0, 999999))
+            relative_to_music_dir=False,
+            file_path=Path(
+                main_settings["temp_directory"],
+                str(song.id)
+            )
         )
         
         r = DownloadResult(1)
