@@ -64,7 +64,7 @@ class Target(OuterProxy):
         return self.file_path.stat().st_size
 
     def create_path(self):
-        self._path.mkdir(parents=True, exist_ok=True)
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
 
     def copy_content(self, copy_to: Target):
         if not self.exists:

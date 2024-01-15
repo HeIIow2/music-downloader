@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Tuple
 from tqdm import tqdm
 from ffmpeg_progress_yield import FfmpegProgress
@@ -19,8 +20,7 @@ def correct_codec(target: Target, bitrate_kb: int = main_settings["bitrate"], au
     bitrate_b = int(bitrate_kb / 1024)
 
     output_target = Target(
-        path=target._path,
-        file=str(target._file) + "." + audio_format
+        file_path=Path(str(target.file_path) + "." + audio_format)
     )
     
     # get the select thingie

@@ -68,7 +68,7 @@ class Song(Base):
     }
 
     def __init__(self, title: str = None, unified_title: str = None, isrc: str = None, length: int = None,
-                 genre: str = None, note: FormattedText = None, source_list: SourceCollection = None,
+                 genre: str = None, note: FormattedText = None, source_list: List[Source] = None,
                  target_list: List[Target] = None, lyrics_list: List[Lyrics] = None,
                  main_artist_list: List[Artist] = None, feature_artist_list: List[Artist] = None,
                  album_list: List[Album] = None, **kwargs) -> None:
@@ -214,7 +214,7 @@ class Album(Base):
     def __init__(self, title: str = None, unified_title: str = None, album_status: AlbumStatus = None,
                  album_type: AlbumType = None, language: Language = None, date: ID3Timestamp = None,
                  barcode: str = None, albumsort: int = None, notes: FormattedText = None,
-                 source_list: SourceCollection = None, artist_list: List[Artist] = None, song_list: List[Song] = None,
+                 source_list: List[Source] = None, artist_list: List[Artist] = None, song_list: List[Song] = None,
                  label_list: List[Label] = None, **kwargs) -> None:
         super().__init__(title=title, unified_title=unified_title, album_status=album_status, album_type=album_type,
                          language=language, date=date, barcode=barcode, albumsort=albumsort, notes=notes,
@@ -410,7 +410,7 @@ class Artist(Base):
     # This is automatically generated
     def __init__(self, name: str = None, unified_name: str = None, country: Country = None,
                  formed_in: ID3Timestamp = None, notes: FormattedText = None, lyrical_themes: List[str] = None,
-                 general_genre: str = None, unformated_location: str = None, source_list: SourceCollection = None,
+                 general_genre: str = None, unformated_location: str = None, source_list: List[Source] = None,
                  contact_list: List[Contact] = None, feature_song_list: List[Song] = None,
                  main_album_list: List[Album] = None, label_list: List[Label] = None, **kwargs) -> None:
 
@@ -604,7 +604,7 @@ class Label(Base):
     }
 
     def __init__(self, name: str = None, unified_name: str = None, notes: FormattedText = None,
-                 source_list: SourceCollection = None, contact_list: List[Contact] = None,
+                 source_list: List[Source] = None, contact_list: List[Contact] = None,
                  album_list: List[Album] = None, current_artist_list: List[Artist] = None, **kwargs) -> None:
         super().__init__(name=name, unified_name=unified_name, notes=notes, source_list=source_list,
                          contact_list=contact_list, album_list=album_list, current_artist_list=current_artist_list,

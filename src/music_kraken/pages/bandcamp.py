@@ -24,6 +24,7 @@ from ..connection import Connection
 from ..utils.support_classes.download_result import DownloadResult
 from ..utils.config import main_settings, logging_settings
 from ..utils.shared import DEBUG
+
 if DEBUG:
     from ..utils.debug_utils import dump_to_file
 
@@ -36,7 +37,6 @@ def _parse_artist_url(url: str) -> str:
 def _get_host(source: Source) -> str:
     parsed = urlparse(source.url)
     return urlunparse((parsed.scheme, parsed.netloc, "", "", "", ""))
-
 
 
 class BandcampTypes(Enum):
@@ -55,7 +55,7 @@ class Bandcamp(Page):
             host="https://bandcamp.com/",
             logger=self.LOGGER
         )
-        
+
         super().__init__(*args, **kwargs)
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
@@ -68,7 +68,7 @@ class Bandcamp(Page):
             return Album
         if path.startswith("track"):
             return Song
-        
+
         return super().get_source_type(source)
 
     def _parse_autocomplete_api_result(self, data: dict) -> DatabaseObject:
@@ -124,7 +124,7 @@ class Bandcamp(Page):
                     )
                 ]
             )
-    
+
     def general_search(self, search_query: str, filter_string: str = "") -> List[DatabaseObject]:
         results = []
 
@@ -148,19 +148,18 @@ class Bandcamp(Page):
                 results.append(r)
 
         return results
-    
+
     def label_search(self, label: Label) -> List[Label]:
         return self.general_search(label.name, filter_string="b")
-    
+
     def artist_search(self, artist: Artist) -> List[Artist]:
         return self.general_search(artist.name, filter_string="b")
-    
+
     def album_search(self, album: Album) -> List[Album]:
         return self.general_search(album.title, filter_string="a")
-    
+
     def song_search(self, song: Song) -> List[Song]:
         return self.general_search(song.title, filter_string="t")
-    
 
     def fetch_label(self, source: Source, stop_at_level: int = 1) -> Label:
         return Label()
@@ -169,13 +168,13 @@ class Bandcamp(Page):
         name: str = None
         source_list: List[Source] = []
         contact_list: List[Contact] = []
-        
+
         band_name_location: BeautifulSoup = soup.find("p", {"id": "band-name-location"})
         if band_name_location is not None:
             title_span = band_name_location.find("span", {"class": "title"})
             if title_span is not None:
                 name = title_span.text.strip()
-        
+
         link_container: BeautifulSoup = soup.find("ol", {"id": "band-links"})
         if link_container is not None:
             li: BeautifulSoup
@@ -189,7 +188,7 @@ class Bandcamp(Page):
             name=name,
             source_list=source_list
         )
-    
+
     def _parse_album(self, soup: BeautifulSoup, initial_source: Source) -> List[Album]:
         title = None
         source_list: List[Source] = []
@@ -197,7 +196,7 @@ class Bandcamp(Page):
         a = soup.find("a")
         if a is not None and a["href"] is not None:
             source_list.append(Source(self.SOURCE_TYPE, _get_host(initial_source) + a["href"]))
-        
+
         title_p = soup.find("p", {"class": "title"})
         if title_p is not None:
             title = title_p.text.strip()
@@ -219,14 +218,13 @@ class Bandcamp(Page):
 
         return album_list
 
-
     def fetch_artist(self, source: Source, stop_at_level: int = 1) -> Artist:
         artist = Artist()
 
         r = self.connection.get(_parse_artist_url(source.url))
         if r is None:
             return artist
-        
+
         soup = self.get_soup_from_response(r)
 
         if DEBUG:
@@ -238,7 +236,7 @@ class Bandcamp(Page):
         if html_music_grid is not None:
             for subsoup in html_music_grid.find_all("li"):
                 artist.main_album_collection.append(self._parse_album(soup=subsoup, initial_source=source))
-        
+
         for i, data_blob_soup in enumerate(soup.find_all("div", {"id": ["pagedata", "collectors-data"]})):
             data_blob = data_blob_soup["data-blob"]
 
@@ -252,7 +250,7 @@ class Bandcamp(Page):
 
         artist.source_collection.append(source)
         return artist
-    
+
     def _parse_track_element(self, track: dict) -> Optional[Song]:
         return Song(
             title=track["item"]["name"].strip(),
@@ -266,11 +264,11 @@ class Bandcamp(Page):
         r = self.connection.get(source.url)
         if r is None:
             return album
-        
+
         soup = self.get_soup_from_response(r)
 
         data_container = soup.find("script", {"type": "application/ld+json"})
-        
+
         if DEBUG:
             dump_to_file("album_data.json", data_container.text, is_json=True, exit_after_dump=False)
 
@@ -279,7 +277,7 @@ class Bandcamp(Page):
 
         artist_source_list = []
         if "@id" in artist_data:
-            artist_source_list=[Source(self.SOURCE_TYPE, _parse_artist_url(artist_data["@id"]))]
+            artist_source_list = [Source(self.SOURCE_TYPE, _parse_artist_url(artist_data["@id"]))]
         album = Album(
             title=data["name"].strip(),
             source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]))],
@@ -307,15 +305,14 @@ class Bandcamp(Page):
         if track_lyrics:
             self.LOGGER.debug(" Lyrics retrieved..")
             return [Lyrics(text=FormattedText(html=track_lyrics.prettify()))]
-        
+
         return []
-        
 
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         r = self.connection.get(source.url)
         if r is None:
             return Song()
-        
+
         soup = self.get_soup_from_response(r)
 
         data_container = soup.find("script", {"type": "application/ld+json"})
@@ -340,7 +337,7 @@ class Bandcamp(Page):
 
         song = Song(
             title=data["name"].strip(),
-            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]), adio_url=mp3_url)],
+            source_list=[Source(self.SOURCE_TYPE, data.get("mainEntityOfPage", data["@id"]), audio_url=mp3_url)],
             album_list=[Album(
                 title=album_data["name"].strip(),
                 date=ID3Timestamp.strptime(data["datePublished"], "%d %b %Y %H:%M:%S %Z"),
@@ -348,7 +345,7 @@ class Bandcamp(Page):
             )],
             main_artist_list=[Artist(
                 name=artist_data["name"].strip(),
-                source_list=[Source(self.SOURCE_TYPE, _parse_artist_url(artist_data["@id"]))]  
+                source_list=[Source(self.SOURCE_TYPE, _parse_artist_url(artist_data["@id"]))]
             )],
             lyrics_list=self._fetch_lyrics(soup=soup)
         )
@@ -359,5 +356,6 @@ class Bandcamp(Page):
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         if source.audio_url is None:
+            print(source)
             return DownloadResult(error_message="Couldn't find download link.")
         return self.connection.stream_into(url=source.audio_url, target=target, description=desc)

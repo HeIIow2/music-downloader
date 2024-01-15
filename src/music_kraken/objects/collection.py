@@ -229,6 +229,7 @@ class Collection(Generic[T]):
 
         if existing_object is None:
             # append
+            # print("appending", existing_object, __object)
             append_to._data.append(__object)
         else:
             # merge

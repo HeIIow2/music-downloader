@@ -628,7 +628,7 @@ class Musify(Page):
                     source_list.append(Source(
                         self.SOURCE_TYPE,
                         url=current_url,
-                        adio_url=self.HOST + download_href
+                        audio_url=self.HOST + download_href
                     ))
 
         return Song(
