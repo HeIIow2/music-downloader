@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from collections import defaultdict
 from functools import lru_cache
 
 from typing import Optional, Dict, Tuple, List, Type, Generic, Any, TypeVar, Set
@@ -130,6 +131,18 @@ class OuterProxy:
             return _inner.__setattr__(__name, __value)
 
         return super().__setattr__(__name, __value)
+
+    def _add_other_db_objects(self, object_type: Type[OuterProxy], object_list: List[OuterProxy]):
+        pass
+
+    def add_list_of_other_objects(self, object_list: List[OuterProxy]):
+        d: Dict[Type[OuterProxy], List[OuterProxy]] = defaultdict(list)
+
+        for db_object in object_list:
+            d[type(db_object)].append(db_object)
+
+        for key, value in d.items():
+            self._add_other_db_objects(key, value)
 
     def __hash__(self):
         """

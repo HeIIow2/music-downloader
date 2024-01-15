@@ -16,7 +16,6 @@ from ..download.page_attributes import Pages
 from ..pages import Page
 from ..objects import Song, Album, Artist, DatabaseObject
 
-
 """
 This is the implementation of the Shell
 
@@ -107,6 +106,7 @@ def get_existing_genre() -> List[str]:
 
     return existing_genres
 
+
 def get_genre():
     existing_genres = get_existing_genre()
     for i, genre_option in enumerate(existing_genres):
@@ -129,19 +129,18 @@ def get_genre():
         verification = input(f"create new genre \"{new_genre}\"? (Y/N): ").lower()
         if verification in agree_inputs:
             return new_genre
-        
-        
+
+
 def help_message():
     print()
     print(main_settings["happy_messages"])
     print()
 
 
-
 class Downloader:
     def __init__(
             self,
-            exclude_pages: Set[Type[Page]] = None, 
+            exclude_pages: Set[Type[Page]] = None,
             exclude_shady: bool = False,
             max_displayed_options: int = 10,
             option_digits: int = 3,
@@ -149,23 +148,22 @@ class Downloader:
             process_metadata_anyway: bool = False,
     ) -> None:
         self.pages: Pages = Pages(exclude_pages=exclude_pages, exclude_shady=exclude_shady)
-        
+
         self.page_dict: Dict[str, Type[Page]] = dict()
-        
+
         self.max_displayed_options = max_displayed_options
         self.option_digits: int = option_digits
-        
+
         self.current_results: Results = None
         self._result_history: List[Results] = []
-        
+
         self.genre = genre or get_genre()
         self.process_metadata_anyway = process_metadata_anyway
-        
+
         print()
         print(f"Downloading to: \"{self.genre}\"")
         print()
 
-    
     def print_current_options(self):
         self.page_dict = dict()
 
@@ -176,12 +174,13 @@ class Downloader:
             if isinstance(option, Option):
                 print(f"{option.index:0{self.option_digits}} {option.music_object.option_string}")
             else:
-                prefix = ALPHABET[page_count%len(ALPHABET)]
-                print(f"({prefix}) ------------------------{option.__name__:{PAGE_NAME_FILL}<{MAX_PAGE_LEN}}------------")
-                
+                prefix = ALPHABET[page_count % len(ALPHABET)]
+                print(
+                    f"({prefix}) ------------------------{option.__name__:{PAGE_NAME_FILL}<{MAX_PAGE_LEN}}------------")
+
                 self.page_dict[prefix] = option
                 self.page_dict[option.__name__] = option
-                
+
                 page_count += 1
 
         print()
@@ -189,47 +188,47 @@ class Downloader:
     def set_current_options(self, current_options: Results):
         if main_settings["result_history"]:
             self._result_history.append(current_options)
-            
+
         if main_settings["history_length"] != -1:
             if len(self._result_history) > main_settings["history_length"]:
                 self._result_history.pop(0)
-        
+
         self.current_results = current_options
-        
+
     def previous_option(self) -> bool:
         if not main_settings["result_history"]:
             print("History is turned of.\nGo to main_settings, and change the value at 'result_history' to 'true'.")
             return False
-        
+
         if len(self._result_history) <= 1:
             print(f"No results in history.")
             return False
         self._result_history.pop()
         self.current_results = self._result_history[-1]
         return True
-    
+
     def _process_parsed(self, key_text: Dict[str, str], query: str) -> Query:
         song = None if not "t" in key_text else Song(title=key_text["t"], dynamic=True)
         album = None if not "r" in key_text else Album(title=key_text["r"], dynamic=True)
         artist = None if not "a" in key_text else Artist(name=key_text["a"], dynamic=True)
-        
+
         if song is not None:
             if album is not None:
                 song.album_collection.append(album)
             if artist is not None:
                 song.main_artist_collection.append(artist)
             return Query(raw_query=query, music_object=song)
-        
+
         if album is not None:
             if artist is not None:
                 album.artist_collection.append(artist)
             return Query(raw_query=query, music_object=album)
-        
+
         if artist is not None:
             return Query(raw_query=query, music_object=artist)
-        
+
         return Query(raw_query=query)
-    
+
     def search(self, query: str):
         if re.match(URL_PATTERN, query) is not None:
             try:
@@ -243,58 +242,57 @@ class Downloader:
             self.set_current_options(PageResults(page, data_object.options))
             self.print_current_options()
             return
-        
+
         special_characters = "#\\"
         query = query + " "
-        
+
         key_text = {}
-        
+
         skip_next = False
         escape_next = False
         new_text = ""
         latest_key: str = None
         for i in range(len(query) - 1):
             current_char = query[i]
-            next_char = query[i+1]
-            
+            next_char = query[i + 1]
+
             if skip_next:
                 skip_next = False
                 continue
-            
+
             if escape_next:
                 new_text += current_char
                 escape_next = False
-            
+
             # escaping
             if current_char == "\\":
                 if next_char in special_characters:
                     escape_next = True
                     continue
-                
+
             if current_char == "#":
                 if latest_key is not None:
                     key_text[latest_key] = new_text
                     new_text = ""
-                    
+
                 latest_key = next_char
                 skip_next = True
                 continue
-            
+
             new_text += current_char
-        
+
         if latest_key is not None:
             key_text[latest_key] = new_text
-            
-            
+
         parsed_query: Query = self._process_parsed(key_text, query)
-        
+
         self.set_current_options(self.pages.search(parsed_query))
         self.print_current_options()
-    
+
     def goto(self, index: int):
         page: Type[Page]
         music_object: DatabaseObject
-        
+
         try:
             page, music_object = self.current_results.get_music_object_by_index(index)
         except KeyError:
@@ -302,23 +300,22 @@ class Downloader:
             print(f"The option {index} doesn't exist.")
             print()
             return
-        
+
         self.pages.fetch_details(music_object)
 
         print(music_object)
         print(music_object.options)
         self.set_current_options(PageResults(page, music_object.options))
-        
+
         self.print_current_options()
-        
-    
+
     def download(self, download_str: str, download_all: bool = False) -> bool:
         to_download: List[DatabaseObject] = []
 
         if re.match(URL_PATTERN, download_str) is not None:
             _, music_objects = self.pages.fetch_url(download_str)
             to_download.append(music_objects)
-            
+
         else:
             index: str
             for index in download_str.split(", "):
@@ -327,65 +324,67 @@ class Downloader:
                     print(f"Every download thingie has to be an index, not {index}.")
                     print()
                     return False
-            
+
             for index in download_str.split(", "):
                 to_download.append(self.current_results.get_music_object_by_index(int(index))[1])
-        
+
         print()
         print("Downloading:")
         for download_object in to_download:
             print(download_object.option_string)
         print()
-        
+
         _result_map: Dict[DatabaseObject, DownloadResult] = dict()
-        
+
         for database_object in to_download:
-            r = self.pages.download(music_object=database_object, genre=self.genre, download_all=download_all, process_metadata_anyway=self.process_metadata_anyway)
+            r = self.pages.download(music_object=database_object, genre=self.genre, download_all=download_all,
+                                    process_metadata_anyway=self.process_metadata_anyway)
             _result_map[database_object] = r
-            
+
         for music_object, result in _result_map.items():
             print()
             print(music_object.option_string)
             print(result)
-            
+
         return True
-    
+
     def process_input(self, input_str: str) -> bool:
         input_str = input_str.strip()
         processed_input: str = input_str.lower()
-        
+
         if processed_input in EXIT_COMMANDS:
             return True
-        
+
         if processed_input == ".":
             self.print_current_options()
             return False
-        
+
         if processed_input == "..":
             if self.previous_option():
                 self.print_current_options()
             return False
-        
+
         if processed_input.startswith("s: "):
             self.search(input_str[3:])
             return False
-        
+
         if processed_input.startswith("d: "):
             return self.download(input_str[3:])
-        
+
         if processed_input.isdigit():
             self.goto(int(processed_input))
             return False
-        
+
         if processed_input != "help":
             print("Invalid input.")
         help_message()
         return False
-    
+
     def mainloop(self):
         while True:
             if self.process_input(input("> ")):
                 return
+
 
 @cli_function
 def download(
@@ -403,9 +402,9 @@ def download(
             print("Restart the programm to use it.")
         else:
             print("Something went wrong configuring.")
-    
+
     shell = Downloader(genre=genre, process_metadata_anyway=process_metadata_anyway)
-    
+
     if command_list is not None:
         for command in command_list:
             shell.process_input(command)
@@ -414,5 +413,5 @@ def download(
     if direct_download_url is not None:
         if shell.download(direct_download_url, download_all=download_all):
             return
-        
+
     shell.mainloop()

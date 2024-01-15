@@ -98,8 +98,10 @@ class Pages:
     def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         if not isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             return DownloadResult(error_message=f"{type(music_object).__name__} can't be downloaded.")
-        
-        _page_types = set()
+
+        self.fetch_details(music_object)
+
+        _page_types = set(self._source_to_page)
         for src in music_object.source_collection.source_pages:
             if src in self._source_to_page:
                 _page_types.add(self._source_to_page[src])

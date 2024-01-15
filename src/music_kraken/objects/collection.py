@@ -315,7 +315,7 @@ class Collection(Generic[T]):
                 yield element
 
     def __merge__(self, __other: Collection, override: bool = False):
-        self.extend(__other.shallow_list, from_map=True)
+        self.extend(__other._data, from_map=True)
 
     def __getitem__(self, item: int):
         if item < len(self._data):

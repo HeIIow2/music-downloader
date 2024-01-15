@@ -95,6 +95,22 @@ class Song(Base):
             "feature_song_collection": self
         }
 
+    def _add_other_db_objects(self, object_type: Type[OuterProxy], object_list: List[OuterProxy]):
+        if object_type is Song:
+            return
+
+        if isinstance(object_list, Lyrics):
+            self.lyrics_collection.extend(object_list)
+            return
+
+        if isinstance(object_list, Artist):
+            self.main_artist_collection.extend(object_list)
+            return
+
+        if isinstance(object_list, Album):
+            self.album_collection.extend(object_list)
+            return
+
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
         return [
@@ -228,6 +244,22 @@ class Album(Base):
         self.song_collection.contain_attribute_in_given = {
             "main_artist_collection": self.artist_collection
         }
+
+    def _add_other_db_objects(self, object_type: Type[OuterProxy], object_list: List[OuterProxy]):
+        if object_type is Song:
+            self.song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            self.artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
 
     @property
     def indexing_values(self) -> List[Tuple[str, object]]:
@@ -436,6 +468,23 @@ class Artist(Base):
             "current_artist_collection": self
         }
 
+    def _add_other_db_objects(self, object_type: Type[OuterProxy], object_list: List[OuterProxy]):
+        if object_type is Song:
+            # this doesn't really make sense
+            # self.feature_song_collection.extend(object_list)
+            return
+
+        if object_type is Artist:
+            return
+
+        if object_type is Album:
+            self.main_album_collection.extend(object_list)
+            return
+
+        if object_type is Label:
+            self.label_collection.extend(object_list)
+            return
+
     @property
     def options(self) -> List[P]:
         options = [self, *self.main_album_collection.shallow_list, *self.feature_album]
@@ -617,6 +666,18 @@ class Label(Base):
             ('name', self.unified_name),
             *[('url', source.url) for source in self.source_collection]
         ]
+
+    def _add_other_db_objects(self, object_type: Type[OuterProxy], object_list: List[OuterProxy]):
+        if object_type is Song:
+            return
+
+        if object_type is Artist:
+            self.current_artist_collection.extend(object_list)
+            return
+
+        if object_type is Album:
+            self.album_collection.extend(object_list)
+            return
 
     @property
     def options(self) -> List[P]:
