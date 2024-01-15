@@ -240,20 +240,28 @@ class Page:
         """
 
         # creating a new object, of the same type
-        new_music_object: DatabaseObject = type(music_object)()
+        new_music_object: Optional[DatabaseObject] = None
 
         # only certain database objects, have a source list
         if isinstance(music_object, INDEPENDENT_DB_OBJECTS):
             source: Source
             for source in music_object.source_collection.get_sources_from_page(self.SOURCE_TYPE):
-                new_music_object.merge(self.fetch_object_from_source(
-                    source=source, 
-                    enforce_type=type(music_object), 
-                    stop_at_level=stop_at_level, 
+                tmp = self.fetch_object_from_source(
+                    source=source,
+                    enforce_type=type(music_object),
+                    stop_at_level=stop_at_level,
                     post_process=False
-                ))
+                )
 
-        return music_object.merge(new_music_object)
+                if new_music_object is None:
+                    new_music_object = tmp
+                else:
+                    new_music_object.merge(tmp)
+
+        if new_music_object is not None:
+            music_object.merge(new_music_object)
+
+        return music_object
 
     def fetch_object_from_source(self, source: Source, stop_at_level: int = 2, enforce_type: Type[DatabaseObject] = None, post_process: bool = True) -> Optional[DatabaseObject]:
         obj_type = self.get_source_type(source)

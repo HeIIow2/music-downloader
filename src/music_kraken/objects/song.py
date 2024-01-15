@@ -61,13 +61,13 @@ class Song(Base):
         "album_collection": Collection,
         "feature_artist_collection": Collection,
 
-        "title": lambda: None,
+        "title": lambda: "",
         "unified_title": lambda: None,
         "isrc": lambda: None,
         "genre": lambda: None,
     }
 
-    def __init__(self, title: str = None, unified_title: str = None, isrc: str = None, length: int = None,
+    def __init__(self, title: str = "", unified_title: str = None, isrc: str = None, length: int = None,
                  genre: str = None, note: FormattedText = None, source_list: List[Source] = None,
                  target_list: List[Target] = None, lyrics_list: List[Lyrics] = None,
                  main_artist_list: List[Artist] = None, feature_artist_list: List[Artist] = None,
@@ -264,7 +264,7 @@ class Album(Base):
     @property
     def option_string(self) -> str:
         return f"{self.__repr__()} " \
-               f"by Artist({OPTION_STRING_DELIMITER.join([str(artist.name) for artist in self.artist_collection])}) " \
+               f"by Artist({OPTION_STRING_DELIMITER.join([artist.name for artist in self.artist_collection])}) " \
                f"under Label({OPTION_STRING_DELIMITER.join([label.name for label in self.label_collection])})"
 
     @property
@@ -390,7 +390,7 @@ class Artist(Base):
     label_collection: Collection[Label]
 
     _default_factories = {
-        "name": lambda: None,
+        "name": str,
         "unified_name": lambda: None,
         "country": lambda: None,
         "unformated_location": lambda: None,
@@ -408,7 +408,7 @@ class Artist(Base):
     }
 
     # This is automatically generated
-    def __init__(self, name: str = None, unified_name: str = None, country: Country = None,
+    def __init__(self, name: str = "", unified_name: str = None, country: Country = None,
                  formed_in: ID3Timestamp = None, notes: FormattedText = None, lyrical_themes: List[str] = None,
                  general_genre: str = None, unformated_location: str = None, source_list: List[Source] = None,
                  contact_list: List[Contact] = None, feature_song_list: List[Song] = None,

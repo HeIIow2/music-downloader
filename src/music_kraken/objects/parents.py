@@ -61,7 +61,7 @@ class OuterProxy:
     """
 
     _default_factories: dict = {}
-    _outer_attribute: Set[str] = {"options", "metadata", "indexing_values"}
+    _outer_attribute: Set[str] = {"options", "metadata", "indexing_values", "option_string"}
 
     DOWNWARDS_COLLECTION_STRING_ATTRIBUTES = tuple()
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = tuple()
