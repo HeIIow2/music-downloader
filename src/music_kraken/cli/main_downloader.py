@@ -11,6 +11,7 @@ from ..utils.string_processing import fit_to_file_system
 from ..utils.support_classes.query import Query
 from ..utils.support_classes.download_result import DownloadResult
 from ..utils.exception.download import UrlNotFoundException
+from ..utils.enums.colors import BColors
 from ..download.results import Results, Option, PageResults
 from ..download.page_attributes import Pages
 from ..pages import Page
@@ -176,7 +177,7 @@ class Downloader:
             else:
                 prefix = ALPHABET[page_count % len(ALPHABET)]
                 print(
-                    f"({prefix}) ------------------------{option.__name__:{PAGE_NAME_FILL}<{MAX_PAGE_LEN}}------------")
+                    f"{BColors.HEADER}({prefix}) ------------------------{option.__name__:{PAGE_NAME_FILL}<{MAX_PAGE_LEN}}------------{BColors.ENDC}")
 
                 self.page_dict[prefix] = option
                 self.page_dict[option.__name__] = option
