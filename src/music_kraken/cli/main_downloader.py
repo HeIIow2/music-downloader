@@ -1,3 +1,4 @@
+import random
 from typing import Set, Type, Dict, List
 from pathlib import Path
 import re
@@ -134,7 +135,7 @@ def get_genre():
 
 def help_message():
     print()
-    print(main_settings["happy_messages"])
+    print(random.choice(main_settings["happy_messages"]))
     print()
 
 
@@ -173,7 +174,7 @@ class Downloader:
         page_count = 0
         for option in self.current_results.formated_generator(max_items_per_page=self.max_displayed_options):
             if isinstance(option, Option):
-                color = BColors.BOLD if self.pages.is_downloadable(option.music_object) else BColors.ENDC
+                color = BColors.BOLD if self.pages.is_downloadable(option.music_object) else BColors.GREY
                 print(f"{color}{option.index:0{self.option_digits}} {option.music_object.option_string}{BColors.ENDC}")
             else:
                 prefix = ALPHABET[page_count % len(ALPHABET)]
@@ -378,7 +379,7 @@ class Downloader:
             return False
 
         if processed_input != "help":
-            print("Invalid input.")
+            print(f"{BColors.WARNING}Invalid input.{BColors.ENDC}")
         help_message()
         return False
 
@@ -401,9 +402,9 @@ def download(
         if code == 0:
             main_settings["hasnt_yet_started"] = False
             write_config()
-            print("Restart the programm to use it.")
+            print(f"{BColors.OKGREEN}Restart the programm to use it.{BColors.ENDC}")
         else:
-            print("Something went wrong configuring.")
+            print(f"{BColors.FAIL}Something went wrong configuring.{BColors.ENDC}")
 
     shell = Downloader(genre=genre, process_metadata_anyway=process_metadata_anyway)
 

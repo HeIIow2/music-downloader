@@ -7,7 +7,8 @@ from .utils.config import logging_settings, main_settings, read_config
 read_config()
 from . import cli
 
-if True:
+
+if DEBUG:
     import sys
     sys.setrecursionlimit(100)
 
