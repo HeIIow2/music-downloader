@@ -133,39 +133,6 @@ def _clean_song(song: Song, collections: Dict[INDEPENDENT_DB_TYPES, Collection])
     _clean_collection(song.main_artist_collection, collections)
 
 
-def clean_object(dirty_object: DatabaseObject) -> DatabaseObject:
-    if isinstance(dirty_object, INDEPENDENT_DB_OBJECTS):
-        collections = {
-            Label: Collection(element_type=Label),
-            Artist: Collection(element_type=Artist),
-            Album: Collection(element_type=Album),
-            Song: Collection(element_type=Song)
-        }
-
-        if isinstance(dirty_object, Song):
-            return dirty_object
-
-        _clean_music_object(dirty_object, collections)
-    return dirty_object
-
-
-def build_new_object(new_object: DatabaseObject) -> DatabaseObject:
-    new_object = clean_object(new_object)
-    new_object.compile(merge_into=False)
-
-    return new_object
-
-
-def merge_together(old_object: DatabaseObject, new_object: DatabaseObject, do_compile: bool = True) -> DatabaseObject:
-    new_object = clean_object(new_object)
-
-    old_object.merge(new_object)
-    if do_compile and False:
-        old_object.compile(merge_into=False)
-
-    return old_object
-
-
 class Page:
     """
     This is an abstract class, laying out the 
