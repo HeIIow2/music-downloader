@@ -94,6 +94,15 @@ class Pages:
                 music_object.merge(self._page_instances[page_type].fetch_details(music_object=music_object, stop_at_level=stop_at_level))
         
         return music_object
+
+    def is_downloadable(self, music_object: DatabaseObject) -> bool:
+        _page_types = set(self._source_to_page)
+        for src in music_object.source_collection.source_pages:
+            if src in self._source_to_page:
+                _page_types.add(self._source_to_page[src])
+
+        audio_pages = self._audio_pages_set.intersection(_page_types)
+        return len(audio_pages) > 0
     
     def download(self, music_object: DatabaseObject, genre: str, download_all: bool = False, process_metadata_anyway: bool = False) -> DownloadResult:
         if not isinstance(music_object, INDEPENDENT_DB_OBJECTS):

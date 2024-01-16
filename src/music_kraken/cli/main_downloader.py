@@ -173,7 +173,8 @@ class Downloader:
         page_count = 0
         for option in self.current_results.formated_generator(max_items_per_page=self.max_displayed_options):
             if isinstance(option, Option):
-                print(f"{option.index:0{self.option_digits}} {option.music_object.option_string}")
+                color = BColors.BOLD if self.pages.is_downloadable(option.music_object) else BColors.ENDC
+                print(f"{color}{option.index:0{self.option_digits}} {option.music_object.option_string}{BColors.ENDC}")
             else:
                 prefix = ALPHABET[page_count % len(ALPHABET)]
                 print(
