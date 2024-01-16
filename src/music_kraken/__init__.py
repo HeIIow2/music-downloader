@@ -2,7 +2,7 @@ import logging
 import gc
 import sys
 
-from .utils.shared import DEBUG, DEBUG_LOGGIN
+from .utils.shared import DEBUG, DEBUG_LOGGING
 from .utils.config import logging_settings, main_settings, read_config
 read_config()
 from . import cli
@@ -40,7 +40,7 @@ stream_handler.setFormatter(CustomFormatter())
 
 # configure logger default
 logging.basicConfig(
-    level=logging_settings['log_level'] if not DEBUG_LOGGIN else logging.DEBUG,
+    level=logging_settings['log_level'] if not DEBUG_LOGGING else logging.DEBUG,
     format=logging_settings['logging_format'],
     handlers=[
         logging.FileHandler(main_settings['log_file']),

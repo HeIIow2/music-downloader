@@ -2,20 +2,20 @@ import random
 
 from .config import main_settings
 
-DEBUG = False
-DEBUG_LOGGIN = DEBUG and False
-DEBUG_YOUTUBE_INITIALIZING = DEBUG and False 
+DEBUG = True
+DEBUG_LOGGING = DEBUG and True
+DEBUG_YOUTUBE_INITIALIZING = DEBUG and False
 DEBUG_PAGES = DEBUG and False
 
 if DEBUG:
     print("DEBUG ACTIVE")
 
+
 def get_random_message() -> str:
     return random.choice(main_settings['happy_messages'])
 
 
-HIGHEST_ID = 2**main_settings['id_bits']
-
+HIGHEST_ID = 2 ** main_settings['id_bits']
 
 HELP_MESSAGE = """to search:
 > s: {query or url}

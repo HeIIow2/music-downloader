@@ -152,7 +152,6 @@ class SuperYouTube(Page):
         if parsed.url_type in _url_type:
             return _url_type[parsed.url_type]
 
-
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         """
         1. getting the optimal source
@@ -195,7 +194,6 @@ class SuperYouTube(Page):
         endpoint = audio_format["url"]
 
         return self.download_connection.stream_into(endpoint, target, description=desc, raw_url=True)
-
 
     def get_skip_intervals(self, song: Song, source: Source) -> List[Tuple[float, float]]:
         if not youtube_settings["use_sponsor_block"]:
