@@ -356,6 +356,5 @@ class Bandcamp(Page):
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         if source.audio_url is None:
-            print(source)
             return DownloadResult(error_message="Couldn't find download link.")
         return self.connection.stream_into(url=source.audio_url, target=target, description=desc)

@@ -59,7 +59,8 @@ class YoutubeMusicConnection(Connection):
             heartbeat_interval=113.25,
             header_values={
                 "Accept-Language": accept_language
-            }
+            },
+            module="youtube_music",
         )
 
         # cookie consent for youtube
@@ -161,8 +162,10 @@ class YoutubeMusic(SuperYouTube):
 
             # save cookies in settings
             youtube_settings["youtube_music_consent_cookies"] = cookie_dict
+        else:
+            self.connection.save(r, "index.html")
 
-        r = self.connection.get("https://music.youtube.com/")
+        r = self.connection.get("https://music.youtube.com/", name="index.html")
         if r is None:
             return
 

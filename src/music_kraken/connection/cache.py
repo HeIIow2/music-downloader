@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List, Optional
 from functools import lru_cache
+import logging
 
-from .config import main_settings
+from ..utils.config import main_settings
 
 
 @dataclass
@@ -29,7 +30,10 @@ class CacheAttribute:
 
 
 class Cache:
-    def __init__(self):
+    def __init__(self, module: str, logger: logging.Logger):
+        self.module = module
+        self.logger: logging.Logger = logger
+
         self._dir = main_settings["cache_directory"]
         self.index = Path(self._dir, "index.json")
 
@@ -89,7 +93,7 @@ class Cache:
 
         return True
 
-    def set(self, content: bytes, module: str, name: str, expires_in: int = 10):
+    def set(self, content: bytes, name: str, expires_in: float = 10):
         """
         :param content:
         :param module:
@@ -97,28 +101,32 @@ class Cache:
         :param expires_in: the unit is days
         :return:
         """
+        if name == "":
+            return
 
-        module_path = self._init_module(module)
+        module_path = self._init_module(self.module)
 
         cache_attribute = CacheAttribute(
-            module=module,
+            module=self.module,
             name=name,
             created=datetime.now(),
             expires=datetime.now() + timedelta(days=expires_in),
         )
         self._write_attribute(cache_attribute)
 
-        with Path(module_path, name).open("wb") as content_file:
+        cache_path = Path(module_path, name)
+        with cache_path.open("wb") as content_file:
+            self.logger.debug(f"writing cache to {cache_path}")
             content_file.write(content)
 
-    def get(self, module: str, name: str) -> Optional[bytes]:
-        path = Path(self._dir, module, name)
+    def get(self, name: str) -> Optional[bytes]:
+        path = Path(self._dir, self.module, name)
 
         if not path.is_file():
             return None
 
         # check if it is outdated
-        existing_attribute: CacheAttribute = self._id_to_attribute[f"{module}_{name}"]
+        existing_attribute: CacheAttribute = self._id_to_attribute[f"{self.module}_{name}"]
         if not existing_attribute.is_valid:
             return
 
