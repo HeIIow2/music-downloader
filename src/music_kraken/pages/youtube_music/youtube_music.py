@@ -6,6 +6,9 @@ import json
 from dataclasses import dataclass
 import re
 
+from youtube_dl.jsinterp import JSInterpreter
+from youtube_dl.extractor.youtube import YoutubeIE
+
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
 from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITIALIZING

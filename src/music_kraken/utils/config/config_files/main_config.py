@@ -12,7 +12,7 @@ from ..attributes.special_attributes import (
     AudioFormatAttribute,
 )
 
-config = Config([
+config = Config((
     Attribute(name="hasnt_yet_started", default_value=False, description="This will be set automatically, to look if it needs to run the scripts that run on start."),
     Attribute(name="bitrate", default_value=125, description="Streams the audio with given bitrate [kB/s]. Can't stream with a higher Bitrate, than the audio source provides."),
     AudioFormatAttribute(name="audio_format", default_value="mp3", description="""Music Kraken will stream the audio into this format.
@@ -64,6 +64,8 @@ all the error messages are shown."""),
     PathAttribute(name="temp_directory", default_value=LOCATIONS.TEMP_DIRECTORY.resolve(), description="All temporary stuff is gonna be dumped in this directory."),
     PathAttribute(name="log_file", default_value=LOCATIONS.get_log_file("download_logs.log").resolve()),
     PathAttribute(name="ffmpeg_binary", default_value=LOCATIONS.FFMPEG_BIN.resolve(), description="Set the path to the ffmpeg binary."),
+    PathAttribute(name="cache_directory", default_value=LOCATIONS.CACHE_DIRECTORY.resolve(),
+                  description="Set the path of the cache directory."),
     Attribute(
         name="not_a_genre_regex",
         description="These regular expressions tell music-kraken, which sub-folders of the music-directory\n"
@@ -93,7 +95,7 @@ But anyways... Freedom of thought, so go ahead and change the messages."""),
     Attribute(name="id_bits", default_value=64, description="I really dunno why I even made this a setting.. Modifying this is a REALLY dumb idea."),
     Description("🏳️‍⚧️🏳️‍⚧️ Protect trans youth. 🏳️‍⚧️🏳️‍⚧️\n"),
 
-], LOCATIONS.get_config_file("main"))
+), LOCATIONS.get_config_file("main"))
 
 
 class SettingsStructure(TypedDict):
@@ -126,4 +128,4 @@ class SettingsStructure(TypedDict):
     log_file: Path
     not_a_genre_regex: List[str]
     ffmpeg_binary: Path
-
+    cache_directory: Path
