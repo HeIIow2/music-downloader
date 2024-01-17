@@ -3,6 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List, Optional
+from functools import lru_cache
 
 from .config import main_settings
 
@@ -45,8 +46,11 @@ class Cache:
                 for key in self._time_fields:
                     c[key] = datetime.fromisoformat(c[key])
 
-                self.cached_attributes.append(**c)
+                ca = CacheAttribute(**c)
+                self.cached_attributes.append(ca)
+                self._id_to_attribute[ca.id] = ca
 
+    @lru_cache()
     def _init_module(self, module: str) -> Path:
         """
         :param module:
@@ -67,7 +71,6 @@ class Cache:
                 return False
 
             existing_attribute.__dict__ = cached_attribute.__dict__
-            cached_attribute = existing_attribute
         else:
             self.cached_attributes.append(cached_attribute)
             self._id_to_attribute[cached_attribute.id] = cached_attribute
@@ -107,3 +110,17 @@ class Cache:
 
         with Path(module_path, name).open("wb") as content_file:
             content_file.write(content)
+
+    def get(self, module: str, name: str) -> Optional[bytes]:
+        path = Path(self._dir, module, name)
+
+        if not path.is_file():
+            return None
+
+        # check if it is outdated
+        existing_attribute: CacheAttribute = self._id_to_attribute[f"{module}_{name}"]
+        if not existing_attribute.is_valid:
+            return
+
+        with path.open("rb") as f:
+            return f.read()
