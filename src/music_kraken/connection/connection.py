@@ -1,19 +1,18 @@
-import time
-from typing import List, Dict, Callable, Optional, Set
-from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
-
 import threading
+import time
+from typing import List, Dict, Optional, Set
+from urllib.parse import urlparse, urlunsplit, ParseResult
+
 import requests
 import responses
-from responses import matchers
 from tqdm import tqdm
 
-from .rotating import RotatingProxy
 from .cache import Cache
+from .rotating import RotatingProxy
+from ..objects import Target
 from ..utils.config import main_settings
 from ..utils.support_classes.download_result import DownloadResult
-from ..objects import Target
 
 
 class Connection:

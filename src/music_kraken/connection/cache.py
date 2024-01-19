@@ -64,6 +64,18 @@ class Cache:
         r.mkdir(exist_ok=True)
         return r
 
+    def _write_index(self, indent: int = 4):
+        _json = []
+        for c in self.cached_attributes:
+            d = c.__dict__
+            for key in self._time_fields:
+                d[key] = d[key].isoformat()
+
+            _json.append(d)
+
+        with self.index.open("w") as f:
+            f.write(json.dumps(_json, indent=indent))
+
     def _write_attribute(self, cached_attribute: CacheAttribute, write: bool = True) -> bool:
         existing_attribute: Optional[CacheAttribute] = self._id_to_attribute.get(cached_attribute.id)
         if existing_attribute is not None:
@@ -80,16 +92,7 @@ class Cache:
             self._id_to_attribute[cached_attribute.id] = cached_attribute
 
         if write:
-            _json = []
-            for c in self.cached_attributes:
-                d = c.__dict__
-                for key in self._time_fields:
-                    d[key] = d[key].isoformat()
-
-                _json.append(d)
-
-            with self.index.open("w") as f:
-                f.write(json.dumps(_json, indent=4))
+            self._write_index()
 
         return True
 
@@ -132,3 +135,59 @@ class Cache:
 
         with path.open("rb") as f:
             return f.read()
+
+    def clean(self):
+        keep = set()
+
+        for ca in self.cached_attributes.copy():
+            file = Path(self._dir, ca.module, ca.name)
+
+            if not ca.is_valid:
+                self.logger.debug(f"deleting cache {ca.id}")
+                file.unlink()
+                self.cached_attributes.remove(ca)
+                del self._id_to_attribute[ca.id]
+
+            else:
+                keep.add(file)
+
+        # iterate through every module (folder)
+        for module_path in self._dir.iterdir():
+            if not module_path.is_dir():
+                continue
+
+            # delete all files not in keep
+            for path in module_path.iterdir():
+                if path not in keep:
+                    self.logger.info(f"Deleting cache {path}")
+                    path.unlink()
+
+            # delete all empty directories
+            for path in module_path.iterdir():
+                if path.is_dir() and not list(path.iterdir()):
+                    self.logger.debug(f"Deleting cache directory {path}")
+                    path.rmdir()
+
+        self._write_index()
+
+    def clear(self):
+        """
+        delete every file in the cache directory
+        :return:
+        """
+
+        for path in self._dir.iterdir():
+            if path.is_dir():
+                for file in path.iterdir():
+                    file.unlink()
+                path.rmdir()
+            else:
+                path.unlink()
+
+        self.cached_attributes.clear()
+        self._id_to_attribute.clear()
+
+        self._write_index()
+
+    def __repr__(self):
+        return f"<Cache {self.module}>"

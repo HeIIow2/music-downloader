@@ -53,7 +53,8 @@ class Bandcamp(Page):
     def __init__(self, *args, **kwargs):
         self.connection: Connection = Connection(
             host="https://bandcamp.com/",
-            logger=self.LOGGER
+            logger=self.LOGGER,
+            module="bandcamp",
         )
 
         super().__init__(*args, **kwargs)
