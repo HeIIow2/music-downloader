@@ -1,16 +1,18 @@
-import time
-from typing import List, Dict, Callable, Optional, Set
-from urllib.parse import urlparse, urlunsplit, ParseResult
 import logging
-
 import threading
+import time
+from typing import List, Dict, Optional, Set
+from urllib.parse import urlparse, urlunsplit, ParseResult
+
 import requests
+import responses
 from tqdm import tqdm
 
+from .cache import Cache
 from .rotating import RotatingProxy
+from ..objects import Target
 from ..utils.config import main_settings
 from ..utils.support_classes.download_result import DownloadResult
-from ..objects import Target
 
 
 class Connection:
@@ -25,12 +27,17 @@ class Connection:
             accepted_response_codes: Set[int] = None,
             semantic_not_found: bool = True,
             sleep_after_404: float = 0.0,
-            heartbeat_interval = 0,
+            heartbeat_interval=0,
+            module: str = "general",
+            cache_expiring_duration: float = 10
     ):
         if proxies is None:
             proxies = main_settings["proxies"]
         if header_values is None:
             header_values = dict()
+
+        self.cache: Cache = Cache(module=module, logger=logger)
+        self.cache_expiring_duration = cache_expiring_duration
 
         self.HEADER_VALUES = header_values
 
@@ -55,23 +62,24 @@ class Connection:
 
     @property
     def user_agent(self) -> str:
-        return self.session.headers.get("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
-
+        return self.session.headers.get("user-agent",
+                                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
 
     def start_heartbeat(self):
         if self.heartbeat_interval <= 0:
             self.LOGGER.warning(f"Can't start a heartbeat with {self.heartbeat_interval}s in between.")
 
-        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval, ), daemon=True)
+        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval,),
+                                                 daemon=True)
         self.heartbeat_thread.start()
 
     def heartbeat_failed(self):
         self.LOGGER.warning(f"I just died... (The heartbeat failed)")
 
-
     def heartbeat(self):
         # Your code to send heartbeat requests goes here
-        print("the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting heartbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
+        print(
+            "the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting heartbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
 
     def _heartbeat_loop(self, interval: float):
         def heartbeat_wrapper():
@@ -85,8 +93,6 @@ class Connection:
             heartbeat_wrapper()
             time.sleep(interval)
 
-
-    
     def base_url(self, url: ParseResult = None):
         if url is None:
             url = self.HOST
@@ -119,9 +125,12 @@ class Connection:
 
         return headers
 
-    def _request(
+    def save(self, r: requests.Response, name: str, **kwargs):
+        self.cache.set(r.content, name, expires_in=kwargs.get("expires_in", self.cache_expiring_duration))
+
+    def request(
             self,
-            request: Callable,
+            method: str,
             try_count: int,
             accepted_response_codes: set,
             url: str,
@@ -131,8 +140,20 @@ class Connection:
             raw_url: bool = False,
             sleep_after_404: float = None,
             is_heartbeat: bool = False,
+            name: str = "",
             **kwargs
     ) -> Optional[requests.Response]:
+        if name != "":
+            cached = self.cache.get(name)
+
+            with responses.RequestsMock() as resp:
+                resp.add(
+                    method=method,
+                    url=url,
+                    body=cached,
+                )
+                return requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
+
         if sleep_after_404 is None:
             sleep_after_404 = self.sleep_after_404
         if try_count >= self.TRIES:
@@ -158,9 +179,10 @@ class Connection:
                 while self.session_is_occupied and not is_heartbeat:
                     pass
 
-            r: requests.Response = request(request_url, timeout=timeout, headers=headers, **kwargs)
+            r: requests.Response = requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
 
             if r.status_code in accepted_response_codes:
+                self.save(r, name, **kwargs)
                 return r
 
             if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
@@ -187,15 +209,16 @@ class Connection:
         if self.heartbeat_interval > 0 and self.heartbeat_thread is None:
             self.start_heartbeat()
 
-        return self._request(
-            request=request,
-            try_count=try_count+1,
+        return self.request(
+            method=method,
+            try_count=try_count + 1,
             accepted_response_codes=accepted_response_codes,
             url=url,
             timeout=timeout,
             headers=headers,
             sleep_after_404=sleep_after_404,
             is_heartbeat=is_heartbeat,
+            name=name,
             **kwargs
         )
 
@@ -213,8 +236,8 @@ class Connection:
         if accepted_response_codes is None:
             accepted_response_codes = self.ACCEPTED_RESPONSE_CODES
 
-        r = self._request(
-            request=self.session.get,
+        r = self.request(
+            method="GET",
             try_count=0,
             accepted_response_codes=accepted_response_codes,
             url=url,
@@ -241,8 +264,8 @@ class Connection:
             raw_url: bool = False,
             **kwargs
     ) -> Optional[requests.Response]:
-        r = self._request(
-            request=self.session.post,
+        r = self.request(
+            method="POST",
             try_count=0,
             accepted_response_codes=accepted_response_codes or self.ACCEPTED_RESPONSE_CODES,
             url=url,
@@ -282,9 +305,9 @@ class Connection:
 
         if accepted_response_codes is None:
             accepted_response_codes = self.ACCEPTED_RESPONSE_CODES
-        
-        r = self._request(
-            request=self.session.get,
+
+        r = self.request(
+            method="GET",
             try_count=0,
             accepted_response_codes=accepted_response_codes,
             url=url,
@@ -310,8 +333,9 @@ class Connection:
             https://en.wikipedia.org/wiki/Kilobyte
             > The internationally recommended unit symbol for the kilobyte is kB.
             """
-                
-            with tqdm(total=total_size-target.size, unit='B', unit_scale=True, unit_divisor=1024, desc=description) as t:
+
+            with tqdm(total=total_size - target.size, unit='B', unit_scale=True, unit_divisor=1024,
+                      desc=description) as t:
                 try:
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         size = f.write(chunk)
@@ -321,7 +345,8 @@ class Connection:
                 except requests.exceptions.ConnectionError:
                     if try_count >= self.TRIES:
                         self.LOGGER.warning(f"Stream timed out at \"{url}\": to many retries, aborting.")
-                        return DownloadResult(error_message=f"Stream timed out from {url}, reducing the chunksize might help.")
+                        return DownloadResult(
+                            error_message=f"Stream timed out from {url}, reducing the chunksize might help.")
 
                     self.LOGGER.warning(f"Stream timed out at \"{url}\": ({try_count}-{self.TRIES})")
                     retry = True
@@ -329,15 +354,14 @@ class Connection:
             if total_size > progress:
                 retry = True
 
-
             if retry:
                 self.LOGGER.warning(f"Retrying stream...")
                 accepted_response_codes.add(206)
                 return self.stream_into(
-                    url = url,
-                    target = target,
-                    description = description,
-                    try_count=try_count+1,
+                    url=url,
+                    target=target,
+                    description=description,
+                    try_count=try_count + 1,
                     progress=progress,
                     accepted_response_codes=accepted_response_codes,
                     timeout=timeout,
