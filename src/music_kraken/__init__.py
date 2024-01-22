@@ -4,12 +4,13 @@ import sys
 
 from .utils.shared import DEBUG, DEBUG_LOGGING
 from .utils.config import logging_settings, main_settings, read_config
+
 read_config()
 from . import cli
 
-
 if DEBUG:
     import sys
+
     sys.setrecursionlimit(100)
 
 

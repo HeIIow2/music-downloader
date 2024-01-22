@@ -79,6 +79,18 @@ def cli():
         action="store_true"
     )
 
+    parser.add_argument(
+        "--clear-cache",
+        help="Deletes the cache.",
+        action="store_true"
+    )
+
+    parser.add_argument(
+        "--clean-cache",
+        help="Deletes the outdated cache. (all expired cached files, and not indexed files)",
+        action="store_true"
+    )
+
     arguments = parser.parse_args()
 
     if arguments.verbose or arguments.test:
@@ -111,6 +123,12 @@ def cli():
         
     if arguments.frontend:
         cli.set_frontend(silent=False)
+
+    if arguments.clear_cache:
+        cli.clear_cache()
+
+    if arguments.clean_cache:
+        cli.clean_cache()
 
     # getting the genre
     genre: str = arguments.genre
