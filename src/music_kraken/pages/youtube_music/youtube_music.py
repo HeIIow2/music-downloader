@@ -5,11 +5,15 @@ import random
 import json
 from dataclasses import dataclass
 import re
+from functools import lru_cache
 
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
 from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITIALIZING
 from ...utils.functions import get_current_millis
+
+from .yt_utils.jsinterp import JSInterpreter
+
 
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -94,6 +98,32 @@ class YouTubeMusicCredentials:
     # the context in requests
     context: dict
 
+    player_url: str
+
+
+
+    @property
+    def player_id(self):
+        @lru_cache(128)
+        def _extract_player_info(player_url):
+            _PLAYER_INFO_RE = (
+                r'/s/player/(?P<id>[a-zA-Z0-9_-]{8,})/player',
+                r'/(?P<id>[a-zA-Z0-9_-]{8,})/player(?:_ias\.vflset(?:/[a-zA-Z]{2,3}_[a-zA-Z]{2,3})?|-plasma-ias-(?:phone|tablet)-[a-z]{2}_[A-Z]{2}\.vflset)/base\.js$',
+                r'\b(?P<id>vfl[a-zA-Z0-9_-]+)\b.*?\.js$',
+            )
+
+            for player_re in _PLAYER_INFO_RE:
+                id_m = re.search(player_re, player_url)
+                if id_m:
+                    break
+            else:
+                return
+
+            return id_m.group('id')
+
+        return _extract_player_info(self.player_url)
+
+
 
 class YoutubeMusic(SuperYouTube):
     # CHANGE
@@ -106,7 +136,8 @@ class YoutubeMusic(SuperYouTube):
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=youtube_settings["youtube_music_api_key"],
             ctoken="",
-            context=youtube_settings["youtube_music_innertube_context"]
+            context=youtube_settings["youtube_music_innertube_context"],
+            player_url=youtube_settings["player_url"],
         )
 
         self.start_millis = get_current_millis()
@@ -114,7 +145,7 @@ class YoutubeMusic(SuperYouTube):
         if self.credentials.api_key == "" or DEBUG_YOUTUBE_INITIALIZING:
             self._fetch_from_main_page()
 
-        super().__init__(*args, **kwargs)
+        SuperYouTube.__init__(self,*args, **kwargs)
 
     def _fetch_from_main_page(self):
         """
@@ -211,6 +242,41 @@ class YoutubeMusic(SuperYouTube):
 
         if not found_context:
             self.LOGGER.warning(f"Couldn't find a context for {type(self).__name__}.")
+
+        # player url
+        """
+        Thanks to youtube-dl <33
+        """
+        player_pattern = [
+            r'(?<="jsUrl":")(.*?)(?=")',
+            r'(?<="PLAYER_JS_URL":")(.*?)(?=")'
+        ]
+        found_player_url = False
+
+        for pattern in player_pattern:
+            for player_string in re.findall(pattern, content, re.M):
+                try:
+                    youtube_settings["player_url"] = "https://music.youtube.com" + player_string
+                    found_player_url = True
+                except json.decoder.JSONDecodeError:
+                    continue
+
+                self.credentials.player_url = youtube_settings["player_url"]
+                break
+
+            if found_player_url:
+                break
+
+        if not found_player_url:
+            self.LOGGER.warning(f"Couldn't find an url for the video player.")
+
+        # ytcfg
+        youtube_settings["ytcfg"] = json.loads(self._search_regex(
+            r'ytcfg\.set\s*\(\s*({.+?})\s*\)\s*;',
+            content,
+            default='{}'
+        )) or {}
+
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return super().get_source_type(source)
@@ -359,47 +425,70 @@ class YoutubeMusic(SuperYouTube):
 
         return album
 
-    @staticmethod
-    def _parse_adaptive_formats(data: list) -> str:
-        best_url = None
-        audio_format = None
+    @lru_cache()
+    def _extract_signature_function(self, player_url):
+        r = self.connection.get(player_url)
+        if r is None:
+            return lambda x: None
+
+        code = r.text
+
+        funcname = self._search_regex((
+            r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\bm=(?P<sig>[a-zA-Z0-9$]{2,})\(decodeURIComponent\(h\.s\)\)',
+            r'\bc&&\(c=(?P<sig>[a-zA-Z0-9$]{2,})\(decodeURIComponent\(c\)\)',
+            r'(?:\b|[^a-zA-Z0-9$])(?P<sig>[a-zA-Z0-9$]{2,})\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)(?:;[a-zA-Z0-9$]{2}\.[a-zA-Z0-9$]{2}\(a,\d+\))?',
+            r'(?P<sig>[a-zA-Z0-9$]+)\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
+            # Obsolete patterns
+            r'("|\')signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('
+        ),
+        code, group='sig')
+
+        jsi = JSInterpreter(code)
+        initial_function = jsi.extract_function(funcname)
+        return lambda s: initial_function([s])
+
+    def _decrypt_signature(self, s):
+        signing_func = self._extract_signature_function(player_url=youtube_settings["player_url"])
+        print(signing_func)
+        return signing_func(s)
+
+    def _parse_adaptive_formats(self, data: list, video_id) -> dict:
+        best_format = None
         best_bitrate = 0
 
-        def decode_url(_format: dict):
-            """
-            s=0%3Dw9hlenzIQkU5qD55flWqkO-wn8G6CJxI%3Dn9_OSUAUh3AiACkI5TNetQixuV6PJAxH-NFqGWGQCivQMkqprwyv8z2NAhIQRwsSdQfJAfJA
-            sp=sig
-            url=https://rr1---sn-cxaf0x-nugl.googlevideo.com/videoplayback%3Fexpire%3D1705426390%26ei%3DdmmmZZK1OYf41gL26KGwDg%26ip%3D129.143.170.58%26id%3Do-APgHuP61UnxvMxskECWmga1BRWYDFv91DMB7E6R_b_CG%26itag%3D18%26source%3Dyoutube%26requiressl%3Dyes%26xpc%3DEgVo2aDSNQ%253D%253D%26mh%3D_V%26mm%3D31%252C29%26mn%3Dsn-cxaf0x-nugl%252Csn-4g5edndd%26ms%3Dau%252Crdu%26mv%3Dm%26mvi%3D1%26pl%3D16%26pcm2%3Dyes%26gcr%3Dde%26initcwndbps%3D1737500%26spc%3DUWF9f6gk6WFPUFJZkjGIeb9q8NjPmmcsXzCp%26vprv%3D1%26svpuc%3D1%26mime%3Dvideo%252Fmp4%26ns%3DJnQgwQe-JazkZpURVB2rmlUQ%26cnr%3D14%26ratebypass%3Dyes%26dur%3D170.643%26lmt%3D1697280536047282%26mt%3D1705404526%26fvip%3D4%26fexp%3D24007246%26c%3DWEB_REMIX%26txp%3D2318224%26n%3DEq7jcRmeC89oLlbr%26sparams%3Dexpire%252Cei%252Cip%252Cid%252Citag%252Csource%252Crequiressl%252Cxpc%252Cpcm2%252Cgcr%252Cspc%252Cvprv%252Csvpuc%252Cmime%252Cns%252Ccnr%252Cratebypass%252Cdur%252Clmt%26lsparams%3Dmh%252Cmm%252Cmn%252Cms%252Cmv%252Cmvi%252Cpl%252Cinitcwndbps%26lsig%3DAAO5W4owRQIhAOJSldsMn2QA8b-rMr8mJoPr-9-8piIMe6J-800YB0DiAiBKLBHGfr-a6d87K0-WbsJzVf9f2DhYgv0vcntWvHmvGA%253D%253D"
-            :param _format:
-            :return:
-            """
-            sc = parse_qs(_format["signatureCipher"])
+        def parse_format(fmt: dict):
+            fmt_url = fmt.get('url')
 
-            fmt_url = sc["url"][0]
-            encrypted_sig = sc['s'][0]
+            if not fmt_url:
+                sc = parse_qs(possible_format["signatureCipher"])
+                print(sc["s"][0])
+                signature = self._decrypt_signature(sc['s'][0])
+                print(signature)
 
-            if not (sc and fmt_url and encrypted_sig):
-                return
+                sp = sc.get("sp", ["sig"])[0]
+                fmt_url = sc.get("url", [None])[0]
 
-            """
-            if not player_url:
-                player_url = self._extract_player_url(webpage)
-            if not player_url:
-                return
-            
-            signature = self._decrypt_signature(sc['s'][0], video_id, player_url)
-            sp = try_get(sc, lambda x: x['sp'][0]) or 'signature'
-            fmt_url += '&' + sp + '=' + signature
-            """
+                fmt_url += '&' + sp + '=' + signature
 
-        for possible_format in data:
-            _url_list = parse_qs(possible_format["signatureCipher"])["url"]
-            if len(_url_list) <= 0:
+            return {
+                "bitrate":  fmt.get("bitrate"),
+                "url": fmt_url
+            }
+
+        for possible_format in sorted(data, key=lambda x: x.get("bitrate", 0)):
+            if best_bitrate <= 0:
+                # no format has been found yet
+                best_format = possible_format
+
+            if possible_format.get('targetDurationSec') or possible_format.get('drmFamilies'):
                 continue
-
-            url = _url_list[0]
-            if best_url is None:
-                best_url = url
 
             mime_type: str = possible_format["mimeType"]
             if not mime_type.startswith("audio"):
@@ -407,18 +496,14 @@ class YoutubeMusic(SuperYouTube):
 
             bitrate = int(possible_format.get("bitrate", 0))
 
-            if bitrate >= main_settings["bitrate"]:
-                best_bitrate = bitrate
-                audio_format = possible_format
-                best_url = url
-                break
-
             if bitrate > best_bitrate:
                 best_bitrate = bitrate
-                audio_format = possible_format
-                best_url = url
+                best_format = possible_format
 
-        return best_url
+            if bitrate >= main_settings["bitrate"]:
+                break
+
+        return parse_format(best_format)
 
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
         """
@@ -471,7 +556,7 @@ class YoutubeMusic(SuperYouTube):
         available_formats = data.get("streamingData", {}).get("adaptiveFormats", [])
 
         if len(available_formats) > 0:
-            source.audio_url = self._parse_adaptive_formats(available_formats)
+            source.audio_url = self._parse_adaptive_formats(available_formats, video_id=browse_id).get("url")
 
         return song
 

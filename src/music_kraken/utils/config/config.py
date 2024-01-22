@@ -32,7 +32,7 @@ class ConfigDict(dict):
 
 
 class Config:
-    def __init__(self, component_list: Tuple[Union[Attribute, Description, EmptyLine]], config_file: Path) -> None:
+    def __init__(self, component_list: Tuple[Union[Attribute, Description, EmptyLine], ...], config_file: Path) -> None:
         self.config_file: Path = config_file
 
         self.component_list: List[Union[Attribute, Description, EmptyLine]] = [

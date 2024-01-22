@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 from copy import copy
 from pathlib import Path
 from typing import Optional, Union, Type, Dict, Set, List, Tuple
@@ -144,6 +145,33 @@ class Page:
 
     # set this to true, if all song details can also be fetched by fetching album details
     NO_ADDITIONAL_DATA_FROM_SONG = False
+
+    def _search_regex(self, pattern, string, default=None, fatal=True, flags=0, group=None):
+        """
+        Perform a regex search on the given string, using a single or a list of
+        patterns returning the first matching group.
+        In case of failure return a default value or raise a WARNING or a
+        RegexNotFoundError, depending on fatal, specifying the field name.
+        """
+
+        if isinstance(pattern, str):
+            mobj = re.search(pattern, string, flags)
+        else:
+            for p in pattern:
+                mobj = re.search(p, string, flags)
+                if mobj:
+                    break
+
+        if mobj:
+            if group is None:
+                # return the first matching group
+                return next(g for g in mobj.groups() if g is not None)
+            elif isinstance(group, (list, tuple)):
+                return tuple(mobj.group(g) for g in group)
+            else:
+                return mobj.group(group)
+
+        return default
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return None

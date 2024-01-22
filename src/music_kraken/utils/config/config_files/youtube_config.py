@@ -9,7 +9,7 @@ from ..attributes.attribute import Attribute
 from ..attributes.special_attributes import SelectAttribute, PathAttribute, UrlAttribute
 
 
-config = Config([
+config = Config((
     Attribute(name="use_youtube_alongside_youtube_music", default_value=False, description="""If set to true, it will search youtube through invidious and piped,
 despite a direct wrapper for the youtube music INNERTUBE api being implemented.
 I my INNERTUBE api wrapper doesn't work, set this to true."""),
@@ -35,6 +35,9 @@ Dw. if it is empty, Rachel will fetch it automatically for you <333
 If any instance seems to be missing, run music kraken with the -f flag."""),
     Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos."),
 
+    Attribute(name="player_url", default_value="/s/player/80b90bfd/player_ias.vflset/en_US/base.js", description="""
+    This is needed to fetch videos without invidious
+    """),
     Attribute(name="youtube_music_consent_cookies", default_value={
         "CONSENT": "PENDING+258"
     }, description="The cookie with the key CONSENT says to what stuff you agree. Per default you decline all cookies, but it honestly doesn't matter."),
@@ -89,8 +92,9 @@ If any instance seems to be missing, run music kraken with the -f flag."""),
                 "adSignalsInfo": {
                     "params": []
                 }
-            }, description="Don't bother about this. It is something technical, but if you wanna change the innertube requests... go on.")
-], LOCATIONS.get_config_file("youtube"))
+            }, description="Don't bother about this. It is something technical, but if you wanna change the innertube requests... go on."),
+    Attribute(name="ytcfg", description="Please... ignore it.", default_value={})
+), LOCATIONS.get_config_file("youtube"))
 
 
 class SettingsStructure(TypedDict):
@@ -102,5 +106,7 @@ class SettingsStructure(TypedDict):
     youtube_music_clean_data: bool
     youtube_url: List[ParseResult]
     use_sponsor_block: bool
+    player_url: str
     youtube_music_innertube_context: dict
     youtube_music_consent_cookies: dict
+    ytcfg: dict
