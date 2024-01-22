@@ -1,17 +1,18 @@
 from ..utils import cli_function
 
 from ...utils.path_manager import LOCATIONS
-from ...utils import shared
+from ...utils.config import main_settings
 
 
 def all_paths():
     return {
-        "Temp dir": LOCATIONS.TEMP_DIRECTORY,
-        "Music dir": LOCATIONS.MUSIC_DIRECTORY,
-        "Log file": shared.LOG_PATH,
+        "Temp dir": main_settings["temp_directory"],
+        "Music dir": main_settings["music_directory"],
         "Conf dir": LOCATIONS.CONFIG_DIRECTORY,
         "Conf file": LOCATIONS.CONFIG_FILE,
-        "FFMPEG bin": LOCATIONS.FFMPEG_BIN,
+        "logging file": main_settings["log_file"],
+        "FFMPEG bin": main_settings["ffmpeg_binary"],
+        "Cache Dir": main_settings["cache_directory"],
     }
 
 

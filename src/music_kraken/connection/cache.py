@@ -23,6 +23,9 @@ class CacheAttribute:
 
     @property
     def is_valid(self):
+        if isinstance(self.expires, str):
+            pass
+            # self.expires = datetime.fromisoformat(self.expires)
         return datetime.now() < self.expires
 
     def __eq__(self, other):
@@ -96,7 +99,7 @@ class Cache:
 
         return True
 
-    def set(self, content: bytes, name: str, expires_in: float = 10):
+    def set(self, content: bytes, name: str, expires_in: float = 10, module: str = ""):
         """
         :param content:
         :param module:
@@ -107,10 +110,12 @@ class Cache:
         if name == "":
             return
 
-        module_path = self._init_module(self.module)
+        module = self.module if module == "" else module
+
+        module_path = self._init_module(module)
 
         cache_attribute = CacheAttribute(
-            module=self.module,
+            module=module,
             name=name,
             created=datetime.now(),
             expires=datetime.now() + timedelta(days=expires_in),

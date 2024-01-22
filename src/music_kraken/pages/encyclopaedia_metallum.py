@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List, Optional, Dict, Type, Union
 from bs4 import BeautifulSoup
 import pycountry
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 from ..connection import Connection
 from ..utils.config import logging_settings
@@ -37,6 +37,10 @@ ALBUM_TYPE_MAP: Dict[str, AlbumType] = defaultdict(lambda: AlbumType.OTHER, {
     "Live album": AlbumType.LIVE_ALBUM,
     "Compilation": AlbumType.COMPILATION_ALBUM
 })
+
+URL_SITE = 'https://www.metal-archives.com/'
+URL_IMAGES = 'https://www.metal-archives.com/images/'
+URL_CSS = 'https://www.metal-archives.com/css/'
 
 
 def _song_from_json(artist_html=None, album_html=None, release_type=None, title=None, lyrics_html=None) -> Song:
@@ -110,6 +114,99 @@ def _album_from_json(album_html=None, release_type=None, artist_html=None) -> Al
     )
 
 
+def create_grid(
+        tableOrId: str = "#searchResultsSong",
+        nbrPerPage: int = 200,
+        ajaxUrl: str = "search/ajax-advanced/searching/songs/?songTitle=high&bandName=&releaseTitle=&lyrics=&genre=",
+        extraOptions: dict = None
+):
+    """
+    function createGrid(tableOrId, nbrPerPage, ajaxUrl, extraOptions) {
+        var table = null;
+        if (typeof tableOrId == "string") {
+            table = $(tableOrId);
+        } else {
+            table = tableOrId;
+        }
+        if (ajaxUrl == undefined) {
+            ajaxUrl = null;
+        }
+        var options = {
+            bAutoWidth: false,
+            bFilter: false,
+            bLengthChange: false,
+            bProcessing: true,
+            bServerSide: ajaxUrl != null,
+            iDisplayLength: nbrPerPage,
+            sAjaxSource: URL_SITE + ajaxUrl,
+            sPaginationType: 'full_numbers',
+            sDom: 'ipl<"block_spacer_5"><"clear"r>f<t>rip',
+            oLanguage: {
+                sProcessing: 'Loading...',
+                sEmptyTable: 'No records to display.',
+                sZeroRecords: 'No records found.'
+            },
+            "fnDrawCallback": autoScrollUp
+        };
+        if (typeof extraOptions == "object") {
+            for (var key in extraOptions) {
+                options[key] = extraOptions[key];
+                if (key == 'fnDrawCallback') {
+                    var callback = options[key];
+                    options[key] = function(o) {
+                        autoScrollUp(o);
+                        callback(o);
+                    }
+                }
+            }
+        }
+        return table.dataTable(options);
+    }
+
+    :return:
+    """
+
+    def onDrawCallback(o):
+        """
+        this gets executed once the ajax request is done
+        :param o:
+        :return:
+        """
+
+    extraOptions = extraOptions or {
+        "bSort": False,
+        "oLanguage": {
+            "sProcessing": 'Searching, please wait...',
+            "sEmptyTable": 'No matches found. Please try with different search terms.'
+         }
+    }
+    options = {
+        "bAutoWidth": False,
+        "bFilter": False,
+        "bLengthChange": False,
+        "bProcessing": True,
+        "bServerSide": ajaxUrl is not None,
+        "iDisplayLength": nbrPerPage,
+        "sAjaxSource": URL_SITE + ajaxUrl,
+        "sPaginationType": 'full_numbers',
+        "sDom": 'ipl<"block_spacer_5"><"clear"r>f<t>rip',
+        "oLanguage": {
+            "sProcessing": 'Loading...',
+            "sEmptyTable": 'No records to display.',
+            "sZeroRecords": 'No records found.'
+        },
+        "fnDrawCallback": onDrawCallback
+    }
+
+    for key, value in extraOptions.items():
+        options[key] = value
+        if key == 'fnDrawCallback':
+            callback = options[key]
+            options[key] = lambda o: onDrawCallback(o) and callback(o)
+
+    # implement jquery datatable
+
+
 class EncyclopaediaMetallum(Page):
     SOURCE_TYPE = SourcePages.ENCYCLOPAEDIA_METALLUM
     LOGGER = logging_settings["metal_archives_logger"]
@@ -117,16 +214,20 @@ class EncyclopaediaMetallum(Page):
     def __init__(self, **kwargs):
         self.connection: Connection = Connection(
             host="https://www.metal-archives.com/",
-            logger=self.LOGGER
+            logger=self.LOGGER,
+            module=type(self).__name__
         )
         
         super().__init__(**kwargs)
 
     def song_search(self, song: Song) -> List[Song]:
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?"
+        """
         endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/songs/?songTitle={song}&bandName={" \
                    "artist}&releaseTitle={album}&lyrics=&genre=&sEcho=1&iColumns=5&sColumns=&iDisplayStart=0" \
                    "&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&_" \
                    "=1674550595663"
+        """
 
         """
         The difficult question I am facing is, that if I try every artist, with every song, with every album,
@@ -136,17 +237,54 @@ class EncyclopaediaMetallum(Page):
         Is not good.
         """
 
-        song_title = song.title
-        album_titles = ["*"] if song.album_collection.empty else [album.title for album in song.album_collection]
-        artist_titles = ["*"] if song.main_artist_collection.empty else [artist.name for artist in song.main_artist_collection]
+        search_params = {
+            "songTitle": song.title,
+            "bandName": "*",
+            "releaseTitle": "*",
+            "lyrics": "",
+            "genre": "",
+            "sEcho": 1,
+            "iColumns": 5,
+            "sColumns": "",
+            "iDisplayStart": 0,
+            "iDisplayLength": 200,
+            "mDataProp_0": 0,
+            "mDataProp_1": 1,
+            "mDataProp_2": 2,
+            "mDataProp_3": 3,
+            "mDataProp_4": 4,
+            "_": 1705946986092
+        }
+        referer_params = {
+            "songTitle": song.title,
+            "bandName": "*",
+            "releaseTitle": "*",
+            "lyrics": "",
+            "genre": "",
+        }
+
+        urlencode(search_params)
+
+        song_title = song.title.strip()
+        album_titles = ["*"] if song.album_collection.empty else [album.title.strip() for album in song.album_collection]
+        artist_titles = ["*"] if song.main_artist_collection.empty else [artist.name.strip() for artist in song.main_artist_collection]
+
 
         search_results = []
 
         for artist in artist_titles:
             for album in album_titles:
-                r = self.connection.get(
-                    endpoint.format(song=song_title, artist=artist, album=album)
-                )
+                _search = search_params.copy()
+                _referer_params = referer_params.copy()
+                _search["bandName"] = _referer_params["bandName"] = artist
+                _search["releaseTitle"] = _referer_params["releaseTitle"] = album
+
+                r = self.connection.get(endpoint + urlencode(_search), headers={
+                    "Referer": "https://www.metal-archives.com/search/advanced/searching/songs?" + urlencode(_referer_params),
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache",
+                    "X-Requested-With": "XMLHttpRequest",
+                }, name="song_search")
 
                 if r is None:
                     return []
@@ -162,20 +300,59 @@ class EncyclopaediaMetallum(Page):
         return search_results
 
     def album_search(self, album: Album) -> List[Album]:
-        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?bandName={" \
-                   "artist}&releaseTitle={album}&releaseYearFrom=&releaseMonthFrom=&releaseYearTo=&releaseMonthTo" \
-                   "=&country=&location=&releaseLabelName=&releaseCatalogNumber=&releaseIdentifiers" \
-                   "=&releaseRecordingInfo=&releaseDescription=&releaseNotes=&genre=&sEcho=1&iColumns=3&sColumns" \
-                   "=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&_=1674563943747"
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/albums/?"
 
+        search_params = {
+            "bandName": "*",
+            "releaseTitle": album.title.strip(),
+            "releaseYearFrom": "",
+            "releaseMonthFrom": "",
+            "releaseYearTo": "",
+            "releaseMonthTo": "",
+            "country": "",
+            "location": "",
+            "releaseLabelName": "",
+            "releaseCatalogNumber": "",
+            "releaseIdentifiers": "",
+            "releaseRecordingInfo": "",
+            "releaseDescription": "",
+            "releaseNotes": "",
+            "genre": "",
+            "sEcho": 1,
+            "iColumns": 3,
+            "sColumns": "",
+            "iDisplayStart": 0,
+            "iDisplayLength": 200,
+            "mDataProp_0": 0,
+            "mDataProp_1": 1,
+            "mDataProp_2": 2,
+            "_": 1705946986092
+        }
+        referer_params = {
+            "bandName": "*",
+            "releaseTitle": album.title.strip(),
+        }
 
         album_title = album.title
-        artist_titles = ["*"] if album.artist_collection.empty else [artist.name for artist in album.artist_collection]
+        artist_titles = ["*"] if album.artist_collection.empty else [artist.name.strip() for artist in album.artist_collection]
 
         search_results = []
 
         for artist in artist_titles:
-            r = self.connection.get(endpoint.format(artist=artist, album=album_title))
+            _search = search_params.copy()
+            _referer_params = referer_params.copy()
+            _search["bandName"] = _referer_params["bandName"] = artist
+
+            r = self.connection.get(endpoint + urlencode(_search), headers={
+                "Referer": "https://www.metal-archives.com/search/advanced/searching/albums?" + urlencode(_referer_params),
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+                "X-Requested-With": "XMLHttpRequest",
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+
+            })
+
+            #r = self.connection.get(endpoint.format(artist=artist, album=album_title))
             if r is None:
                 return []
 
@@ -186,12 +363,37 @@ class EncyclopaediaMetallum(Page):
             ) for raw_album in r.json()['aaData'])
 
     def artist_search(self, artist: Artist) -> List[Artist]:
-        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?bandName={" \
-                   "artist}&genre=&country=&yearCreationFrom=&yearCreationTo=&bandNotes=&status=&themes=&location" \
-                   "=&bandLabelName=&sEcho=1&iColumns=3&sColumns=&iDisplayStart=0&iDisplayLength=200&mDataProp_0=0" \
-                   "&mDataProp_1=1&mDataProp_2=2&_=1674565459976"
+        endpoint = "https://www.metal-archives.com/search/ajax-advanced/searching/bands/?"
 
-        r = self.connection.get(endpoint.format(artist=artist.name))
+        search_params = {
+            "bandName": artist.name.strip(),
+            "genre": "",
+            "country": "",
+            "yearCreationFrom": "",
+            "yearCreationTo": "",
+            "bandNotes": "",
+            "status": "",
+            "themes": "",
+            "location": "",
+            "bandLabelName": "",
+            "sEcho": 1,
+            "iColumns": 3,
+            "sColumns": "",
+            "iDisplayStart": 0,
+            "iDisplayLength": 200,
+            "mDataProp_0": 0,
+            "mDataProp_1": 1,
+            "mDataProp_2": 2,
+            "_": 1705946986092
+        }
+
+        r = self.connection.get(endpoint + urlencode(search_params), headers={
+            "Referer": "https://www.metal-archives.com/search/advanced/searching/bands?" + urlencode({"bandName": artist.name.strip()}),
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+        }, name="artist_search.json")
 
         if r is None:
             return []

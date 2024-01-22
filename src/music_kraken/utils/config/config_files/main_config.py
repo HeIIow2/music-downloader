@@ -58,6 +58,21 @@ If you use Tor, make sure the Tor browser is installed, and running.I can't guar
     Attribute(name="show_download_errors_threshold", default_value=0.3, description="""If the percentage of failed downloads goes over this threshold,
 all the error messages are shown."""),
 
+    Attribute(
+        name="language",
+        default_value="en-US,en;q=0.6",
+        description="The language of the program. This will be used to translate the program in the future.\n"
+                    "Currently it just sets the Accept-Language header.\n"
+                    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language"
+    ),
+    Attribute(
+        name="user_agent",
+        default_value="Mozilla/5.0 (X11; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0",
+        description="The user agent of the program. This will be used to translate the program in the future.\n"
+                    "Currently it just sets the User-Agent header.\n"
+                    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent"
+    ),
+
     EmptyLine(),
 
     PathAttribute(name="music_directory", default_value=LOCATIONS.MUSIC_DIRECTORY.resolve(), description="The directory, all the music will be downloaded to."),
@@ -121,6 +136,8 @@ class SettingsStructure(TypedDict):
     tor_port: int
     chunk_size: int
     show_download_errors_threshold: float
+    language: str
+    user_agent: str
 
     # paths
     music_directory: Path

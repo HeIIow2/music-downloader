@@ -60,11 +60,6 @@ class Connection:
         self.heartbeat_thread = None
         self.heartbeat_interval = heartbeat_interval
 
-    @property
-    def user_agent(self) -> str:
-        return self.session.headers.get("user-agent",
-                                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
-
     def start_heartbeat(self):
         if self.heartbeat_interval <= 0:
             self.LOGGER.warning(f"Can't start a heartbeat with {self.heartbeat_interval}s in between.")
@@ -101,10 +96,13 @@ class Connection:
 
     def get_header(self, **header_values) -> Dict[str, str]:
         return {
-            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+            "user-agent": main_settings["user_agent"],
+            "User-Agent": main_settings["user_agent"],
             "Connection": "keep-alive",
-            # "Host": self.HOST.netloc,
+            "Host": self.HOST.netloc,
+            "authority": self.HOST.netloc,
             "Referer": self.base_url(),
+            "Accept-Language": main_settings["language"],
             **header_values
         }
 
@@ -117,16 +115,18 @@ class Connection:
             refer_from_origin: bool,
             url: ParseResult
     ) -> Dict[str, str]:
-        if headers is None:
-            headers = dict()
-
+        headers = self.get_header(**(headers or {}))
         if not refer_from_origin:
             headers["Referer"] = self.base_url(url=url)
 
         return headers
 
-    def save(self, r: requests.Response, name: str, **kwargs):
-        self.cache.set(r.content, name, expires_in=kwargs.get("expires_in", self.cache_expiring_duration))
+    def save(self, r: requests.Response, name: str, error: bool = False, **kwargs):
+        n_kwargs = {}
+        if error:
+            n_kwargs["module"] = "failed_requests"
+
+        self.cache.set(r.content, name, expires_in=kwargs.get("expires_in", self.cache_expiring_duration), **n_kwargs)
 
     def request(
             self,
@@ -135,7 +135,7 @@ class Connection:
             accepted_response_codes: set,
             url: str,
             timeout: float,
-            headers: dict,
+            headers: Optional[dict],
             refer_from_origin: bool = True,
             raw_url: bool = False,
             sleep_after_404: float = None,
@@ -143,16 +143,28 @@ class Connection:
             name: str = "",
             **kwargs
     ) -> Optional[requests.Response]:
-        if name != "":
+        parsed_url = urlparse(url)
+
+        headers = self._update_headers(
+            headers=headers,
+            refer_from_origin=refer_from_origin,
+            url=parsed_url
+        )
+
+        disable_cache = headers.get("Cache-Control") == "no-cache" or kwargs.get("disable_cache", False)
+
+
+        if name != "" and not disable_cache:
             cached = self.cache.get(name)
 
-            with responses.RequestsMock() as resp:
-                resp.add(
-                    method=method,
-                    url=url,
-                    body=cached,
-                )
-                return requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
+            if cached is not None:
+                with responses.RequestsMock() as resp:
+                    resp.add(
+                        method=method,
+                        url=url,
+                        body=cached,
+                    )
+                    return requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
 
         if sleep_after_404 is None:
             sleep_after_404 = self.sleep_after_404
@@ -162,16 +174,9 @@ class Connection:
         if timeout is None:
             timeout = self.TIMEOUT
 
-        parsed_url = urlparse(url)
-
-        headers = self._update_headers(
-            headers=headers,
-            refer_from_origin=refer_from_origin,
-            url=parsed_url
-        )
-
         request_url = parsed_url.geturl() if not raw_url else url
 
+        r = None
         connection_failed = False
         try:
             if self.session_is_occupied and not is_heartbeat:
@@ -179,10 +184,12 @@ class Connection:
                 while self.session_is_occupied and not is_heartbeat:
                     pass
 
+            print(headers)
             r: requests.Response = requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
 
             if r.status_code in accepted_response_codes:
-                self.save(r, name, **kwargs)
+                if not disable_cache:
+                    self.save(r, name, **kwargs)
                 return r
 
             if self.SEMANTIC_NOT_FOUND and r.status_code == 404:
@@ -199,7 +206,13 @@ class Connection:
         if not connection_failed:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
                                 f"at {url}. ({try_count}-{self.TRIES})")
-            self.LOGGER.debug(r.content)
+            if r is not None:
+                self.LOGGER.debug("request headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.request.headers.items()))
+                self.LOGGER.debug("response headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.headers.items()))
+                self.LOGGER.debug(r.content)
+                if name != "":
+                    self.save(r, name, error=True, **kwargs)
+
             if sleep_after_404 != 0:
                 self.LOGGER.warning(f"Waiting for {sleep_after_404} seconds.")
                 time.sleep(sleep_after_404)
@@ -219,6 +232,7 @@ class Connection:
             sleep_after_404=sleep_after_404,
             is_heartbeat=is_heartbeat,
             name=name,
+            user_agent=main_settings["user_agent"],
             **kwargs
         )
 

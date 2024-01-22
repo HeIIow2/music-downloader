@@ -1,5 +1,8 @@
 import music_kraken
 
+import logging
+print("Setting logging-level to DEBUG")
+logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == "__main__":
     normally_download = [
