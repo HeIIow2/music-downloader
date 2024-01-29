@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class BColors:
+class BColors(Enum):
     # https://stackoverflow.com/a/287944
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
