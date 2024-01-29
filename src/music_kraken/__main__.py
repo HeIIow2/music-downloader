@@ -125,10 +125,12 @@ def cli():
         cli.set_frontend(silent=False)
 
     if arguments.clear_cache:
-        cli.clear_cache()
+        from .cli.options import cache
+        cache.clear_cache()
 
     if arguments.clean_cache:
-        cli.clean_cache()
+        from .cli.options import cache
+        cache.clean_cache()
 
     # getting the genre
     genre: str = arguments.genre

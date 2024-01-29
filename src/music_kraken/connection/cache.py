@@ -145,6 +145,9 @@ class Cache:
         keep = set()
 
         for ca in self.cached_attributes.copy():
+            if ca.name == "":
+                continue
+
             file = Path(self._dir, ca.module, ca.name)
 
             if not ca.is_valid:
