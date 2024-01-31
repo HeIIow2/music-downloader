@@ -232,7 +232,6 @@ class Connection:
             sleep_after_404=sleep_after_404,
             is_heartbeat=is_heartbeat,
             name=name,
-            user_agent=main_settings["user_agent"],
             **kwargs
         )
 

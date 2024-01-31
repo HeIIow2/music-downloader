@@ -30,12 +30,13 @@ Dw. if it is empty, Rachel will fetch it automatically for you <333
     Attribute(name="youtube_music_clean_data", default_value=True, description="If set to true, it exclusively fetches artists/albums/songs, not things like user channels etc."),
     UrlAttribute(name="youtube_url", default_value=[
         "https://www.youtube.com/",
-        "https://www.youtu.be/"
+        "https://www.youtu.be/",
+        "https://music.youtube.com/",
     ], description="""This is used to detect, if an url is from youtube, or any alternativ frontend.
 If any instance seems to be missing, run music kraken with the -f flag."""),
     Attribute(name="use_sponsor_block", default_value=True, description="Use sponsor block to remove adds or simmilar from the youtube videos."),
 
-    Attribute(name="player_url", default_value="/s/player/80b90bfd/player_ias.vflset/en_US/base.js", description="""
+    Attribute(name="player_url", default_value="https://music.youtube.com/s/player/80b90bfd/player_ias.vflset/en_US/base.js", description="""
     This is needed to fetch videos without invidious
     """),
     Attribute(name="youtube_music_consent_cookies", default_value={

@@ -104,8 +104,11 @@ def cli():
     
     if arguments.r:
         import os
-        if os.path.exists(shared.CONFIG_FILE):
-            os.remove(shared.CONFIG_FILE)
+
+        for file in shared.CONFIG_DIRECTORY.iterdir():
+            if file.is_file():
+                print(f"Deleting {file}....")
+                file.unlink()
         read_config()
         
         exit()

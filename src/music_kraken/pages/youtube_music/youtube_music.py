@@ -1,5 +1,7 @@
+from __future__ import unicode_literals, annotations
+
 from typing import Dict, List, Optional, Set, Type
-from urllib.parse import urlparse, urlunparse, quote, parse_qs
+from urllib.parse import urlparse, urlunparse, quote, parse_qs, urlencode
 import logging
 import random
 import json
@@ -7,6 +9,7 @@ from dataclasses import dataclass
 import re
 from functools import lru_cache
 
+import youtube_dl
 from youtube_dl.jsinterp import JSInterpreter
 from youtube_dl.extractor.youtube import YoutubeIE
 
@@ -16,7 +19,6 @@ from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITIALIZING
 from ...utils.functions import get_current_millis
 
 from .yt_utils.jsinterp import JSInterpreter
-
 
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -104,8 +106,6 @@ class YouTubeMusicCredentials:
 
     player_url: str
 
-
-
     @property
     def player_id(self):
         @lru_cache(128)
@@ -128,15 +128,34 @@ class YouTubeMusicCredentials:
         return _extract_player_info(self.player_url)
 
 
+class MusicKrakenYoutubeIE(YoutubeIE):
+    def __init__(self, *args, main_instance: YoutubeMusic, **kwargs):
+        self.main_instance = main_instance
+        super().__init__(*args, **kwargs)
+
+
+class MusicKrakenYoutubeDL(youtube_dl.YoutubeDL):
+    def __init__(self, main_instance: YoutubeMusic, ydl_opts: dict, **kwargs):
+        self.main_instance = main_instance
+        super().__init__(ydl_opts or {}, **kwargs)
+        super().__enter__()
+
+    def __del__(self):
+        super().__exit__(None, None, None)
+
+
+
 
 class YoutubeMusic(SuperYouTube):
     # CHANGE
     SOURCE_TYPE = SourcePages.YOUTUBE_MUSIC
     LOGGER = logging_settings["youtube_music_logger"]
 
-    def __init__(self, *args, **kwargs):
-        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(logger=self.LOGGER,
-                                                                         accept_language="en-US,en;q=0.5")
+    def __init__(self, *args, ydl_opts: dict = None, **kwargs):
+        self.connection: YoutubeMusicConnection = YoutubeMusicConnection(
+            logger=self.LOGGER,
+            accept_language="en-US,en;q=0.5"
+        )
         self.credentials: YouTubeMusicCredentials = YouTubeMusicCredentials(
             api_key=youtube_settings["youtube_music_api_key"],
             ctoken="",
@@ -149,7 +168,17 @@ class YoutubeMusic(SuperYouTube):
         if self.credentials.api_key == "" or DEBUG_YOUTUBE_INITIALIZING:
             self._fetch_from_main_page()
 
-        SuperYouTube.__init__(self,*args, **kwargs)
+        SuperYouTube.__init__(self, *args, **kwargs)
+
+        self.download_connection: Connection = Connection(
+            host="https://music.youtube.com/",
+            logger=self.LOGGER,
+            sleep_after_404=youtube_settings["sleep_after_youtube_403"]
+        )
+
+        # https://github.com/ytdl-org/youtube-dl/blob/master/README.md#embedding-youtube-dl
+        self.ydl = MusicKrakenYoutubeDL(self, ydl_opts)
+        self.yt_ie = MusicKrakenYoutubeIE(downloader=self.ydl, main_instance=self)
 
     def _fetch_from_main_page(self):
         """
@@ -282,7 +311,6 @@ class YoutubeMusic(SuperYouTube):
             content,
             default='{}'
         )) or {}
-
 
     def get_source_type(self, source: Source) -> Optional[Type[DatabaseObject]]:
         return super().get_source_type(source)
@@ -454,15 +482,19 @@ class YoutubeMusic(SuperYouTube):
             r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
             r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('
         ),
-        code, group='sig')
+            code, group='sig')
 
         jsi = JSInterpreter(code)
         initial_function = jsi.extract_function(funcname)
+
         return lambda s: initial_function([s])
 
-    def _decrypt_signature(self, s):
-        signing_func = self._extract_signature_function(player_url=youtube_settings["player_url"])
-        print(signing_func)
+    def _decrypt_signature(self, video_id, s):
+        print(youtube_settings["player_url"])
+        res = self._extract_signature_function(player_url=youtube_settings["player_url"])
+        test_string = ''.join(map(str, range(len(s))))
+        cache_spec = [ord(c) for c in res(test_string)]
+        signing_func = lambda _s: ''.join(_s[i] for i in cache_spec)
         return signing_func(s)
 
     def _parse_adaptive_formats(self, data: list, video_id) -> dict:
@@ -475,16 +507,45 @@ class YoutubeMusic(SuperYouTube):
             if not fmt_url:
                 sc = parse_qs(possible_format["signatureCipher"])
                 print(sc["s"][0])
-                signature = self._decrypt_signature(sc['s'][0])
+                signature = self._decrypt_signature(video_id, sc['s'][0])
                 print(signature)
 
-                sp = sc.get("sp", ["sig"])[0]
+                tmp = sc.get("sp", ["sig"])
+                sig_key = "signature" if len(tmp) <= 0 else tmp[-1]
+
                 fmt_url = sc.get("url", [None])[0]
 
-                fmt_url += '&' + sp + '=' + signature
+                ftm_parsed = urlparse(fmt_url)
+                q = parse_qs(ftm_parsed.query)
+                q[sig_key] = [signature]
+                print(json.dumps(q, indent=4))
+                print(sig_key)
+                query_str = urlencode(q)
+                print(query_str)
+
+                fmt_url = urlunparse((
+                    ftm_parsed.scheme,
+                    ftm_parsed.netloc,
+                    ftm_parsed.path,
+                    ftm_parsed.params,
+                    query_str,
+                    ftm_parsed.fragment
+                ))
+
+                """
+                    if not isinstance(url, tuple):
+                        url = compat_urllib_parse.urlparse(url)
+                    query = kwargs.pop('query_update', None)
+                    if query:
+                        qs = compat_parse_qs(url.query)
+                        qs.update(query)
+                        kwargs['query'] = compat_urllib_parse_urlencode(qs, True)
+                        kwargs = compat_kwargs(kwargs)
+                    return compat_urllib_parse.urlunparse(url._replace(**kwargs))
+                """
 
             return {
-                "bitrate":  fmt.get("bitrate"),
+                "bitrate": fmt.get("bitrate"),
                 "url": fmt_url
             }
 
@@ -512,32 +573,16 @@ class YoutubeMusic(SuperYouTube):
         return parse_format(best_format)
 
     def fetch_song(self, source: Source, stop_at_level: int = 1) -> Song:
-        """
-        curl 'https://music.youtube.com/youtubei/v1/player?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30&prettyPrint=false'
-            --compressed -X POST
-            -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0'
-            -H 'Accept: */*'
-            -H 'Accept-Language: en-US,en;q=0.5'
-            -H 'Accept-Encoding: gzip, deflate, br'
-             -H 'Content-Type: application/json'
-             -H 'Referer: https://music.youtube.com/'
-             -H 'X-Goog-Visitor-Id: CgtHdmkzbGhaMDltVSj4j5mtBjIKCgJERRIEEgAgOA%3D%3D'
-             -H 'X-Youtube-Bootstrap-Logged-In: false'
-             -H 'X-Youtube-Client-Name: 67' -H 'X-Youtube-Client-Version: 1.20240103.01.00'
-             -H 'Origin: https://music.youtube.com'
-             -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Connection: keep-alive' -H 'Alt-Used: music.youtube.com'
-            -H 'Cookie: SOCS=CAISNQgREitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjQwMTA5LjA1X3AwGgJlbiACGgYIgI6XrQY; YSC=r46McyPx8dE; VISITOR_PRIVACY_METADATA=CgJERRIEEgAgOA%3D%3D; CONSENT=PENDING+663; VISITOR_INFO1_LIVE=Gvi3lhZ09mU; _gcl_au=1.1.396177275.1705396217; ST-1hw5vco=csn=MC4xNTI3OTkwMzQyOTc1MzQ2&itct=CNgDEMn0AhgDIhMItMS6_cfhgwMVDMtCBR1u5wb6' -H 'TE: trailers'
-            --data-raw '{
-                "videoId":"QeQrfsqPMCs",
-                "context":{"client":{"hl":"en","gl":"DE","remoteHost":"129.143.170.58","deviceMake":"","deviceModel":"","visitorData":"CgtHdmkzbGhaMDltVSj4j5mtBjIKCgJERRIEEgAgOA%3D%3D","userAgent":"Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0,gzip(gfe)","clientName":"WEB_REMIX","clientVersion":"1.20240103.01.00","osName":"X11","osVersion":"","originalUrl":"https://music.youtube.com/?cbrd=1","platform":"DESKTOP","clientFormFactor":"UNKNOWN_FORM_FACTOR","configInfo":{"appInstallData":"CPiPma0GEL2ZsAUQqJqwBRCmgbAFEP24_RIQjaKwBRDNlbAFENWIsAUQmaSwBRD6p7AFEL75rwUQmvCvBRDT4a8FEL2KsAUQrtT-EhC36v4SENnJrwUQnouwBRDJ968FEJP8rwUQuIuuBRDM364FEIiHsAUQ0I2wBRDnuq8FEPOhsAUQ2piwBRDMrv4SEIjjrwUQooGwBRDuorAFEM6osAUQ6-j-EhC3nbAFEKXC_hIQ9fmvBRDh8q8FEJmUsAUQt--vBRD8hbAFEKigsAUQrLevBRC_o7AFEOuTrgUQqfevBRDd6P4SEJj8_hIQ6YywBRC9tq4FEOupsAUQ5LP-EhDfhP8SEOrDrwUQqKGwBRC8-a8FEPKYsAU%3D"},"browserName":"Firefox","browserVersion":"121.0","acceptHeader":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8","deviceExperimentId":"ChxOek15TkRZeU1EazNOalE0TXpVNU1EQXhOZz09EPiPma0GGPiPma0G","screenWidthPoints":780,"screenHeightPoints":638,"screenPixelDensity":2,"screenDensityFloat":2,"utcOffsetMinutes":60,"userInterfaceTheme":"USER_INTERFACE_THEME_DARK","timeZone":"Europe/Berlin","playerType":"UNIPLAYER","tvAppInfo":{"livingRoomAppMode":"LIVING_ROOM_APP_MODE_UNSPECIFIED"},"clientScreen":"WATCH_FULL_SCREEN"},"user":{"lockedSafetyMode":false},"request":{"useSsl":true,"internalExperimentFlags":[],"consistencyTokenJars":[]},"clientScreenNonce":"MC4xNTI3OTkwMzQyOTc1MzQ2","adSignalsInfo":{"params":[{"key":"dt","value":"1705396224619"},{"key":"flash","value":"0"},{"key":"frm","value":"0"},{"key":"u_tz","value":"60"},{"key":"u_his","value":"5"},{"key":"u_h","value":"800"},{"key":"u_w","value":"1280"},{"key":"u_ah","value":"769"},{"key":"u_aw","value":"1280"},{"key":"u_cd","value":"24"},{"key":"bc","value":"31"},{"key":"bih","value":"638"},{"key":"biw","value":"780"},{"key":"brdim","value":"0,31,0,31,1280,31,1280,769,780,638"},{"key":"vis","value":"1"},{"key":"wgl","value":"true"},{"key":"ca_type","value":"image"}]},"clickTracking":{"clickTrackingParams":"CNgDEMn0AhgDIhMItMS6_cfhgwMVDMtCBR1u5wb6"}},"playbackContext":{"contentPlaybackContext":{"html5Preference":"HTML5_PREF_WANTS","lactMilliseconds":"22","referer":"https://music.youtube.com/","signatureTimestamp":19732,"autoCaptionsDefaultOn":false,"mdxContext":{}}},"cpn":"Aqv99K7Z_3tj9ACA","playlistId":"RDAMVMQeQrfsqPMCs","captionParams":{},"serviceIntegrityDimensions":{"poToken":"MnQLhidwfIVPEAu-woG_SQU69mfPclEz7kVUmC1dNP8EQN7NNyVdF3KcVIuKRKrcXlwOXEQg3hc5qXSBbbQU_M7lxx9zgQMelv9iZwWfWlLyI9RoZXB1wipAYHWNzxu7rMqDwRn5M6WS4RRIeHcld9P_YZRYdg=="}
-            }'
-        :param source:
-        :param stop_at_level:
-        :return:
-        """
-        song = Song(source_list=[
-            source
-        ])
+        # implement the functionality yt_dl provides
+        ydl_res = self.yt_ie._real_extract(source.url)
+        print(ydl_res)
+
+        source.audio_url = ydl_res.get("formats")[0].get("url")
+        song = Song(
+            title=ydl_res.get("title"),
+            source_list=[source],
+        )
+        return song
 
         parsed_url = urlparse(source.url)
         video_id = parse_qs(parsed_url.query)['v']
@@ -575,4 +620,9 @@ class YoutubeMusic(SuperYouTube):
             return super().download_song_to_target(source, target)
 
         print(source.audio_url)
-        return self.download_connection.stream_into(source.audio_url, target, description=desc, raw_url=True)
+        return self.download_connection.stream_into(source.audio_url, target, description=desc, headers={
+            "Host": "rr1---sn-cxaf0x-nugl.googlevideo.com"
+        })
+
+    def __del__(self):
+        self.ydl.__exit__()

@@ -1,5 +1,6 @@
 import random
 
+from .path_manager import LOCATIONS
 from .config import main_settings
 
 DEBUG = True
@@ -14,6 +15,8 @@ if DEBUG:
 def get_random_message() -> str:
     return random.choice(main_settings['happy_messages'])
 
+
+CONFIG_DIRECTORY = LOCATIONS.CONFIG_DIRECTORY
 
 HIGHEST_ID = 2 ** main_settings['id_bits']
 
