@@ -10,15 +10,12 @@ import re
 from functools import lru_cache
 
 import youtube_dl
-from youtube_dl.jsinterp import JSInterpreter
 from youtube_dl.extractor.youtube import YoutubeIE
 
 from ...utils.exception.config import SettingValueError
 from ...utils.config import main_settings, youtube_settings, logging_settings
 from ...utils.shared import DEBUG, DEBUG_YOUTUBE_INITIALIZING
 from ...utils.functions import get_current_millis
-
-from .yt_utils.jsinterp import JSInterpreter
 
 if DEBUG:
     from ...utils.debug_utils import dump_to_file
@@ -162,8 +159,6 @@ class MusicKrakenYoutubeIE(YoutubeIE):
         self.main_instance = main_instance
         super().__init__(*args, **kwargs)
 
-    def _extract_player_url(self, *ytcfgs, **kw_webpage):
-        return youtube_settings["player_url"]
 
 
 
@@ -493,8 +488,6 @@ class YoutubeMusic(SuperYouTube):
         highest_score = 0
         best_format = {}
         for _format in format_list:
-            print(_format)
-
             _s = _calc_score(_format)
             if _s >= highest_score:
                 highest_score = _s
@@ -513,7 +506,6 @@ class YoutubeMusic(SuperYouTube):
         )
         return song
 
-
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
         if source.audio_url is None:
             self.fetch_song(source)
@@ -522,10 +514,9 @@ class YoutubeMusic(SuperYouTube):
             self.LOGGER.warning(f"Couldn't fetch the audio source with the innertube api, falling back to invidious.")
             return super().download_song_to_target(source, target)
 
-        print(source.audio_url)
         return self.download_connection.stream_into(source.audio_url, target, description=desc, headers={
             "Host": "rr1---sn-cxaf0x-nugl.googlevideo.com"
-        })
+        }, raw_url=True)
 
     def __del__(self):
         self.ydl.__exit__()
