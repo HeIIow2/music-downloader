@@ -76,7 +76,7 @@ class YoutubeMusicConnection(Connection):
             )
 
     def heartbeat(self):
-        r = self.get("https://music.youtube.com/verify_session", is_heartbeat=True)
+        r = self.get("https://music.youtube.com/verify_session")
         if r is None:
             self.heartbeat_failed()
             return
@@ -516,7 +516,7 @@ class YoutubeMusic(SuperYouTube):
 
         return self.download_connection.stream_into(source.audio_url, target, description=desc, headers={
             "Host": "rr1---sn-cxaf0x-nugl.googlevideo.com"
-        }, raw_url=True)
+        }, raw_url=True, disable_cache=True)
 
     def __del__(self):
         self.ydl.__exit__()

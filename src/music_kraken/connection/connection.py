@@ -3,6 +3,7 @@ import threading
 import time
 from typing import List, Dict, Optional, Set
 from urllib.parse import urlparse, urlunsplit, ParseResult
+import copy
 
 import requests
 import responses
@@ -20,7 +21,7 @@ class Connection:
             self,
             host: str,
             proxies: List[dict] = None,
-            tries: int = (len(main_settings["proxies"]) + 1) * 4,
+            tries: int = (len(main_settings["proxies"]) + 1) * main_settings["tries_per_proxy"],
             timeout: int = 7,
             logger: logging.Logger = logging.getLogger("connection"),
             header_values: Dict[str, str] = None,
@@ -55,34 +56,29 @@ class Connection:
         self.session.headers = self.get_header(**self.HEADER_VALUES)
         self.session.proxies = self.rotating_proxy.current_proxy
 
-        self.session_is_occupied: bool = False
-
         self.heartbeat_thread = None
         self.heartbeat_interval = heartbeat_interval
+
+        self.lock: bool = False
 
     def start_heartbeat(self):
         if self.heartbeat_interval <= 0:
             self.LOGGER.warning(f"Can't start a heartbeat with {self.heartbeat_interval}s in between.")
 
-        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval,),
-                                                 daemon=True)
+        self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, args=(self.heartbeat_interval,), daemon=True)
         self.heartbeat_thread.start()
 
     def heartbeat_failed(self):
-        self.LOGGER.warning(f"I just died... (The heartbeat failed)")
+        self.LOGGER.warning(f"The hearth couldn't beat.")
 
     def heartbeat(self):
         # Your code to send heartbeat requests goes here
-        print(
-            "the hearth is beating, but it needs to be implemented ;-;\nFuck youuuu for setting heartbeat in the constructor to true, but not implementing the method Connection.hearbeat()")
+        raise NotImplementedError("please implement the heartbeat function.")
 
     def _heartbeat_loop(self, interval: float):
         def heartbeat_wrapper():
-            self.session_is_occupied = True
-            self.LOGGER.debug(f"I am living. (sending a heartbeat)")
+            self.LOGGER.debug(f"The hearth is beating.")
             self.heartbeat()
-            self.LOGGER.debug(f"finished the heartbeat")
-            self.session_is_occupied = False
 
         while True:
             heartbeat_wrapper()
@@ -100,7 +96,6 @@ class Connection:
             "User-Agent": main_settings["user_agent"],
             "Connection": "keep-alive",
             "Host": self.HOST.netloc,
-            "authority": self.HOST.netloc,
             "Referer": self.base_url(),
             "Accept-Language": main_settings["language"],
             **header_values
@@ -143,6 +138,8 @@ class Connection:
             name: str = "",
             **kwargs
     ) -> Optional[requests.Response]:
+        current_kwargs = copy.copy(locals)
+
         parsed_url = urlparse(url)
 
         headers = self._update_headers(
@@ -179,12 +176,12 @@ class Connection:
         r = None
         connection_failed = False
         try:
-            if self.session_is_occupied and not is_heartbeat:
+            if self.lock:
                 self.LOGGER.info(f"Waiting for the heartbeat to finish.")
-                while self.session_is_occupied and not is_heartbeat:
+                while self.lock and not is_heartbeat:
                     pass
-
-            print(headers)
+            
+            self.lock = True
             r: requests.Response = requests.request(method=method, url=url, timeout=timeout, headers=headers, **kwargs)
 
             if r.status_code in accepted_response_codes:
@@ -196,12 +193,17 @@ class Connection:
                 self.LOGGER.warning(f"Couldn't find url (404): {request_url}")
                 return None
 
+        # the server rejected the request, or the internet is lacking
         except requests.exceptions.Timeout:
             self.LOGGER.warning(f"Request timed out at \"{request_url}\": ({try_count}-{self.TRIES})")
             connection_failed = True
         except requests.exceptions.ConnectionError:
             self.LOGGER.warning(f"Couldn't connect to \"{request_url}\": ({try_count}-{self.TRIES})")
             connection_failed = True
+
+        # this is important for thread safety
+        finally:
+            self.lock = False
 
         if not connection_failed:
             self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
@@ -210,6 +212,7 @@ class Connection:
                 self.LOGGER.debug("request headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.request.headers.items()))
                 self.LOGGER.debug("response headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.headers.items()))
                 self.LOGGER.debug(r.content)
+                
                 if name != "":
                     self.save(r, name, error=True, **kwargs)
 
@@ -219,21 +222,8 @@ class Connection:
 
         self.rotate()
 
-        if self.heartbeat_interval > 0 and self.heartbeat_thread is None:
-            self.start_heartbeat()
-
-        return self.request(
-            method=method,
-            try_count=try_count + 1,
-            accepted_response_codes=accepted_response_codes,
-            url=url,
-            timeout=timeout,
-            headers=headers,
-            sleep_after_404=sleep_after_404,
-            is_heartbeat=is_heartbeat,
-            name=name,
-            **kwargs
-        )
+        current_kwargs["try_count"] = current_kwargs.get("try_count", 0) + 1
+        return self.request(**current_kwargs)
 
     def get(
             self,

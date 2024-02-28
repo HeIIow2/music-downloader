@@ -9,7 +9,7 @@ from ..attributes.attribute import Attribute, EmptyLine, Description
 from ..attributes.special_attributes import (
     SelectAttribute, 
     PathAttribute, 
-    AudioFormatAttribute,
+    AudioFormatAttribute
 )
 
 config = Config((
@@ -72,6 +72,11 @@ all the error messages are shown."""),
                     "Currently it just sets the User-Agent header.\n"
                     "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent"
     ),
+    Attribute(
+        name="tries_per_proxy",
+        default_value=2,
+        description="The retries it should do. These can be overridden by the program, at certain places, and they have to be.",
+    ),
 
     EmptyLine(),
 
@@ -79,8 +84,7 @@ all the error messages are shown."""),
     PathAttribute(name="temp_directory", default_value=LOCATIONS.TEMP_DIRECTORY.resolve(), description="All temporary stuff is gonna be dumped in this directory."),
     PathAttribute(name="log_file", default_value=LOCATIONS.get_log_file("download_logs.log").resolve()),
     PathAttribute(name="ffmpeg_binary", default_value=LOCATIONS.FFMPEG_BIN.resolve(), description="Set the path to the ffmpeg binary."),
-    PathAttribute(name="cache_directory", default_value=LOCATIONS.CACHE_DIRECTORY.resolve(),
-                  description="Set the path of the cache directory."),
+    PathAttribute(name="cache_directory", default_value=LOCATIONS.CACHE_DIRECTORY.resolve(), description="Set the path of the cache directory."),
     Attribute(
         name="not_a_genre_regex",
         description="These regular expressions tell music-kraken, which sub-folders of the music-directory\n"
@@ -132,6 +136,7 @@ class SettingsStructure(TypedDict):
 
     # connection
     proxies: List[dict[str, str]]
+    tries_per_proxy: int
     tor: bool
     tor_port: int
     chunk_size: int

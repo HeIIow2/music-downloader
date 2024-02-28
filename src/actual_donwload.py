@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     bandcamp_test = [
         "s: #a Only Smile",
-        "d: 18",
+        "d: 7",
     ]
 
     

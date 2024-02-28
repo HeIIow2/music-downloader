@@ -94,5 +94,5 @@ class DownloadResult:
             return head
 
         _lines = [head]
-        _lines.extend(BColors.FAIL + s + BColors.ENDC for s in self._error_message_list)
+        _lines.extend(BColors.FAIL.value + s + BColors.ENDC.value for s in self._error_message_list)
         return "\n".join(_lines)

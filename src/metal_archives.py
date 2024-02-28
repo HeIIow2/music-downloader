@@ -12,7 +12,8 @@ def fetch_artist():
     artist = objects.Artist(
         source_list=[
             objects.Source(objects.SourcePages.MUSIFY, "https://musify.club/artist/psychonaut-4-83193"),
-            objects.Source(objects.SourcePages.ENCYCLOPAEDIA_METALLUM, "https://www.metal-archives.com/bands/Ghost_Bath/3540372489")
+            objects.Source(objects.SourcePages.ENCYCLOPAEDIA_METALLUM,
+                           "https://www.metal-archives.com/bands/Ghost_Bath/3540372489")
         ]
     )
 
