@@ -1,53 +1,51 @@
 import logging
 import gc
 import sys
+from pathlib import Path
+
+from rich.logging import RichHandler
+from rich.console import Console
 
 from .utils.shared import DEBUG, DEBUG_LOGGING
 from .utils.config import logging_settings, main_settings, read_config
 
 read_config()
+
+console: Console = Console(width=220)
+def init_logging():
+    log_file = main_settings['log_file']
+
+    if log_file.is_file():
+        last_log_file = Path(log_file.parent, "prev." + log_file.name)
+
+        with log_file.open("r", encoding="utf-8") as current_file:
+            with last_log_file.open("w", encoding="utf-8") as last_file:
+                last_file.write(current_file.read())
+
+    rich_handler = RichHandler(rich_tracebacks=True, console=console)
+    rich_handler.setLevel(logging_settings['log_level'] if not DEBUG_LOGGING else logging.DEBUG)
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+
+    # configure logger default
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format=logging_settings['logging_format'],
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            file_handler,
+            rich_handler,
+        ]
+    )
+
+init_logging()
+
 from . import cli
 
 if DEBUG:
-    import sys
-
     sys.setrecursionlimit(100)
 
-
-class CustomFormatter(logging.Formatter):
-    grey = "\x1b[38;20m"
-    yellow = "\x1b[33;20m"
-    red = "\x1b[31;20m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = logging_settings['logging_format']
-
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: grey + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(CustomFormatter())
-
-# configure logger default
-logging.basicConfig(
-    level=logging_settings['log_level'] if not DEBUG_LOGGING else logging.DEBUG,
-    format=logging_settings['logging_format'],
-    handlers=[
-        logging.FileHandler(main_settings['log_file']),
-        stream_handler
-    ]
-)
 
 if main_settings['modify_gc']:
     """
@@ -63,3 +61,5 @@ if main_settings['modify_gc']:
     gen1 = gen1 * 2
     gen2 = gen2 * 2
     gc.set_threshold(allocs, gen1, gen2)
+
+

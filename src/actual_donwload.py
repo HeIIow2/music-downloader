@@ -44,11 +44,11 @@ if __name__ == "__main__":
         "d: 0"
     ]
 
-    bandcamp_test = [
-        "s: #a Only Smile",
-        "d: 7",
+    commands = [
+        "s: #a PTK",
+        "d: 26",
     ]
 
     
-    music_kraken.cli.download(genre="test", command_list=bandcamp_test, process_metadata_anyway=True)
+    music_kraken.cli.download(genre="test", command_list=commands, process_metadata_anyway=True)
     _ = "debug"

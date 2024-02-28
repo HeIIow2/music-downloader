@@ -187,7 +187,7 @@ class YoutubeMusic(SuperYouTube):
         SuperYouTube.__init__(self, *args, **kwargs)
 
         self.download_connection: Connection = Connection(
-            host="https://music.youtube.com/",
+            host="https://rr2---sn-cxaf0x-nugl.googlevideo.com/",
             logger=self.LOGGER,
             sleep_after_404=youtube_settings["sleep_after_youtube_403"]
         )
@@ -514,9 +514,7 @@ class YoutubeMusic(SuperYouTube):
             self.LOGGER.warning(f"Couldn't fetch the audio source with the innertube api, falling back to invidious.")
             return super().download_song_to_target(source, target)
 
-        return self.download_connection.stream_into(source.audio_url, target, description=desc, headers={
-            "Host": "rr1---sn-cxaf0x-nugl.googlevideo.com"
-        }, raw_url=True, disable_cache=True)
+        return self.download_connection.stream_into(source.audio_url, target, name=desc, raw_url=True, disable_cache=True)
 
     def __del__(self):
         self.ydl.__exit__()

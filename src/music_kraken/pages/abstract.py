@@ -321,7 +321,7 @@ class Page:
 
                 if collection.empty:
                     continue
-
+                
                 dom_ordered_music_object: DatabaseObject = collection[0]
                 naming_dict.add_object(dom_ordered_music_object)
                 return fill_naming_objects(dom_ordered_music_object)

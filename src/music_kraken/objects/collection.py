@@ -304,7 +304,7 @@ class Collection(Generic[T]):
 
     @property
     def empty(self) -> bool:
-        return self.__len__() == 0
+        return self.__len__() <= 0
 
     def __iter__(self) -> Iterator[T]:
         for element in self._data:
@@ -321,12 +321,11 @@ class Collection(Generic[T]):
         if item < len(self._data):
             return self._data[item]
 
-        item = item - (len(self._data) - 1)
+        item = item - len(self._data)
 
         for c in self.children:
             if item < len(c):
-                return c[item]
-
-            item = item - (len(self._data) - 1)
+                return c.__getitem__(item)
+            item = item - len(c._data)
 
         raise IndexError

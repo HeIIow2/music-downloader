@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import threading
 import time
@@ -9,13 +11,13 @@ import inspect
 import requests
 import responses
 from tqdm import tqdm
-import merge_args
 
 from .cache import Cache
 from .rotating import RotatingProxy
 from ..objects import Target
 from ..utils.config import main_settings
 from ..utils.support_classes.download_result import DownloadResult
+from ..utils.hacking import merge_args
 
 
 class Connection:
@@ -144,6 +146,7 @@ class Connection:
         if method is None:
             raise AttributeError("method is not set.")
         method = method.upper()
+        headers = dict() if headers is None else headers
         disable_cache = headers.get("Cache-Control", "").lower() == "no-cache" if disable_cache is None else disable_cache
         accepted_response_codes = self.ACCEPTED_RESPONSE_CODES if accepted_response_codes is None else accepted_response_codes
         
@@ -211,8 +214,7 @@ class Connection:
             self.lock = False
 
         if not connection_failed:
-            self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} "
-                                f"at {url}. ({try_count}-{self.TRIES})")
+            self.LOGGER.warning(f"{self.HOST.netloc} responded wit {r.status_code} at {url}. ({try_count}-{self.TRIES})")
             if r is not None:
                 self.LOGGER.debug("request headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.request.headers.items()))
                 self.LOGGER.debug("response headers:\n\t"+ "\n\t".join(f"{k}\t=\t{v}" for k, v in r.headers.items()))
@@ -228,7 +230,7 @@ class Connection:
         self.rotate()
 
         current_kwargs["try_count"] = current_kwargs.get("try_count", 0) + 1
-        return self.request(**current_kwargs)
+        return Connection.request(**current_kwargs)
 
     @merge_args(request)
     def get(self, *args,  **kwargs) -> Optional[requests.Response]:
@@ -275,8 +277,8 @@ class Connection:
         r = self.request(
             url=url,
             name=name,
-            chunk_size=chunk_size,
             method=method,
+            stream=True,
             **kwargs
         )
 

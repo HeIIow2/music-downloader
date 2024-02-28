@@ -42,6 +42,7 @@ class Song(Base):
     length: int
     genre: str
     note: FormattedText
+    tracksort: int
 
     source_collection: SourceCollection
     target_collection: Collection[Target]
@@ -65,18 +66,17 @@ class Song(Base):
         "unified_title": lambda: None,
         "isrc": lambda: None,
         "genre": lambda: None,
+
+        "tracksort": lambda: 0,
     }
 
     def __init__(self, title: str = "", unified_title: str = None, isrc: str = None, length: int = None,
                  genre: str = None, note: FormattedText = None, source_list: List[Source] = None,
                  target_list: List[Target] = None, lyrics_list: List[Lyrics] = None,
                  main_artist_list: List[Artist] = None, feature_artist_list: List[Artist] = None,
-                 album_list: List[Album] = None, **kwargs) -> None:
+                 album_list: List[Album] = None, tracksort: int = 0, **kwargs) -> None:
 
-        super().__init__(title=title, unified_title=unified_title, isrc=isrc, length=length, genre=genre, note=note,
-                         source_list=source_list, target_list=target_list, lyrics_list=lyrics_list,
-                         main_artist_list=main_artist_list, feature_artist_list=feature_artist_list,
-                         album_list=album_list, **kwargs)
+        Base.__init__(**locals())
 
     UPWARDS_COLLECTION_STRING_ATTRIBUTES = ("album_collection", "main_artist_collection", "feature_artist_collection")
 
