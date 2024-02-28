@@ -24,8 +24,7 @@ class CacheAttribute:
     @property
     def is_valid(self):
         if isinstance(self.expires, str):
-            pass
-            # self.expires = datetime.fromisoformat(self.expires)
+            self.expires = datetime.fromisoformat(self.expires)
         return datetime.now() < self.expires
 
     def __eq__(self, other):

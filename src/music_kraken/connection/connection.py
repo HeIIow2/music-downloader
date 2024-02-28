@@ -38,13 +38,11 @@ class Connection:
     ):
         if proxies is None:
             proxies = main_settings["proxies"]
-        if header_values is None:
-            header_values = dict()
 
         self.cache: Cache = Cache(module=module, logger=logger)
         self.cache_expiring_duration = cache_expiring_duration
 
-        self.HEADER_VALUES = header_values
+        self.HEADER_VALUES = dict() if header_values is None else header_values
 
         self.LOGGER = logger
         self.HOST = urlparse(host)
@@ -151,10 +149,16 @@ class Connection:
         accepted_response_codes = self.ACCEPTED_RESPONSE_CODES if accepted_response_codes is None else accepted_response_codes
         
         current_kwargs = copy.copy(locals())
+        current_kwargs.pop("kwargs")
+        current_kwargs.update(**kwargs)
+
 
         parsed_url = urlparse(url)
+        _headers = copy.copy(self.HEADER_VALUES)
+        _headers.update(headers)
+
         headers = self._update_headers(
-            headers=headers,
+            headers=_headers,
             refer_from_origin=refer_from_origin,
             url=parsed_url
         )
@@ -318,6 +322,6 @@ class Connection:
             if retry:
                 self.LOGGER.warning(f"Retrying stream...")
                 accepted_response_codes.add(206)
-                return self.stream_into(**stream_kwargs)
+                return Connection.stream_into(**stream_kwargs)
 
             return DownloadResult()

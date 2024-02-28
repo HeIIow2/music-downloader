@@ -189,7 +189,11 @@ class YoutubeMusic(SuperYouTube):
         self.download_connection: Connection = Connection(
             host="https://rr2---sn-cxaf0x-nugl.googlevideo.com/",
             logger=self.LOGGER,
-            sleep_after_404=youtube_settings["sleep_after_youtube_403"]
+            sleep_after_404=youtube_settings["sleep_after_youtube_403"],
+            header_values={
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Referer": "https://music.youtube.com/",
+            }
         )
 
         # https://github.com/ytdl-org/youtube-dl/blob/master/README.md#embedding-youtube-dl
@@ -507,8 +511,7 @@ class YoutubeMusic(SuperYouTube):
         return song
 
     def download_song_to_target(self, source: Source, target: Target, desc: str = None) -> DownloadResult:
-        if source.audio_url is None:
-            self.fetch_song(source)
+        self.fetch_song(source)
 
         if source.audio_url is None:
             self.LOGGER.warning(f"Couldn't fetch the audio source with the innertube api, falling back to invidious.")
